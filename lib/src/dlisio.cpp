@@ -1,0 +1,234 @@
+#include <algorithm>
+#include <array>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
+#include <dlisio/dlisio.h>
+
+namespace {
+
+bool is_zero_string( const char* xs ) noexcept {
+    /*
+     * check if a a string legitimately produced zero as output. If so, then
+     * the following holds:
+     *
+     * * it has zero or more leading spaces (as per isspace)
+     * * it has 1 or more zeros
+     * * it ends with a \0 NUL-byte
+     *
+     * which means it takes C-strings, and the terminating 0 must be inserted
+     * accordingly
+     */
+    if( !xs || *xs == '\0' ) return false;
+
+    do {
+        if( !std::isspace( *xs ) ) break;
+    } while( *++xs );
+
+    if( *xs == '\0' ) return false;
+
+    do {
+        if( *xs != '0' ) return false;
+    } while( *++xs );
+
+    return true;
+}
+
+int parse_revision( const char* rawin, int* major, int* minor ) {
+    /*
+     * The standard requires version numbers to be a non-zero-terminated
+     * ASCII string on the format VN.mm where N is the major revision (1-9),
+     * and mm is the minor revision 00, 01.. 99
+     */
+
+    /*
+     * blazing if short string optimisation is enabled, but even if not then
+     * accept the cost of std::string a one-off function
+     */
+    const std::string in( rawin, rawin + 5 );
+
+    /*
+     * V1.00 is probably the most common, so check for that before looking
+     * for patterns
+     */
+
+    if( in == "V1.00" ) {
+        *major = 1;
+        *minor = 0;
+        return DLIS_OK;
+    }
+
+    /* Now look for well-formed, non-V1.00 versions */
+
+    if(            'V' == in[ 0 ]
+         && std::isdigit( in[ 1 ] )
+         &&        '.' == in[ 2 ]
+         && std::isdigit( in[ 3 ] )
+         && std::isdigit( in[ 4 ] ) ) {
+        *major =  in[ 1 ] - '0';
+        *minor = (in[ 3 ] - '0') * 10
+               + (in[ 4 ] - '0');
+        return DLIS_OK;
+    }
+
+    return DLIS_UNEXPECTED_VALUE;
+
+    /* Not formatted according to spec, try and figure something out anyway */
+    // Case: formatted as int, mis-aligned?
+    // Case: dropped leading V?
+    // Case: dropped dot?
+    // Case: drpoped minors?
+}
+
+/* hexdump -vCn 80 in.dlis v1
+ * 000  20 20 20 31 56 31 2e 30  30 52 45 43 4f 52 44 20  |   1V1.00RECORD |
+ * 010  38 31 39 32 44 65 66 61  75 6c 74 20 53 74 6f 72  |8192Default Stor|
+ * 020  61 67 65 20 53 65 74 20  20 20 20 20 20 20 20 20  |age Set         |
+ * 030  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+ * 040  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+ *
+ * A well-formatted whitespace padded storage-unit-label for dlis v1. The
+ * fields, with their respective sizes:
+ *
+ * Storage Unit Sequence Number  4
+ * DLIS Version                  5
+ * Storage Unit Structure        6
+ * Maximum Record Length         5
+ * Storage Set Identifier       60
+ */
+
+int sulv1( const char* xs,
+           int* seqnum,
+           std::int64_t* maxlen,
+           int* layout,
+           char* id ) noexcept {
+
+    /*
+     * read from the input record into a local zero'd buffer. Because the next
+     * chunk is always longer than the last, there's no need to explicitly zero
+     * in-between
+     */
+    std::array< char, 8 > buffer = {};
+
+    /*
+     * If number parsing fails (atoi, atol), it returns 0, which on both these
+     * cases is an invalid value (they're all defined to be >= 1), so any zero
+     * is, at best, a protocol error, but most likely invalid tokens
+     */
+
+    std::copy_n( xs + 0, 4, std::begin( buffer ) );
+    const auto seq = std::atoi( buffer.data() );
+
+    /* skip revision, already parsed and known to be V1.00 */
+
+    /*
+     * with 5 digits, maxlen can overflow ints on 16-bit int platforms, but
+     * longs are good. The type of output maxlen is int64, however, because
+     * later revisions can have huge records overflowing 32bit int
+     * (theoretically), and this keeps the two revisions' maxlen uniform in
+     * type.
+     */
+    std::copy_n( xs + 15, 5, std::begin( buffer ) );
+    const auto len = std::atol( buffer.data() );
+
+    /*
+     * In revision 1, only RECORD is a valid structure description, so just
+     * check that
+     */
+    std::copy_n( xs + 9, 6, std::begin( buffer ) );
+    const auto rec = std::equal( std::begin( buffer ),
+                                 std::begin( buffer ) + 6,
+                                 "RECORD" );
+
+    /*
+     * In theory, output values could always be set, and output-values of 0 as
+     * "undefined" could be a part of the interface. However, that means
+     * clients can't use their own values with confidence, and have weaker
+     * exception guarantees
+     */
+
+    if( seqnum && seq > 0 ) *seqnum = seq;
+    if( maxlen && len > 0 ) *maxlen = len;
+    if( layout && rec )     *layout = DLIS_STRUCTURE_RECORD;
+    if( id )                std::copy_n( xs + 20, 60, id );
+
+    /* all good? */
+    if( seq > 0 && len > 0 && rec ) return DLIS_OK;
+
+    /*
+     * a max-length of 0 means "undefined upper limit", but is considered
+     * valid. However, sequence-num and rec has to be >= 1 and RECORD/true
+     * respectively, so if either of those are wrong, we're in inconsistent
+     * territory
+     *
+     * Only report it as such if output params aren't nullptr, because if they
+     * are, caller don't care if they're correct or not
+     */
+    if( seqnum && seq <= 0 ) return DLIS_INCONSISTENT;
+    if( layout && !rec )     return DLIS_INCONSISTENT;
+
+    /*
+     * re-read the max-length and check if a correct[1] zero was input
+     *
+     * [1] correct in the sense it's accepted as explicit zero as input, which
+     * includes any leading-spaces leading-zeros optionally-zero terminated
+     * strings
+     */
+    std::copy_n( xs + 15, 5, std::begin( buffer ) );
+    buffer[ 5 ] = '\0';
+    if( !is_zero_string( buffer.data() ) )
+        return DLIS_INCONSISTENT;
+
+    if( maxlen ) *maxlen = 0;
+    return DLIS_OK;
+}
+
+}
+
+int dlis_sul( const char* xs,
+              int* seqnum,
+              int* major,
+              int* minor,
+              int* layout,
+              std::int64_t* maxlen,
+              char* id ) {
+    /*
+     * First, check for DLIS1, which means the Storage Unit Label is 80 bytes
+     * long ASCII, and revision starts at byte 4
+     */
+    std::array< char, 5 > revision = {};
+    std::copy_n( xs + 4, 5, std::begin( revision ) );
+
+    /* now parse the revision field */
+    int vmajor = -1;
+    int vminor = -1;
+    auto err = parse_revision( revision.data(), &vmajor, &vminor );
+
+    if( err == DLIS_UNEXPECTED_VALUE ) {
+        /*
+         * version couldn't parse - this is probably either not a DLIS file or
+         * it's increadibly corrupted or malformed, but try assuming revision 1
+         * and see if the rest parses fine. If it's not a DLIS file, or it's
+         * very corrupted, a new protocol violation probably shows up really
+         * fast
+         */
+
+        vmajor = 1;
+        vminor = 0;
+    } else if( err != DLIS_OK )
+        return err;
+
+    if( vmajor == 1 && vminor == 0 ) {
+        *major = 1;
+        *minor = 0;
+        auto errv1 = sulv1( xs, seqnum, maxlen, layout, id );
+
+        if( errv1 == DLIS_OK && err == DLIS_OK )
+            return DLIS_OK;
+
+        return DLIS_INCONSISTENT;
+    }
+
+    return DLIS_UNEXPECTED_VALUE;
+}
