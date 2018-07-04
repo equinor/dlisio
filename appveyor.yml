@@ -1,0 +1,34 @@
+version: 1.0.{build}
+
+clone_depth: 1
+
+configuration:
+    - Release
+
+os: Visual Studio 2015
+image: Visual Studio 2015
+
+platform:
+    - x86
+    - x64
+
+matrix:
+    fast_finish: true
+
+before_build:
+    - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
+
+build_script:
+    - mkdir build
+    - ps: pushd build
+    - cmake %APPVEYOR_BUILD_FOLDER%
+            %W64%
+            -DCMAKE_CXX_FLAGS=/D_CRT_SECURE_NO_WARNINGS
+    - cmake --build .
+            --config %configuration%
+    - ps: popd
+
+test_script:
+    - ps: pushd build
+    - ctest --build-config %configuration% --output-on-failure
+    - ps: popd
