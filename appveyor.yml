@@ -23,6 +23,7 @@ build_script:
     - ps: pushd build
     - cmake %APPVEYOR_BUILD_FOLDER%
             %W64%
+            /D_CRT_SECURE_NO_WARNINGS
     - cmake --build .
             --config %configuration%
     - ps: popd
