@@ -1,0 +1,36 @@
+language: c++
+
+os:
+    - linux
+    - osx
+
+compiler:
+    - gcc
+    - clang
+
+services: docker
+sudo: required
+
+addons:
+    apt:
+        packages:
+            - cmake
+            - cmake-data
+
+before_install:
+    - unset -f pushd
+    - unset -f popd
+
+before_script:
+    - mkdir build
+    - pushd build
+    - cmake -DCMAKE_BUILD_TYPE=Release
+            -DBUILD_SHARED_LIBS=ON
+            ..
+    - popd
+
+script:
+    - pushd build
+    - make
+    - ctest --output-on-failure
+    - sudo make install
