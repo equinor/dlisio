@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <string>
