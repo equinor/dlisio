@@ -23,7 +23,8 @@ build_script:
     - ps: pushd build
     - cmake %APPVEYOR_BUILD_FOLDER%
             %W64%
-    - cmake --build . --config "%configuration%" --target install
+    - cmake --build .
+            --config "%configuration%"
     - ps: popd
 
 test_script:
