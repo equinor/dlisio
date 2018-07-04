@@ -29,7 +29,7 @@ build_script:
     - cmake --build . --config "%configuration%" --target install
     - ps: popd
 
-test_script
+test_script:
     - ps: pushd build
     - ctest --config "%configuration%" --output-on-failure
     - ps: popd
