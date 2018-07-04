@@ -24,10 +24,10 @@ build_script:
     - cmake %APPVEYOR_BUILD_FOLDER%
             %W64%
     - cmake --build .
-            --config "%configuration%"
+            --config %configuration%
     - ps: popd
 
 test_script:
     - ps: pushd build
-    - ctest --config "%configuration%" --output-on-failure
+    - ctest --build-config %configuration% --output-on-failure
     - ps: popd
