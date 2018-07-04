@@ -33,4 +33,3 @@ script:
     - pushd build
     - make
     - ctest --output-on-failure
-    - sudo make install
