@@ -164,11 +164,11 @@ TEST_CASE("A well-formatted SULv1 with undefined maxlen", "[sul][v1]") {
                                     "                   ";
 
     static const std::string maxlens[] = {
-        //"    0",
-        //"   00",
-        //"  000",
-        //" 0000",
-        //"00000",
+        "    0",
+        "   00",
+        "  000",
+        " 0000",
+        "00000",
     };
 
     for( const auto& len : maxlens )
