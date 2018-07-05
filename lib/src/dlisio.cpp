@@ -5,6 +5,14 @@
 #include <cstring>
 #include <string>
 
+#ifdef HAVE_ARPA_INET
+    #include <arpa/inet.h>
+#elif HAVE_NETINET_IN
+    #include <netinet/in.h>
+#elif HAVE_WINSOCK2
+    #include <winsock2.h>
+#endif
+
 #include <dlisio/dlisio.h>
 
 namespace {

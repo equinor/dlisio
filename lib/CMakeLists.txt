@@ -9,6 +9,13 @@ target_compile_options(dlisio
     BEFORE
     PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
 )
+target_compile_definitions(dlisio
+    PRIVATE ${htons}
+)
+target_link_libraries(dlisio
+    PUBLIC ${ws2}
+)
+
 
 if(NOT BUILD_TESTING)
     return()
