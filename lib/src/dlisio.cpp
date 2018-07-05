@@ -193,6 +193,22 @@ int sulv1( const char* xs,
     return DLIS_OK;
 }
 
+namespace dlis {
+
+std::uint8_t ushort( const char* xs ) noexcept {
+    std::uint8_t x;
+    std::memcpy( &x, xs, sizeof( x ) );
+    return x;
+}
+
+std::uint16_t unorm( const char* xs ) noexcept {
+    std::uint16_t x;
+    std::memcpy( &x, xs, sizeof( x ) );
+    return ntohs( x );
+}
+
+}
+
 }
 
 int dlis_sul( const char* xs,
