@@ -10,12 +10,12 @@ target_compile_options(dlisio
     PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
 )
 
+if(NOT BUILD_TESTING)
+    return()
+endif()
+
 add_executable(testsuite test/testsuite.cpp
                          test/storage-unit-label.cpp
 )
 target_link_libraries(testsuite dlisio catch2)
 add_test(NAME core COMMAND testsuite)
-
-if(NOT BUILD_TESTING)
-    return()
-endif()
