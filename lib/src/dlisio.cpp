@@ -257,3 +257,34 @@ int dlis_sul( const char* xs,
 
     return DLIS_UNEXPECTED_VALUE;
 }
+
+/*
+ * hexdump -vn 4 -s 80 dlis
+ * 0000050 0020 01ff
+ *
+ * The visual record label is only 4 bytes long, all binary:
+ * Visible record length    2
+ * Padding/FF               1
+ * Major version            1
+ *
+ * The length field is recorded in big-endian. It's a signed 16-bit integer
+ * (uses an unsigned type, but the length of a record is limited to 16 384
+ * bytes).
+ *
+ * RP66 requires the value of the padding to be FF (all bits set), but this is
+ * not checked currently.
+ *
+ * The version is a single-byte integer, and should correspond to the major
+ * DLIS revision.
+ */
+int dlis_vrl( const char* xs,
+              int* length,
+              int* version ) {
+    const auto len   = dlis::unorm( xs );
+    const auto ff    = dlis::ushort( xs + 2 );
+    const auto major = dlis::ushort( xs + 3 );
+
+    *length = len;
+    *version = major;
+    return DLIS_OK;
+}

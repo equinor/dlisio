@@ -15,6 +15,10 @@ int dlis_sul( const char* xs,
               int64_t* maxlen,
               char* id );
 
+int dlis_vrl( const char* xs,
+              int* len,
+              int* version );
+
 enum DLIS_STRUCTURE {
     DLIS_STRUCTURE_UNKNOWN,
     DLIS_STRUCTURE_RECORD,
