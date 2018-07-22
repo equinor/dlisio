@@ -293,6 +293,22 @@ int dlis_vrl( const char* xs,
     return DLIS_OK;
 }
 
+
+/*
+ * hexdump -vn 4 -s 80 dlis
+ * 0000054 7c00 0080
+ *
+ * The logical record segment header is metadata for the next segment, length,
+ * attributes, and type, in total 4 bytes:
+ *
+ * Segment length 2
+ * Attributes     1
+ * Type           1
+ *
+ * The types 0-127 are reserved by the standard, 127-255 seems to be free to
+ * use for vendor-specific purposes.
+ */
+
 int dlis_lrsh( const char* xs,
                int* seglen,
                uint8_t* attrs,
