@@ -40,3 +40,4 @@ endif()
 
 add_subdirectory(external/catch2)
 add_subdirectory(lib)
+add_subdirectory(bin)
