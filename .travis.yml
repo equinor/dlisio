@@ -23,6 +23,7 @@ matrix:
         - os: linux
           compiler: clang
           env: SCAN="scan-build --status-bugs"
+        - env: WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
 
 before_install:
     - unset -f pushd
@@ -33,6 +34,7 @@ before_script:
     - pushd build
     - $SCAN cmake -DCMAKE_BUILD_TYPE=Release
                   -DBUILD_SHARED_LIBS=ON
+                  ${WERROR}
                   ..
     - popd
 
