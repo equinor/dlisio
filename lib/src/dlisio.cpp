@@ -118,7 +118,7 @@ int sulv1( const char* xs,
      * chunk is always longer than the last, there's no need to explicitly zero
      * in-between
      */
-    std::array< char, 8 > buffer = {};
+    std::array< char, 8 > buffer{{}};
 
     /*
      * If number parsing fails (atoi, atol), it returns 0, which on both these
@@ -222,7 +222,7 @@ int dlis_sul( const char* xs,
      * First, check for DLIS1, which means the Storage Unit Label is 80 bytes
      * long ASCII, and revision starts at byte 4
      */
-    std::array< char, 5 > revision = {};
+    std::array< char, 5 > revision{{}};
     std::copy_n( xs + 4, 5, std::begin( revision ) );
 
     /* now parse the revision field */
