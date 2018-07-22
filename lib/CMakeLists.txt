@@ -24,6 +24,7 @@ endif()
 add_executable(testsuite test/testsuite.cpp
                          test/storage-unit-label.cpp
                          test/visible-record-label.cpp
+                         test/logical-record-segment-header.cpp
 )
 target_link_libraries(testsuite dlisio catch2)
 add_test(NAME core COMMAND testsuite)
