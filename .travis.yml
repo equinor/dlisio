@@ -17,6 +17,13 @@ addons:
             - cmake
             - cmake-data
 
+matrix:
+    fast_finish: true
+    include:
+        - os: linux
+          compiler: clang
+          env: SCAN="scan-build --status-bugs"
+
 before_install:
     - unset -f pushd
     - unset -f popd
@@ -24,9 +31,9 @@ before_install:
 before_script:
     - mkdir build
     - pushd build
-    - cmake -DCMAKE_BUILD_TYPE=Release
-            -DBUILD_SHARED_LIBS=ON
-            ..
+    - $SCAN cmake -DCMAKE_BUILD_TYPE=Release
+                  -DBUILD_SHARED_LIBS=ON
+                  ..
     - popd
 
 script:
