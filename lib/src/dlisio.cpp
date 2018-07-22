@@ -281,7 +281,11 @@ int dlis_vrl( const char* xs,
               int* length,
               int* version ) {
     const auto len   = dlis::unorm( xs );
-    const auto ff    = dlis::ushort( xs + 2 );
+    /*
+     * for now, ignore the ff. later, this might change the return value to
+     * not-ok to flag protocol errors
+     *  const auto ff    = dlis::ushort( xs + 2 );
+     */
     const auto major = dlis::ushort( xs + 3 );
 
     *length = len;
