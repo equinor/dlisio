@@ -288,3 +288,38 @@ int dlis_vrl( const char* xs,
     *version = major;
     return DLIS_OK;
 }
+
+int dlis_lrsh( const char* xs,
+               int* seglen,
+               uint8_t* attrs,
+               int* type ) {
+    auto len = dlis::unorm( xs );
+    auto atr = dlis::ushort( xs + 2 );
+    auto typ = dlis::ushort( xs + 3 );
+
+    *seglen = len;
+    *attrs = atr;
+    *type = typ;
+
+    return 0;
+}
+
+int dlis_segment_attributes( std::uint8_t attrs,
+                             int* explicit_formatting,
+                             int* has_predecessor,
+                             int* has_successor,
+                             int* is_encrypted,
+                             int* has_encryption_packet,
+                             int* has_checksum,
+                             int* has_trailing_length,
+                             int* has_padding ) {
+    *explicit_formatting   = attrs & DLIS_SEGATTR_EXFMTLR;
+    *has_predecessor       = attrs & DLIS_SEGATTR_PREDSEG;
+    *has_successor         = attrs & DLIS_SEGATTR_SUCCSEG;
+    *is_encrypted          = attrs & DLIS_SEGATTR_ENCRYPT;
+    *has_encryption_packet = attrs & DLIS_SEGATTR_ENCRPKT;
+    *has_checksum          = attrs & DLIS_SEGATTR_CHCKSUM;
+    *has_trailing_length   = attrs & DLIS_SEGATTR_TRAILEN;
+    *has_padding           = attrs & DLIS_SEGATTR_PADDING;
+    return DLIS_OK;
+}
