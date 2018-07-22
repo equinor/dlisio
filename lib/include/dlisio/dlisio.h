@@ -41,6 +41,15 @@ int dlis_segment_attributes( uint8_t,
                              int* has_checksum,
                              int* has_trailing_length,
                              int* has_padding );
+/*
+ * Query the encryption packet, but don't actually read it.
+ *
+ * Returns the length *of the encryption packet*, so if there is none (it is
+ * optional), len is set to zero.
+ */
+int dlis_encryption_packet_info( const char*,
+                                 int* len,
+                                 int* companycode );
 
 /*
  * A table of the record attributes, high bit first:

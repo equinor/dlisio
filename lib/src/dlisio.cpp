@@ -343,3 +343,22 @@ int dlis_segment_attributes( std::uint8_t attrs,
     *has_padding           = attrs & DLIS_SEGATTR_PADDING;
     return DLIS_OK;
 }
+
+int dlis_encryption_packet_info( const char* xs,
+                                 int* len,
+                                 int* companycode ) {
+    const int ln = dlis::unorm( xs );
+    const int cc = dlis::unorm( xs + 2 );
+
+    /*
+     * RP66 rqeuires there to be at least 4 bytes, which means the actual
+     * encryption packet itself is empty.
+     */
+    if( ln - 4 < 0 ) return DLIS_INCONSISTENT;
+    if( ln % 2 != 0 ) return DLIS_UNEXPECTED_VALUE;
+
+    *len = ln - 4;
+    *companycode = cc;
+
+    return DLIS_OK;
+}
