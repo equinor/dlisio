@@ -16,6 +16,15 @@ target_link_libraries(dlisio
     PUBLIC ${ws2}
 )
 
+install(TARGETS dlisio
+        EXPORT dlisio
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+install(DIRECTORY include/ DESTINATION include)
+install(EXPORT dlisio DESTINATION share/dlisio/cmake FILE dlisio-config.cmake)
+export(TARGETS dlisio FILE dlisio-config.cmake)
 
 if(NOT BUILD_TESTING)
     return()
