@@ -405,6 +405,64 @@ const char* dlis_ulong( const char* xs, std::uint32_t* x ) {
     return xs + sizeof( std::uint32_t );
 }
 
+const char* dlis_uvari( const char* xs, int32_t* out ) {
+    /*
+     * extract the two high bits. (length-encoding)
+     * 0x: 1-byte
+     * 10: 2-byte
+     * 11: 4-byte
+     */
+    const std::uint8_t high = xs[ 0 ] & 0xC0; // b11000000
+
+    int len = 0;
+    switch( high ) {
+        case 0xC0: len = 4; break; // 11
+        case 0x80: len = 2; break; // 10
+        default:   len = 1; break; // 0x
+    }
+
+    auto i32 = []( const char* in ) {
+        std::uint32_t x = 0;
+        std::memcpy( &x, in, sizeof( std::uint32_t ) );
+        x = ntohl( x ) & 0x3FFFFFFF;
+        return x;
+    };
+
+    auto i16 = []( const char* in ) {
+        std::uint16_t x = 0;
+        std::memcpy( &x, in, sizeof( std::uint16_t ) );
+        x = ntohs( x ) & 0x3FFF;
+        return x;
+    };
+
+    auto i8 = []( const char* in ) {
+        std::uint8_t x = 0;
+        std::memcpy( &x, in, sizeof( std::int8_t ) );
+        return x;
+    };
+
+    /*
+     * blank out the length encoding if multi-byte, and byteswap as needed
+     *
+     * no point blanking out in single-byte, because only one bit contributes
+     * (the leading zero) and we might lose information, and the leading two
+     * zeroes in 2-4 byte uints are effectively zero anyway
+     *
+     * unsigned -> signed conversion won't overflow, because of the zero'd
+     * leading bits
+     *
+     * 0x3F = b00111111
+     *
+     */
+    switch( len ) {
+        case 4:  *out = i32( xs ); break;
+        case 2:  *out = i16( xs ); break;
+        default: *out =  i8( xs ); break;
+    }
+
+    return xs + len;
+}
+
 const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
     std::uint8_t ln;
     dlis_ushort( xs, &ln );

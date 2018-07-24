@@ -183,6 +183,93 @@ TEST_CASE("unsigned long (32-bit)", "[type]") {
     }
 }
 
+TEST_CASE("variable-length unsigned int", "[type]") {
+    SECTION("1-byte") {
+        const std::array< unsigned char[1], 4 > in = {{
+            { 0x00 }, // 0
+            { 0x01 }, // 1
+            { 0x2E }, // 46
+            { 0x7F }, // 127
+        }};
+
+        const std::array< std::int32_t, in.size() > expected = {
+            0,
+            1,
+            46,
+            127
+        };
+
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            const char* end = dlis_uvari( (char*)in[ i ], &v );
+            CHECK( v == expected[ i ] );
+            CHECK( std::intptr_t(end) == std::intptr_t((char*)in[ i ] + 1) );
+        }
+    }
+
+    SECTION("2-byte") {
+        const std::array< unsigned char[2], 7 > in = {{
+            { 0x80, 0x00 }, // 0
+            { 0x80, 0x01 }, // 1
+            { 0x80, 0x2E }, // 46
+            { 0x80, 0x7F }, // 127
+            { 0x81, 0x00 }, // 256
+            { 0x8F, 0xFF }, // 4095
+            { 0xBF, 0xFF }, // 16383 (int-max)
+        }};
+
+        const std::array< std::int32_t, in.size() > expected = {
+            0,
+            1,
+            46,
+            127,
+            256,
+            4095,
+            16383,
+        };
+
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            const char* end = dlis_uvari( (char*)in[ i ], &v );
+            CHECK( v == expected[ i ] );
+            CHECK( std::intptr_t(end) == std::intptr_t((char*)in[ i ] + 2) );
+        }
+    }
+
+    SECTION("4-byte") {
+        const std::array< unsigned char[4], 9 > in = {{
+            { 0xC0, 0x00, 0x00, 0x00 }, // 0
+            { 0xC0, 0x00, 0x00, 0x01 }, // 1
+            { 0xC0, 0x00, 0x00, 0x2E }, // 46
+            { 0xC0, 0x00, 0x00, 0x7F }, // 127
+            { 0xC0, 0x00, 0x01, 0x00 }, // 256
+            { 0xC0, 0x00, 0x8F, 0xFF }, // 36863
+            { 0xC1, 0x00, 0x00, 0x00 }, // 16777216
+            { 0xF0, 0x00, 0xBF, 0xFF }, // 805355519
+            { 0xFF, 0xFF, 0xFF, 0xFF }, // 1073741823 (int-max)
+        }};
+
+        const std::array< std::int32_t, in.size() > expected = {
+            0,
+            1,
+            46,
+            127,
+            256,
+            36863,
+            16777216,
+            805355519,
+            1073741823,
+        };
+
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            const char* end = dlis_uvari( (char*)in[ i ], &v );
+            CHECK( v == expected[ i ] );
+            CHECK( std::intptr_t(end) == std::intptr_t((char*)in[ i ] + 4) );
+        }
+    }
+}
+
 TEST_CASE("identifier (var-length string)", "[type]") {
     std::int32_t len;
 
