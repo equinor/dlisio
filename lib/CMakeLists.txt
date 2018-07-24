@@ -35,6 +35,7 @@ add_executable(testsuite test/testsuite.cpp
                          test/visible-record-label.cpp
                          test/logical-record-segment-header.cpp
                          test/encryption-packet.cpp
+                         test/types.cpp
 )
 target_link_libraries(testsuite dlisio catch2)
 add_test(NAME core COMMAND testsuite)

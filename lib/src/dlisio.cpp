@@ -14,6 +14,7 @@
 #endif
 
 #include <dlisio/dlisio.h>
+#include <dlisio/types.h>
 
 namespace {
 
@@ -361,4 +362,54 @@ int dlis_encryption_packet_info( const char* xs,
     *companycode = cc;
 
     return DLIS_OK;
+}
+
+/* TYPES */
+
+const char* dlis_sshort( const char* xs, std::int8_t* x ) {
+    /* assume two's complement platform - insert check to support */
+    std::memcpy( x, xs, sizeof( std::int8_t ) );
+    return xs + sizeof( std::int8_t );
+}
+
+const char* dlis_snorm( const char* xs, std::int16_t* x ) {
+    std::uint16_t ux;
+    std::memcpy( &ux, xs, sizeof( std::int16_t ) );
+    ux = ntohs( ux );
+    std::memcpy( x, &ux, sizeof( std::int16_t ) );
+    return xs + sizeof( std::int16_t );
+}
+
+const char* dlis_slong( const char* xs, std::int32_t* x ) {
+    std::uint32_t ux;
+    std::memcpy( &ux, xs, sizeof( std::int32_t ) );
+    ux = ntohl( ux );
+    std::memcpy( x, &ux, sizeof( std::int32_t ) );
+    return xs + sizeof( std::int32_t );
+}
+
+const char* dlis_ushort( const char* xs, std::uint8_t* x ) {
+    std::memcpy( x, xs, sizeof( std::uint8_t ) );
+    return xs + sizeof( std::uint8_t );
+}
+
+const char* dlis_unorm( const char* xs, std::uint16_t* x ) {
+    std::memcpy( x, xs, sizeof( std::uint16_t ) );
+    *x = ntohs( *x );
+    return xs + sizeof( std::uint16_t );
+}
+
+const char* dlis_ulong( const char* xs, std::uint32_t* x ) {
+    std::memcpy( x, xs, sizeof( std::uint32_t ) );
+    *x = ntohl( *x );
+    return xs + sizeof( std::uint32_t );
+}
+
+const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
+    std::uint8_t ln;
+    dlis_ushort( xs, &ln );
+
+    if( len ) *len = ln;
+    if( out ) std::memcpy( out, xs + 1, ln );
+    return xs + ln + 1;
 }
