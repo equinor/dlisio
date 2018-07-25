@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -531,4 +532,137 @@ const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
     if( len ) *len = ln;
     if( out ) std::memcpy( out, xs + 1, ln );
     return xs + ln + 1;
+}
+
+const char* dlis_fshort( const char* xs, float* out ) {
+    std::uint16_t v;
+    const char* newptr = dlis_unorm( xs, &v );
+
+    std::uint16_t sign_bit = v & 0x8000;
+    std::uint16_t exp_bits = v & 0x000F;
+    std::uint16_t frac_bits = (v & 0xFFF0) >> 4;
+    if( sign_bit )
+        frac_bits = (~frac_bits & 0x0FFF) + 1;
+
+    float sign = sign_bit ? -1.0 : 1.0;
+    float exponent = float( exp_bits );
+    float fractional = frac_bits / float( 0x0800 );
+
+    *out = sign * fractional * std::pow( 2.0f, exponent );
+    return newptr;
+}
+
+const char* dlis_fsingl( const char* xs, float* out ) {
+    static_assert(
+        std::numeric_limits< float >::is_iec559 && sizeof( float ) == 4,
+        "Function assumes IEEE 754 32-bit float" );
+
+    std::memcpy( out, xs, sizeof( float ) );
+    *out = ntoh( *out );
+    return xs + sizeof( float );
+}
+
+const char* dlis_fdoubl( const char* xs, double* out ) {
+    static_assert(
+        std::numeric_limits< double >::is_iec559 && sizeof( double ) == 8,
+        "Function assumes IEEE 754 64-bit float" );
+
+    std::memcpy( out, xs, sizeof( double ) );
+    *out = ntoh( *out );
+    return xs + sizeof( double );
+}
+
+const char* dlis_isingl( const char* xs, float* out ) {
+    static const std::uint32_t ieeemax = 0x7FFFFFFF;
+    static const std::uint32_t iemaxib = 0x611FFFFF;
+    static const std::uint32_t ieminib = 0x21200000;
+
+    static const std::uint32_t it[8] = {
+        0x21800000, 0x21400000, 0x21000000, 0x21000000,
+        0x20c00000, 0x20c00000, 0x20c00000, 0x20c00000 };
+    static const std::uint32_t mt[8] = { 8, 4, 2, 2, 1, 1, 1, 1 };
+    std::uint32_t manthi, iexp, inabs;
+    std::uint32_t ix;
+    std::uint32_t u;
+
+    std::memcpy( &u, xs, sizeof( std::uint32_t ) );
+    u = ntoh( u );
+
+    manthi = u & 0X00FFFFFF;
+    ix     = manthi >> 21;
+    iexp   = ( ( u & 0x7f000000 ) - it[ix] ) << 1;
+    manthi = manthi * mt[ix] + iexp;
+    inabs  = u & 0X7FFFFFFF;
+    if ( inabs > iemaxib ) manthi = ieeemax;
+    manthi = manthi | ( u & 0x80000000 );
+    u = ( inabs < ieminib ) ? 0 : manthi;
+
+    std::memcpy( out, &u, sizeof( std::uint32_t ) );
+    return xs + sizeof( std::uint32_t );
+}
+
+const char* dlis_vsingl( const char* xs, float* out ) {
+    std::uint8_t x[4];
+    std::memcpy( &x, xs, 4 );
+
+    std::uint32_t v = std::uint32_t(x[1]) << 24
+                    | std::uint32_t(x[0]) << 16
+                    | std::uint32_t(x[3]) << 8
+                    | std::uint32_t(x[2]) << 0
+                    ;
+
+    std::uint32_t sign_bit = v & 0x80000000;
+    std::uint32_t frac_bits = v & 0x007FFFFF;
+    std::uint32_t exp_bits = (v & 0x7F800000) >> 23;
+
+    float sign = sign_bit ? -1.0 : 1.0;
+    float exponent = float( exp_bits );
+    float significand = frac_bits / float( 0x00800000 );
+
+    if (exp_bits)
+        *out = sign * (0.5 + significand) * std::pow(2.0f, exponent - 128.0f);
+    else if (!sign_bit)
+        *out = 0;
+    else
+        *out = std::nanf("");
+
+    return xs + sizeof( std::uint32_t );
+}
+
+const char* dlis_fsing1( const char* xs, float* V, float* A ) {
+    const char* ys = dlis_fsingl( xs, V );
+    const char* zs = dlis_fsingl( ys, A );
+    return zs;
+}
+
+const char* dlis_fsing2( const char* xs, float* V, float* A, float* B ) {
+    const char* ys = dlis_fsingl( xs, V );
+    const char* zs = dlis_fsingl( ys, A );
+    const char* ws = dlis_fsingl( zs, B );
+    return ws;
+}
+
+const char* dlis_csingl( const char* xs, float* R, float* I ) {
+    const char* ys = dlis_fsingl( xs, R );
+    const char* zs = dlis_fsingl( ys, I );
+    return zs;
+}
+
+const char* dlis_fdoub1( const char* xs, double* V, double* A ) {
+    const char* ys = dlis_fdoubl( xs, V );
+    const char* zs = dlis_fdoubl( ys, A );
+    return zs;
+}
+
+const char* dlis_fdoub2( const char* xs, double* V, double* A, double* B ) {
+    const char* ys = dlis_fdoubl( xs, V );
+    const char* zs = dlis_fdoubl( ys, A );
+    const char* ws = dlis_fdoubl( zs, B );
+    return ws;
+}
+
+const char* dlis_cdoubl( const char* xs, double* R, double* I ) {
+    const char* ys = dlis_fdoubl( xs, R );
+    const char* zs = dlis_fdoubl( ys, I );
+    return zs;
 }
