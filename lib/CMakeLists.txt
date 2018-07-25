@@ -31,10 +31,7 @@ if(NOT BUILD_TESTING)
 endif()
 
 add_executable(testsuite test/testsuite.cpp
-                         test/storage-unit-label.cpp
-                         test/visible-record-label.cpp
-                         test/logical-record-segment-header.cpp
-                         test/encryption-packet.cpp
+                         test/protocol.cpp
                          test/types.cpp
 )
 target_link_libraries(testsuite dlisio catch2)
