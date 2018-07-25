@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
+#include <sstream>
 #include <string>
 
 #include <catch2/catch.hpp>
@@ -200,4 +201,106 @@ TEST_CASE("A well-formatted SULv1 with undefined maxlen", "[sul][v1]") {
         auto v1 = parse_sulv1( label );
         CHECK( v1 == ref );
     }
+}
+
+TEST_CASE("A well-formatted logical record segment header", "[lrsh][v1]") {
+    const char lrsh[] = {
+        0x00, 0x7c, // 124 in big-endian
+        0x01,       // has-padding only
+        0x00,       // type (0 = File-Header)
+    };
+
+    int length = 0;
+    std::uint8_t attrs = 0;
+    int type = 0;
+
+    dlis_lrsh( lrsh, &length, &attrs, &type );
+
+    CHECK( length == 124 );
+    CHECK( type == 0 );
+
+    int explicit_formatting = 0;
+    int has_predecessor = 0;
+    int has_successor = 0;
+    int is_encrypted = 0;
+    int has_encryption_packet = 0;
+    int has_checksum = 0;
+    int has_trailing_length = 0;
+    int has_padding = 0;
+
+    dlis_segment_attributes( attrs,
+                             &explicit_formatting,
+                             &has_predecessor,
+                             &has_successor,
+                             &is_encrypted,
+                             &has_encryption_packet,
+                             &has_checksum,
+                             &has_trailing_length,
+                             &has_padding );
+
+    CHECK_FALSE( explicit_formatting );
+    CHECK_FALSE( has_predecessor );
+    CHECK_FALSE( has_successor );
+    CHECK_FALSE( is_encrypted );
+    CHECK_FALSE( has_encryption_packet );
+    CHECK_FALSE( has_checksum );
+    CHECK_FALSE( has_trailing_length );
+    CHECK( has_padding );
+
+}
+
+TEST_CASE("An empty encryption packet", "[encpk][v1]") {
+    const char encpk[] = {
+        0x00, 0x04,
+        0x00, 0x00,
+    };
+
+    int len = -1;
+    int cc = -1;
+    auto err = dlis_encryption_packet_info( encpk, &len, &cc );
+
+    CHECK( err == DLIS_OK );
+    CHECK( len == 0 );
+    CHECK( cc == 0 );
+}
+
+TEST_CASE("A non-empty encryption packet", "[encpk][v1]") {
+    const char encpk[] = {
+        0x00, 0x08,
+        0x00, 0x03,
+    };
+
+    int len = -1;
+    int cc = -1;
+    auto err = dlis_encryption_packet_info( encpk, &len, &cc );
+
+    CHECK( err == DLIS_OK );
+    CHECK( len == 4 );
+    CHECK( cc == 3 );
+}
+
+TEST_CASE("A non-even encryption packet", "[encpk][v1]") {
+    const char encpk[] = {
+        0x00, 0x07,
+        0x00, 0x03,
+    };
+
+    int len = -1;
+    int cc = -1;
+    auto err = dlis_encryption_packet_info( encpk, &len, &cc );
+
+    CHECK( err == DLIS_UNEXPECTED_VALUE );
+}
+
+TEST_CASE("A too small encryption packet", "[encpk][v1]") {
+    const char encpk[] = {
+        0x00, 0x03,
+        0x00, 0x07,
+    };
+
+    int len = -1;
+    int cc = -1;
+    auto err = dlis_encryption_packet_info( encpk, &len, &cc );
+
+    CHECK( err == DLIS_INCONSISTENT );
 }
