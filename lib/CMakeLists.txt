@@ -10,10 +10,7 @@ target_compile_options(dlisio
     PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
 )
 target_compile_definitions(dlisio
-    PRIVATE ${htons}
-)
-target_link_libraries(dlisio
-    PUBLIC ${ws2}
+    PRIVATE $<${BIG_ENDIAN}:HOST_BIG_ENDIAN>
 )
 
 install(TARGETS dlisio

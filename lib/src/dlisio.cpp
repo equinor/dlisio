@@ -5,18 +5,79 @@
 #include <cstring>
 #include <string>
 
-#ifdef HAVE_ARPA_INET
-    #include <arpa/inet.h>
-#elif HAVE_NETINET_IN
-    #include <netinet/in.h>
-#elif HAVE_WINSOCK2
-    #include <winsock2.h>
-#endif
-
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
 
 namespace {
+
+/*
+ * Until the scope of network <-> host transformation is known, just copy the
+ * implementation into the test program to avoid hassle with linking winsock
+ */
+#ifdef HOST_BIG_ENDIAN
+
+template< typename T > T hton( T value ) noexcept { return value; }
+template< typename T > T ntoh( T value ) noexcept { return value; }
+
+#else
+
+template< typename T >
+typename std::enable_if< sizeof(T) == 1, T >::type
+hton( T value ) noexcept {
+    return value;
+}
+
+template< typename T >
+typename std::enable_if< sizeof(T) == 2, T >::type
+hton( T value ) noexcept {
+    std::uint16_t v;
+    std::memcpy( &v, &value, sizeof( T ) );
+    v = ((v & 0x00FF) << 8)
+      | ((v & 0xFF00) >> 8)
+      ;
+    std::memcpy( &value, &v, sizeof( T ) );
+    return value;
+}
+
+template< typename T >
+typename std::enable_if< sizeof(T) == 4, T >::type
+hton( T value ) noexcept {
+    std::uint32_t v;
+    std::memcpy( &v, &value, sizeof( T ) );
+    v = ((v & 0x000000FF) << 24)
+      | ((v & 0x0000FF00) <<  8)
+      | ((v & 0x00FF0000) >>  8)
+      | ((v & 0xFF000000) >> 24)
+      ;
+    std::memcpy( &value, &v, sizeof( T ) );
+    return value;
+}
+
+template< typename T >
+typename std::enable_if< sizeof(T) == 8, T >::type
+hton( T value ) noexcept {
+    std::uint64_t v;
+    std::memcpy( &v, &value, sizeof( T ) );
+    v = ((v & 0xFF00000000000000ull) >> 56)
+      | ((v & 0x00FF000000000000ull) >> 40)
+      | ((v & 0x0000FF0000000000ull) >> 24)
+      | ((v & 0x000000FF00000000ull) >>  8)
+      | ((v & 0x00000000FF000000ull) <<  8)
+      | ((v & 0x0000000000FF0000ull) << 24)
+      | ((v & 0x000000000000FF00ull) << 40)
+      | ((v & 0x00000000000000FFull) << 56)
+      ;
+    std::memcpy( &value, &v, sizeof( T ) );
+    return value;
+}
+
+// preserve the ntoh name for symmetry
+template< typename T >
+T ntoh( T value ) noexcept {
+    return hton( value );
+}
+
+#endif
 
 bool is_zero_string( const char* xs ) noexcept {
     /*
@@ -205,7 +266,7 @@ std::uint8_t ushort( const char* xs ) noexcept {
 std::uint16_t unorm( const char* xs ) noexcept {
     std::uint16_t x;
     std::memcpy( &x, xs, sizeof( x ) );
-    return ntohs( x );
+    return ntoh( x );
 }
 
 }
@@ -375,7 +436,7 @@ const char* dlis_sshort( const char* xs, std::int8_t* x ) {
 const char* dlis_snorm( const char* xs, std::int16_t* x ) {
     std::uint16_t ux;
     std::memcpy( &ux, xs, sizeof( std::int16_t ) );
-    ux = ntohs( ux );
+    ux = ntoh( ux );
     std::memcpy( x, &ux, sizeof( std::int16_t ) );
     return xs + sizeof( std::int16_t );
 }
@@ -383,7 +444,7 @@ const char* dlis_snorm( const char* xs, std::int16_t* x ) {
 const char* dlis_slong( const char* xs, std::int32_t* x ) {
     std::uint32_t ux;
     std::memcpy( &ux, xs, sizeof( std::int32_t ) );
-    ux = ntohl( ux );
+    ux = ntoh( ux );
     std::memcpy( x, &ux, sizeof( std::int32_t ) );
     return xs + sizeof( std::int32_t );
 }
@@ -395,13 +456,13 @@ const char* dlis_ushort( const char* xs, std::uint8_t* x ) {
 
 const char* dlis_unorm( const char* xs, std::uint16_t* x ) {
     std::memcpy( x, xs, sizeof( std::uint16_t ) );
-    *x = ntohs( *x );
+    *x = ntoh( *x );
     return xs + sizeof( std::uint16_t );
 }
 
 const char* dlis_ulong( const char* xs, std::uint32_t* x ) {
     std::memcpy( x, xs, sizeof( std::uint32_t ) );
-    *x = ntohl( *x );
+    *x = ntoh( *x );
     return xs + sizeof( std::uint32_t );
 }
 
@@ -424,14 +485,14 @@ const char* dlis_uvari( const char* xs, int32_t* out ) {
     auto i32 = []( const char* in ) {
         std::uint32_t x = 0;
         std::memcpy( &x, in, sizeof( std::uint32_t ) );
-        x = ntohl( x ) & 0x3FFFFFFF;
+        x = ntoh( x ) & 0x3FFFFFFF;
         return x;
     };
 
     auto i16 = []( const char* in ) {
         std::uint16_t x = 0;
         std::memcpy( &x, in, sizeof( std::uint16_t ) );
-        x = ntohs( x ) & 0x3FFF;
+        x = ntoh( x ) & 0x3FFF;
         return x;
     };
 
