@@ -52,6 +52,62 @@ int dlis_encryption_packet_info( const char*,
                                  int* companycode );
 
 /*
+ * The component is the first thing that comes in a set, and the first piece of
+ * information that describes actual data.
+ *
+ * The first component of a record is always a Set. After the set follows a set
+ * of attributes, the Template, that describe all objects in this record. The
+ * Template is terminated by encountering an object.
+ *
+ * The dlis_component function outputs the dlis_component_role enum, which can
+ * be used to determine how to interpret the rest of the descriptor (set,
+ * object, attrib).
+ *
+ * The component_ functions take the descriptor *and* the role as arguments.
+ * This is a sanity check - if set is invoked with an object descriptor,
+ * UNEXPECTED_VALUE will be returned, and no arguments modified.
+ *
+ * If a mandatory flag is not set, these functions return INCONSISTENT. This
+ * might not necessarily be an application error, only information for a
+ * warning about more inconsistenties later.
+ *
+ * The intended use is something along the lines of:
+ *
+ * read(&descriptor);
+ * dlis_component( descriptor, &role );
+ *
+ * switch( role ) {
+ *      case SET:
+ *          dlis_component_set( descriptor, role, &type, &name );
+ *          [prepare for building template]
+ *          break;
+ *      case OBJECT:
+ *          dlis_component_object( descriptor, role, &obname );
+ *          [read object according to template]
+ *          break;
+ *      ...
+ * }
+ */
+int dlis_component( uint8_t descriptor, int* role );
+
+int dlis_component_set( uint8_t descriptor,
+                        int role,
+                        int* type,
+                        int* name );
+
+int dlis_component_object( uint8_t descriptor,
+                           int role,
+                           int* obname );
+
+int dlis_component_attrib( uint8_t descriptor,
+                           int role,
+                           int* label,
+                           int* count,
+                           int* reprcode,
+                           int* units,
+                           int* value );
+
+/*
  * A table of the record attributes, high bit first:
  *
  * 1 Logical Record Structure
@@ -81,6 +137,32 @@ enum dlis_segment_attribute {
     DLIS_SEGATTR_CHCKSUM = 1 << 2,
     DLIS_SEGATTR_TRAILEN = 1 << 1,
     DLIS_SEGATTR_PADDING = 1 << 0,
+};
+
+/*
+ * A table of the component roles, given by the three high bits of the
+ * dlis_component
+ *
+ * Bits Role     Type
+ * ---------------------------------
+ * 000  ABSATR   Absent attributes
+ * 001  ATTRIB   Attribute
+ * 010  INVATR   Invariant Attribute
+ * 011  OBJECT   Object
+ * 100  reserved    -
+ * 101  RDSET    Redundant Set
+ * 110  RSET     Replacement Set
+ * 111  SET      Set
+ */
+enum dlis_component_role {
+    DLIS_ROLE_ABSATR = 0,
+    DLIS_ROLE_ATTRIB = 1 << 5,
+    DLIS_ROLE_INVATR = 1 << 6,
+    DLIS_ROLE_OBJECT = 1 << 6 | 1 << 5,
+    DLIS_ROLE_RESERV = 1 << 7,
+    DLIS_ROLE_RDSET  = 1 << 7 | 1 << 5,
+    DLIS_ROLE_RSET   = 1 << 7 | 1 << 6,
+    DLIS_ROLE_SET    = 1 << 7 | 1 << 6 | 1 << 5,
 };
 
 enum DLIS_STRUCTURE {
