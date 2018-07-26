@@ -426,6 +426,63 @@ int dlis_encryption_packet_info( const char* xs,
     return DLIS_OK;
 }
 
+int dlis_component( std::uint8_t comp, int* role ) {
+    /* just extract the three high bits for role */
+    *role = comp & (1 << 7 | 1 << 6 | 1 << 5);
+    return DLIS_OK;
+}
+
+int dlis_component_set( std::uint8_t desc, int role, int* type, int* name ) {
+    switch( role ) {
+        case DLIS_ROLE_RDSET:
+        case DLIS_ROLE_RSET:
+        case DLIS_ROLE_SET:
+            break;
+
+        default:
+            return DLIS_UNEXPECTED_VALUE;
+    }
+
+    *type = desc & (1 << 4);
+    *name = desc & (1 << 3);
+
+    if( !*type ) return DLIS_INCONSISTENT;
+    return DLIS_OK;
+}
+
+int dlis_component_object( std::uint8_t desc, int role, int* obname ) {
+    if( role != DLIS_ROLE_OBJECT ) return DLIS_UNEXPECTED_VALUE;
+
+    *obname = desc & (1 << 4);
+    if( !*obname ) return DLIS_INCONSISTENT;
+    return DLIS_OK;
+}
+
+int dlis_component_attrib( std::uint8_t desc,
+                           int role,
+                           int* label,
+                           int* count,
+                           int* reprc,
+                           int* units,
+                           int* value ) {
+    switch( role ) {
+        case DLIS_ROLE_ATTRIB:
+        case DLIS_ROLE_INVATR:
+            break;
+
+        default:
+            return DLIS_UNEXPECTED_VALUE;
+    }
+
+    *label = desc & (1 << 4);
+    *count = desc & (1 << 3);
+    *reprc = desc & (1 << 2);
+    *units = desc & (1 << 1);
+    *value = desc & (1 << 0);
+
+    return DLIS_OK;
+}
+
 /* TYPES */
 
 const char* dlis_sshort( const char* xs, std::int8_t* x ) {
