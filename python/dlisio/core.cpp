@@ -19,17 +19,17 @@ static struct PyModuleDef dlisio_module = {
         PyModuleDef_HEAD_INIT,
         "core",   /* name of module */
         NULL,     /* module documentation, may be NULL */
-        -1,      /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+        -1,       /* size of per-interpreter state of the module */
         module_functions, 
 };
 
 PyMODINIT_FUNC PyInit_core( void ) {
-    PyObject* m = PyModule_Create(&dlisio_module);
+    PyObject* m = PyModule_Create( &dlisio_module );
     if( !m ) return NULL;
     return m;
 }
 #else
 PyMODINIT_FUNC init_core( void ) {
-    Py_InitModule("core", module_functions);
+    Py_InitModule( "core", module_functions );
 }
 #endif
