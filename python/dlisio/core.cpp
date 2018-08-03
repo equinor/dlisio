@@ -237,7 +237,7 @@ static struct PyModuleDef dlisio_module = {
         "core",   /* name of module */
         NULL,     /* module documentation, may be NULL */
         -1,       /* size of per-interpreter state of the module */
-        module_functions, 
+        module_functions,
 };
 
 PyMODINIT_FUNC PyInit_core( void ) {
