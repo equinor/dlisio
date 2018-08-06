@@ -53,7 +53,7 @@ PyObject* NotImplementedError( const char* msg, A... args ) noexcept {
 }
 
 template< typename... A >
-PyObject* IOError( const char* msg, A... args ) noexcept {
+PyObject* IOError( const char* msg, A... args ) {
     std::string exmsg = msg;
     if( errno ) {
         exmsg += ": ";
@@ -85,6 +85,8 @@ struct file_handle {
 int filehandle_init( file_handle* self, PyObject* args, PyObject* kwargs ) {
     char* filename = NULL;
     char* modearg = NULL;
+
+    new (&self->fd) decltype(self->fd);
 
     static const char* kwlist[] = {
         "path",
@@ -118,7 +120,7 @@ int filehandle_init( file_handle* self, PyObject* args, PyObject* kwargs ) {
 }
 
 void filehandle_dealloc( file_handle* self ) {
-    self->fd.reset();
+    self->fd.~autofd();
     Py_TYPE( self )->tp_free( (PyObject*) self );
 }
 
@@ -176,12 +178,28 @@ PyObject* close( file_handle* self, PyObject* ) {
     return Py_BuildValue( "" );
 }
 
+PyObject* iseof( file_handle* self, PyObject* ) {
+    std::FILE* fd = self->fd;
+    if( !fd ) return nullptr;
+
+    int c = std::fgetc( fd );
+
+    if( c == EOF ) return PyLong_FromLong( 1 );
+    else c = std::ungetc( c, fd );
+
+    if( c == EOF ) return PyLong_FromLong( 1 );
+    return PyLong_FromLong( std::feof( fd ) );
+}
+
+
 PyMethodDef file_methods[] = {
-    { "rewind", (PyCFunction) rewind, METH_VARARGS, "Rewind" },
+    { "tell",   (PyCFunction) tell,   METH_NOARGS,  "Tell"   },
+    { "rewind", (PyCFunction) rewind, METH_NOARGS,  "Rewind" },
     { "seek",   (PyCFunction) seek,   METH_VARARGS, "Seek"   },
-    { "tell",   (PyCFunction) tell,   METH_VARARGS, "Tell"   },
     { "read",   (PyCFunction) read,   METH_VARARGS, "Read"   },
-    { "close",  (PyCFunction) close,  METH_VARARGS, "Close"  },
+    { "close",  (PyCFunction) close,  METH_NOARGS,  "Close"  },
+    { "iseof",  (PyCFunction) iseof,  METH_NOARGS,  "Is EOF" },
+
     { nullptr },
 };
 
