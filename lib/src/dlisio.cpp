@@ -591,6 +591,15 @@ const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
     return xs + ln + 1;
 }
 
+const char* dlis_ascii( const char* xs, std::int32_t* len, char* out ) {
+    std::int32_t ln;
+    xs = dlis_uvari( xs, &ln );
+
+    if( len ) *len = ln;
+    if( out ) std::memcpy( out, xs, ln );
+    return xs + ln;
+}
+
 const char* dlis_fshort( const char* xs, float* out ) {
     std::uint16_t v;
     const char* newptr = dlis_unorm( xs, &v );
