@@ -1,8 +1,12 @@
-language: c++
+language: python
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
 
 os:
     - linux
-    - osx
 
 compiler:
     - gcc
@@ -28,6 +32,10 @@ matrix:
 before_install:
     - unset -f pushd
     - unset -f popd
+
+install:
+  - pip install bandit setuptools pytest pytest-runner
+  - bandit -c bandit.yml -r python/
 
 before_script:
     - mkdir build

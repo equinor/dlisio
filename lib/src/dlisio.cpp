@@ -591,6 +591,40 @@ const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
     return xs + ln + 1;
 }
 
+const char* dlis_ascii( const char* xs, std::int32_t* len, char* out ) {
+    std::int32_t ln;
+    xs = dlis_uvari( xs, &ln );
+
+    if( len ) *len = ln;
+    if( out ) std::memcpy( out, xs, ln );
+    return xs + ln;
+}
+
+const char* dlis_dtime( const char* xs, int* Y,
+                                        int* TZ,
+                                        int* M,
+                                        int* D,
+                                        int* H,
+                                        int* MN,
+                                        int* S,
+                                        int* MS ) {
+    std::uint8_t x[ 6 ];
+    std::memcpy( &x, xs, sizeof( x ) );
+    *Y  = x[ 0 ];
+    *TZ = x[ 1 ] & 0xF0;
+    *M  = x[ 1 ] & 0x0F;
+    *D  = x[ 2 ];
+    *H  = x[ 3 ];
+    *MN = x[ 4 ];
+    *S  = x[ 5 ];
+
+    std::uint16_t ms;
+    std::memcpy( &ms, xs + sizeof( x ), sizeof( ms ) );
+    *MS = ms;
+
+    return xs + sizeof( x ) + sizeof( ms );
+}
+
 const char* dlis_fshort( const char* xs, float* out ) {
     std::uint16_t v;
     const char* newptr = dlis_unorm( xs, &v );
@@ -722,4 +756,8 @@ const char* dlis_cdoubl( const char* xs, double* R, double* I ) {
     const char* ys = dlis_fdoubl( xs, R );
     const char* zs = dlis_fdoubl( ys, I );
     return zs;
+}
+
+const char* dlis_status( const char* xs, std::uint8_t* x ) {
+    return dlis_ushort( xs, x );
 }
