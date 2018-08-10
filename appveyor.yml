@@ -12,8 +12,20 @@ platform:
     - x86
     - x64
 
+environment:
+    matrix:
+        - PYTHON: C:\Python35
+          PYTHON_VERSION: 35
+        - PYTHON: C:\Python36
+          PYTHON_VERSION: 36
+
 matrix:
     fast_finish: true
+
+install:
+    - IF DEFINED PYTHON (IF "%platform%" == "x64" SET PYTHON=%PYTHON%-x64)
+    - IF DEFINED PYTHON SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+    - IF DEFINED PYTHON pip install pytest pytest-runner setuptools pybind11
 
 before_build:
     - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
