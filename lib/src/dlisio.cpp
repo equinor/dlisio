@@ -600,6 +600,46 @@ const char* dlis_ascii( const char* xs, std::int32_t* len, char* out ) {
     return xs + ln;
 }
 
+int dlis_year( int Y ) {
+    return Y + DLIS_YEAR_ZERO;
+}
+
+const char* dlis_dtime( const char* xs, int* Y,
+                                        int* TZ,
+                                        int* M,
+                                        int* D,
+                                        int* H,
+                                        int* MN,
+                                        int* S,
+                                        int* MS ) {
+    std::uint8_t x[ 6 ];
+    std::memcpy( x, xs, sizeof( x ) );
+    *Y  = x[ 0 ];
+    *D  = x[ 2 ];
+    *H  = x[ 3 ];
+    *MN = x[ 4 ];
+    *S  = x[ 5 ];
+
+    /*
+     * TZ is a half-byte enumeration in the upper 4 bits:
+     * 2^3 2^2 2^1 2^0
+     *  1   1   1   1
+     *
+     * So it must be shifted after masking the upper 4 bits to be interepreted
+     * as its proper range (0, 1, 2)
+     */
+    *TZ = (x[ 1 ] & 0xF0) >> 4;
+    *M  =  x[ 1 ] & 0x0F;
+
+    xs += sizeof( x );
+
+    std::uint16_t ms;
+    std::memcpy( &ms, xs, sizeof( ms ) );
+    *MS = ntoh( ms );
+
+    return xs + sizeof( ms );
+}
+
 const char* dlis_fshort( const char* xs, float* out ) {
     std::uint16_t v;
     const char* newptr = dlis_unorm( xs, &v );
