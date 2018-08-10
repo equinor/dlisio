@@ -65,8 +65,10 @@ const char* dlis_dtime( const char*, int* Y,
 
 const char* dlis_origin( const char*, int32_t* out );
 
+/* obname = { origin, ushort, ident } */
 const char* dlis_obname( const char*, int32_t* origin,
                                       uint8_t* copy_number,
+                                      int32_t* idlen,
                                       char* identifier );
 
 /* objref = { ident, obname } */
