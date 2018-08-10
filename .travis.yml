@@ -1,8 +1,12 @@
-language: c++
+language: python
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
 
 os:
     - linux
-    - osx
 
 compiler:
     - gcc
@@ -24,21 +28,61 @@ matrix:
           compiler: clang
           env: SCAN="scan-build --status-bugs"
         - env: WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
+        - os: osx
+          language: generic
+          python: 2.7
+          env:
+            - MB_PYTHON_VERSION=2.7
+            - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          language: generic
+          python: 3.4
+          env:
+            - MB_PYTHON_VERSION=3.4
+            - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          python: 3.5
+          language: generic
+          env:
+            - MB_PYTHON_VERSION=3.5
+            - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          language: generic
+          python: 3.6
+          env:
+            - MB_PYTHON_VERSION=3.6
+            - MACOSX_DEPLOYMENT_TARGET=10.9
 
 before_install:
     - unset -f pushd
     - unset -f popd
+    - git clone https://github.com/matthew-brett/multibuild
+    - source multibuild/common_utils.sh
+    - source multibuild/travis_steps.sh
+    - before_install
+
+install:
+    - pip install bandit setuptools pytest pytest-runner pybind11
+    - bandit -c bandit.yml -r python/
 
 before_script:
     - mkdir build
     - pushd build
     - $SCAN cmake -DCMAKE_BUILD_TYPE=Release
                   -DBUILD_SHARED_LIBS=ON
+                  -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib
                   ${WERROR}
                   ..
     - popd
 
+# distutils/setuptools on macos ignores the --rpath argument, so set
+# DYLD_LIBRARY_PATH so that the freshly-built image is picked up on for the
+# tests.
+#
+# the build is configured with CMAKE_INSTALL_NAME_DIR so that in the wheel
+# build on OS X, the delocate tool can figure out what dylib to include.
 script:
     - pushd build
+    - export DYLD_LIBRARY_PATH=$PWD/lib
     - make
     - ctest --output-on-failure

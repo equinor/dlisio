@@ -6,6 +6,8 @@ include(CTest)
 include(GNUInstallDirs)
 include(TestBigEndian)
 
+option(BUILD_PYTHON "Build Python extension" ON)
+
 if (NOT MSVC)
     # assuming gcc-style options
     # add warnings in debug mode
@@ -28,3 +30,4 @@ test_big_endian(BIG_ENDIAN)
 add_subdirectory(external/catch2)
 add_subdirectory(lib)
 add_subdirectory(bin)
+add_subdirectory(python)
