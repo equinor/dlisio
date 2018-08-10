@@ -654,6 +654,19 @@ const char* dlis_dtime( const char* xs, int* Y,
     return xs + sizeof( ms );
 }
 
+const char* dlis_origin( const char* xs, std::int32_t* out ) {
+    return dlis_uvari( xs, out );
+}
+
+const char* dlis_obname( const char* xs, std::int32_t* origin,
+                                         std::uint8_t* copy_number,
+                                         std::int32_t* idlen,
+                                         char* identifier ) {
+    xs = dlis_origin( xs, origin );
+    xs = dlis_ushort( xs, copy_number );
+    return dlis_ident( xs, idlen, identifier );
+}
+
 const char* dlis_fshort( const char* xs, float* out ) {
     std::uint16_t v;
     const char* newptr = dlis_unorm( xs, &v );
