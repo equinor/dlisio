@@ -732,3 +732,7 @@ const char* dlis_cdoubl( const char* xs, double* R, double* I ) {
     const char* zs = dlis_fdoubl( ys, I );
     return zs;
 }
+
+const char* dlis_status( const char* xs, std::uint8_t* x ) {
+    return dlis_ushort( xs, x );
+}
