@@ -679,3 +679,29 @@ TEST_CASE("ascii (var-length string)", "[type]") {
         CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
     }
 }
+
+TEST_CASE("date-time", "[type]") {
+    std::array< char, 8 > input = {
+        0x57, // 87
+        0x14, // 1, 4
+        0x13, // 19
+        0x15, // 21
+        0x14, // 20
+        0x0F, // 15
+        0x02, 0x6C // 620
+    };
+
+    // 9:20:15.62 PM, April 19, 1987 (DST)
+    int Y, TZ, M, D, H, MN, S, MS;
+    dlis_dtime( input.data(), &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
+
+    CHECK( Y  == 87 );
+    CHECK( dlis_year( Y ) == 1987 );
+    CHECK( TZ == DLIS_TZ_DST );
+    CHECK( M  == 4 );
+    CHECK( D  == 19 );
+    CHECK( H  == 21 );
+    CHECK( MN == 20 );
+    CHECK( S  == 15 );
+    CHECK( MS == 620 );
+}

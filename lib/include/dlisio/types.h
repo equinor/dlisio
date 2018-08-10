@@ -47,6 +47,13 @@ const char* dlis_uvari( const char*, int32_t* out );
 const char* dlis_ident( const char*, int32_t* len, char* out );
 const char* dlis_ascii( const char*, int32_t* len, char* out );
 
+#define DLIS_TZ_LST 0 // local standard
+#define DLIS_TZ_DST 1 // local daylight savings
+#define DLIS_TZ_GMT 2 // greenwich mean time
+
+#define DLIS_YEAR_ZERO 1900
+int dlis_year( int );
+
 const char* dlis_dtime( const char*, int* Y,
                                      int* TZ,
                                      int* M,
