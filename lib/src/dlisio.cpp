@@ -483,6 +483,20 @@ int dlis_component_attrib( std::uint8_t desc,
     return DLIS_OK;
 }
 
+const char* dlis_component_str( int tag ) {
+    switch( tag ) {
+        case DLIS_ROLE_ABSATR: return "absent attribute";
+        case DLIS_ROLE_ATTRIB: return "attribute";
+        case DLIS_ROLE_INVATR: return "invariant attribute";
+        case DLIS_ROLE_OBJECT: return "object";
+        case DLIS_ROLE_RESERV: return "reserved";
+        case DLIS_ROLE_RDSET:  return "redundant set";
+        case DLIS_ROLE_RSET:   return "replacement set";
+        case DLIS_ROLE_SET:    return "set";
+        default:               return "unknown";
+    }
+}
+
 /* TYPES */
 
 const char* dlis_sshort( const char* xs, std::int8_t* x ) {

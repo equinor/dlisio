@@ -107,6 +107,8 @@ int dlis_component_attrib( uint8_t descriptor,
                            int* units,
                            int* value );
 
+const char* dlis_component_str( int );
+
 /*
  * A table of the record attributes, high bit first:
  *
