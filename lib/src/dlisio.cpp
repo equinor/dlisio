@@ -358,7 +358,7 @@ int dlis_vrl( const char* xs,
 
 
 /*
- * hexdump -vn 4 -s 80 dlis
+ * hexdump -vn 4 -s 84 dlis
  * 0000054 7c00 0080
  *
  * The logical record segment header is metadata for the next segment, length,
