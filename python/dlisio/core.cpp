@@ -53,7 +53,14 @@ struct bookmark {
      * object is the visible record label
      */
     int residual = 0;
+
     int isexplicit = 0;
+
+    /*
+     * only pos is used for seeking and repositioning - tell is used only for
+     * __repr__ and debugging purposes
+     */
+    long long tell = 0;
 };
 
 struct segheader {
@@ -175,7 +182,14 @@ marker mark( std::FILE* fp, int remaining ) {
     mark.residual = remaining;
 
     auto err = std::fgetpos( fp, &mark.pos );
-    if( err ) throw io_error( "unable to get stream position" );
+    if( err ) throw io_error( errno );
+
+    /*
+     * TODO: use _ftell64 or similar on Windows, to handle >2G files.
+     * It's not necessary for repositioning, but helps diagnostics
+     */
+    mark.tell = std::ftell( fp );
+    if( mark.tell == -1 ) throw io_error( errno );
 
     while( true ) {
 
@@ -291,7 +305,14 @@ PYBIND11_MODULE(core, m) {
         }
     });
 
-    py::class_< bookmark >( m, "bookmark" );
+    py::class_< bookmark >( m, "bookmark" )
+        .def( "__repr__", []( const bookmark& m ) {
+            return "<dlisio.core.bookmark pos="
+                 + std::to_string( m.tell )
+                 + ">"
+                 ;
+        })
+    ;
 
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
