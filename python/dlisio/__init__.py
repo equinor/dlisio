@@ -21,3 +21,19 @@ class dlis(object):
 
     def __getitem__(self, i):
         return self.fp.getrecord(self.bookmarks[i])
+
+    def close(self):
+        """Close the file
+
+        This method is mostly useful for testing.
+
+        It is not necessary to call this method if you're using the `with`
+        statement, which will close the file for you. Calling methods on a
+        previously-closed file will raise `IOError`.
+        """
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.fp.close()
