@@ -92,9 +92,9 @@ TEST_CASE("A simple, well-formatted SULv1", "[sul][v1]") {
     ref.minor  = 0;
     ref.layout = DLIS_STRUCTURE_RECORD;
     ref.maxlen = 8192;
-    std::strcpy( ref.id, "Default Storage Set"
-                         "                   "
-                         "                   " );
+    std::strcpy( ref.id, "Default Storage Set "
+                         "                    "
+                         "                    " );
 
     /*
      * Generate all valid permutations of numbers with paddings and leading
@@ -126,9 +126,9 @@ TEST_CASE("A simple, well-formatted SULv1", "[sul][v1]") {
     };
 
     static const std::string identifiers[] = {
-        "Default Storage Set"
-        "                   "
-        "                   ",
+        "Default Storage Set "
+        "                    "
+        "                    ",
     };
 
     for( const auto& seq : sequence_numbers )
@@ -152,17 +152,17 @@ TEST_CASE("A well-formatted SULv1 with undefined maxlen", "[sul][v1]") {
     ref.minor  = 0;
     ref.layout = DLIS_STRUCTURE_RECORD;
     ref.maxlen = 0;
-    std::strcpy( ref.id, "Default Storage Set"
-                         "                   "
-                         "                   " );
+    std::strcpy( ref.id, "Default Storage Set "
+                         "                    "
+                         "                    " );
 
     static const std::string pre = "   1"
                                    "V1.00"
                                    "RECORD";
 
-    static const std::string post = "Default Storage Set"
-                                    "                   "
-                                    "                   ";
+    static const std::string post = "Default Storage Set "
+                                    "                    "
+                                    "                    ";
 
     static const std::string maxlens[] = {
         "    0",
