@@ -62,7 +62,7 @@ before_install:
     - before_install
 
 install:
-    - pip install bandit setuptools pytest pytest-runner pybind11
+    - pip install bandit setuptools pytest pytest-runner pybind11 hypothesis
     - bandit -c bandit.yml -r python/
 
 before_script:

@@ -25,7 +25,11 @@ matrix:
 install:
     - IF DEFINED PYTHON (IF "%platform%" == "x64" SET PYTHON=%PYTHON%-x64)
     - IF DEFINED PYTHON SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
-    - IF DEFINED PYTHON pip install pytest pytest-runner setuptools pybind11
+    - IF DEFINED PYTHON pip install pytest
+                                    pytest-runner
+                                    setuptools
+                                    pybind11
+                                    hypothesis
 
 before_build:
     - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
