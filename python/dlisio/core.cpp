@@ -261,6 +261,44 @@ py::tuple file::mkindex() {
     return py::make_tuple( sul, bookmarks );
 }
 
+py::list getarray( const char*& xs, int count, int reprc ) {
+    py::list l;
+
+    for( int i = 0; i < count; ++i ) {
+        switch( reprc ) {
+            case DLIS_FSHORT: l.append( fshort( xs ) ); break;
+            case DLIS_FSINGL: l.append( fsingl( xs ) ); break;
+            case DLIS_FSING1: l.append( fsing1( xs ) ); break;
+            case DLIS_FSING2: l.append( fsing2( xs ) ); break;
+            case DLIS_ISINGL: l.append( isingl( xs ) ); break;
+            case DLIS_VSINGL: l.append( vsingl( xs ) ); break;
+            case DLIS_FDOUBL: l.append( fdoubl( xs ) ); break;
+            case DLIS_FDOUB1: l.append( fdoub1( xs ) ); break;
+            case DLIS_FDOUB2: l.append( fdoub2( xs ) ); break;
+            case DLIS_CSINGL: l.append( csingl( xs ) ); break;
+            case DLIS_CDOUBL: l.append( cdoubl( xs ) ); break;
+            case DLIS_SSHORT: l.append( sshort( xs ) ); break;
+            case DLIS_SNORM:  l.append(  snorm( xs ) ); break;
+            case DLIS_SLONG:  l.append(  slong( xs ) ); break;
+            case DLIS_USHORT: l.append( ushort( xs ) ); break;
+            case DLIS_UNORM:  l.append(  unorm( xs ) ); break;
+            case DLIS_ULONG:  l.append(  ulong( xs ) ); break;
+            case DLIS_UVARI:  l.append(  uvari( xs ) ); break;
+            case DLIS_IDENT:  l.append(  ident( xs ) ); break;
+            case DLIS_ASCII:  l.append(  ascii( xs ) ); break;
+            case DLIS_DTIME:  l.append(  dtime( xs ) ); break;
+            case DLIS_STATUS: l.append( status( xs ) ); break;
+            case DLIS_OBNAME: l.append( obname( xs ) ); break;
+
+            default:
+                throw py::value_error( "unknown representation code "
+                                     + std::to_string( reprc ) );
+        }
+    }
+
+    return l;
+}
+
 struct setattr {
     int type, name;
 };
@@ -304,6 +342,111 @@ setattr set_attributes( const char*& cur ) {
     }
 
     return flags;
+}
+
+struct attribattr {
+    int label;
+    int count;
+    int reprc;
+    int units;
+    int value;
+    int object = 0;
+    int absent = 0;
+    int invariant = 0;
+};
+
+attribattr attrib_attributes( const char*& cur ) {
+    std::uint8_t attr;
+    std::memcpy( &attr, cur, sizeof( std::uint8_t ) );
+
+    int role;
+    dlis_component( attr, &role );
+
+    attribattr flags;
+    switch( role ) {
+        case DLIS_ROLE_ABSATR:
+            flags.absent= 1;
+            break;
+
+        case DLIS_ROLE_OBJECT:
+            flags.object = 1;
+            break;
+
+        case DLIS_ROLE_INVATR:
+            flags.invariant = 1;
+
+        case DLIS_ROLE_ATTRIB:
+            break;
+
+        default:
+            throw py::value_error(
+                std::string("expected ATTRIB, INVATR, or OBJECT, was ")
+                + dlis_component_str( role )
+                + "(" + std::bitset< sizeof( attr ) >( role ).to_string() + ")"
+            );
+    }
+
+    /*
+     * only consume the component tag if it is not object, because if it is
+     * then the next function assumes its there
+     */
+    if( role != DLIS_ROLE_OBJECT )
+        cur += sizeof( std::uint8_t );
+
+    if( flags.object || flags.absent ) return flags;
+
+    const auto err = dlis_component_attrib( attr, role, &flags.label,
+                                                        &flags.count,
+                                                        &flags.reprc,
+                                                        &flags.units,
+                                                        &flags.value );
+
+    if( !err ) return flags;
+
+    // all sources for this error should've been checked, so
+    // something is REALLY wrong if we end up here
+    throw std::runtime_error( "unhandled error in dlis_component_attrib" );
+}
+
+struct object_template {
+    std::vector< py::dict > attribute;
+    std::vector< py::dict > invariant;
+};
+
+object_template explicit_template( const char*& cur ) {
+    object_template cols;
+
+    while( true ) {
+        auto flags = attrib_attributes( cur );
+
+        if( flags.object ) return cols;
+
+        if( flags.absent ) {
+            user_warning( "ABSATR in object template - skipping" );
+            continue;
+        }
+
+        int count = 1;
+        int reprc = DLIS_IDENT;
+        /* set the global defaults unconditionally */
+        py::dict col( "count"_a = count,
+                      "reprc"_a = reprc,
+                      "value"_a = py::none() );
+
+        if( !flags.label ) {
+            user_warning( "ATTRIB:label not set, but must be non-null" );
+            flags.label = 1;
+        }
+
+                          col["label"] = ident( cur );
+        if( flags.count ) col["count"] = count = uvari( cur );
+        if( flags.reprc ) col["reprc"] = reprc = ushort( cur );
+        if( flags.units ) col["units"] = ident( cur );
+        if( flags.value ) col["value"] = getarray( cur, count, reprc );
+
+        if( flags.invariant ) cols.invariant.push_back( std::move( col ) );
+        else                  cols.attribute.push_back( std::move( col ) );
+    }
 }
 
 std::vector< char > catrecord( std::FILE* fp, int remaining ) {
