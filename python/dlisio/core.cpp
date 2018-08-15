@@ -334,6 +334,15 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
+    m.def( "sul", []( const std::string& b ) {
+        if( b.size() < 80 ) {
+            throw py::value_error(
+                    "SUL object too small: expected 80, was "
+                    + std::to_string( b.size() ) );
+        }
+        return SUL( b.data() );
+    } );
+
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
         .def( "close", &file::close )
