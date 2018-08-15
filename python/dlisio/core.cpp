@@ -2,7 +2,9 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <exception>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -41,6 +43,10 @@ void runtime_warning( const char* msg ) {
 void user_warning( const char* msg ) {
     int err = PyErr_WarnEx( PyExc_UserWarning, msg, 1 );
     if( err ) throw py::error_already_set();
+}
+
+void user_warning( const std::string& msg ) {
+    user_warning( msg.c_str() );
 }
 
 /*
@@ -107,6 +113,7 @@ struct bookmark {
     int residual = 0;
 
     int isexplicit = 0;
+    int isencrypted = 0;
 
     /*
      * only pos is used for seeking and repositioning - tell is used only for
@@ -162,6 +169,7 @@ public:
 
     py::tuple mkindex();
     py::bytes raw_record( const bookmark& );
+    py::dict eflr( const bookmark& );
 
 
 private:
@@ -219,7 +227,6 @@ bookmark mark( std::FILE* fp, int& remaining ) {
 
             int has_predecessor = 0;
             int has_successor = 0;
-            int is_encrypted = 0;
             int has_encryption_packet = 0;
             int has_checksum = 0;
             int has_trailing_length = 0;
@@ -227,7 +234,7 @@ bookmark mark( std::FILE* fp, int& remaining ) {
             dlis_segment_attributes( seg.attrs, &mark.isexplicit,
                                                 &has_predecessor,
                                                 &has_successor,
-                                                &is_encrypted,
+                                                &mark.isencrypted,
                                                 &has_encryption_packet,
                                                 &has_checksum,
                                                 &has_trailing_length,
@@ -289,6 +296,8 @@ py::list getarray( const char*& xs, int count, int reprc ) {
             case DLIS_DTIME:  l.append(  dtime( xs ) ); break;
             case DLIS_STATUS: l.append( status( xs ) ); break;
             case DLIS_OBNAME: l.append( obname( xs ) ); break;
+            case DLIS_OBJREF: l.append( objref( xs ) ); break;
+            case DLIS_UNITS:  l.append(  ident( xs ) ); break;
 
             default:
                 throw py::value_error( "unknown representation code "
@@ -408,15 +417,37 @@ attribattr attrib_attributes( const char*& cur ) {
     throw std::runtime_error( "unhandled error in dlis_component_attrib" );
 }
 
+void object_attributes( const char*& cur ) {
+    std::uint8_t attr;
+    std::memcpy( &attr, cur, sizeof( std::uint8_t ) );
+
+    cur += sizeof( std::uint8_t );
+
+    int role;
+    dlis_component( attr, &role );
+
+    if( role != DLIS_ROLE_OBJECT )
+        throw py::value_error( std::string("expected OBJECT, was ")
+                             + dlis_component_str( role ) );
+
+    int obname;
+    const auto err = dlis_component_object( attr, role, &obname );
+
+    if( err ) user_warning( "OBJECT:name not set, but must be non-null" );
+}
+
 struct object_template {
     std::vector< py::dict > attribute;
     std::vector< py::dict > invariant;
 };
 
-object_template explicit_template( const char*& cur ) {
+object_template explicit_template( const char*& cur, const char* end ) {
     object_template cols;
 
     while( true ) {
+        if( cur >= end )
+            throw py::value_error( "unexpected end-of-record in template" );
+
         auto flags = attrib_attributes( cur );
 
         if( flags.object ) return cols;
@@ -447,6 +478,104 @@ object_template explicit_template( const char*& cur ) {
         if( flags.invariant ) cols.invariant.push_back( std::move( col ) );
         else                  cols.attribute.push_back( std::move( col ) );
     }
+}
+
+py::dict deepcopy( const py::dict& d ) {
+    return py::reinterpret_steal< py::dict >( PyDict_Copy( d.ptr() ) );
+}
+
+template< typename T >
+std::vector< T > deepcopy( const std::vector< T >& xs ) {
+    std::vector< T > ys;
+    ys.reserve( xs.size() );
+
+    for( const auto& x : xs )
+        ys.push_back( deepcopy( x ) );
+
+    return ys;
+}
+
+py::dict eflr( const char* cur, const char* end ) {
+    if( std::distance( cur, end ) == 0 )
+        throw py::value_error( "eflr must be non-empty" );
+
+    py::dict record;
+    auto set = set_attributes( cur );
+    if( cur >= end ) {
+        throw py::value_error( "unexpected end-of-record "
+                                 "after SET component" );
+    }
+
+    if( set.type ) record["type"] = ident( cur );
+    if( set.name ) record["name"] = ident( cur );
+
+    auto tmpl = explicit_template( cur, end );
+
+    if( cur >= end )
+        throw py::value_error( "unexpected end-of-record after template" );
+
+    py::dict objects;
+    while( true ) {
+        if( cur == end ) break;
+
+        object_attributes( cur );
+
+        /*
+         * just assume obname. objects have to specify it, and if it is unset
+         * then UserWarning has already been emitted
+         */
+        auto name = obname( cur );
+
+        /*
+         * each object is a row in a table of attributes. If the object is cut
+         * short (terminated by a new object), use the defaults from the template
+         */
+        auto row = deepcopy( tmpl.attribute );
+
+        for( auto& cell : row ) {
+            if( cur == end ) break;
+
+            auto flags = attrib_attributes( cur );
+
+            if( flags.object ) break;
+
+            if( flags.absent ) {
+                cell["value"] = py::none();
+                continue;
+            }
+
+            if( flags.label ) {
+                user_warning( "ATTRIB:label set, but must be null - was "
+                            + ident( cur ) );
+            }
+
+            if( flags.count ) cell["count"] = uvari( cur );
+            if( flags.reprc ) cell["reprc"] = ushort( cur );
+            if( flags.units ) cell["units"] = ident( cur );
+            if( flags.value ) {
+                /*
+                 * count/repr can both be set by this label, and by the
+                 * template, so the simplest thing is to just look them up in
+                 * the dict
+                 */
+                auto count = cell["count"].cast< int >();
+                auto reprc = cell["reprc"].cast< int >();
+                cell["value"] = getarray( cur, count, reprc );
+            }
+        }
+
+        /* patch invariant-attributes onto the record */
+        row.insert( row.end(), tmpl.invariant.begin(), tmpl.invariant.end() );
+        auto pyname = py::make_tuple( std::get< 0 >( name ),
+                                      std::get< 1 >( name ),
+                                      std::get< 2 >( name ) );
+        objects[pyname] = row;
+    }
+
+    record["template-attribute"] = tmpl.attribute;
+    record["template-invariant"] = tmpl.invariant;
+    record["objects"] = objects;
+    return record;
 }
 
 std::vector< char > catrecord( std::FILE* fp, int remaining ) {
@@ -508,6 +637,15 @@ py::bytes file::raw_record( const bookmark& m ) {
     return py::bytes( cat.data(), cat.size() );
 }
 
+py::dict file::eflr( const bookmark& mark ) {
+    if( mark.isencrypted ) return py::none();
+    auto err = std::fsetpos( *this, &mark.pos );
+    if( err ) throw io_error( errno );
+
+    auto cat = catrecord( *this, mark.residual );
+    return ::eflr( cat.data(), cat.data() + cat.size() );
+}
+
 }
 
 PYBIND11_MODULE(core, m) {
@@ -524,11 +662,15 @@ PYBIND11_MODULE(core, m) {
     });
 
     py::class_< bookmark >( m, "bookmark" )
+        .def_readwrite( "encrypted", &bookmark::isencrypted )
+        .def_readwrite( "explicit",  &bookmark::isexplicit )
         .def( "__repr__", []( const bookmark& m ) {
-            return "<dlisio.core.bookmark pos="
-                 + std::to_string( m.tell )
-                 + ">"
-                 ;
+            auto pos = " pos=" + std::to_string( m.tell );
+            auto enc = std::string(" encrypted=") +
+                     (m.isencrypted ? "True": "False");
+            auto exp = std::string(" explicit=") +
+                     (m.isexplicit ? "True": "False");
+            return "<dlisio.core.bookmark" + pos + enc + exp + ">";
         })
     ;
 
@@ -541,6 +683,13 @@ PYBIND11_MODULE(core, m) {
         return SUL( b.data() );
     } );
 
+    m.def( "eflr", []( py::buffer b ) {
+        const auto info = b.request();
+        const auto len = info.size * info.itemsize;
+        const auto ptr = static_cast< char* >( info.ptr );
+        return eflr( ptr, ptr + len );
+    } );
+
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
         .def( "close", &file::close )
@@ -548,5 +697,6 @@ PYBIND11_MODULE(core, m) {
 
         .def( "mkindex",   &file::mkindex )
         .def( "raw_record", &file::raw_record )
+        .def( "eflr",       &file::eflr )
         ;
 }
