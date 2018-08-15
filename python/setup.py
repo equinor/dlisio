@@ -58,6 +58,6 @@ setup(
     platforms = 'any',
     install_requires = [],
     setup_requires = ['setuptools >= 28', 'pytest-runner', 'pybind11 >= 2.2'],
-    tests_require = ['pytest'],
+    tests_require = ['pytest', 'hypothesis'],
     cmdclass = {'build_ext': BuildExt },
 )
