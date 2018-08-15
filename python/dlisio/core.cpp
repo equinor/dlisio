@@ -14,6 +14,8 @@
 namespace py = pybind11;
 using namespace py::literals;
 
+#include "typeconv.cpp"
+
 namespace {
 
 /*
@@ -319,6 +321,8 @@ py::bytes file::raw_record( const bookmark& m ) {
 }
 
 PYBIND11_MODULE(core, m) {
+    PyDateTime_IMPORT;
+
     py::register_exception_translator( []( std::exception_ptr p ) {
         try {
             if( p ) std::rethrow_exception( p );
