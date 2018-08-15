@@ -34,6 +34,11 @@ void runtime_warning( const char* msg ) {
     if( err ) throw py::error_already_set();
 }
 
+void user_warning( const char* msg ) {
+    int err = PyErr_WarnEx( PyExc_UserWarning, msg, 1 );
+    if( err ) throw py::error_already_set();
+}
+
 /*
  * automate the read-bytes-throw-if-fails, at least for now. file error
  * reporting isn't very sophisticated, but doesn't have to be yet.
