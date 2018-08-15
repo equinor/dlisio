@@ -1,4 +1,6 @@
+#include <bitset>
 #include <cerrno>
+#include <cstdint>
 #include <cstdio>
 #include <exception>
 #include <memory>
@@ -257,6 +259,51 @@ py::tuple file::mkindex() {
         bookmarks.push_back( mark( fd, remaining ) );
 
     return py::make_tuple( sul, bookmarks );
+}
+
+struct setattr {
+    int type, name;
+};
+
+setattr set_attributes( const char*& cur ) {
+    std::uint8_t attr;
+    std::memcpy( &attr, cur, sizeof( std::uint8_t ) );
+    cur += sizeof( std::uint8_t );
+
+    int role;
+    dlis_component( attr, &role );
+
+    switch( role ) {
+        case DLIS_ROLE_RDSET:
+        case DLIS_ROLE_RSET:
+        case DLIS_ROLE_SET:
+            break;
+
+        default:
+            throw py::value_error(
+                std::string("first item in EFLR not SET, RSET or RDSET, was ")
+                + dlis_component_str( role )
+                + "(" + std::bitset< sizeof( attr ) >( role ).to_string() + ")"
+            );
+    }
+
+    setattr flags;
+    const auto err = dlis_component_set( attr, role, &flags.type, &flags.name );
+
+    switch( err ) {
+        case DLIS_OK:
+            break;
+
+        case DLIS_INCONSISTENT:
+            user_warning( "SET:type not set, but must be non-null." );
+            flags.type = 1;
+            break;
+
+        default:
+            throw std::runtime_error( "unhandled error in dlis_component_set" );
+    }
+
+    return flags;
 }
 
 std::vector< char > catrecord( std::FILE* fp, int remaining ) {
