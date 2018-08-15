@@ -45,6 +45,48 @@ void getbytes( char* buffer, std::size_t nmemb, std::FILE* fd ) {
     }
 }
 
+py::dict SUL( const char* buffer ) {
+    char id[ 61 ] = {};
+    int seqnum, major, minor, layout;
+    int64_t maxlen;
+
+    auto err = dlis_sul( buffer, &seqnum,
+                                 &major,
+                                 &minor,
+                                 &layout,
+                                 &maxlen,
+                                 id );
+
+
+    switch( err ) {
+        case DLIS_OK: break;
+
+        // TODO: report more precisely - a lot of stuff can go wrong with the
+        // SUL
+        if( err == DLIS_UNEXPECTED_VALUE )
+            throw py::value_error( "unable to parse storage unit label (SUL)" );
+
+        case DLIS_INCONSISTENT:
+            runtime_warning( "storage unit label inconsistent with "
+                             "specification - falling back to assuming DLIS v1"
+            );
+            break;
+    }
+
+    std::string version = std::to_string( major )
+                        + "."
+                        + std::to_string( minor );
+
+    std::string laystr = "record";
+    if( layout != DLIS_STRUCTURE_RECORD ) laystr = "unknown";
+
+    return py::dict( "sequence"_a = seqnum,
+                     "version"_a = version.c_str(),
+                     "layout"_a = laystr.c_str(),
+                     "maxlen"_a = maxlen,
+                     "id"_a =  id );
+}
+
 struct bookmark {
     std::fpos_t pos;
 
@@ -142,34 +184,12 @@ bool file::eof() {
 }
 
 py::dict file::storage_unit_label() {
+    auto err = std::fseek( *this, 0, SEEK_SET );
+    if( err ) throw io_error( errno );
+
     char buffer[ 80 ];
     getbytes( buffer, sizeof( buffer ), *this );
-
-    char id[ 61 ] = {};
-    int seqnum, major, minor, layout;
-    int64_t maxlen;
-
-    auto err = dlis_sul( buffer, &seqnum,
-                                 &major,
-                                 &minor,
-                                 &layout,
-                                 &maxlen,
-                                 id );
-
-    if( err ) throw py::value_error( "unable to parse SUL" );
-
-    std::string version = std::to_string( major )
-                        + "."
-                        + std::to_string( minor );
-
-    std::string laystr = "record";
-    if( layout != DLIS_STRUCTURE_RECORD ) laystr = "unknown";
-
-    return py::dict( "sequence"_a = seqnum,
-                     "version"_a = version.c_str(),
-                     "layout"_a = laystr.c_str(),
-                     "maxlen"_a = maxlen,
-                     "id"_a =  id );
+    return SUL( buffer );
 }
 
 struct marker {
