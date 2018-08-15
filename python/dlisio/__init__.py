@@ -8,19 +8,31 @@ def load(path):
 class dlis(object):
     def __init__(self, path):
         self.fp = core.file(path)
-        self.sul = self.fp.sul()
+        self.sul, self.bookmarks = self.fp.mkindex()
 
-        self.bookmarks = []
-        self.formatting = []
-        off = 0
-        while not self.fp.eof():
-            pos, off, explicit = self.fp.mark(off)
+    def raw_record(self, i):
+        """Get a raw record (as bytes)
 
-            self.formatting.append(explicit)
-            self.bookmarks.append(pos)
+        Read the logical record i, but make no attempt to parse it. Use this if
+        the file for some reason is not read correctly, to either debug or
+        recover.
 
-    def __getitem__(self, i):
-        return self.fp.getrecord(self.bookmarks[i])
+        Parameters
+        ----------
+        i : int
+
+        Returns
+        -------
+        record : bytes
+
+        Notes
+        -----
+        Under normal operation, this method is not necessary at all. It's meant
+        as an escape hatch for inspection or custom record parsing, should
+        something else be very wrong. If you find you need to use this function
+        a lot, please report it as an issue.
+        """
+        return self.fp.raw_record(self.bookmarks[i])
 
     def close(self):
         """Close the file

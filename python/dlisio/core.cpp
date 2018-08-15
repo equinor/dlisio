@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -150,9 +151,8 @@ public:
     void close() { this->fp.reset(); }
     bool eof();
 
-    py::dict storage_unit_label();
-    py::tuple markrecord( int );
-    py::bytes getrecord( const bookmark& );
+    py::tuple mkindex();
+    py::bytes raw_record( const bookmark& );
 
 
 private:
@@ -171,33 +171,21 @@ file::file( const std::string& path ) :
     if( !this->fp ) throw io_error( errno );
 }
 
+bool iseof( std::FILE* fp ) {
+    int c = std::fgetc( fp );
+
+    if( c == EOF ) return true;
+    else c = std::ungetc( c, fp );
+
+    if( c == EOF ) return true;
+    return std::feof( fp );
+}
+
 bool file::eof() {
-    std::FILE* fd = *this;
-
-    int c = std::fgetc( fd );
-
-    if( c == EOF ) return true;
-    else c = std::ungetc( c, fd );
-
-    if( c == EOF ) return true;
-    return std::feof( fd );
+    return iseof( *this );
 }
 
-py::dict file::storage_unit_label() {
-    auto err = std::fseek( *this, 0, SEEK_SET );
-    if( err ) throw io_error( errno );
-
-    char buffer[ 80 ];
-    getbytes( buffer, sizeof( buffer ), *this );
-    return SUL( buffer );
-}
-
-struct marker {
-    bookmark m;
-    int residual;
-};
-
-marker mark( std::FILE* fp, int remaining ) {
+bookmark mark( std::FILE* fp, int& remaining ) {
     bookmark mark;
     mark.residual = remaining;
 
@@ -240,7 +228,7 @@ marker mark( std::FILE* fp, int remaining ) {
             err = std::fseek( fp, seg.len, SEEK_CUR );
             if( err ) throw io_error( errno );
 
-            if( !has_successor ) return { mark, remaining };
+            if( !has_successor ) return mark;
         }
 
         /* if remaining is 0, then we're at a VRL */
@@ -248,9 +236,20 @@ marker mark( std::FILE* fp, int remaining ) {
     }
 }
 
-py::tuple file::markrecord( int remaining ) {
-    auto next = mark( *this, remaining );
-    return py::make_tuple( next.m, next.residual, next.m.isexplicit );
+py::tuple file::mkindex() {
+    std::FILE* fd = *this;
+
+    char buffer[ 80 ];
+    getbytes( buffer, sizeof( buffer ), fd );
+    auto sul = SUL( buffer );
+
+    std::vector< bookmark > bookmarks;
+    int remaining = 0;
+
+    while( !iseof( fd ) )
+        bookmarks.push_back( mark( fd, remaining ) );
+
+    return py::make_tuple( sul, bookmarks );
 }
 
 std::vector< char > catrecord( std::FILE* fp, int remaining ) {
@@ -303,7 +302,7 @@ std::vector< char > catrecord( std::FILE* fp, int remaining ) {
     }
 }
 
-py::bytes file::getrecord( const bookmark& m ) {
+py::bytes file::raw_record( const bookmark& m ) {
     std::FILE* fd = *this;
     auto err = std::fsetpos( fd, &m.pos );
     if( err ) throw io_error( errno );
@@ -348,8 +347,7 @@ PYBIND11_MODULE(core, m) {
         .def( "close", &file::close )
         .def( "eof",   &file::eof )
 
-        .def( "sul",       &file::storage_unit_label )
-        .def( "mark",      &file::markrecord )
-        .def( "getrecord", &file::getrecord )
+        .def( "mkindex",   &file::mkindex )
+        .def( "raw_record", &file::raw_record )
         ;
 }
