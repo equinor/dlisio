@@ -667,6 +667,16 @@ const char* dlis_obname( const char* xs, std::int32_t* origin,
     return dlis_ident( xs, idlen, identifier );
 }
 
+const char* dlis_objref( const char* xs, int32_t* ident_len,
+                                         char* ident,
+                                         int32_t* origin,
+                                         uint8_t* copy_number,
+                                         int32_t* objname_len,
+                                         char* identifier ) {
+    xs = dlis_ident( xs, ident_len, ident );
+    return dlis_obname( xs, origin, copy_number, objname_len, identifier );
+}
+
 const char* dlis_fshort( const char* xs, float* out ) {
     std::uint16_t v;
     const char* newptr = dlis_unorm( xs, &v );

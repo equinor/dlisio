@@ -76,6 +76,7 @@ const char* dlis_objref( const char*, int32_t* ident_len,
                                       char* ident,
                                       int32_t* origin,
                                       uint8_t* copy_number,
+                                      int32_t* objname_len,
                                       char* identifier );
 
 /* attref = { ident, obname, ident } */
