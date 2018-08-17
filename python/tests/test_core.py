@@ -269,3 +269,10 @@ def test_read_eflr_metadata():
         record = f.fp.eflr(f.bookmarks[25])
         assert(record['name'] == '330')
         assert(record['type'] == '440-OP-CORE_REPORT_FORMAT')
+
+def test_conv():
+    dim = bytearray([0x09, 0x44, 0x49, 0x4D, 0x45,
+                     0x4E, 0x53, 0x49, 0x4F, 0x4E,
+                    ])
+
+    assert dlisio.core.conv(19, dim) == "DIMENSION"
