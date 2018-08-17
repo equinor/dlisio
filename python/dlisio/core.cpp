@@ -268,6 +268,42 @@ py::tuple file::mkindex() {
     return py::make_tuple( sul, bookmarks );
 }
 
+py::object conv( int reprc, py::buffer b ) {
+    const auto* xs = static_cast< const char* >( b.request().ptr );
+    switch( reprc ) {
+        case DLIS_FSHORT: return py::cast( fshort( xs ) );
+        case DLIS_FSINGL: return py::cast( fsingl( xs ) );
+        case DLIS_FSING1: return py::cast( fsing1( xs ) );
+        case DLIS_FSING2: return py::cast( fsing2( xs ) );
+        case DLIS_ISINGL: return py::cast( isingl( xs ) );
+        case DLIS_VSINGL: return py::cast( vsingl( xs ) );
+        case DLIS_FDOUBL: return py::cast( fdoubl( xs ) );
+        case DLIS_FDOUB1: return py::cast( fdoub1( xs ) );
+        case DLIS_FDOUB2: return py::cast( fdoub2( xs ) );
+        case DLIS_CSINGL: return py::cast( csingl( xs ) );
+        case DLIS_CDOUBL: return py::cast( cdoubl( xs ) );
+        case DLIS_SSHORT: return py::cast( sshort( xs ) );
+        case DLIS_SNORM:  return py::cast(  snorm( xs ) );
+        case DLIS_SLONG:  return py::cast(  slong( xs ) );
+        case DLIS_USHORT: return py::cast( ushort( xs ) );
+        case DLIS_UNORM:  return py::cast(  unorm( xs ) );
+        case DLIS_ULONG:  return py::cast(  ulong( xs ) );
+        case DLIS_UVARI:  return py::cast(  uvari( xs ) );
+        case DLIS_IDENT:  return py::cast(  ident( xs ) );
+        case DLIS_ASCII:  return py::cast(  ascii( xs ) );
+        case DLIS_DTIME:  return            dtime( xs )  ;
+        case DLIS_STATUS: return py::cast( status( xs ) );
+        case DLIS_ORIGIN: return py::cast( origin( xs ) );
+        case DLIS_OBNAME: return py::cast( obname( xs ) );
+        case DLIS_OBJREF: return py::cast( objref( xs ) );
+        case DLIS_UNITS:  return py::cast(  ident( xs ) );
+
+        default:
+            throw py::value_error( "unknown representation code "
+                                 + std::to_string( reprc ) );
+    }
+}
+
 py::list getarray( const char*& xs, int count, int reprc ) {
     py::list l;
 
@@ -690,6 +726,8 @@ PYBIND11_MODULE(core, m) {
         const auto ptr = static_cast< char* >( info.ptr );
         return eflr( ptr, ptr + len );
     } );
+
+    m.def( "conv", conv );
 
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
