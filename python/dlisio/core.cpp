@@ -295,6 +295,7 @@ py::list getarray( const char*& xs, int count, int reprc ) {
             case DLIS_ASCII:  l.append(  ascii( xs ) ); break;
             case DLIS_DTIME:  l.append(  dtime( xs ) ); break;
             case DLIS_STATUS: l.append( status( xs ) ); break;
+            case DLIS_ORIGIN: l.append( origin( xs ) ); break;
             case DLIS_OBNAME: l.append( obname( xs ) ); break;
             case DLIS_OBJREF: l.append( objref( xs ) ); break;
             case DLIS_UNITS:  l.append(  ident( xs ) ); break;
