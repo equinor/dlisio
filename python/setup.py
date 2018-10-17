@@ -57,7 +57,15 @@ setup(
     ],
     platforms = 'any',
     install_requires = [],
-    setup_requires = ['setuptools >= 28', 'pytest-runner', 'pybind11 >= 2.2'],
+    setup_requires = ['setuptools >= 28',
+                      'pytest-runner',
+                      'pybind11 >= 2.2',
+                      'setuptools_scm',
+    ],
     tests_require = ['pytest', 'hypothesis'],
     cmdclass = {'build_ext': BuildExt },
+    use_scm_version = {
+        'root': '..',
+        'write_to': 'python/dlisio/version.py',
+    },
 )

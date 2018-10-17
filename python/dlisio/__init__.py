@@ -1,6 +1,6 @@
-__version__ = '0.0.0'
-
 from . import core
+
+from .version import version as __version__
 
 def load(path):
     return dlis(path)
