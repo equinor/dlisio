@@ -22,6 +22,8 @@ using namespace py::literals;
 
 namespace {
 
+std::vector< char > catrecord( std::FILE* , int );
+
 /*
  * for some reason, pybind does not defined IOError, so make a quick
  * regular-looking exception like that and register its translation
@@ -170,6 +172,7 @@ public:
     py::tuple mkindex();
     py::bytes raw_record( const bookmark& );
     py::dict eflr( const bookmark& );
+    py::object iflr_chunk( const bookmark& mark, const std::vector< std::tuple< int, int > >&, int, int );
 
 
 private:
@@ -260,12 +263,38 @@ py::tuple file::mkindex() {
     auto sul = SUL( buffer );
 
     std::vector< bookmark > bookmarks;
+    std::vector< py::dict > explicits;
+    py::dict implicit_refs;
     int remaining = 0;
 
-    while( !iseof( fd ) )
+    while( !iseof( fd ) ) {
         bookmarks.push_back( mark( fd, remaining ) );
 
-    return py::make_tuple( sul, bookmarks );
+        const auto& last = bookmarks.back();
+        if( last.isexplicit && !last.isencrypted ) try {
+            explicits.push_back( this->eflr( last ) );
+        } catch( std::exception& e ) {
+            py::print(e.what(), " at ", bookmarks.size() );
+        }
+    }
+
+    for( const auto& last : bookmarks ) {
+        if( last.isexplicit || last.isencrypted ) continue;
+
+        auto err = std::fsetpos( fd, &last.pos );
+        if( err ) throw io_error( errno );
+
+        auto implicit = catrecord( fd, last.residual );
+        const auto* ptr = implicit.data();
+        auto name = py::cast( obname( ptr ) );
+
+        if( !implicit_refs.contains( name ) )
+            implicit_refs[ name ] = py::list();
+
+        implicit_refs[ name ].cast< py::list >().append( last );
+    }
+
+    return py::make_tuple( sul, bookmarks, explicits, implicit_refs );
 }
 
 py::object conv( int reprc, py::buffer b ) {
@@ -683,6 +712,32 @@ py::dict file::eflr( const bookmark& mark ) {
     return ::eflr( cat.data(), cat.data() + cat.size() );
 }
 
+py::object file::iflr_chunk( const bookmark& mark,
+                             const std::vector< std::tuple< int, int > >& pre,
+                             int elems,
+                             int dtype ) {
+
+    if( mark.isencrypted ) return py::none();
+    auto err = std::fsetpos( *this, &mark.pos );
+    if( err ) throw io_error( errno );
+
+    auto cat = catrecord( *this, mark.residual );
+    const char* ptr = cat.data();
+
+    obname( ptr );
+
+    auto frameno = uvari( ptr );
+
+    for( auto& pair : pre ) {
+        auto count = std::get< 0 >( pair );
+        auto reprc = std::get< 1 >( pair );
+
+        getarray( ptr, count, reprc );
+    }
+
+    return getarray( ptr, elems, dtype );
+}
+
 }
 
 PYBIND11_MODULE(core, m) {
@@ -734,8 +789,9 @@ PYBIND11_MODULE(core, m) {
         .def( "close", &file::close )
         .def( "eof",   &file::eof )
 
-        .def( "mkindex",   &file::mkindex )
+        .def( "mkindex",    &file::mkindex )
         .def( "raw_record", &file::raw_record )
         .def( "eflr",       &file::eflr )
+        .def( "iflr",       &file::iflr_chunk )
         ;
 }

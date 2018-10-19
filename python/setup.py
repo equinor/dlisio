@@ -65,7 +65,7 @@ setup(
         )
     ],
     platforms = 'any',
-    install_requires = [],
+    install_requires = ['numpy'],
     setup_requires = ['setuptools >= 28',
                       'pytest-runner',
                       'pybind11 >= 2.2',

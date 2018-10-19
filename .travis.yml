@@ -37,8 +37,9 @@ matrix:
           sudo: true
         - os: linux
           compiler: clang
-          env: SCAN="scan-build --status-bugs"
-        - env: WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
+          env:
+              - SCAN="scan-build --status-bugs"
+              - WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
         - os: osx
           language: generic
           python: 3.4
@@ -74,6 +75,7 @@ before_install:
 
 install:
     - pip install bandit
+                  numpy
                   setuptools
                   setuptools_scm
                   pytest
