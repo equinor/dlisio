@@ -1,6 +1,11 @@
 from . import core
 
-from .version import version as __version__
+
+try:
+    import pkg_resources
+    __version__ = pkg_resources.get_distribution(__name__).version
+except pkg_resources.DistributionNotFound:
+    pass
 
 def load(path):
     return dlis(path)
