@@ -13,6 +13,8 @@ platform:
     - x64
 
 environment:
+    TWINE_PASSWORD:
+        secure: kTga6+rLL1fNpKqFNcX0QZNyqiYaHsEfSS4k6wvUoTE=
     matrix:
         - PYTHON: C:\Python35
           PYTHON_VERSION: 35
@@ -32,21 +34,44 @@ install:
                                     setuptools
                                     pybind11
                                     hypothesis
+                                    twine
+                                    wheel
 
 before_build:
     - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
+    - git fetch --tags
 
 build_script:
-    - mkdir build
-    - ps: pushd build
+    - ps: |
+          mkdir build
+          pushd build
     - cmake %APPVEYOR_BUILD_FOLDER%
             %W64%
             -DCMAKE_CXX_FLAGS=/D_CRT_SECURE_NO_WARNINGS
     - cmake --build .
             --config %configuration%
-    - ps: popd
+    - ps: |
+          popd
+          pushd python
+          python setup.py bdist_wheel
+          popd
 
 test_script:
     - ps: pushd build
     - ctest --build-config %configuration% --output-on-failure
     - ps: popd
+
+before_deploy:
+    - ps: pushd build/python
+
+after_deploy:
+    - ps: popd
+
+deploy_script:
+    - ps: |
+          Write-Host "TAG: $env:APPVEYOR_REPO_TAG"
+          If ($env:APPVEYOR_REPO_TAG -eq "false") { return }
+
+          Write-Host "Uploading wheels to pypi"
+          Invoke-Expression "twine upload -u statoil-travis --skip-existing dist/*"
+          If ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }

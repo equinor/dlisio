@@ -14,8 +14,17 @@ compiler:
 services: docker
 sudo: required
 
+env:
+    global:
+        - UNICODE_WIDTH=32
+        - PLAT=x86_64
+        - MB_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION
+        - VERSION=$(echo $TRAVIS_TAG | sed s/v//)
+
 addons:
     apt:
+        sources:
+            - george-edison55-precise-backports # cmake 3
         packages:
             - cmake
             - cmake-data
@@ -94,3 +103,25 @@ script:
     - export DYLD_LIBRARY_PATH=$PWD/lib
     - make
     - ctest --output-on-failure
+    - sudo make install
+    - popd
+    - build_wheel python $PLAT
+    - install_run $PLAT
+    - mv wheelhouse python/dist
+
+before_deploy:
+    - pushd python
+
+after_deploy:
+    - popd
+
+deploy:
+    - provider: pypi
+      skip_cleanup: true
+      skip_upload_docs: true
+      user: statoil-travis
+      distributions: build
+      password:
+        secure: lov28Jwk7zhWn4O9TAahp+NVbdhppnVmJj2rZKIgupy8LAac9NX5zxv+WvuZeAcOGInVYiryuS5WMY8flpweajfJ4uoRI6N5MvGFK09EgBZZSqGktJyVeLHAUZEjvIKduGRtim3wrpqTFNtmAkl3iXhOYkUhUlUWNTkuEH2vHMq3irpgFrL/7uXQcB/r18VIjXaxJDZlbY19bDrV1PdsGmTEhpFStN2izSEp+3gchs//8IqxpZgmXFNHPWNQdLVX9/pjansYd+eR6tT2yObYKaXlo8B3UZlvh2XeNynDIz9iNUzZeEzysdj9UJV+Gnm/aGd+oo6n+vVRKOe2Rmky5AnEwLQcSLy1IpRAZdUZlVMGxiIZuAnsRhmwZAGIhc7DE4ay+Gv8hroVhvRe78+pZ4Opv5HD7g9VN1x2MCANUrw0uAPmueq6EwDGtAFqCt1DnbMrvooXAHtPfsHvSjQesh/TVoIndeiD9j1I/rSP5OmV6PEQuorplWsBlsLRdGf3oisisyrupWCb9DXmveDIOgQqtD1lGddO7NkFsFLCiaXq94+EZxBu4ih/hqWcWFFoZ5pIpr4HcJU3Hm7qv+DWp2XLGDyj6zy7EC74tQwo1TE2MhQeYjb3jal3p6G0nqSXd91nlzJOjE7wBHsNe1XuhO1Ye6ET/jFSeo8BIyrugl4=
+      on:
+        tags: true
