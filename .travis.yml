@@ -1,6 +1,5 @@
 language: python
 python:
-  - 2.7
   - 3.4
   - 3.5
   - 3.6
@@ -28,12 +27,6 @@ matrix:
           compiler: clang
           env: SCAN="scan-build --status-bugs"
         - env: WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
-        - os: osx
-          language: generic
-          python: 2.7
-          env:
-            - MB_PYTHON_VERSION=2.7
-            - MACOSX_DEPLOYMENT_TARGET=10.9
         - os: osx
           language: generic
           python: 3.4
