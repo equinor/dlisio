@@ -63,7 +63,7 @@ test_script:
     - ps: popd
 
 before_deploy:
-    - ps: pushd build/python
+    - ps: pushd python
 
 after_deploy:
     - ps: popd
