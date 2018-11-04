@@ -41,10 +41,11 @@ class BuildExt(build_ext):
 
 def getversion():
     if os.path.isdir('.git'):
+        print('Getversion == True')
         return True
 
     return {
-        'relative_to': os.path.dirname(__file__),
+        'relative_to': os.path.dirname(os.path.abspath(__file__)),
     }
 
 setup(

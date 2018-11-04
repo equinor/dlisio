@@ -1,7 +1,5 @@
 version: 1.0.{build}
 
-clone_depth: 1
-
 configuration:
     - Release
 
@@ -33,6 +31,7 @@ install:
                                     pytest
                                     pytest-runner
                                     setuptools
+                                    setuptools_scm
                                     pybind11
                                     hypothesis
                                     twine
@@ -51,15 +50,12 @@ build_script:
             -DCMAKE_CXX_FLAGS=/D_CRT_SECURE_NO_WARNINGS
     - cmake --build .
             --config %configuration%
-    - ps: |
-          popd
-          pushd python
-          python setup.py bdist_wheel
-          popd
-
-test_script:
-    - ps: pushd build
-    - ctest --build-config %configuration% --output-on-failure
+    - ctest --build-config %configuration%
+            --output-on-failure
+    - ps: popd
+    - ps: pushd python
+    - git describe
+    - IF DEFINED PYTHON python setup.py bdist_wheel
     - ps: popd
 
 before_deploy:
