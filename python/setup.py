@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
@@ -38,6 +39,14 @@ class BuildExt(build_ext):
             ext.extra_compile_args = opts
         build_ext.build_extensions(self)
 
+def getversion():
+    if os.path.isdir('.git'):
+        return True
+
+    return {
+        'relative_to': os.path.dirname(__file__),
+    }
+
 setup(
     name = 'dlisio',
     description = 'DLIS v1',
@@ -56,16 +65,13 @@ setup(
         )
     ],
     platforms = 'any',
-    install_requires = [],
+    install_requires = ['numpy'],
     setup_requires = ['setuptools >= 28',
                       'pytest-runner',
                       'pybind11 >= 2.2',
                       'setuptools_scm',
     ],
     tests_require = ['pytest', 'hypothesis'],
-    cmdclass = {'build_ext': BuildExt },
-    use_scm_version = {
-        'root': '..',
-        'write_to': 'python/dlisio/version.py',
-    },
+    cmdclass = { 'build_ext': BuildExt },
+    use_scm_version = getversion(),
 )

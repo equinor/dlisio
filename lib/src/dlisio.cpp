@@ -598,11 +598,11 @@ const char* dlis_uvari( const char* xs, int32_t* out ) {
 
 const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
     std::uint8_t ln;
-    dlis_ushort( xs, &ln );
+    xs = dlis_ushort( xs, &ln );
 
     if( len ) *len = ln;
-    if( out ) std::memcpy( out, xs + 1, ln );
-    return xs + ln + 1;
+    if( out ) std::memcpy( out, xs, ln );
+    return xs + ln;
 }
 
 const char* dlis_ascii( const char* xs, std::int32_t* len, char* out ) {
