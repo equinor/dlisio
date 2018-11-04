@@ -23,6 +23,9 @@ addons:
 matrix:
     fast_finish: true
     include:
+        - python: 3.7
+          dist: xenial
+          sudo: true
         - os: linux
           compiler: clang
           env: SCAN="scan-build --status-bugs"
@@ -44,6 +47,12 @@ matrix:
           python: 3.6
           env:
             - MB_PYTHON_VERSION=3.6
+            - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          language: generic
+          python: 3.7
+          env:
+            - MB_PYTHON_VERSION=3.7
             - MACOSX_DEPLOYMENT_TARGET=10.9
 
 before_install:
