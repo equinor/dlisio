@@ -1,6 +1,8 @@
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(dlisio src/dlisio.cpp)
+add_library(dlisio src/dlisio.cpp
+                   src/types.cpp
+)
 target_include_directories(dlisio
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:include>
