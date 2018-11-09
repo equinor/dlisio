@@ -190,7 +190,11 @@ bookmark mark( std::FILE* fp, int& remaining ) {
      * TODO: use _ftell64 or similar on Windows, to handle >2G files.
      * It's not necessary for repositioning, but helps diagnostics
      */
+#ifndef _WIN32
     mark.tell = std::ftell( fp );
+#else
+    mark.tell = _ftell64( fp );
+#endif
     if( mark.tell == -1 ) throw io_error( errno );
 
     while( true ) {
