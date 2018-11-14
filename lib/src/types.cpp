@@ -396,3 +396,35 @@ const char* dlis_status( const char* xs, std::uint8_t* x ) {
     return dlis_ushort( xs, x );
 }
 
+/*
+ * output functions
+ */
+
+void* dlis_sshorto( void* xs, std::int8_t x ) {
+    return dlis_ushorto( xs, x );
+}
+
+void* dlis_snormo( void* xs, std::int16_t x ) {
+    return dlis_unormo( xs, x );
+}
+
+void* dlis_slongo( void* xs, std::int32_t x ) {
+    return dlis_ulongo( xs, x );
+}
+
+void* dlis_ushorto( void* xs, std::uint8_t x ) {
+    std::memcpy( xs, &x, sizeof( x ) );
+    return (char*)xs + sizeof( x );
+}
+
+void* dlis_unormo( void* xs, std::uint16_t x ) {
+    x = hton( x );
+    std::memcpy( xs, &x, sizeof( x ) );
+    return (char*)xs + sizeof( x );;
+}
+
+void* dlis_ulongo( void* xs, std::uint32_t x ) {
+    x = hton( x );
+    std::memcpy( xs, &x, sizeof( x ) );
+    return (char*)xs + sizeof( x );
+}

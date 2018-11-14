@@ -91,6 +91,23 @@ const char* dlis_attref( const char*, int32_t* ident1_len,
 const char* dlis_status( const char*, uint8_t* );
 const char* dlis_units( const char*, uint8_t*, char* );
 
+/*
+ * A family of the reverse operation, i.e. transform a native data type to an
+ * RP66 compatible one.
+ *
+ * They share the same name as the parsing functions, except for a trailing o.
+ *
+ * Unlike the input functions, they work on fixed-size unsigned numbers as
+ * buffers, to make return-values more ergonomic
+ */
+void* dlis_sshorto( void*, int8_t );
+void* dlis_snormo(  void*, int16_t );
+void* dlis_slongo(  void*, int32_t );
+
+void* dlis_ushorto( void*, uint8_t );
+void* dlis_unormo(  void*, uint16_t );
+void* dlis_ulongo(  void*, uint32_t );
+
 #define DLIS_FSHORT 1  // Low precision floating point
 #define DLIS_FSINGL 2  // IEEE single precision floating point
 #define DLIS_FSING1 3  // Validated single precision floating point

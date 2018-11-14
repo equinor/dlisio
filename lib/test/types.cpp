@@ -129,10 +129,20 @@ TEST_CASE("signed short (8-bit)", "[type]") {
         -1,
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::int8_t v;
-        dlis_sshort( (char*)inputs[ i ], &v );
-        CHECK( int(v) == int(expected[ i ]) );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int8_t v;
+            dlis_sshort( inputs[ i ], &v );
+            CHECK( int(v) == int(expected[ i ]) );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int8_t v;
+            dlis_sshorto( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
@@ -159,10 +169,20 @@ TEST_CASE("signed normal (16-bit)", "[type]") {
         std::numeric_limits< std::int16_t >::min(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::int16_t v;
-        dlis_snorm( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int16_t v;
+            dlis_snorm( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int16_t v;
+            dlis_snormo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
@@ -189,10 +209,20 @@ TEST_CASE("signed long (32-bit)", "[type]") {
         std::numeric_limits< std::int32_t >::min(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::int32_t v;
-        dlis_slong( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            dlis_slong( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            dlis_slongo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
@@ -217,10 +247,20 @@ TEST_CASE("unsigned short (8-bit)", "[type]") {
         std::numeric_limits< std::uint8_t >::max(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::uint8_t v;
-        dlis_ushort( (char*)inputs[ i ], &v );
-        CHECK( int(v) == int(expected[ i ]) );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint8_t v;
+            dlis_ushort( inputs[ i ], &v );
+            CHECK( int(v) == int(expected[ i ]) );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint8_t v;
+            dlis_ushorto( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
@@ -247,10 +287,20 @@ TEST_CASE("unsigned normal (16-bit)", "[type]") {
         std::numeric_limits< std::uint16_t >::max(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::uint16_t v;
-        dlis_unorm( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint16_t v;
+            dlis_unorm( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint16_t v;
+            dlis_unormo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
@@ -277,10 +327,20 @@ TEST_CASE("unsigned long (32-bit)", "[type]") {
         std::numeric_limits< std::uint32_t >::max(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::uint32_t v;
-        dlis_ulong( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION( "to native" ) {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint32_t v;
+            dlis_ulong( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint32_t v;
+            dlis_ulongo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
