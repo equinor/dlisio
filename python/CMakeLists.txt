@@ -69,6 +69,13 @@ if(NOT BUILD_TESTING)
     return()
 endif()
 
+add_executable(py.testsuite tests/testsuite.cpp
+                            tests/core.cpp
+)
+
+target_link_libraries(py.testsuite dlisio catch2)
+add_test(NAME python.core COMMAND py.testsuite)
+
 # run tests with setup.py test
 # this is very slow compared to invoking pytest directly, but setuptools will
 # copy the built extension into the tree as it sees fit

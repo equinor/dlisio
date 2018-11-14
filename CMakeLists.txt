@@ -27,6 +27,8 @@ endif()
 
 test_big_endian(BIG_ENDIAN)
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_subdirectory(external/catch2)
 add_subdirectory(lib)
 add_subdirectory(bin)

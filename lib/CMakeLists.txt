@@ -1,5 +1,3 @@
-set(CMAKE_CXX_STANDARD 11)
-
 add_library(dlisio src/dlisio.cpp
                    src/types.cpp
 )
