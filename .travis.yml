@@ -9,7 +9,6 @@ os:
 
 compiler:
     - gcc
-    - clang
 
 services: docker
 sudo: required
@@ -20,14 +19,17 @@ env:
         - PLAT=x86_64
         - MB_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION
         - VERSION=$(echo $TRAVIS_TAG | sed s/v//)
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 addons:
     apt:
         sources:
             - george-edison55-precise-backports # cmake 3
+            - ubuntu-toolchain-r-test # gcc-7
         packages:
             - cmake
             - cmake-data
+            - g++-7
 
 matrix:
     fast_finish: true
@@ -38,6 +40,7 @@ matrix:
         - os: linux
           compiler: clang
           env:
+              - MATRIX_EVAL="CC=clang && CXX=clang++"
               - SCAN="scan-build --status-bugs"
               - WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
         - os: osx
@@ -66,6 +69,7 @@ matrix:
             - MACOSX_DEPLOYMENT_TARGET=10.9
 
 before_install:
+    - eval "${MATRIX_EVAL}"
     - unset -f pushd
     - unset -f popd
     - git clone https://github.com/matthew-brett/multibuild

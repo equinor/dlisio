@@ -1,14 +1,115 @@
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstring>
+#include <initializer_list>
+#include <iomanip>
 #include <limits>
+#include <sstream>
 #include <string>
 
 #include <catch2/catch.hpp>
 
 #include <dlisio/types.h>
 
+/*
+ * Custom type for byte arrays, for nicely printing mismatch between expected
+ * and actual parameters to comparison of byte arrays.
+ *
+ * This type exists mostly for Catch's stringmaker to have something to hook
+ * into, as it relies on the type system to pick the correct specialisation.
+ * Using std::array is pretty clumsy, and (unsigned) char* already means
+ * "print-as-string".
+ */
+template< std::size_t N, typename T = char >
+struct bytes {
+    using value_type = T[N];
+
+    bytes() = default;
+    bytes( const value_type& xs ) {
+        using std::begin;
+        using std::end;
+        std::copy( begin( xs ), end( xs ), begin( this->data ) );
+    }
+
+    bytes( std::initializer_list< std::size_t > xs ) {
+        using std::begin;
+        using std::end;
+        std::copy( begin( xs ), end( xs ), begin( this->data ) );
+    }
+
+    operator value_type& ()             { return this->data; }
+    operator const value_type& () const { return this->data; }
+
+    value_type data;
+};
+
+namespace {
+
+template< typename T, std::size_t N >
+class BytesEqualsMatcher : public Catch::MatcherBase< bytes< N > > {
+public:
+    explicit BytesEqualsMatcher( T x ) : lhs( x ) {}
+
+    virtual bool match( const bytes< N >& rhs ) const override {
+        static_assert( sizeof( T ) == N, "sizeof(T) must be equal to N" );
+        return std::memcmp( &this->lhs, rhs, sizeof( T ) ) == 0;
+    }
+
+    virtual std::string describe() const override {
+        bytes< N > lhsb;
+        std::memcpy( lhsb, &this->lhs, N );
+
+        using str = Catch::StringMaker< bytes< N > >;
+        return "== " + str::convert( lhsb );
+    }
+
+private:
+    T lhs;
+};
+
+template< typename T >
+BytesEqualsMatcher< T, sizeof( T ) > BytesEquals( T lhs ) {
+    return BytesEqualsMatcher< T, sizeof( T ) >{ lhs };
+}
+
+}
+
+namespace Catch {
+
+/*
+ * print bytes as a hex sequence
+ */
+template< std::size_t N >
+struct StringMaker< bytes< N > > {
+    static std::string convert( const bytes< N >& xs ) {
+        std::stringstream ss;
+        ss << std::hex;
+
+        /*
+         * Convert every byte to unsigned char (even though the byte array
+         * stores as unspecified signed) to preserve representation as a byte,
+         * so it doesn't change once widened to an int. Once an int, the
+         * std::hex manipulator picks it up and writes it as a hex value
+         */
+        for( unsigned char x : xs.data ) {
+            ss << std::setfill( '0' )
+               << std::setw( 2 )
+               << int( x ) << ' '
+               ;
+        }
+
+        auto s = ss.str();
+        /* remove trailing space */
+        s.pop_back();
+        return s;
+    }
+};
+
+}
+
 TEST_CASE("signed short (8-bit)", "[type]") {
-    const std::array< unsigned char[1], 7 > inputs = {{
+    const std::array< bytes< 1 >, 7 > inputs = {{
         { 0x00 }, // 0
         { 0x01 }, // 1
         { 0x59 }, // 89
@@ -28,15 +129,25 @@ TEST_CASE("signed short (8-bit)", "[type]") {
         -1,
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::int8_t v;
-        dlis_sshort( (char*)inputs[ i ], &v );
-        CHECK( int(v) == int(expected[ i ]) );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int8_t v;
+            dlis_sshort( inputs[ i ], &v );
+            CHECK( int(v) == int(expected[ i ]) );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int8_t v;
+            dlis_sshorto( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
 TEST_CASE("signed normal (16-bit)", "[type]") {
-    const std::array< unsigned char[2], 8 > inputs = {{
+    const std::array< bytes< 2 >, 8 > inputs = {{
         { 0x00, 0x00 }, // 0
         { 0x00, 0x01 }, // 1
         { 0x00, 0x59 }, // 89
@@ -58,15 +169,25 @@ TEST_CASE("signed normal (16-bit)", "[type]") {
         std::numeric_limits< std::int16_t >::min(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::int16_t v;
-        dlis_snorm( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int16_t v;
+            dlis_snorm( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int16_t v;
+            dlis_snormo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
 TEST_CASE("signed long (32-bit)", "[type]") {
-    const std::array< unsigned char[4], 8 > inputs = {{
+    const std::array< bytes< 4 >, 8 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00, }, // 0
         { 0x00, 0x00, 0x00, 0x01, }, // 1
         { 0x00, 0x00, 0x00, 0x59, }, // 89
@@ -88,15 +209,25 @@ TEST_CASE("signed long (32-bit)", "[type]") {
         std::numeric_limits< std::int32_t >::min(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::int32_t v;
-        dlis_slong( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            dlis_slong( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::int32_t v;
+            dlis_slongo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
 TEST_CASE("unsigned short (8-bit)", "[type]") {
-    const std::array< unsigned char[1], 7 > inputs = {{
+    const std::array< bytes< 1 >, 7 > inputs = {{
         { 0x00 }, // 0
         { 0x01 }, // 1
         { 0x59 }, // 89
@@ -116,15 +247,25 @@ TEST_CASE("unsigned short (8-bit)", "[type]") {
         std::numeric_limits< std::uint8_t >::max(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::uint8_t v;
-        dlis_ushort( (char*)inputs[ i ], &v );
-        CHECK( int(v) == int(expected[ i ]) );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint8_t v;
+            dlis_ushort( inputs[ i ], &v );
+            CHECK( int(v) == int(expected[ i ]) );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint8_t v;
+            dlis_ushorto( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
 TEST_CASE("unsigned normal (16-bit)", "[type]") {
-    const std::array< unsigned char[2], 8 > inputs = {{
+    const std::array< bytes< 2 >, 8 > inputs = {{
         { 0x00, 0x00 }, // 0
         { 0x00, 0x01 }, // 1
         { 0x00, 0x59 }, // 89
@@ -146,15 +287,25 @@ TEST_CASE("unsigned normal (16-bit)", "[type]") {
         std::numeric_limits< std::uint16_t >::max(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::uint16_t v;
-        dlis_unorm( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint16_t v;
+            dlis_unorm( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint16_t v;
+            dlis_unormo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
 TEST_CASE("unsigned long (32-bit)", "[type]") {
-    const std::array< unsigned char[4], 8 > inputs = {{
+    const std::array< bytes< 4 >, 8 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00, }, // 0
         { 0x00, 0x00, 0x00, 0x01, }, // 1
         { 0x00, 0x00, 0x00, 0x59, }, // 89
@@ -176,10 +327,20 @@ TEST_CASE("unsigned long (32-bit)", "[type]") {
         std::numeric_limits< std::uint32_t >::max(),
     };
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
-        std::uint32_t v;
-        dlis_ulong( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION( "to native" ) {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint32_t v;
+            dlis_ulong( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            std::uint32_t v;
+            dlis_ulongo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+        }
     }
 }
 
