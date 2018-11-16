@@ -346,7 +346,7 @@ TEST_CASE("unsigned long (32-bit)", "[type]") {
 
 TEST_CASE("variable-length unsigned int", "[type]") {
     SECTION("1-byte") {
-        const std::array< unsigned char[1], 4 > in = {{
+        const std::array< bytes<1>, 4 > in = {{
             { 0x00 }, // 0
             { 0x01 }, // 1
             { 0x2E }, // 46
@@ -360,16 +360,27 @@ TEST_CASE("variable-length unsigned int", "[type]") {
             127
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            std::int32_t v;
-            const char* end = dlis_uvari( (char*)in[ i ], &v );
-            CHECK( v == expected[ i ] );
-            CHECK( std::intptr_t(end) == std::intptr_t((char*)in[ i ] + 1) );
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const char* end = dlis_uvari( in[ i ], &v );
+                CHECK( v == expected[ i ] );
+                CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 1) );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int8_t v;
+                const void* end = dlis_uvario( &v, expected[ i ], 1 );
+                CHECK_THAT( in[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 
     SECTION("2-byte") {
-        const std::array< unsigned char[2], 7 > in = {{
+        const std::array< bytes<2>, 7 > in = {{
             { 0x80, 0x00 }, // 0
             { 0x80, 0x01 }, // 1
             { 0x80, 0x2E }, // 46
@@ -389,16 +400,27 @@ TEST_CASE("variable-length unsigned int", "[type]") {
             16383,
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            std::int32_t v;
-            const char* end = dlis_uvari( (char*)in[ i ], &v );
-            CHECK( v == expected[ i ] );
-            CHECK( std::intptr_t(end) == std::intptr_t((char*)in[ i ] + 2) );
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const char* end = dlis_uvari( in[ i ], &v );
+                CHECK( v == expected[ i ] );
+                CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 2) );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int16_t v;
+                const void* end = dlis_uvario( &v, expected[ i ], 2 );
+                CHECK_THAT( in[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 
     SECTION("4-byte") {
-        const std::array< unsigned char[4], 9 > in = {{
+        const std::array< bytes<4>, 9 > in = {{
             { 0xC0, 0x00, 0x00, 0x00 }, // 0
             { 0xC0, 0x00, 0x00, 0x01 }, // 1
             { 0xC0, 0x00, 0x00, 0x2E }, // 46
@@ -422,11 +444,22 @@ TEST_CASE("variable-length unsigned int", "[type]") {
             1073741823,
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            std::int32_t v;
-            const char* end = dlis_uvari( (char*)in[ i ], &v );
-            CHECK( v == expected[ i ] );
-            CHECK( std::intptr_t(end) == std::intptr_t((char*)in[ i ] + 4) );
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const char* end = dlis_uvari( in[ i ], &v );
+                CHECK( v == expected[ i ] );
+                CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 4) );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const void* end = dlis_uvario( &v, expected[ i ], 4 );
+                CHECK_THAT( in[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 }

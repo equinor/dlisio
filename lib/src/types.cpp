@@ -428,3 +428,25 @@ void* dlis_ulongo( void* xs, std::uint32_t x ) {
     std::memcpy( xs, &x, sizeof( x ) );
     return (char*)xs + sizeof( x );
 }
+
+void* dlis_uvario( void* xs, std::int32_t x, int width ) {
+    if( x <= 0x7F && width <= 1 ) {
+        std::int8_t v = x;
+        std::memcpy( xs, &v, sizeof( v ) );
+        return (char*)xs + sizeof( v );
+    }
+
+    if( x <= 0xBFFF && width <= 2 ) {
+        std::uint16_t v = x;
+        v |= 0x8000;
+        v = hton( v );
+        std::memcpy( xs, &v, sizeof( v ) );
+        return (char*)xs + sizeof( v );
+    }
+
+    std::int32_t v = x;
+    v |= 0xC0000000;
+    v = hton( v );
+    std::memcpy( xs, &v, sizeof( v ) );
+    return (char*)xs + sizeof( v );
+}
