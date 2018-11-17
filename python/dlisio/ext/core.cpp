@@ -21,6 +21,7 @@ using namespace py::literals;
 
 #include "exception.hpp"
 #include "typeconv.hpp"
+#include "io.hpp"
 
 namespace pybind11 { namespace detail {
 template <> struct type_caster< dl::datetime > {
@@ -98,25 +99,6 @@ py::dict SUL( const char* buffer ) {
                      "id"_a =  id );
 }
 
-struct bookmark {
-    std::fpos_t pos;
-
-    /*
-     * the remaining bytes of the "previous" visible record. if 0, the current
-     * object is the visible record label
-     */
-    int residual = 0;
-
-    int isexplicit = 0;
-    int isencrypted = 0;
-
-    /*
-     * only pos is used for seeking and repositioning - tell is used only for
-     * __repr__ and debugging purposes
-     */
-    long long tell = 0;
-};
-
 struct segheader {
     std::uint8_t attrs;
     int len;
@@ -163,9 +145,9 @@ public:
     bool eof();
 
     py::tuple mkindex();
-    py::bytes raw_record( const bookmark& );
-    py::dict eflr( const bookmark& );
-    py::object iflr_chunk( const bookmark& mark, const std::vector< std::tuple< int, int > >&, int, int );
+    py::bytes raw_record( const dl::bookmark& );
+    py::dict eflr( const dl::bookmark& );
+    py::object iflr_chunk( const dl::bookmark& mark, const std::vector< std::tuple< int, int > >&, int, int );
 
 
 private:
@@ -198,8 +180,8 @@ bool file::eof() {
     return iseof( *this );
 }
 
-bookmark mark( std::FILE* fp, int& remaining ) {
-    bookmark mark;
+dl::bookmark mark( std::FILE* fp, int& remaining ) {
+    dl::bookmark mark;
     mark.residual = remaining;
 
     auto err = std::fgetpos( fp, &mark.pos );
@@ -255,7 +237,7 @@ py::tuple file::mkindex() {
     getbytes( buffer, sizeof( buffer ), fd );
     auto sul = SUL( buffer );
 
-    std::vector< bookmark > bookmarks;
+    std::vector< dl::bookmark > bookmarks;
     std::vector< py::dict > explicits;
     py::dict implicit_refs;
     int remaining = 0;
@@ -687,7 +669,7 @@ std::vector< char > catrecord( std::FILE* fp, int remaining ) {
     }
 }
 
-py::bytes file::raw_record( const bookmark& m ) {
+py::bytes file::raw_record( const dl::bookmark& m ) {
     std::FILE* fd = *this;
     auto err = std::fsetpos( fd, &m.pos );
     if( err ) throw io_error( errno );
@@ -696,7 +678,7 @@ py::bytes file::raw_record( const bookmark& m ) {
     return py::bytes( cat.data(), cat.size() );
 }
 
-py::dict file::eflr( const bookmark& mark ) {
+py::dict file::eflr( const dl::bookmark& mark ) {
     if( mark.isencrypted ) return py::none();
     auto err = std::fsetpos( *this, &mark.pos );
     if( err ) throw io_error( errno );
@@ -705,7 +687,7 @@ py::dict file::eflr( const bookmark& mark ) {
     return ::eflr( cat.data(), cat.data() + cat.size() );
 }
 
-py::object file::iflr_chunk( const bookmark& mark,
+py::object file::iflr_chunk( const dl::bookmark& mark,
                              const std::vector< std::tuple< int, int > >& pre,
                              int elems,
                              int dtype ) {
@@ -745,10 +727,10 @@ PYBIND11_MODULE(core, m) {
         }
     });
 
-    py::class_< bookmark >( m, "bookmark" )
-        .def_readwrite( "encrypted", &bookmark::isencrypted )
-        .def_readwrite( "explicit",  &bookmark::isexplicit )
-        .def( "__repr__", []( const bookmark& m ) {
+    py::class_< dl::bookmark >( m, "bookmark" )
+        .def_readwrite( "encrypted", &dl::bookmark::isencrypted )
+        .def_readwrite( "explicit",  &dl::bookmark::isexplicit )
+        .def( "__repr__", []( const dl::bookmark& m ) {
             auto pos = " pos=" + std::to_string( m.tell );
             auto enc = std::string(" encrypted=") +
                      (m.isencrypted ? "True": "False");
