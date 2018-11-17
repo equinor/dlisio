@@ -108,6 +108,8 @@ void* dlis_ushorto( void*, uint8_t );
 void* dlis_unormo(  void*, uint16_t );
 void* dlis_ulongo(  void*, uint32_t );
 
+void* dlis_uvario( void*, int32_t, int width );
+
 #define DLIS_FSHORT 1  // Low precision floating point
 #define DLIS_FSINGL 2  // IEEE single precision floating point
 #define DLIS_FSING1 3  // Validated single precision floating point
