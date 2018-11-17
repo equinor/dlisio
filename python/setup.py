@@ -57,7 +57,7 @@ setup(
     license = 'LGPL-3.0',
     ext_modules = [
         Extension('dlisio.core',
-            sources = ['dlisio/core.cpp'],
+            sources = ['dlisio/ext/core.cpp'],
             include_dirs = ['../lib/include',
                             get_pybind_include(),
                             get_pybind_include(user=True),
