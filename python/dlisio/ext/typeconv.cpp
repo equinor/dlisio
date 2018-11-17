@@ -5,12 +5,9 @@
 
 #include <dlisio/types.h>
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include "typeconv.hpp"
 
-#include <datetime.h>
-
-namespace {
+namespace dl {
 
 int sshort( const char*& xs ) noexcept {
     std::int8_t x;
@@ -120,7 +117,7 @@ long uvari( const char*& xs ) noexcept {
     return x;
 }
 
-std::string ident( const char*& xs ) noexcept {
+std::string ident( const char*& xs ) {
     char str[ 256 ];
     std::int32_t len;
 
@@ -141,14 +138,17 @@ std::string ascii( const char*& xs ) {
     return { str.begin(), str.end() };
 }
 
-py::object dtime( const char*& xs ) {
-    int Y, TZ, M, D, H, MN, S, MS;
-    xs = dlis_dtime( xs, &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
-    auto dt = py::reinterpret_steal< py::object >(
-        PyDateTime_FromDateAndTime( dlis_year( Y ), M, D, H, MN, S, MS )
-    );
-
-    // TODO: make this aware of TZ
+datetime dtime( const char*& xs ) noexcept {
+    datetime dt;
+    xs = dlis_dtime( xs, &dt.Y,
+                         &dt.TZ,
+                         &dt.M,
+                         &dt.D,
+                         &dt.H,
+                         &dt.MN,
+                         &dt.S,
+                         &dt.MS );
+    dt.Y = dlis_year( dt.Y );
     return dt;
 }
 
