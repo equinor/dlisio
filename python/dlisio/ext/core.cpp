@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -22,6 +23,8 @@ using namespace py::literals;
 #include "exception.hpp"
 #include "typeconv.hpp"
 #include "io.hpp"
+
+using File = dl::basic_file< std::ifstream >;
 
 namespace pybind11 { namespace detail {
 template <> struct type_caster< dl::datetime > {
@@ -42,20 +45,6 @@ public:
 }} // namespace pybind11::detail
 
 namespace {
-
-std::vector< char > catrecord( std::FILE* , int );
-
-/*
- * automate the read-bytes-throw-if-fails, at least for now. file error
- * reporting isn't very sophisticated, but doesn't have to be yet.
- */
-void getbytes( char* buffer, std::size_t nmemb, std::FILE* fd ) {
-    const auto read = std::fread( buffer, 1, nmemb, fd );
-    if( read != nmemb ) {
-        if( std::feof( fd ) ) throw eof_error( "unexpected EOF" );
-        throw io_error( errno );
-    }
-}
 
 py::dict SUL( const char* buffer ) {
     char id[ 61 ] = {};
@@ -105,44 +94,12 @@ struct segheader {
     int type;
 };
 
-segheader segment_header( std::FILE* fp ) {
-    char buffer[ 4 ];
-    getbytes( buffer, 4, fp );
-
-    segheader seg;
-    const auto err = dlis_lrsh( buffer, &seg.len, &seg.attrs, &seg.type );
-    if( err ) throw py::value_error( "unable to parse "
-                                     "logical record segment header" );
-    return seg;
-}
-
-int visible_length( std::FILE* fp ) {
-    char buffer[ 4 ];
-    getbytes( buffer, 4, fp );
-
-    int len, version;
-    const auto err = dlis_vrl( buffer, &len, &version );
-    if( err ) throw py::value_error( "unable to parse visible record label" );
-
-    if( version != 1 ) {
-        std::string msg = "VRL DLIS not v1, was " + std::to_string( version );
-        runtime_warning( msg.c_str() );
-    }
-
-    return len;
-}
 
 class file {
 public:
     explicit file( const std::string& path );
 
-    operator std::FILE*() const {
-        if( this->fp ) return this->fp.get();
-        throw py::value_error( "I/O operation on closed file" );
-    }
-
-    void close() { this->fp.reset(); }
-    bool eof();
+    void close() { this->fs.close(); }
 
     py::tuple mkindex();
     py::bytes raw_record( const dl::bookmark& );
@@ -151,99 +108,24 @@ public:
 
 
 private:
-    struct fcloser {
-        void operator()( std::FILE* x ) {
-            if( x ) std::fclose( x );
-        }
-    };
-
-    std::unique_ptr< std::FILE, fcloser > fp;
+    File fs;
 };
 
-file::file( const std::string& path ) :
-    fp( std::fopen( path.c_str(), "rb" ) ) {
-
-    if( !this->fp ) throw io_error( errno );
-}
-
-bool iseof( std::FILE* fp ) {
-    int c = std::fgetc( fp );
-
-    if( c == EOF ) return true;
-    else c = std::ungetc( c, fp );
-
-    if( c == EOF ) return true;
-    return std::feof( fp );
-}
-
-bool file::eof() {
-    return iseof( *this );
-}
-
-dl::bookmark mark( std::FILE* fp, int& remaining ) {
-    dl::bookmark mark;
-    mark.residual = remaining;
-
-    auto err = std::fgetpos( fp, &mark.pos );
-    if( err ) throw io_error( errno );
-
-#ifndef _WIN32
-    mark.tell = std::ftell( fp );
-#else
-    mark.tell = _ftelli64( fp );
-#endif
-    if( mark.tell == -1 ) throw io_error( errno );
-
-    while( true ) {
-
-        /*
-         * if remaining = 0 this is at the VRL, skip the inner-loop and read it
-         */
-        while( remaining > 0 ) {
-            auto seg = segment_header( fp );
-            remaining -= seg.len;
-
-            int has_predecessor = 0;
-            int has_successor = 0;
-            int has_encryption_packet = 0;
-            int has_checksum = 0;
-            int has_trailing_length = 0;
-            int has_padding = 0;
-            dlis_segment_attributes( seg.attrs, &mark.isexplicit,
-                                                &has_predecessor,
-                                                &has_successor,
-                                                &mark.isencrypted,
-                                                &has_encryption_packet,
-                                                &has_checksum,
-                                                &has_trailing_length,
-                                                &has_padding );
-
-            seg.len -= 4; // size of LRSH
-            err = std::fseek( fp, seg.len, SEEK_CUR );
-            if( err ) throw io_error( errno );
-
-            if( !has_successor ) return mark;
-        }
-
-        /* if remaining is 0, then we're at a VRL */
-        remaining = visible_length( fp ) - 4;
-    }
-}
+file::file( const std::string& path ) : fs( path ) {}
 
 py::tuple file::mkindex() {
-    std::FILE* fd = *this;
-
-    char buffer[ 80 ];
-    getbytes( buffer, sizeof( buffer ), fd );
-    auto sul = SUL( buffer );
+    auto sulbuffer = this->fs.read< 80 >();
+    auto sul = SUL( sulbuffer.data() );
 
     std::vector< dl::bookmark > bookmarks;
     std::vector< py::dict > explicits;
     py::dict implicit_refs;
     int remaining = 0;
 
-    while( !iseof( fd ) ) {
-        bookmarks.push_back( mark( fd, remaining ) );
+    while( !this->fs.eof() ) {
+        auto mark = tag( this->fs, remaining );
+        bookmarks.push_back( std::move( mark.second ) );
+        remaining = mark.first;
 
         const auto& last = bookmarks.back();
         if( last.isexplicit && !last.isencrypted ) try {
@@ -251,17 +133,8 @@ py::tuple file::mkindex() {
         } catch( std::exception& e ) {
             py::print(e.what(), " at ", bookmarks.size() );
         }
-    }
 
-    for( const auto& last : bookmarks ) {
-        if( last.isexplicit || last.isencrypted ) continue;
-
-        auto err = std::fsetpos( fd, &last.pos );
-        if( err ) throw io_error( errno );
-
-        auto implicit = catrecord( fd, last.residual );
-        const auto* ptr = implicit.data();
-        auto name = py::cast( dl::obname( ptr ) );
+        auto name = py::cast( last.name );
 
         if( !implicit_refs.contains( name ) )
             implicit_refs[ name ] = py::list();
@@ -619,7 +492,7 @@ py::dict eflr( const char* cur, const char* end ) {
     return record;
 }
 
-std::vector< char > catrecord( std::FILE* fp, int remaining ) {
+std::vector< char > catrecord( File& fp, int remaining ) {
 
     std::vector< char > cat;
     cat.reserve( 8192 );
@@ -652,7 +525,7 @@ std::vector< char > catrecord( std::FILE* fp, int remaining ) {
             seg.len -= 4; // size of LRSH
             const auto prevsize = cat.size();
             cat.resize( prevsize + seg.len );
-            getbytes( cat.data() + prevsize, seg.len, fp );
+            fp.read( cat.data() + prevsize, seg.len );
 
             if( has_trailing_length ) cat.erase( cat.end() - 2, cat.end() );
             if( has_checksum )        cat.erase( cat.end() - 2, cat.end() );
@@ -670,20 +543,17 @@ std::vector< char > catrecord( std::FILE* fp, int remaining ) {
 }
 
 py::bytes file::raw_record( const dl::bookmark& m ) {
-    std::FILE* fd = *this;
-    auto err = std::fsetpos( fd, &m.pos );
-    if( err ) throw io_error( errno );
+    this->fs.seek( m.tell );
 
-    auto cat = catrecord( fd, m.residual );
+    auto cat = catrecord( this->fs, m.residual );
     return py::bytes( cat.data(), cat.size() );
 }
 
 py::dict file::eflr( const dl::bookmark& mark ) {
     if( mark.isencrypted ) return py::none();
-    auto err = std::fsetpos( *this, &mark.pos );
-    if( err ) throw io_error( errno );
+    this->fs.seek( mark.tell );
 
-    auto cat = catrecord( *this, mark.residual );
+    auto cat = catrecord( this->fs, mark.residual );
     return ::eflr( cat.data(), cat.data() + cat.size() );
 }
 
@@ -693,10 +563,10 @@ py::object file::iflr_chunk( const dl::bookmark& mark,
                              int dtype ) {
 
     if( mark.isencrypted ) return py::none();
-    auto err = std::fsetpos( *this, &mark.pos );
-    if( err ) throw io_error( errno );
 
-    auto cat = catrecord( *this, mark.residual );
+    this->fs.seek( mark.tell );
+
+    auto cat = catrecord( this->fs, mark.residual );
     const char* ptr = cat.data();
 
     dl::obname( ptr );
@@ -761,7 +631,6 @@ PYBIND11_MODULE(core, m) {
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
         .def( "close", &file::close )
-        .def( "eof",   &file::eof )
 
         .def( "mkindex",    &file::mkindex )
         .def( "raw_record", &file::raw_record )

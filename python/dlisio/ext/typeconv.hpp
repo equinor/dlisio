@@ -45,6 +45,7 @@ datetime dtime( const char*& xs ) noexcept;
 long origin( const char*& xs ) noexcept;
 
 std::tuple< long, int, std::string > obname( const char*& xs );
+std::tuple< long, int, std::string > obname( const char*& xs, int nmemb );
 std::tuple< std::string, long, int, std::string > objref( const char*& xs );
 
 int status( const char*& xs ) noexcept;

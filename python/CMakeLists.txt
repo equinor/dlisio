@@ -70,7 +70,9 @@ if(NOT BUILD_TESTING)
 endif()
 
 add_executable(py.testsuite tests/testsuite.cpp
-                            tests/core.cpp
+                            tests/io.cpp
+
+                            dlisio/ext/typeconv.cpp
 )
 
 target_link_libraries(py.testsuite dlisio catch2)

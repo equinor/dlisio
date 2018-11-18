@@ -15,11 +15,13 @@ int dlis_sul( const char* xs,
               int64_t* maxlen,
               char* id );
 
+#define DLIS_VRL_SIZE 4
 int dlis_vrl( const char* xs,
               int* len,
               int* version );
 
 /* logical-record-segment-header */
+#define DLIS_LRSH_SIZE 4
 int dlis_lrsh( const char* xs,
                int* length,
                uint8_t* attrs,
