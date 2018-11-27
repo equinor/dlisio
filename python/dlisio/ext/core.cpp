@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -11,6 +12,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <datetime.h>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -19,23 +21,30 @@ namespace py = pybind11;
 using namespace py::literals;
 
 #include "exception.hpp"
-#include "typeconv.cpp"
+#include "typeconv.hpp"
+#include "io.hpp"
+
+using File = dl::basic_file< std::ifstream >;
+
+namespace pybind11 { namespace detail {
+template <> struct type_caster< dl::datetime > {
+public:
+    PYBIND11_TYPE_CASTER(dl::datetime, _("datetime.datetime"));
+
+    static handle cast( dl::datetime src, return_value_policy, handle ) {
+        // TODO: add TZ info
+        return PyDateTime_FromDateAndTime( src.Y,
+                                           src.M,
+                                           src.D,
+                                           src.H,
+                                           src.MN,
+                                           src.S,
+                                           src.MS );
+    }
+};
+}} // namespace pybind11::detail
 
 namespace {
-
-std::vector< char > catrecord( std::FILE* , int );
-
-/*
- * automate the read-bytes-throw-if-fails, at least for now. file error
- * reporting isn't very sophisticated, but doesn't have to be yet.
- */
-void getbytes( char* buffer, std::size_t nmemb, std::FILE* fd ) {
-    const auto read = std::fread( buffer, 1, nmemb, fd );
-    if( read != nmemb ) {
-        if( std::feof( fd ) ) throw eof_error( "unexpected EOF" );
-        throw io_error( errno );
-    }
-}
 
 py::dict SUL( const char* buffer ) {
     char id[ 61 ] = {};
@@ -79,170 +88,44 @@ py::dict SUL( const char* buffer ) {
                      "id"_a =  id );
 }
 
-struct bookmark {
-    std::fpos_t pos;
-
-    /*
-     * the remaining bytes of the "previous" visible record. if 0, the current
-     * object is the visible record label
-     */
-    int residual = 0;
-
-    int isexplicit = 0;
-    int isencrypted = 0;
-
-    /*
-     * only pos is used for seeking and repositioning - tell is used only for
-     * __repr__ and debugging purposes
-     */
-    long long tell = 0;
-};
-
 struct segheader {
     std::uint8_t attrs;
     int len;
     int type;
 };
 
-segheader segment_header( std::FILE* fp ) {
-    char buffer[ 4 ];
-    getbytes( buffer, 4, fp );
-
-    segheader seg;
-    const auto err = dlis_lrsh( buffer, &seg.len, &seg.attrs, &seg.type );
-    if( err ) throw py::value_error( "unable to parse "
-                                     "logical record segment header" );
-    return seg;
-}
-
-int visible_length( std::FILE* fp ) {
-    char buffer[ 4 ];
-    getbytes( buffer, 4, fp );
-
-    int len, version;
-    const auto err = dlis_vrl( buffer, &len, &version );
-    if( err ) throw py::value_error( "unable to parse visible record label" );
-
-    if( version != 1 ) {
-        std::string msg = "VRL DLIS not v1, was " + std::to_string( version );
-        runtime_warning( msg.c_str() );
-    }
-
-    return len;
-}
 
 class file {
 public:
     explicit file( const std::string& path );
 
-    operator std::FILE*() const {
-        if( this->fp ) return this->fp.get();
-        throw py::value_error( "I/O operation on closed file" );
-    }
-
-    void close() { this->fp.reset(); }
-    bool eof();
+    void close() { this->fs.close(); }
 
     py::tuple mkindex();
-    py::bytes raw_record( const bookmark& );
-    py::dict eflr( const bookmark& );
-    py::object iflr_chunk( const bookmark& mark, const std::vector< std::tuple< int, int > >&, int, int );
+    py::bytes raw_record( const dl::bookmark& );
+    py::dict eflr( const dl::bookmark& );
+    py::object iflr_chunk( const dl::bookmark& mark, const std::vector< std::tuple< int, int > >&, int, int );
 
 
 private:
-    struct fcloser {
-        void operator()( std::FILE* x ) {
-            if( x ) std::fclose( x );
-        }
-    };
-
-    std::unique_ptr< std::FILE, fcloser > fp;
+    File fs;
 };
 
-file::file( const std::string& path ) :
-    fp( std::fopen( path.c_str(), "rb" ) ) {
-
-    if( !this->fp ) throw io_error( errno );
-}
-
-bool iseof( std::FILE* fp ) {
-    int c = std::fgetc( fp );
-
-    if( c == EOF ) return true;
-    else c = std::ungetc( c, fp );
-
-    if( c == EOF ) return true;
-    return std::feof( fp );
-}
-
-bool file::eof() {
-    return iseof( *this );
-}
-
-bookmark mark( std::FILE* fp, int& remaining ) {
-    bookmark mark;
-    mark.residual = remaining;
-
-    auto err = std::fgetpos( fp, &mark.pos );
-    if( err ) throw io_error( errno );
-
-#ifndef _WIN32
-    mark.tell = std::ftell( fp );
-#else
-    mark.tell = _ftelli64( fp );
-#endif
-    if( mark.tell == -1 ) throw io_error( errno );
-
-    while( true ) {
-
-        /*
-         * if remaining = 0 this is at the VRL, skip the inner-loop and read it
-         */
-        while( remaining > 0 ) {
-            auto seg = segment_header( fp );
-            remaining -= seg.len;
-
-            int has_predecessor = 0;
-            int has_successor = 0;
-            int has_encryption_packet = 0;
-            int has_checksum = 0;
-            int has_trailing_length = 0;
-            int has_padding = 0;
-            dlis_segment_attributes( seg.attrs, &mark.isexplicit,
-                                                &has_predecessor,
-                                                &has_successor,
-                                                &mark.isencrypted,
-                                                &has_encryption_packet,
-                                                &has_checksum,
-                                                &has_trailing_length,
-                                                &has_padding );
-
-            seg.len -= 4; // size of LRSH
-            err = std::fseek( fp, seg.len, SEEK_CUR );
-            if( err ) throw io_error( errno );
-
-            if( !has_successor ) return mark;
-        }
-
-        /* if remaining is 0, then we're at a VRL */
-        remaining = visible_length( fp ) - 4;
-    }
-}
+file::file( const std::string& path ) : fs( path ) {}
 
 py::tuple file::mkindex() {
-    std::FILE* fd = *this;
+    auto sulbuffer = this->fs.read< 80 >();
+    auto sul = SUL( sulbuffer.data() );
 
-    char buffer[ 80 ];
-    getbytes( buffer, sizeof( buffer ), fd );
-    auto sul = SUL( buffer );
-
-    std::vector< bookmark > bookmarks;
+    std::vector< dl::bookmark > bookmarks;
     std::vector< py::dict > explicits;
     py::dict implicit_refs;
     int remaining = 0;
 
-    while( !iseof( fd ) ) {
-        bookmarks.push_back( mark( fd, remaining ) );
+    while( !this->fs.eof() ) {
+        auto mark = tag( this->fs, remaining );
+        bookmarks.push_back( std::move( mark.second ) );
+        remaining = mark.first;
 
         const auto& last = bookmarks.back();
         if( last.isexplicit && !last.isencrypted ) try {
@@ -250,17 +133,8 @@ py::tuple file::mkindex() {
         } catch( std::exception& e ) {
             py::print(e.what(), " at ", bookmarks.size() );
         }
-    }
 
-    for( const auto& last : bookmarks ) {
-        if( last.isexplicit || last.isencrypted ) continue;
-
-        auto err = std::fsetpos( fd, &last.pos );
-        if( err ) throw io_error( errno );
-
-        auto implicit = catrecord( fd, last.residual );
-        const auto* ptr = implicit.data();
-        auto name = py::cast( obname( ptr ) );
+        auto name = py::cast( last.name );
 
         if( !implicit_refs.contains( name ) )
             implicit_refs[ name ] = py::list();
@@ -274,32 +148,32 @@ py::tuple file::mkindex() {
 py::object conv( int reprc, py::buffer b ) {
     const auto* xs = static_cast< const char* >( b.request().ptr );
     switch( reprc ) {
-        case DLIS_FSHORT: return py::cast( fshort( xs ) );
-        case DLIS_FSINGL: return py::cast( fsingl( xs ) );
-        case DLIS_FSING1: return py::cast( fsing1( xs ) );
-        case DLIS_FSING2: return py::cast( fsing2( xs ) );
-        case DLIS_ISINGL: return py::cast( isingl( xs ) );
-        case DLIS_VSINGL: return py::cast( vsingl( xs ) );
-        case DLIS_FDOUBL: return py::cast( fdoubl( xs ) );
-        case DLIS_FDOUB1: return py::cast( fdoub1( xs ) );
-        case DLIS_FDOUB2: return py::cast( fdoub2( xs ) );
-        case DLIS_CSINGL: return py::cast( csingl( xs ) );
-        case DLIS_CDOUBL: return py::cast( cdoubl( xs ) );
-        case DLIS_SSHORT: return py::cast( sshort( xs ) );
-        case DLIS_SNORM:  return py::cast(  snorm( xs ) );
-        case DLIS_SLONG:  return py::cast(  slong( xs ) );
-        case DLIS_USHORT: return py::cast( ushort( xs ) );
-        case DLIS_UNORM:  return py::cast(  unorm( xs ) );
-        case DLIS_ULONG:  return py::cast(  ulong( xs ) );
-        case DLIS_UVARI:  return py::cast(  uvari( xs ) );
-        case DLIS_IDENT:  return py::cast(  ident( xs ) );
-        case DLIS_ASCII:  return py::cast(  ascii( xs ) );
-        case DLIS_DTIME:  return            dtime( xs )  ;
-        case DLIS_STATUS: return py::cast( status( xs ) );
-        case DLIS_ORIGIN: return py::cast( origin( xs ) );
-        case DLIS_OBNAME: return py::cast( obname( xs ) );
-        case DLIS_OBJREF: return py::cast( objref( xs ) );
-        case DLIS_UNITS:  return py::cast(  ident( xs ) );
+        case DLIS_FSHORT: return py::cast( dl::fshort( xs ) );
+        case DLIS_FSINGL: return py::cast( dl::fsingl( xs ) );
+        case DLIS_FSING1: return py::cast( dl::fsing1( xs ) );
+        case DLIS_FSING2: return py::cast( dl::fsing2( xs ) );
+        case DLIS_ISINGL: return py::cast( dl::isingl( xs ) );
+        case DLIS_VSINGL: return py::cast( dl::vsingl( xs ) );
+        case DLIS_FDOUBL: return py::cast( dl::fdoubl( xs ) );
+        case DLIS_FDOUB1: return py::cast( dl::fdoub1( xs ) );
+        case DLIS_FDOUB2: return py::cast( dl::fdoub2( xs ) );
+        case DLIS_CSINGL: return py::cast( dl::csingl( xs ) );
+        case DLIS_CDOUBL: return py::cast( dl::cdoubl( xs ) );
+        case DLIS_SSHORT: return py::cast( dl::sshort( xs ) );
+        case DLIS_SNORM:  return py::cast( dl:: snorm( xs ) );
+        case DLIS_SLONG:  return py::cast( dl:: slong( xs ) );
+        case DLIS_USHORT: return py::cast( dl::ushort( xs ) );
+        case DLIS_UNORM:  return py::cast( dl:: unorm( xs ) );
+        case DLIS_ULONG:  return py::cast( dl:: ulong( xs ) );
+        case DLIS_UVARI:  return py::cast( dl:: uvari( xs ) );
+        case DLIS_IDENT:  return py::cast( dl:: ident( xs ) );
+        case DLIS_ASCII:  return py::cast( dl:: ascii( xs ) );
+        case DLIS_DTIME:  return py::cast( dl:: dtime( xs ) );
+        case DLIS_STATUS: return py::cast( dl::status( xs ) );
+        case DLIS_ORIGIN: return py::cast( dl::origin( xs ) );
+        case DLIS_OBNAME: return py::cast( dl::obname( xs ) );
+        case DLIS_OBJREF: return py::cast( dl::objref( xs ) );
+        case DLIS_UNITS:  return py::cast( dl:: ident( xs ) );
 
         default:
             throw py::value_error( "unknown representation code "
@@ -312,32 +186,32 @@ py::list getarray( const char*& xs, int count, int reprc ) {
 
     for( int i = 0; i < count; ++i ) {
         switch( reprc ) {
-            case DLIS_FSHORT: l.append( fshort( xs ) ); break;
-            case DLIS_FSINGL: l.append( fsingl( xs ) ); break;
-            case DLIS_FSING1: l.append( fsing1( xs ) ); break;
-            case DLIS_FSING2: l.append( fsing2( xs ) ); break;
-            case DLIS_ISINGL: l.append( isingl( xs ) ); break;
-            case DLIS_VSINGL: l.append( vsingl( xs ) ); break;
-            case DLIS_FDOUBL: l.append( fdoubl( xs ) ); break;
-            case DLIS_FDOUB1: l.append( fdoub1( xs ) ); break;
-            case DLIS_FDOUB2: l.append( fdoub2( xs ) ); break;
-            case DLIS_CSINGL: l.append( csingl( xs ) ); break;
-            case DLIS_CDOUBL: l.append( cdoubl( xs ) ); break;
-            case DLIS_SSHORT: l.append( sshort( xs ) ); break;
-            case DLIS_SNORM:  l.append(  snorm( xs ) ); break;
-            case DLIS_SLONG:  l.append(  slong( xs ) ); break;
-            case DLIS_USHORT: l.append( ushort( xs ) ); break;
-            case DLIS_UNORM:  l.append(  unorm( xs ) ); break;
-            case DLIS_ULONG:  l.append(  ulong( xs ) ); break;
-            case DLIS_UVARI:  l.append(  uvari( xs ) ); break;
-            case DLIS_IDENT:  l.append(  ident( xs ) ); break;
-            case DLIS_ASCII:  l.append(  ascii( xs ) ); break;
-            case DLIS_DTIME:  l.append(  dtime( xs ) ); break;
-            case DLIS_STATUS: l.append( status( xs ) ); break;
-            case DLIS_ORIGIN: l.append( origin( xs ) ); break;
-            case DLIS_OBNAME: l.append( obname( xs ) ); break;
-            case DLIS_OBJREF: l.append( objref( xs ) ); break;
-            case DLIS_UNITS:  l.append(  ident( xs ) ); break;
+            case DLIS_FSHORT: l.append( dl::fshort( xs ) ); break;
+            case DLIS_FSINGL: l.append( dl::fsingl( xs ) ); break;
+            case DLIS_FSING1: l.append( dl::fsing1( xs ) ); break;
+            case DLIS_FSING2: l.append( dl::fsing2( xs ) ); break;
+            case DLIS_ISINGL: l.append( dl::isingl( xs ) ); break;
+            case DLIS_VSINGL: l.append( dl::vsingl( xs ) ); break;
+            case DLIS_FDOUBL: l.append( dl::fdoubl( xs ) ); break;
+            case DLIS_FDOUB1: l.append( dl::fdoub1( xs ) ); break;
+            case DLIS_FDOUB2: l.append( dl::fdoub2( xs ) ); break;
+            case DLIS_CSINGL: l.append( dl::csingl( xs ) ); break;
+            case DLIS_CDOUBL: l.append( dl::cdoubl( xs ) ); break;
+            case DLIS_SSHORT: l.append( dl::sshort( xs ) ); break;
+            case DLIS_SNORM:  l.append( dl:: snorm( xs ) ); break;
+            case DLIS_SLONG:  l.append( dl:: slong( xs ) ); break;
+            case DLIS_USHORT: l.append( dl::ushort( xs ) ); break;
+            case DLIS_UNORM:  l.append( dl:: unorm( xs ) ); break;
+            case DLIS_ULONG:  l.append( dl:: ulong( xs ) ); break;
+            case DLIS_UVARI:  l.append( dl:: uvari( xs ) ); break;
+            case DLIS_IDENT:  l.append( dl:: ident( xs ) ); break;
+            case DLIS_ASCII:  l.append( dl:: ascii( xs ) ); break;
+            case DLIS_DTIME:  l.append( dl:: dtime( xs ) ); break;
+            case DLIS_STATUS: l.append( dl::status( xs ) ); break;
+            case DLIS_ORIGIN: l.append( dl::origin( xs ) ); break;
+            case DLIS_OBNAME: l.append( dl::obname( xs ) ); break;
+            case DLIS_OBJREF: l.append( dl::objref( xs ) ); break;
+            case DLIS_UNITS:  l.append( dl:: ident( xs ) ); break;
 
             default:
                 throw py::value_error( "unknown representation code "
@@ -509,10 +383,10 @@ object_template explicit_template( const char*& cur, const char* end ) {
             flags.label = 1;
         }
 
-                          col["label"] = ident( cur );
-        if( flags.count ) col["count"] = count = uvari( cur );
-        if( flags.reprc ) col["reprc"] = reprc = ushort( cur );
-        if( flags.units ) col["units"] = ident( cur );
+                          col["label"] = dl::ident( cur );
+        if( flags.count ) col["count"] = count = dl::uvari( cur );
+        if( flags.reprc ) col["reprc"] = reprc = dl::ushort( cur );
+        if( flags.units ) col["units"] = dl::ident( cur );
         if( flags.value ) col["value"] = getarray( cur, count, reprc );
 
         if( flags.invariant ) cols.invariant.push_back( std::move( col ) );
@@ -546,8 +420,8 @@ py::dict eflr( const char* cur, const char* end ) {
                                  "after SET component" );
     }
 
-    if( set.type ) record["type"] = ident( cur );
-    if( set.name ) record["name"] = ident( cur );
+    if( set.type ) record["type"] = dl::ident( cur );
+    if( set.name ) record["name"] = dl::ident( cur );
 
     auto tmpl = explicit_template( cur, end );
 
@@ -564,7 +438,7 @@ py::dict eflr( const char* cur, const char* end ) {
          * just assume obname. objects have to specify it, and if it is unset
          * then UserWarning has already been emitted
          */
-        auto name = obname( cur );
+        auto name = dl::obname( cur );
 
         /*
          * each object is a row in a table of attributes. If the object is cut
@@ -586,12 +460,12 @@ py::dict eflr( const char* cur, const char* end ) {
 
             if( flags.label ) {
                 user_warning( "ATTRIB:label set, but must be null - was "
-                            + ident( cur ) );
+                            + dl::ident( cur ) );
             }
 
-            if( flags.count ) cell["count"] = uvari( cur );
-            if( flags.reprc ) cell["reprc"] = ushort( cur );
-            if( flags.units ) cell["units"] = ident( cur );
+            if( flags.count ) cell["count"] = dl::uvari( cur );
+            if( flags.reprc ) cell["reprc"] = dl::ushort( cur );
+            if( flags.units ) cell["units"] = dl::ident( cur );
             if( flags.value ) {
                 /*
                  * count/repr can both be set by this label, and by the
@@ -618,7 +492,7 @@ py::dict eflr( const char* cur, const char* end ) {
     return record;
 }
 
-std::vector< char > catrecord( std::FILE* fp, int remaining ) {
+std::vector< char > catrecord( File& fp, int remaining ) {
 
     std::vector< char > cat;
     cat.reserve( 8192 );
@@ -651,7 +525,7 @@ std::vector< char > catrecord( std::FILE* fp, int remaining ) {
             seg.len -= 4; // size of LRSH
             const auto prevsize = cat.size();
             cat.resize( prevsize + seg.len );
-            getbytes( cat.data() + prevsize, seg.len, fp );
+            fp.read( cat.data() + prevsize, seg.len );
 
             if( has_trailing_length ) cat.erase( cat.end() - 2, cat.end() );
             if( has_checksum )        cat.erase( cat.end() - 2, cat.end() );
@@ -668,39 +542,35 @@ std::vector< char > catrecord( std::FILE* fp, int remaining ) {
     }
 }
 
-py::bytes file::raw_record( const bookmark& m ) {
-    std::FILE* fd = *this;
-    auto err = std::fsetpos( fd, &m.pos );
-    if( err ) throw io_error( errno );
+py::bytes file::raw_record( const dl::bookmark& m ) {
+    this->fs.seek( m.tell );
 
-    auto cat = catrecord( fd, m.residual );
+    auto cat = catrecord( this->fs, m.residual );
     return py::bytes( cat.data(), cat.size() );
 }
 
-py::dict file::eflr( const bookmark& mark ) {
+py::dict file::eflr( const dl::bookmark& mark ) {
     if( mark.isencrypted ) return py::none();
-    auto err = std::fsetpos( *this, &mark.pos );
-    if( err ) throw io_error( errno );
+    this->fs.seek( mark.tell );
 
-    auto cat = catrecord( *this, mark.residual );
+    auto cat = catrecord( this->fs, mark.residual );
     return ::eflr( cat.data(), cat.data() + cat.size() );
 }
 
-py::object file::iflr_chunk( const bookmark& mark,
+py::object file::iflr_chunk( const dl::bookmark& mark,
                              const std::vector< std::tuple< int, int > >& pre,
                              int elems,
                              int dtype ) {
 
     if( mark.isencrypted ) return py::none();
-    auto err = std::fsetpos( *this, &mark.pos );
-    if( err ) throw io_error( errno );
 
-    auto cat = catrecord( *this, mark.residual );
+    this->fs.seek( mark.tell );
+
+    auto cat = catrecord( this->fs, mark.residual );
     const char* ptr = cat.data();
 
-    obname( ptr );
-
-    auto frameno = uvari( ptr );
+    dl::obname( ptr );
+    auto frameno = dl::uvari( ptr );
 
     for( auto& pair : pre ) {
         auto count = std::get< 0 >( pair );
@@ -727,10 +597,10 @@ PYBIND11_MODULE(core, m) {
         }
     });
 
-    py::class_< bookmark >( m, "bookmark" )
-        .def_readwrite( "encrypted", &bookmark::isencrypted )
-        .def_readwrite( "explicit",  &bookmark::isexplicit )
-        .def( "__repr__", []( const bookmark& m ) {
+    py::class_< dl::bookmark >( m, "bookmark" )
+        .def_readwrite( "encrypted", &dl::bookmark::isencrypted )
+        .def_readwrite( "explicit",  &dl::bookmark::isexplicit )
+        .def( "__repr__", []( const dl::bookmark& m ) {
             auto pos = " pos=" + std::to_string( m.tell );
             auto enc = std::string(" encrypted=") +
                      (m.isencrypted ? "True": "False");
@@ -761,7 +631,6 @@ PYBIND11_MODULE(core, m) {
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
         .def( "close", &file::close )
-        .def( "eof",   &file::eof )
 
         .def( "mkindex",    &file::mkindex )
         .def( "raw_record", &file::raw_record )

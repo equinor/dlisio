@@ -5,12 +5,9 @@
 
 #include <dlisio/types.h>
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include "typeconv.hpp"
 
-#include <datetime.h>
-
-namespace {
+namespace dl {
 
 int sshort( const char*& xs ) noexcept {
     std::int8_t x;
@@ -120,7 +117,7 @@ long uvari( const char*& xs ) noexcept {
     return x;
 }
 
-std::string ident( const char*& xs ) noexcept {
+std::string ident( const char*& xs ) {
     char str[ 256 ];
     std::int32_t len;
 
@@ -141,14 +138,17 @@ std::string ascii( const char*& xs ) {
     return { str.begin(), str.end() };
 }
 
-py::object dtime( const char*& xs ) {
-    int Y, TZ, M, D, H, MN, S, MS;
-    xs = dlis_dtime( xs, &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
-    auto dt = py::reinterpret_steal< py::object >(
-        PyDateTime_FromDateAndTime( dlis_year( Y ), M, D, H, MN, S, MS )
-    );
-
-    // TODO: make this aware of TZ
+datetime dtime( const char*& xs ) noexcept {
+    datetime dt;
+    xs = dlis_dtime( xs, &dt.Y,
+                         &dt.TZ,
+                         &dt.M,
+                         &dt.D,
+                         &dt.H,
+                         &dt.MN,
+                         &dt.S,
+                         &dt.MS );
+    dt.Y = dlis_year( dt.Y );
     return dt;
 }
 
@@ -167,6 +167,40 @@ std::tuple< long, int, std::string > obname( const char*& xs ) {
 
     xs = dlis_obname( xs, &orig, &copy, &len, str );
     return std::make_tuple( orig, copy, std::string( str, str + len ) );
+}
+
+std::tuple< long, int, std::string > obname( const char*& xs, int nmemb ) {
+    if( nmemb < 4 ) {
+        /*
+         * safeguard against too-few-bytes to read the integer parts of the obname
+         */
+        std::string msg = "obname is minimum 5 bytes, nmemb was "
+                        + std::to_string( nmemb );
+        throw std::length_error( msg );
+    }
+
+    char str[ 256 ] = {};
+    std::int32_t orig;
+    std::uint8_t copy;
+    std::int32_t len;
+    std::uint8_t name_len;
+
+    const auto* ptr = xs;
+    ptr = dlis_origin( ptr, &orig );
+    ptr = dlis_ushort( ptr, &copy );
+    ptr = dlis_ushort( ptr, &name_len );
+    const auto int_len = std::distance( xs, ptr );
+
+    if( int_len + name_len > nmemb ) {
+        std::string msg = "expected obname length (= "
+                        + std::to_string(int_len + name_len) + ") < nmemb ("
+                        + "= " + std::to_string( nmemb ) + ")";
+        throw std::length_error( msg );
+    }
+
+    // TODO: stronger exception guarantee?
+    xs = dlis_ident( ptr - 1, &len, str );
+    return std::make_tuple( orig, copy, str );
 }
 
 std::tuple< std::string, long, int, std::string > objref( const char*& xs ) {
