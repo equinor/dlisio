@@ -222,6 +222,43 @@ py::list getarray( const char*& xs, int count, int reprc ) {
     return l;
 }
 
+void skiparray( const char*& xs, int count, int reprc ) {
+    for( int i = 0; i < count; ++i ) {
+        switch( reprc ) {
+            case DLIS_FSHORT: dl::fshort( xs ); break;
+            case DLIS_FSINGL: dl::fsingl( xs ); break;
+            case DLIS_FSING1: dl::fsing1( xs ); break;
+            case DLIS_FSING2: dl::fsing2( xs ); break;
+            case DLIS_ISINGL: dl::isingl( xs ); break;
+            case DLIS_VSINGL: dl::vsingl( xs ); break;
+            case DLIS_FDOUBL: dl::fdoubl( xs ); break;
+            case DLIS_FDOUB1: dl::fdoub1( xs ); break;
+            case DLIS_FDOUB2: dl::fdoub2( xs ); break;
+            case DLIS_CSINGL: dl::csingl( xs ); break;
+            case DLIS_CDOUBL: dl::cdoubl( xs ); break;
+            case DLIS_SSHORT: dl::sshort( xs ); break;
+            case DLIS_SNORM:  dl:: snorm( xs ); break;
+            case DLIS_SLONG:  dl:: slong( xs ); break;
+            case DLIS_USHORT: dl::ushort( xs ); break;
+            case DLIS_UNORM:  dl:: unorm( xs ); break;
+            case DLIS_ULONG:  dl:: ulong( xs ); break;
+            case DLIS_UVARI:  dl:: uvari( xs ); break;
+            case DLIS_IDENT:  dl:: ident( xs ); break;
+            case DLIS_ASCII:  dl:: ascii( xs ); break;
+            case DLIS_DTIME:  dl:: dtime( xs ); break;
+            case DLIS_STATUS: dl::status( xs ); break;
+            case DLIS_ORIGIN: dl::origin( xs ); break;
+            case DLIS_OBNAME: dl::obname( xs ); break;
+            case DLIS_OBJREF: dl::objref( xs ); break;
+            case DLIS_UNITS:  dl:: ident( xs ); break;
+
+            default:
+                throw py::value_error( "unknown representation code "
+                                     + std::to_string( reprc ) );
+        }
+    }
+}
+
 struct setattr {
     int type, name;
 };
@@ -572,11 +609,91 @@ py::object file::iflr_chunk( const dl::bookmark& mark,
     dl::obname( ptr );
     auto frameno = dl::uvari( ptr );
 
-    for( auto& pair : pre ) {
-        auto count = std::get< 0 >( pair );
-        auto reprc = std::get< 1 >( pair );
+    const auto is_constant_size = [](int reprc) {
+        switch( reprc ) {
+            case DLIS_FSHORT:
+            case DLIS_FSINGL:
+            case DLIS_FSING1:
+            case DLIS_FSING2:
+            case DLIS_ISINGL:
+            case DLIS_VSINGL:
+            case DLIS_FDOUBL:
+            case DLIS_FDOUB1:
+            case DLIS_FDOUB2:
+            case DLIS_CSINGL:
+            case DLIS_CDOUBL:
+            case DLIS_SSHORT:
+            case DLIS_SNORM :
+            case DLIS_SLONG :
+            case DLIS_USHORT:
+            case DLIS_UNORM :
+            case DLIS_ULONG :
+            case DLIS_DTIME :
+                return true;
+            default:
+                return false;
+        }
+    };
 
-        getarray( ptr, count, reprc );
+    const auto reprsize = [](int reprc) {
+        switch( reprc ) {
+            case DLIS_USHORT:
+            case DLIS_SSHORT:
+                return 1;
+
+            case DLIS_FSHORT:
+            case DLIS_SNORM :
+            case DLIS_UNORM :
+                return 2;
+
+            case DLIS_FSINGL:
+            case DLIS_ISINGL:
+            case DLIS_VSINGL:
+            case DLIS_SLONG :
+            case DLIS_ULONG :
+                return 4;
+
+            case DLIS_FDOUBL:
+            case DLIS_FSING1:
+            case DLIS_CSINGL:
+            case DLIS_DTIME :
+                return 8;
+
+            case DLIS_FSING2:
+                return 12;
+
+            case DLIS_FDOUB1:
+            case DLIS_CDOUBL:
+                return 16;
+
+            case DLIS_FDOUB2:
+                return 24;
+
+            default:
+                throw std::runtime_error( "unknown reprc" );
+        }
+    };
+
+    bool constant_size = true;
+    int size = 0;
+    for( const auto& pair : pre ) {
+        const auto count = std::get< 1 >( pair );
+        const auto reprc = std::get< 1 >( pair );
+        constant_size = constant_size && is_constant_size( reprc );
+
+        size += count * reprsize( reprc );
+    }
+
+    if ( !constant_size ) {
+        for( auto& pair : pre ) {
+            auto count = std::get< 0 >( pair );
+            auto reprc = std::get< 1 >( pair );
+
+            skiparray( ptr, count, reprc );
+        }
+    }
+    else {
+        ptr += size;
     }
 
     return getarray( ptr, elems, dtype );
