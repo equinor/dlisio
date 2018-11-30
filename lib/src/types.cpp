@@ -450,3 +450,39 @@ void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     std::memcpy( xs, &v, sizeof( v ) );
     return (char*)xs + sizeof( v );
 }
+
+int dlis_sizeof_type( int x ) {
+    if ( x < DLIS_FSHORT || x > DLIS_UNITS ) return -1;
+
+    constexpr const int sizes[] = {
+        DLIS_SIZEOF_FSHORT,
+        DLIS_SIZEOF_FSINGL,
+        DLIS_SIZEOF_FSING1,
+        DLIS_SIZEOF_FSING2,
+        DLIS_SIZEOF_ISINGL,
+        DLIS_SIZEOF_VSINGL,
+        DLIS_SIZEOF_FDOUBL,
+        DLIS_SIZEOF_FDOUB1,
+        DLIS_SIZEOF_FDOUB2,
+        DLIS_SIZEOF_CSINGL,
+        DLIS_SIZEOF_CDOUBL,
+        DLIS_SIZEOF_SSHORT,
+        DLIS_SIZEOF_SNORM,
+        DLIS_SIZEOF_SLONG,
+        DLIS_SIZEOF_USHORT,
+        DLIS_SIZEOF_UNORM,
+        DLIS_SIZEOF_ULONG,
+        DLIS_SIZEOF_UVARI,
+        DLIS_SIZEOF_IDENT,
+        DLIS_SIZEOF_ASCII,
+        DLIS_SIZEOF_DTIME,
+        DLIS_SIZEOF_ORIGIN,
+        DLIS_SIZEOF_OBNAME,
+        DLIS_SIZEOF_OBJREF,
+        DLIS_SIZEOF_ATTREF,
+        DLIS_SIZEOF_STATUS,
+        DLIS_SIZEOF_UNITS,
+    };
+
+    return sizes[ x - 1 ];
+}

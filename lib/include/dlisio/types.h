@@ -110,6 +110,14 @@ void* dlis_ulongo(  void*, uint32_t );
 
 void* dlis_uvario( void*, int32_t, int width );
 
+/*
+ * get the size (in bytes) of a particular data type. Expects a DLIS_UNORM or
+ * similar type code.
+ *
+ * Returns a negative value passed an invalid type code.
+ */
+int dlis_sizeof_type( int );
+
 #define DLIS_FSHORT 1  // Low precision floating point
 #define DLIS_FSINGL 2  // IEEE single precision floating point
 #define DLIS_FSING1 3  // Validated single precision floating point
@@ -137,6 +145,36 @@ void* dlis_uvario( void*, int32_t, int width );
 #define DLIS_ATTREF 25 // Attribute reference
 #define DLIS_STATUS 26 // Boolean status
 #define DLIS_UNITS  27 // Units expression
+
+#define DLIS_VARIABLE_LENGTH 0
+
+#define DLIS_SIZEOF_FSHORT 2
+#define DLIS_SIZEOF_FSINGL 4
+#define DLIS_SIZEOF_FSING1 8
+#define DLIS_SIZEOF_FSING2 12
+#define DLIS_SIZEOF_ISINGL 4
+#define DLIS_SIZEOF_VSINGL 4
+#define DLIS_SIZEOF_FDOUBL 8
+#define DLIS_SIZEOF_FDOUB1 16
+#define DLIS_SIZEOF_FDOUB2 24
+#define DLIS_SIZEOF_CSINGL 8
+#define DLIS_SIZEOF_CDOUBL 16
+#define DLIS_SIZEOF_SSHORT 1
+#define DLIS_SIZEOF_SNORM  2
+#define DLIS_SIZEOF_SLONG  4
+#define DLIS_SIZEOF_USHORT 1
+#define DLIS_SIZEOF_UNORM  2
+#define DLIS_SIZEOF_ULONG  4
+#define DLIS_SIZEOF_UVARI  DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_IDENT  DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_ASCII  DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_DTIME  8
+#define DLIS_SIZEOF_ORIGIN DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_OBNAME DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_OBJREF DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_ATTREF DLIS_VARIABLE_LENGTH
+#define DLIS_SIZEOF_STATUS 1
+#define DLIS_SIZEOF_UNITS  DLIS_VARIABLE_LENGTH
 
 #ifdef __cplusplus
 }
