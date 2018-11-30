@@ -899,3 +899,33 @@ TEST_CASE("date-time", "[type]") {
     CHECK( S  == 15 );
     CHECK( MS == 620 );
 }
+
+TEST_CASE( "size-of", "[type]" ) {
+    CHECK( dlis_sizeof_type( DLIS_FSHORT ) == 2 );
+    CHECK( dlis_sizeof_type( DLIS_FSINGL ) == 4 );
+    CHECK( dlis_sizeof_type( DLIS_FSING1 ) == 8 );
+    CHECK( dlis_sizeof_type( DLIS_FSING2 ) == 12 );
+    CHECK( dlis_sizeof_type( DLIS_ISINGL ) == 4 );
+    CHECK( dlis_sizeof_type( DLIS_VSINGL ) == 4 );
+    CHECK( dlis_sizeof_type( DLIS_FDOUBL ) == 8 );
+    CHECK( dlis_sizeof_type( DLIS_FDOUB1 ) == 16 );
+    CHECK( dlis_sizeof_type( DLIS_FDOUB2 ) == 24 );
+    CHECK( dlis_sizeof_type( DLIS_CSINGL ) == 8 );
+    CHECK( dlis_sizeof_type( DLIS_CDOUBL ) == 16 );
+    CHECK( dlis_sizeof_type( DLIS_SSHORT ) == 1 );
+    CHECK( dlis_sizeof_type( DLIS_SNORM  ) == 2 );
+    CHECK( dlis_sizeof_type( DLIS_SLONG  ) == 4 );
+    CHECK( dlis_sizeof_type( DLIS_USHORT ) == 1 );
+    CHECK( dlis_sizeof_type( DLIS_UNORM  ) == 2 );
+    CHECK( dlis_sizeof_type( DLIS_ULONG  ) == 4 );
+    CHECK( dlis_sizeof_type( DLIS_UVARI  ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_IDENT  ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_ASCII  ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_DTIME  ) == 8 );
+    CHECK( dlis_sizeof_type( DLIS_ORIGIN ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_OBNAME ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_OBJREF ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_ATTREF ) == 0 );
+    CHECK( dlis_sizeof_type( DLIS_STATUS ) == 1 );
+    CHECK( dlis_sizeof_type( DLIS_UNITS  ) == 0 );
+}
