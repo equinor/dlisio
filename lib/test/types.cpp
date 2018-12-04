@@ -550,7 +550,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
 
 TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
     SECTION("parsed doubles match expected result") {
-        const std::array< unsigned char[8], 7 > inputs = {{
+        const std::array< bytes<8>, 7 > inputs = {{
             { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // 0
             { 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // -0
             { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18 }, // ~3.14
@@ -562,7 +562,7 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
 
         const std::array< double, inputs.size() > expected = {
             0,
-            -0,
+            static_cast< float >( std::copysign(0, -1) ),
             3.1415926535897930,
             153,
             -153,
@@ -570,10 +570,21 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
             -std::numeric_limits< double >::infinity(),
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            double v;
-            dlis_fdoubl( (char*)inputs[ i ], &v );
-            CHECK( v == expected[ i ] );
+        SECTION( "to native" ) {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                double v;
+                dlis_fdoubl( inputs[ i ], &v );
+                CHECK( v == expected[ i ] );
+            }
+        }
+
+        SECTION( "from native" ) {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                double v;
+                const void* end = dlis_fdoublo( &v, expected[ i ] );
+                CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 

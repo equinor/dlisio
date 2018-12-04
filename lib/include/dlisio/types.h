@@ -109,6 +109,7 @@ void* dlis_unormo(  void*, uint16_t );
 void* dlis_ulongo(  void*, uint32_t );
 
 void* dlis_fsinglo( void*, float );
+void* dlis_fdoublo( void*, double );
 
 void* dlis_uvario( void*, int32_t, int width );
 
