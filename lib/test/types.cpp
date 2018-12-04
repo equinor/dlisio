@@ -494,7 +494,7 @@ TEST_CASE("short float (16-bit)", "[type]") {
 
 TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
     SECTION("parsed floats match expected result") {
-        const std::array< unsigned char[4], 7 > inputs = {{
+        const std::array< bytes<4>, 7 > inputs = {{
             { 0x00, 0x00, 0x00, 0x00 }, // 0
             { 0x80, 0x00, 0x00, 0x00 }, // -0
             { 0x40, 0x49, 0x0F, 0xDB }, // 3.1415927410125732421875
@@ -506,7 +506,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
 
         const std::array< float, inputs.size() > expected = {
             0,
-            -0,
+            static_cast< float >( std::copysign(0, -1) ),
             3.1415927410125732421875,
             153,
             -153,
@@ -514,10 +514,21 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
             -std::numeric_limits< float >::infinity(),
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            float v;
-            dlis_fsingl( (char*)inputs[ i ], &v );
-            CHECK( v == expected[ i ] );
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                float v;
+                dlis_fsingl( inputs[ i ], &v );
+                CHECK( v == expected[ i ] );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                float v;
+                const void* end = dlis_fsinglo( &v, expected[ i ] );
+                CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 

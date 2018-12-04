@@ -429,6 +429,12 @@ void* dlis_ulongo( void* xs, std::uint32_t x ) {
     return (char*)xs + sizeof( x );
 }
 
+void* dlis_fsinglo( void* xs, float x ) {
+    x = hton( x );
+    std::memcpy( xs, &x, sizeof( x ) );
+    return (char*)xs + sizeof( x );
+}
+
 void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;
