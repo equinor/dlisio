@@ -2,6 +2,7 @@
 #define DLISIO_PYTHON_TYPECONV_HPP
 
 #include <complex>
+#include <cstdint>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -10,6 +11,16 @@ namespace dl {
 
 struct datetime {
     int Y, TZ, M, D, H, MN, S, MS;
+};
+
+struct object_name {
+    std::int32_t origin;
+    std::uint8_t copy;
+    std::string id;
+
+    std::tuple< long, long, std::string > as_tuple() const {
+        return std::make_tuple( this->origin, this->copy, this->id );
+    }
 };
 
 int sshort( const char*& xs ) noexcept;
@@ -44,8 +55,8 @@ datetime dtime( const char*& xs ) noexcept;
 
 long origin( const char*& xs ) noexcept;
 
-std::tuple< long, int, std::string > obname( const char*& xs );
-std::tuple< long, int, std::string > obname( const char*& xs, int nmemb );
+object_name obname( const char*& xs );
+object_name obname( const char*& xs, int nmemb );
 std::tuple< std::string, long, int, std::string > objref( const char*& xs );
 
 int status( const char*& xs ) noexcept;

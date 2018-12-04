@@ -64,9 +64,9 @@ TEST_CASE("IFRL in single VRL, unsegmented, minimal size") {
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( std::get< 0 >( x.second.name ) == 1 );
-    CHECK( std::get< 1 >( x.second.name ) == 1 );
-    CHECK( std::get< 2 >( x.second.name ) == "iflr" );
+    CHECK( x.second.name.origin == 1 );
+    CHECK( x.second.name.copy   == 1 );
+    CHECK( x.second.name.id     == "iflr" );
     CHECK( fs.tell() == last );
 }
 
@@ -88,9 +88,9 @@ TEST_CASE("IFRL in single VRL, unsegmented, obname and body") {
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( std::get< 0 >( x.second.name ) == 1 );
-    CHECK( std::get< 1 >( x.second.name ) == 1 );
-    CHECK( std::get< 2 >( x.second.name ) == "iflr" );
+    CHECK( x.second.name.origin == 1 );
+    CHECK( x.second.name.copy   == 1 );
+    CHECK( x.second.name.id     == "iflr" );
     CHECK( fs.tell() == last );
 }
 
@@ -116,9 +116,9 @@ TEST_CASE("IFRL in single VRL, segmented after obname") {
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( std::get< 0 >( x.second.name ) == 1 );
-    CHECK( std::get< 1 >( x.second.name ) == 1 );
-    CHECK( std::get< 2 >( x.second.name ) == "iflr" );
+    CHECK( x.second.name.origin == 1 );
+    CHECK( x.second.name.copy   == 1 );
+    CHECK( x.second.name.id     == "iflr" );
     CHECK( fs.tell() == last );
 }
 
@@ -157,9 +157,9 @@ TEST_CASE("IFRL single VRL, full obname first segment") {
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( std::get< 0 >( x.second.name ) == 1 );
-    CHECK( std::get< 1 >( x.second.name ) == 1 );
-    CHECK( std::get< 2 >( x.second.name ) == refstr );
+    CHECK( x.second.name.origin == 1 );
+    CHECK( x.second.name.copy   == 1 );
+    CHECK( x.second.name.id     == refstr );
     CHECK( fs.tell() == last );
 }
 
@@ -201,9 +201,9 @@ TEST_CASE("IFRL single VRL, full obname split across segments") {
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( std::get< 0 >( x.second.name ) == 1 );
-    CHECK( std::get< 1 >( x.second.name ) == 1 );
-    CHECK( std::get< 2 >( x.second.name ) == refstr );
+    CHECK( x.second.name.origin == 1 );
+    CHECK( x.second.name.copy   == 1 );
+    CHECK( x.second.name.id     == refstr );
     CHECK( fs.tell() == last );
 }
 
@@ -246,8 +246,8 @@ TEST_CASE("IFRL obname split across two VRLs") {
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( std::get< 0 >( x.second.name ) == 1 );
-    CHECK( std::get< 1 >( x.second.name ) == 1 );
-    CHECK( std::get< 2 >( x.second.name ) == refstr );
+    CHECK( x.second.name.origin == 1 );
+    CHECK( x.second.name.copy   == 1 );
+    CHECK( x.second.name.id     == refstr );
     CHECK( fs.tell() == last );
 }

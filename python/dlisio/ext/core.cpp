@@ -128,13 +128,20 @@ py::tuple file::mkindex() {
         remaining = mark.first;
 
         const auto& last = bookmarks.back();
-        if( last.isexplicit && !last.isencrypted ) try {
+
+        if ( last.isencrypted ) continue;
+
+        if( last.isexplicit ) try {
             explicits.push_back( this->eflr( last ) );
         } catch( std::exception& e ) {
             py::print(e.what(), " at ", bookmarks.size() );
         }
 
-        auto name = py::cast( last.name );
+        if ( last.isexplicit ) continue;
+
+        const auto name = py::make_tuple( last.name.origin,
+                                          last.name.copy,
+                                          last.name.id );
 
         if( !implicit_refs.contains( name ) )
             implicit_refs[ name ] = py::list();
@@ -171,7 +178,7 @@ py::object conv( int reprc, py::buffer b ) {
         case DLIS_DTIME:  return py::cast( dl:: dtime( xs ) );
         case DLIS_STATUS: return py::cast( dl::status( xs ) );
         case DLIS_ORIGIN: return py::cast( dl::origin( xs ) );
-        case DLIS_OBNAME: return py::cast( dl::obname( xs ) );
+        case DLIS_OBNAME: return py::cast( dl::obname( xs ).as_tuple() );
         case DLIS_OBJREF: return py::cast( dl::objref( xs ) );
         case DLIS_UNITS:  return py::cast( dl:: ident( xs ) );
 
@@ -209,7 +216,7 @@ py::list getarray( const char*& xs, int count, int reprc ) {
             case DLIS_DTIME:  l.append( dl:: dtime( xs ) ); break;
             case DLIS_STATUS: l.append( dl::status( xs ) ); break;
             case DLIS_ORIGIN: l.append( dl::origin( xs ) ); break;
-            case DLIS_OBNAME: l.append( dl::obname( xs ) ); break;
+            case DLIS_OBNAME: l.append( dl::obname( xs ).as_tuple() ); break;
             case DLIS_OBJREF: l.append( dl::objref( xs ) ); break;
             case DLIS_UNITS:  l.append( dl:: ident( xs ) ); break;
 
@@ -517,9 +524,7 @@ py::dict eflr( const char* cur, const char* end ) {
 
         /* patch invariant-attributes onto the record */
         row.insert( row.end(), tmpl.invariant.begin(), tmpl.invariant.end() );
-        auto pyname = py::make_tuple( std::get< 0 >( name ),
-                                      std::get< 1 >( name ),
-                                      std::get< 2 >( name ) );
+        const auto pyname = py::make_tuple( name.origin, name.copy, name.id );
         objects[pyname] = row;
     }
 

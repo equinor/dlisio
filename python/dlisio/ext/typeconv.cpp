@@ -158,7 +158,7 @@ long origin( const char*& xs ) noexcept {
     return x;
 }
 
-std::tuple< long, int, std::string > obname( const char*& xs ) {
+object_name obname( const char*& xs ) {
     char str[ 256 ];
     std::int32_t len;
 
@@ -166,10 +166,10 @@ std::tuple< long, int, std::string > obname( const char*& xs ) {
     std::uint8_t copy;
 
     xs = dlis_obname( xs, &orig, &copy, &len, str );
-    return std::make_tuple( orig, copy, std::string( str, str + len ) );
+    return { orig, copy, std::string( str, str + len ) };
 }
 
-std::tuple< long, int, std::string > obname( const char*& xs, int nmemb ) {
+object_name obname( const char*& xs, int nmemb ) {
     if( nmemb < 4 ) {
         /*
          * safeguard against too-few-bytes to read the integer parts of the obname
@@ -200,7 +200,7 @@ std::tuple< long, int, std::string > obname( const char*& xs, int nmemb ) {
 
     // TODO: stronger exception guarantee?
     xs = dlis_ident( ptr - 1, &len, str );
-    return std::make_tuple( orig, copy, str );
+    return { orig, copy, str };
 }
 
 std::tuple< std::string, long, int, std::string > objref( const char*& xs ) {
