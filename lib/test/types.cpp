@@ -605,9 +605,8 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
 }
 
 TEST_CASE("ibm single precision float", "[type]") {
-    const std::array< unsigned char[4], 5 > inputs = {{
+    const std::array< bytes< 4 >, 4 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00 }, // 0
-        { 0x80, 0x00, 0x00, 0x00 }, // -0
         { 0x42, 0x99, 0x00, 0x00 }, // 153
         { 0xC2, 0x99, 0x00, 0x00 }, // -153
         { 0xC2, 0x76, 0xA0, 0x00 }, // -118.625
@@ -615,16 +614,26 @@ TEST_CASE("ibm single precision float", "[type]") {
 
     const std::array< float, inputs.size() > expected = {
         0.0,
-        -0.0,
         153.0,
         -153.0,
         -118.625,
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        float v;
-        dlis_isingl( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION( "to native" ) {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v;
+            dlis_isingl( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION( "from native" ) {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            const void* end = dlis_isinglo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+        }
     }
 }
 

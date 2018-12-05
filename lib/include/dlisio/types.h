@@ -111,6 +111,9 @@ void* dlis_ulongo(  void*, uint32_t );
 void* dlis_fsinglo( void*, float );
 void* dlis_fdoublo( void*, double );
 
+/* IBM and VAX floats */
+void* dlis_isinglo( void*, float );
+
 void* dlis_uvario( void*, int32_t, int width );
 
 /*

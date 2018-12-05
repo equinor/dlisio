@@ -441,6 +441,25 @@ void* dlis_fdoublo( void* xs, double x ) {
     return (char*)xs + sizeof( x );
 }
 
+void* dlis_isinglo( void* xs, float x ) {
+    static int it[4] = { 0x21200000, 0x21400000, 0x21800000, 0x22100000 };
+    static int mt[4] = { 2, 4, 8, 1 };
+    unsigned int manthi, iexp, ix;
+    std::uint32_t u;
+
+    memcpy( &u, &x, sizeof( u ) );
+
+    ix     = ( u & 0x01800000 ) >> 23;
+    iexp   = ( ( u & 0x7e000000 ) >> 1 ) + it[ix];
+    manthi = ( mt[ix] * ( u & 0x007fffff) ) >> 3;
+    manthi = ( manthi + iexp ) | ( u & 0x80000000 );
+    u      = ( u & 0x7fffffff ) ? manthi : 0;
+
+    u = hton( u );
+    memcpy( xs, &u, sizeof( u ) );
+    return (char*)xs + sizeof( x );
+}
+
 void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;
