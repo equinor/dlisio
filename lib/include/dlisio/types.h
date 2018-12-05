@@ -113,6 +113,7 @@ void* dlis_fdoublo( void*, double );
 
 /* IBM and VAX floats */
 void* dlis_isinglo( void*, float );
+void* dlis_vsinglo( void*, float );
 
 void* dlis_uvario( void*, int32_t, int width );
 

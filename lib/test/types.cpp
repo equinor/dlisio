@@ -638,7 +638,7 @@ TEST_CASE("ibm single precision float", "[type]") {
 }
 
 TEST_CASE("vax single precision float", "[type]") {
-    const std::array< unsigned char[4], 3 > inputs = {{
+    const std::array< bytes< 4 >, 3 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00 }, // 0
         { 0x0C, 0x44, 0x00, 0x80 }, // 153
         { 0x0C, 0xC4, 0x00, 0x80 }, // -153
@@ -650,10 +650,21 @@ TEST_CASE("vax single precision float", "[type]") {
         -153,
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        float v;
-        dlis_vsingl( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION( "to native" ) {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v;
+            dlis_vsingl( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION( "from native" ) {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            const void* end = dlis_vsinglo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+        }
     }
 }
 

@@ -460,6 +460,36 @@ void* dlis_isinglo( void* xs, float x ) {
     return (char*)xs + sizeof( x );
 }
 
+void* dlis_vsinglo( void* xs, float x ) {
+    std::uint32_t u;
+    std::memcpy( &u, &x, sizeof( x ) );
+
+    std::uint32_t sign_bit = (u & 0x80000000);
+    std::uint32_t exp_bits = (u & 0x7F800000) >> 23;
+    std::uint32_t frac_bits = (u & 0x007FFFFE) >> 1;
+
+    if( !exp_bits ){
+        std::uint32_t zeros = 0;
+        std::memcpy( xs, &zeros, sizeof( std::uint32_t ) );
+        return (char*)xs + sizeof( std::uint32_t );
+    }
+
+    exp_bits += 2;
+    exp_bits = exp_bits << 23;
+    std::uint32_t v = sign_bit | exp_bits | frac_bits;
+
+    std::uint32_t w[ 4 ];
+    w[ 0 ] = ( v & 0x00FF0000 ) << 8;
+    w[ 1 ] = ( v & 0xFF000000 ) >> 8;
+    w[ 2 ] = ( v & 0x000000FF ) << 8;
+    w[ 3 ] = ( v & 0x0000FF00 ) >> 8;
+    std::uint32_t z = w[ 0 ] | w[ 1 ]| w[ 2 ] | w[ 3 ];
+
+    z = hton( z );
+    std::memcpy( xs, &z, sizeof( v ) );
+    return (char*)xs + sizeof( v );
+}
+
 void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;
