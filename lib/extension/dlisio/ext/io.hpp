@@ -10,8 +10,6 @@
 
 namespace dl {
 
-using object_name = std::tuple< long, int, std::string >;
-
 struct bookmark {
     std::streamsize tell = 0;
     /*
@@ -335,8 +333,8 @@ std::pair< int, bookmark > tag( basic_file< Stream >& fs, int remaining ) {
     char* ptr = body_buffer.data() + 12;
     cursor.strlen = 12 - intlen;
 
-    std::get< 0 >( mark.name ) = origin;
-    std::get< 1 >( mark.name ) = copynum;
+    mark.name.origin = origin;
+    mark.name.copy = copynum;
 
     /*
      * check that the obname isn't segmented, and if not, just read the
@@ -366,7 +364,7 @@ std::pair< int, bookmark > tag( basic_file< Stream >& fs, int remaining ) {
     }
 
     /* all good - complete the obname */
-    std::get< 2 >( mark.name ).assign( xs, namelen );
+    mark.name.id.assign( xs, namelen );
 
     cursor.skip_remaining();
     return { cursor.remaining, mark };
