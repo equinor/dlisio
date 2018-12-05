@@ -20,9 +20,9 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-#include "exception.hpp"
-#include "typeconv.hpp"
-#include "io.hpp"
+#include <dlisio/ext/exception.hpp>
+#include <dlisio/ext/typeconv.hpp>
+#include <dlisio/ext/io.hpp>
 
 using File = dl::basic_file< std::ifstream >;
 

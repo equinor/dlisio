@@ -59,13 +59,13 @@ setup(
         Extension('dlisio.core',
             sources = [
                 'dlisio/ext/core.cpp',
-                'dlisio/ext/typeconv.cpp',
             ],
             include_dirs = ['../lib/include',
+                            '../lib/extension',
                             get_pybind_include(),
                             get_pybind_include(user=True),
             ],
-            libraries = ['dlisio'],
+            libraries = ['dlisio', 'dlisio-extension'],
         )
     ],
     platforms = 'any',

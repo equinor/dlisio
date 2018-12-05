@@ -7,8 +7,7 @@
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
-
-#include "../dlisio/ext/io.hpp"
+#include <dlisio/ext/io.hpp>
 
 using filestream = dl::basic_file< std::stringstream >;
 

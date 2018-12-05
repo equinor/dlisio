@@ -43,10 +43,16 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:dlisio>
                                      $<TARGET_LINKER_FILE_NAME:dlisio>
 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dlisio-extension>
+                                     $<TARGET_FILE_NAME:dlisio-extension>
+
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:dlisio-extension>
+                                     $<TARGET_LINKER_FILE_NAME:dlisio-extension>
+
     COMMAND ${python} ${setup.py} ${build_ext} build
 )
 
-add_dependencies(dlisio-python dlisio)
+add_dependencies(dlisio-python dlisio dlisio-extension)
 
 install(CODE "
 if (DEFINED ENV{DESTDIR})
@@ -62,21 +68,6 @@ execute_process(COMMAND
                 \${root_destdir}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )")
-
-
-
-if(NOT BUILD_TESTING)
-    return()
-endif()
-
-add_executable(py.testsuite tests/testsuite.cpp
-                            tests/io.cpp
-
-                            dlisio/ext/typeconv.cpp
-)
-
-target_link_libraries(py.testsuite dlisio catch2)
-add_test(NAME python.core COMMAND py.testsuite)
 
 # run tests with setup.py test
 # this is very slow compared to invoking pytest directly, but setuptools will
