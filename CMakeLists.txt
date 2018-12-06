@@ -29,6 +29,10 @@ test_big_endian(BIG_ENDIAN)
 
 set(CMAKE_CXX_STANDARD 11)
 
+find_package(Boost 1.53
+    REQUIRED
+)
+
 add_subdirectory(external/catch2)
 add_subdirectory(lib)
 add_subdirectory(bin)
