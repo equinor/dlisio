@@ -895,7 +895,7 @@ TEST_CASE("two-way validated double precision float", "[type]") {
     };
 
     const std::array< double, inputs.size() > expectedA = {
-        std::copysign(0, -1),
+        static_cast< double >( std::copysign(0, -1) ),
         153,
         std::numeric_limits< double >::infinity(),
         0
@@ -904,16 +904,30 @@ TEST_CASE("two-way validated double precision float", "[type]") {
     const std::array< double, inputs.size() > expectedB = {
         153,
         0,
-        std::copysign(0, -1),
+        static_cast< double >( std::copysign(0, -1) ),
         -153
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        double v, a, b;
-        dlis_fdoub2( inputs[ i ], &v, &a, &b );
-        CHECK( v == expectedV[ i ] );
-        CHECK( a == expectedA[ i ] );
-        CHECK( b == expectedB[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double v, a, b;
+            dlis_fdoub2( inputs[ i ], &v, &a, &b );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i ] );
+            CHECK( b == expectedB[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 24 > x;
+            const void* end = dlis_fdoub2o( &x,
+                                            expectedV[ i ],
+                                            expectedA[ i ],
+                                            expectedB[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
     }
 }
 
