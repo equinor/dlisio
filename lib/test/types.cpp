@@ -688,17 +688,28 @@ TEST_CASE("validated single precision float", "[type]") {
     };
 
     const std::array< float, inputs.size() > expectedA = {
-        std::copysign(0, -1),
-        std::copysign(0, -1),
+        static_cast< float >( std::copysign(0, -1) ),
+        static_cast< float >( std::copysign(0, -1) ),
         -153,
         -std::numeric_limits< float >::infinity(),
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        float v, a;
-        dlis_fsing1( inputs[ i ], &v, &a );
-        CHECK( v == expectedV[ i ] );
-        CHECK( a == expectedA[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v, a;
+            dlis_fsing1( inputs[ i ], &v, &a );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double x;
+            const void* end = dlis_fsing1o( &x, expectedV[ i ], expectedA[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
     }
 }
 

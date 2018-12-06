@@ -115,6 +115,9 @@ void* dlis_fdoublo( void*, double );
 void* dlis_isinglo( void*, float );
 void* dlis_vsinglo( void*, float );
 
+/* complex or validated floats */
+void* dlis_fsing1o( void*, float, float );
+
 void* dlis_uvario( void*, int32_t, int width );
 
 /*
