@@ -789,17 +789,30 @@ TEST_CASE("single precision complex float", "[type]") {
     };
 
     const std::array< float, inputs.size() > expectedI = {
-        std::copysign(0, -1),
-        std::copysign(0, -1),
+        static_cast< float >( std::copysign(0, -1) ),
+        static_cast< float >( std::copysign(0, -1) ),
         -153,
         -std::numeric_limits< float >::infinity(),
     };
 
-    for( std::size_t j = 0; j < inputs.size(); ++j ) {
-        float r, i;
-        dlis_fsing1( inputs[ i  ], &r, &i );
-        CHECK( r == expectedR[ i ] );
-        CHECK( i == expectedI[ i ] );
+    SECTION("to native") {
+        for( std::size_t j = 0; j < inputs.size(); ++j ) {
+            float r, i;
+            dlis_fsing1( inputs[ i  ], &r, &i );
+            CHECK( r == expectedR[ i ] );
+            CHECK( i == expectedI[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double x;
+            const void* end = dlis_csinglo( &x,
+                                            expectedR[ i ],
+                                            expectedI[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
     }
 }
 

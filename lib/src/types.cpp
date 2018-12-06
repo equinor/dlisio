@@ -503,6 +503,12 @@ void* dlis_fsing2o( void* xs, float V, float A, float B ) {
     return ws;
 }
 
+void* dlis_csinglo( void* xs, float R, float I ) {
+    void* ys = dlis_fsinglo( xs, R );
+    void* zs = dlis_fsinglo( ys, I );
+    return zs;
+}
+
 void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;
