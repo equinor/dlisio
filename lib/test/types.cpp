@@ -733,8 +733,8 @@ TEST_CASE("two-way validated single precision float", "[type]") {
     };
 
     const std::array< float, inputs.size() > expectedA = {
-        std::copysign(0, -1),
-        std::copysign(0, -1),
+        static_cast< float >( std::copysign(0, -1) ),
+        static_cast< float >( std::copysign(0, -1) ),
         -153,
         -std::numeric_limits< float >::infinity(),
     };
@@ -742,16 +742,30 @@ TEST_CASE("two-way validated single precision float", "[type]") {
     const std::array< float, inputs.size() > expectedB = {
         153,
         0,
-        std::copysign(0, -1),
+        static_cast< float >( std::copysign(0, -1) ),
         -153
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        float v, a, b;
-        dlis_fsing2( inputs[ i ], &v, &a, &b );
-        CHECK( v == expectedV[ i ] );
-        CHECK( a == expectedA[ i ] );
-        CHECK( b == expectedB[ i ] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v, a, b;
+            dlis_fsing2( inputs[ i ], &v, &a, &b );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i ] );
+            CHECK( b == expectedB[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 12 > x;
+            const void* end = dlis_fsing2o( &x,
+                                            expectedV[ i ],
+                                            expectedA[ i ],
+                                            expectedB[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
     }
 }
 
