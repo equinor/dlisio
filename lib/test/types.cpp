@@ -668,109 +668,239 @@ TEST_CASE("vax single precision float", "[type]") {
     }
 }
 
-TEST_CASE("complex and validated single precision floats", "[type]") {
-    const std::array< unsigned char, 28 > inputs = {
-        0x00, 0x00, 0x00, 0x00, // 0
-        0x80, 0x00, 0x00, 0x00, // -0
-        0x40, 0x49, 0x0F, 0xDB, // 3.1415927410125732421875
-        0x43, 0x19, 0x00, 0x00, // 153
-        0xC3, 0x19, 0x00, 0x00, // -153
-        0x7F, 0x80, 0x00, 0x00, // infinity
-        0xFF, 0x80, 0x00, 0x00, // -infinity
+TEST_CASE("validated single precision float", "[type]") {
+    const std::array< bytes< 8 >, 4 > inputs = {{
+        // 0, -0
+        { 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00 },
+        // 3.1415927410125732421875, -0
+        { 0x40, 0x49, 0x0F, 0xDB, 0x80, 0x00, 0x00, 0x00 },
+        // 153, -153
+        { 0x43, 0x19, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00 },
+        // infinity, -infinity
+        { 0x7F, 0x80, 0x00, 0x00, 0xFF, 0x80, 0x00, 0x00 },
+    }};
+
+    const std::array< float, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        153,
+        std::numeric_limits< float >::infinity(),
     };
 
-    SECTION("validaed single precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( float ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( float );
-            float v, a;
-            float x, y;
-            dlis_fsing1( xs, &v, &a );
-            const char* ys = dlis_fsingl( xs, &x );
-                             dlis_fsingl( ys, &y );
-            CHECK( v == x );
-            CHECK( a == y );
-        }
-    }
+    const std::array< float, inputs.size() > expectedA = {
+        std::copysign(0, -1),
+        std::copysign(0, -1),
+        -153,
+        -std::numeric_limits< float >::infinity(),
+    };
 
-    SECTION("two-way validated single precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( float ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( float );
-            float v, a, b;
-            float x, y, z;
-            dlis_fsing2( xs, &v, &a, &b );
-            const char* ys = dlis_fsingl( xs, &x );
-            const char* zs = dlis_fsingl( ys, &y );
-                             dlis_fsingl( zs, &z );
-            CHECK( v == x );
-            CHECK( a == y );
-            CHECK( b == z );
-        }
-    }
-
-    SECTION("single precision complex float") {
-        for( std::size_t j = 0; j < inputs.size() / sizeof( float ); ++j ) {
-            const char* xs = (char*)inputs.data() + j * sizeof( float );
-            float r, i;
-            float x, y;
-            dlis_fsing1( xs, &r, &i );
-            const char* ys = dlis_fsingl( xs, &x );
-                             dlis_fsingl( ys, &y );
-            CHECK( r == x );
-            CHECK( i == y );
-        }
+    for( std::size_t i = 0; i < inputs.size(); ++i ) {
+        float v, a;
+        dlis_fsing1( inputs[ i ], &v, &a );
+        CHECK( v == expectedV[ i ] );
+        CHECK( a == expectedA[ i ] );
     }
 }
 
-TEST_CASE("complex and validaed double precision floats", "[type]") {
-    const std::array< unsigned char, 56 > inputs = {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0
-        0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // -0
-        0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18, // 3.1415926535897930
-        0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, // 153
-        0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, // -153
-        0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // infinity
-        0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // -infinity
+TEST_CASE("two-way validated single precision float", "[type]") {
+    const std::array< bytes< 12 >, 4 > inputs = {{
+        // 0, -0, 153
+        { 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x43, 0x19, 0x00, 0x00 },
+        // 3.1415927410125732421875, -0, 0
+        { 0x40, 0x49, 0x0F, 0xDB, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 153, -153, -0
+        { 0x43, 0x19, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00 },
+        // infinity, -infinity, -153
+        { 0x7F, 0x80, 0x00, 0x00, 0xFF, 0x80, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00 },
+    }};
+
+    const std::array< float, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        153,
+        std::numeric_limits< float >::infinity(),
     };
 
-    SECTION("validaed double precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( double ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( double );
-            double v, a;
-            double x, y;
-            dlis_fdoub1( xs, &v, &a );
-            const char* ys = dlis_fdoubl( xs, &x );
-                             dlis_fdoubl( ys, &y );
-            CHECK( v == x );
-            CHECK( a == y );
-        }
-    }
+    const std::array< float, inputs.size() > expectedA = {
+        std::copysign(0, -1),
+        std::copysign(0, -1),
+        -153,
+        -std::numeric_limits< float >::infinity(),
+    };
 
-    SECTION("two-way validaed double precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( double ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( double );
-            double v, a, b;
-            double x, y, z;
-            dlis_fdoub2( xs, &v, &a, &b );
-            const char* ys = dlis_fdoubl( xs, &x );
-            const char* zs = dlis_fdoubl( ys, &y );
-                             dlis_fdoubl( zs, &z );
-            CHECK( v == x );
-            CHECK( a == y );
-            CHECK( b == z );
-        }
-    }
+    const std::array< float, inputs.size() > expectedB = {
+        153,
+        0,
+        std::copysign(0, -1),
+        -153
+    };
 
-    SECTION("double precision complex float") {
-        for( std::size_t j = 0; j < inputs.size() / sizeof( double ); ++j ) {
-            const char* xs = (char*)inputs.data() + j * sizeof( double );
-            double r, i;
-            double x, y;
-            dlis_fdoub1( xs, &r, &i );
-            const char* ys = dlis_fdoubl( xs, &x );
-                             dlis_fdoubl( ys, &y );
-            CHECK( r == x );
-            CHECK( i == y );
-        }
+    for( std::size_t i = 0; i < inputs.size(); ++i ) {
+        float v, a, b;
+        dlis_fsing2( inputs[ i ], &v, &a, &b );
+        CHECK( v == expectedV[ i ] );
+        CHECK( a == expectedA[ i ] );
+        CHECK( b == expectedB[ i ] );
+    }
+}
+
+TEST_CASE("single precision complex float", "[type]") {
+    const std::array< bytes< 8 >, 4 > inputs = {{
+        // 0, -0
+        { 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00 },
+        // 3.1415927410125732421875, -0
+        { 0x40, 0x49, 0x0F, 0xDB, 0x80, 0x00, 0x00, 0x00 },
+        // 153, -153
+        { 0x43, 0x19, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00 },
+        // infinity, -infinity
+        { 0x7F, 0x80, 0x00, 0x00, 0xFF, 0x80, 0x00, 0x00 },
+    }};
+
+    const std::array< float, inputs.size() > expectedR = {
+        0,
+        3.1415926535897930,
+        153,
+        std::numeric_limits< float >::infinity(),
+    };
+
+    const std::array< float, inputs.size() > expectedI = {
+        std::copysign(0, -1),
+        std::copysign(0, -1),
+        -153,
+        -std::numeric_limits< float >::infinity(),
+    };
+
+    for( std::size_t j = 0; j < inputs.size(); ++j ) {
+        float r, i;
+        dlis_fsing1( inputs[ i  ], &r, &i );
+        CHECK( r == expectedR[ i ] );
+        CHECK( i == expectedI[ i ] );
+    }
+}
+
+TEST_CASE("validated double precision float", "[type]") {
+    const std::array< bytes< 16 >, 4 > inputs = {{
+        // 0,- 0
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 3.1415926535897930, 153
+        { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        //-153, infinity
+        { 0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // -infinity, 0
+        { 0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    }};
+
+    const std::array< double, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        -153,
+        -std::numeric_limits< double >::infinity(),
+    };
+
+    const std::array< double, inputs.size() > expectedA = {
+        std::copysign(0, -1),
+        153,
+        std::numeric_limits< double >::infinity(),
+        0
+    };
+
+    for( std::size_t i = 0; i < inputs.size(); ++i ) {
+        double v, a;
+        dlis_fdoub1( inputs[ i ], &v, &a );
+        CHECK( v == expectedV[ i ] );
+        CHECK( a == expectedA[ i] );
+    }
+}
+
+TEST_CASE("two-way validated double precision float", "[type]") {
+    const std::array< bytes< 24 >, 4 > inputs = {{
+        // 0,- 0, 153
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 3.1415926535897930, 153, 0
+        { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        //-153, infinity, -0
+        { 0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // -infinity, 0, -153
+        { 0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    }};
+
+    const std::array< double, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        -153,
+        -std::numeric_limits< double >::infinity(),
+    };
+
+    const std::array< double, inputs.size() > expectedA = {
+        std::copysign(0, -1),
+        153,
+        std::numeric_limits< double >::infinity(),
+        0
+    };
+
+    const std::array< double, inputs.size() > expectedB = {
+        153,
+        0,
+        std::copysign(0, -1),
+        -153
+    };
+
+    for( std::size_t i = 0; i < inputs.size(); ++i ) {
+        double v, a, b;
+        dlis_fdoub2( inputs[ i ], &v, &a, &b );
+        CHECK( v == expectedV[ i ] );
+        CHECK( a == expectedA[ i ] );
+        CHECK( b == expectedB[ i ] );
+    }
+}
+
+TEST_CASE("double precision complex float", "[type]") {
+    const std::array< bytes< 16 >, 4 > inputs = {{
+        // 0,- 0
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 3.1415926535897930, 153
+        { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        //-153, infinity
+        { 0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // -infinity, 0
+        { 0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    }};
+
+    const std::array< double, inputs.size() > expectedR = {
+        0,
+        3.1415926535897930,
+        -153,
+        -std::numeric_limits< double >::infinity(),
+    };
+
+    const std::array< double, inputs.size() > expectedI = {
+        std::copysign(0, -1),
+        153,
+        std::numeric_limits< double >::infinity(),
+        0
+    };
+
+    for( std::size_t j = 0; j < inputs.size(); ++j ) {
+        double r, i;
+        dlis_fdoub1( inputs[ i ], &r, &i );
+        CHECK( r == expectedR[ i ] );
+        CHECK( i == expectedI[ i ] );
     }
 }
 
