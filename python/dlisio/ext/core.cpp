@@ -101,6 +101,7 @@ public:
 
     void close() { this->fs.close(); }
 
+    py::dict sul();
     py::tuple mkindex();
     py::bytes raw_record( const dl::bookmark& );
     py::dict eflr( const dl::bookmark& );
@@ -113,10 +114,12 @@ private:
 
 file::file( const std::string& path ) : fs( path ) {}
 
-py::tuple file::mkindex() {
+py::dict file::sul() {
     auto sulbuffer = this->fs.read< 80 >();
-    auto sul = SUL( sulbuffer.data() );
+    return SUL( sulbuffer.data() );
+}
 
+py::tuple file::mkindex() {
     std::vector< dl::bookmark > bookmarks;
     std::vector< py::dict > explicits;
     py::dict implicit_refs;
@@ -149,7 +152,7 @@ py::tuple file::mkindex() {
         implicit_refs[ name ].cast< py::list >().append( last );
     }
 
-    return py::make_tuple( sul, bookmarks, explicits, implicit_refs );
+    return py::make_tuple( bookmarks, explicits, implicit_refs );
 }
 
 py::object conv( int reprc, py::buffer b ) {
@@ -754,6 +757,7 @@ PYBIND11_MODULE(core, m) {
         .def( py::init< const std::string& >() )
         .def( "close", &file::close )
 
+        .def( "sul",        &file::sul )
         .def( "mkindex",    &file::mkindex )
         .def( "raw_record", &file::raw_record )
         .def( "eflr",       &file::eflr )
