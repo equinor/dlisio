@@ -840,17 +840,30 @@ TEST_CASE("validated double precision float", "[type]") {
     };
 
     const std::array< double, inputs.size() > expectedA = {
-        std::copysign(0, -1),
+        static_cast< double >( std::copysign(0, -1) ),
         153,
         std::numeric_limits< double >::infinity(),
         0
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        double v, a;
-        dlis_fdoub1( inputs[ i ], &v, &a );
-        CHECK( v == expectedV[ i ] );
-        CHECK( a == expectedA[ i] );
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double v, a;
+            dlis_fdoub1( inputs[ i ], &v, &a );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 16 > x;
+            const void* end = dlis_fdoub1o( &x,
+                                            expectedV[ i ],
+                                            expectedA[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
     }
 }
 

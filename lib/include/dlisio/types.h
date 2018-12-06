@@ -120,6 +120,8 @@ void* dlis_fsing1o( void*, float, float );
 void* dlis_fsing2o( void*, float, float, float );
 void* dlis_csinglo( void*, float, float );
 
+void* dlis_fdoub1o( void*, double, double );
+
 void* dlis_uvario( void*, int32_t, int width );
 
 /*

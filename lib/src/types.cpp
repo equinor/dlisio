@@ -509,6 +509,12 @@ void* dlis_csinglo( void* xs, float R, float I ) {
     return zs;
 }
 
+void* dlis_fdoub1o( void* xs, double V, double A ) {
+    void* ys = dlis_fdoublo( xs, V );
+    void* zs = dlis_fdoublo( ys, A );
+    return zs;
+}
+
 void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;
