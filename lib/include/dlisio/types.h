@@ -122,6 +122,7 @@ void* dlis_csinglo( void*, float, float );
 
 void* dlis_fdoub1o( void*, double, double );
 void* dlis_fdoub2o( void*, double, double, double );
+void* dlis_cdoublo( void*, double, double );
 
 void* dlis_uvario( void*, int32_t, int width );
 

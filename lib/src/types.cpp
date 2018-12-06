@@ -522,6 +522,12 @@ void* dlis_fdoub2o( void* xs, double V, double A, double B ) {
     return ws;
 }
 
+void* dlis_cdoublo( void* xs, double R, double I ) {
+    void* ys = dlis_fdoublo( xs, R );
+    void* zs = dlis_fdoublo( ys, I );
+    return zs;
+}
+
 void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;

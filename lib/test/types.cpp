@@ -955,17 +955,30 @@ TEST_CASE("double precision complex float", "[type]") {
     };
 
     const std::array< double, inputs.size() > expectedI = {
-        std::copysign(0, -1),
+        static_cast< double >( std::copysign(0, -1) ),
         153,
         std::numeric_limits< double >::infinity(),
         0
     };
 
-    for( std::size_t j = 0; j < inputs.size(); ++j ) {
-        double r, i;
-        dlis_fdoub1( inputs[ i ], &r, &i );
-        CHECK( r == expectedR[ i ] );
-        CHECK( i == expectedI[ i ] );
+    SECTION("to native") {
+        for( std::size_t j = 0; j < inputs.size(); ++j ) {
+            double r, i;
+            dlis_cdoubl( inputs[ i ], &r, &i );
+            CHECK( r == expectedR[ i ] );
+            CHECK( i == expectedI[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 16 > x;
+            const void* end = dlis_cdoublo( &x,
+                                            expectedR[ i ],
+                                            expectedI[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
     }
 }
 
