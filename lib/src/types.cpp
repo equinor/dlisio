@@ -564,6 +564,36 @@ void* dlis_statuso( void* xs, std::uint8_t x ) {
     return dlis_ushorto( xs, x );
 }
 
+void* dlis_dtimeo( void* xs, int Y,
+                             int TZ,
+                             int M,
+                             int D,
+                             int H,
+                             int MN,
+                             int S,
+                             int MS ) {
+
+    // OBS: no overflow protection
+    std::uint8_t tz = TZ;
+    std::uint8_t m = M;
+
+    std::uint8_t x[ 6 ];
+    x[ 0 ] = Y;
+    x[ 1 ] = tz << 4 | m;
+    x[ 2 ] = D;
+    x[ 3 ] = H;
+    x[ 4 ] = MN;
+    x[ 5 ] = S;
+
+    std::memcpy( xs, &x, sizeof( x ) );
+    void* ys = (char*)xs + sizeof( x );
+
+    std::uint16_t ms = MS;
+    ms = ntoh( ms );
+    std::memcpy( ys, &ms, sizeof( ms ) );
+    return (char*)ys + sizeof( ms );
+}
+
 int dlis_sizeof_type( int x ) {
     if ( x < DLIS_FSHORT || x > DLIS_UNITS ) return -1;
 

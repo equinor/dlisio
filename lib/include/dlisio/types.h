@@ -130,6 +130,16 @@ void* dlis_idento( void*, uint8_t len, const char* in );
 
 void* dlis_origino( void*, int32_t );
 void* dlis_statuso( void*, uint8_t );
+
+void* dlis_dtimeo( void*, int Y,
+                          int TZ,
+                          int M,
+                          int D,
+                          int H,
+                          int MN,
+                          int S,
+                          int MS );
+
 /*
  * get the size (in bytes) of a particular data type. Expects a DLIS_UNORM or
  * similar type code.

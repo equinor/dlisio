@@ -1186,7 +1186,7 @@ TEST_CASE("ascii (var-length string)", "[type]") {
 }
 
 TEST_CASE("date-time", "[type]") {
-    std::array< char, 8 > input = {
+    bytes< 8 > input = {
         0x57, // 87
         0x14, // 1, 4
         0x13, // 19
@@ -1198,17 +1198,35 @@ TEST_CASE("date-time", "[type]") {
 
     // 9:20:15.62 PM, April 19, 1987 (DST)
     int Y, TZ, M, D, H, MN, S, MS;
-    dlis_dtime( input.data(), &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
 
-    CHECK( Y  == 87 );
-    CHECK( dlis_year( Y ) == 1987 );
-    CHECK( TZ == DLIS_TZ_DST );
-    CHECK( M  == 4 );
-    CHECK( D  == 19 );
-    CHECK( H  == 21 );
-    CHECK( MN == 20 );
-    CHECK( S  == 15 );
-    CHECK( MS == 620 );
+    SECTION("to native") {
+        dlis_dtime( input, &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
+
+        CHECK( Y  == 87 );
+        CHECK( dlis_year( Y ) == 1987 );
+        CHECK( TZ == DLIS_TZ_DST );
+        CHECK( M  == 4 );
+        CHECK( D  == 19 );
+        CHECK( H  == 21 );
+        CHECK( MN == 20 );
+        CHECK( S  == 15 );
+        CHECK( MS == 620 );
+    }
+
+    SECTION("from native") {
+        bytes< 8 > x;
+        const void* end = dlis_dtimeo( &x,
+                                       87,
+                                       DLIS_TZ_DST,
+                                       4,
+                                       19,
+                                       21,
+                                       20,
+                                       15,
+                                       620 );
+        CHECK( intptr_t(end) == intptr_t(&x) + sizeof( x ) );
+        CHECK_THAT( input, BytesEquals( x ) );
+    }
 }
 
 TEST_CASE( "size-of", "[type]" ) {
