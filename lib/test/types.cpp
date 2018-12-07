@@ -1025,6 +1025,7 @@ TEST_CASE("identifier (var-length string)", "[type]") {
         CHECK( len == 255 );
         dlis_ident( in.c_str(), &len, str.data() );
         CHECK( std::string( str.begin(), str.end() ) == expected );
+
     }
 
     SECTION("returns pointer past read data") {
@@ -1039,6 +1040,20 @@ TEST_CASE("identifier (var-length string)", "[type]") {
         const char* withread = dlis_ident( in, &len, out );
         CHECK( len == 50 );
         CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
+    }
+
+    SECTION("from native") {
+        const std::string in = "foobar";
+        const uint8_t length = 6;
+
+        const std::array< bytes< 7 >, 1> expected = {{
+            { 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+        }};
+
+        std::array< char, 7 > x;
+        const void* end = dlis_idento( &x, length, in.c_str() );
+        CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+        CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
     }
 }
 

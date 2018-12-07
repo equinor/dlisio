@@ -550,6 +550,12 @@ void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     return (char*)xs + sizeof( v );
 }
 
+void* dlis_idento( void* xs, std::uint8_t len, const char* in ) {
+    void* ys = dlis_ushorto( xs, len );
+    std::memcpy( ys, in, (size_t)len );
+    return (char*)ys + len;
+}
+
 int dlis_sizeof_type( int x ) {
     if ( x < DLIS_FSHORT || x > DLIS_UNITS ) return -1;
 
