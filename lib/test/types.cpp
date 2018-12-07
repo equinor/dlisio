@@ -1057,6 +1057,52 @@ TEST_CASE("identifier (var-length string)", "[type]") {
     }
 }
 
+TEST_CASE("origin", "[type]") {
+    SECTION("4-byte") {
+        const std::array< bytes<4>, 9 > in = {{
+            { 0xC0, 0x00, 0x00, 0x00 }, // 0
+            { 0xC0, 0x00, 0x00, 0x01 }, // 1
+            { 0xC0, 0x00, 0x00, 0x2E }, // 46
+            { 0xC0, 0x00, 0x00, 0x7F }, // 127
+            { 0xC0, 0x00, 0x01, 0x00 }, // 256
+            { 0xC0, 0x00, 0x8F, 0xFF }, // 36863
+            { 0xC1, 0x00, 0x00, 0x00 }, // 16777216
+            { 0xF0, 0x00, 0xBF, 0xFF }, // 805355519
+            { 0xFF, 0xFF, 0xFF, 0xFF }, // 1073741823 (int-max)
+        }};
+
+        const std::array< std::int32_t, in.size() > expected = {
+            0,
+            1,
+            46,
+            127,
+            256,
+            36863,
+            16777216,
+            805355519,
+            1073741823,
+        };
+
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const char* end = dlis_origin( in[ i ], &v );
+                CHECK( v == expected[ i ] );
+                CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 4) );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const void* end = dlis_origino( &v, expected[ i ] );
+                CHECK_THAT( in[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
+        }
+    }
+}
+
 TEST_CASE("ascii (var-length string)", "[type]") {
     std::int32_t len;
 

@@ -556,6 +556,10 @@ void* dlis_idento( void* xs, std::uint8_t len, const char* in ) {
     return (char*)ys + len;
 }
 
+void* dlis_origino( void* xs, std::int32_t x ) {
+    return dlis_uvario( xs, x, 4 );
+}
+
 void* dlis_statuso( void* xs, std::uint8_t x ) {
     return dlis_ushorto( xs, x );
 }

@@ -128,7 +128,7 @@ void* dlis_uvario( void*, int32_t, int width );
 
 void* dlis_idento( void*, uint8_t len, const char* in );
 
-
+void* dlis_origino( void*, int32_t );
 void* dlis_statuso( void*, uint8_t );
 /*
  * get the size (in bytes) of a particular data type. Expects a DLIS_UNORM or
