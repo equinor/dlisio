@@ -556,6 +556,10 @@ void* dlis_idento( void* xs, std::uint8_t len, const char* in ) {
     return (char*)ys + len;
 }
 
+void* dlis_statuso( void* xs, std::uint8_t x ) {
+    return dlis_ushorto( xs, x );
+}
+
 int dlis_sizeof_type( int x ) {
     if ( x < DLIS_FSHORT || x > DLIS_UNITS ) return -1;
 
