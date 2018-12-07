@@ -131,6 +131,7 @@ void* dlis_idento( void*, uint8_t len, const char* in );
 void* dlis_origino( void*, int32_t );
 void* dlis_statuso( void*, uint8_t );
 
+int dlis_yearo( int );
 void* dlis_dtimeo( void*, int Y,
                           int TZ,
                           int M,

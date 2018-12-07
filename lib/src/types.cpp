@@ -564,6 +564,10 @@ void* dlis_statuso( void* xs, std::uint8_t x ) {
     return dlis_ushorto( xs, x );
 }
 
+int dlis_yearo( int Y ) {
+    return Y - DLIS_YEAR_ZERO;
+}
+
 void* dlis_dtimeo( void* xs, int Y,
                              int TZ,
                              int M,

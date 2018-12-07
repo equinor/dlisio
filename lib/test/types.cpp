@@ -1216,7 +1216,7 @@ TEST_CASE("date-time", "[type]") {
     SECTION("from native") {
         bytes< 8 > x;
         const void* end = dlis_dtimeo( &x,
-                                       87,
+                                       dlis_yearo( 1987 ),
                                        DLIS_TZ_DST,
                                        4,
                                        19,
