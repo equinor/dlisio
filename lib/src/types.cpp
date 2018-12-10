@@ -556,6 +556,14 @@ void* dlis_idento( void* xs, std::uint8_t len, const char* in ) {
     return (char*)ys + len;
 }
 
+void* dlis_asciio( void* xs, std::int32_t len,
+                             const char* in,
+                             std::uint8_t l ) {
+    void* ys = dlis_uvario( xs, len, l );
+    std::memcpy( ys, in, (size_t)len );
+    return (char*)ys + len;
+}
+
 void* dlis_origino( void* xs, std::int32_t x ) {
     return dlis_uvario( xs, x, 4 );
 }

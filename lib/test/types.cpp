@@ -1106,65 +1106,100 @@ TEST_CASE("origin", "[type]") {
 TEST_CASE("ascii (var-length string)", "[type]") {
     std::int32_t len;
 
-    SECTION("empty string has zero length") {
-        dlis_ascii( "\0", &len, nullptr );
-        CHECK( len == 0 );
+    SECTION("to native") {
+
+        SECTION("empty string has zero length") {
+            dlis_ascii( "\0", &len, nullptr );
+            CHECK( len == 0 );
+        }
+
+        SECTION("empty string does not affect output") {
+            char str[] = "foobar";
+            dlis_ascii( "\0", &len, str );
+            CHECK( str == std::string("foobar") );
+        }
+
+        SECTION("single-char string has length 1") {
+            char str[] = "    ";
+            dlis_ascii( "\x01""a", &len, str );
+            CHECK( str == std::string("a   ") );
+            CHECK( len == 1 );
+        }
+
+        SECTION("single-char string has length 1") {
+            char str[] = "    ";
+            dlis_ascii( "\x01""a", &len, str );
+            CHECK( str == std::string("a   ") );
+            CHECK( len == 1 );
+        }
+
+        SECTION("can be longer than 255 chars ") {
+            std::vector< char > str( 510, ' ' );
+            const std::string expected =
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
+                "tristique enim ac leo tristique, eu finibus enim pharetra. "
+                "Donec ac elit congue, viverra mauris nec, maximus mauris. "
+                "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
+                "quis metus."
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
+                "tristique enim ac leo tristique, eu finibus enim pharetra. "
+                "Donec ac elit congue, viverra mauris nec, maximus mauris. "
+                "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
+                "quis metus.";
+
+            const std::string in = "\x81\xFE" + expected;
+
+            dlis_ascii( in.c_str(), &len, nullptr );
+            CHECK( len == 510 );
+            dlis_ascii( in.c_str(), &len, str.data() );
+            CHECK( std::string( str.begin(), str.end() ) == expected );
+        }
+
+        SECTION("returns pointer past read data") {
+            const char in[] = "\x32"
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing";
+
+            const char* noread = dlis_ascii( in, &len, nullptr );
+            CHECK( len == 50 );
+            CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
+
+            char out[ 50 ] = {};
+            const char* withread = dlis_ascii( in, &len, out );
+            CHECK( len == 50 );
+            CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
+        }
     }
 
-    SECTION("empty string does not affect output") {
-        char str[] = "foobar";
-        dlis_ascii( "\0", &len, str );
-        CHECK( str == std::string("foobar") );
-    }
+    SECTION("from native") {
 
-    SECTION("single-char string has length 1") {
-        char str[] = "    ";
-        dlis_ascii( "\x01""a", &len, str );
-        CHECK( str == std::string("a   ") );
-        CHECK( len == 1 );
-    }
+        SECTION("can write the correct string") {
+            const std::string in = "foobar";
+            const int32_t length = 6;
 
-    SECTION("single-char string has length 1") {
-        char str[] = "    ";
-        dlis_ascii( "\x01""a", &len, str );
-        CHECK( str == std::string("a   ") );
-        CHECK( len == 1 );
-    }
+            const std::array< bytes< 7 >, 1> expected = {{
+                { 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+            }};
 
-    SECTION("can be longer than 255 chars ") {
-        std::vector< char > str( 510, ' ' );
-        const std::string expected =
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
-            "tristique enim ac leo tristique, eu finibus enim pharetra. "
-            "Donec ac elit congue, viverra mauris nec, maximus mauris. "
-            "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
-            "quis metus."
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
-            "tristique enim ac leo tristique, eu finibus enim pharetra. "
-            "Donec ac elit congue, viverra mauris nec, maximus mauris. "
-            "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
-            "quis metus.";
+            std::array< char, 7 > x;
+            const void* end = dlis_asciio( &x, length, in.c_str() );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+            CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
+        }
 
-        const std::string in = "\x81\xFE" + expected;
+        SECTION("can write 2-byte len-prefix") {
+            const std::string in = "foobar";
+            const int32_t length = 6;
 
-        dlis_ascii( in.c_str(), &len, nullptr );
-        CHECK( len == 510 );
-        dlis_ascii( in.c_str(), &len, str.data() );
-        CHECK( std::string( str.begin(), str.end() ) == expected );
-    }
+            const std::array< bytes< 8 >, 1> expected = {{
+                { 0x80, 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+            }};
 
-    SECTION("returns pointer past read data") {
-        const char in[] = "\x32"
-                          "Lorem ipsum dolor sit amet, consectetur adipiscing";
+            std::array< char, 8 > x;
+            const void* end = dlis_asciio( &x, length, in.c_str(), 2 );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+            CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
 
-        const char* noread = dlis_ascii( in, &len, nullptr );
-        CHECK( len == 50 );
-        CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
-
-        char out[ 50 ] = {};
-        const char* withread = dlis_ascii( in, &len, out );
-        CHECK( len == 50 );
-        CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
+        }
     }
 }
 
