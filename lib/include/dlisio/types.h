@@ -142,6 +142,11 @@ void* dlis_dtimeo( void*, int Y,
                           int S,
                           int MS );
 
+/* obname = { origin, ushort, ident } */
+void* dlis_obnameo( void*, int32_t origin,
+                           uint8_t copy_number,
+                           uint8_t idlen,
+                           const char* identifier );
 
 void* dlis_unitso( void*, uint8_t len, const char* in );
 

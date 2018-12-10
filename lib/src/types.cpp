@@ -615,6 +615,16 @@ void* dlis_dtimeo( void* xs, int Y,
     return (char*)ys + sizeof( ms );
 }
 
+void* dlis_obnameo( void* xs, std::int32_t origin,
+                              std::uint8_t copy_number,
+                              std::uint8_t idlen,
+                              const char* identifier ) {
+    void* ys = dlis_origino( xs, origin );
+    void* zs = dlis_ushorto( ys, copy_number );
+    void* ws = dlis_idento( zs, idlen, identifier );
+    return ws;
+}
+
 void* dlis_unitso( void* xs, std::uint8_t len, const char* in ) {
     void* ys = dlis_ushorto( xs, len );
     std::memcpy( ys, in, (size_t)len );

@@ -1340,15 +1340,29 @@ TEST_CASE( "obname", "[type]" ) {
     std::uint8_t copynumber;
     std::vector< char > ident( 6, ' ' );
 
-    const char* end = dlis_obname( in[ 0 ], &origin,
-                                            &copynumber,
-                                            &idlen,
-                                            ident.data() );
-    CHECK( origin     == originOut );
-    CHECK( copynumber == copynumberOut );
-    CHECK( idlen      == idlenOut );
-    CHECK( std::string( ident.begin(), ident.end() ) == identOut );
-    CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 12 ) );
+    SECTION("to native") {
+        const char* end = dlis_obname( in[ 0 ], &origin,
+                                                &copynumber,
+                                                &idlen,
+                                                ident.data() );
+        CHECK( origin     == originOut );
+        CHECK( copynumber == copynumberOut );
+        CHECK( idlen      == idlenOut );
+        CHECK( std::string( ident.begin(), ident.end() ) == identOut );
+        CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 12 ) );
+    }
+
+    SECTION("from native") {
+        bytes< 12 > v;
+        const std::uint8_t idlen = 6;
+        const void* end = dlis_obnameo( &v, originOut,
+                                            copynumber,
+                                            idlen,
+                                            identOut.c_str() );
+
+        CHECK_THAT( in[ 0 ], BytesEquals( v ) );
+        CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+    }
 }
 
 TEST_CASE( "objref", "[type]" ) {
