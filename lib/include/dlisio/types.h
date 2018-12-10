@@ -148,6 +148,13 @@ void* dlis_obnameo( void*, int32_t origin,
                            uint8_t idlen,
                            const char* identifier );
 
+/* objref = { ident, obname } */
+void* dlis_objrefo( void*, uint8_t ident_len,
+                           const char* ident,
+                           int32_t origin,
+                           uint8_t copy_number,
+                           uint8_t objname_len,
+                           const char* identifier );
 void* dlis_unitso( void*, uint8_t len, const char* in );
 
 /*
