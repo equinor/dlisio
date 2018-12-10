@@ -142,6 +142,9 @@ void* dlis_dtimeo( void*, int Y,
                           int S,
                           int MS );
 
+
+void* dlis_unitso( void*, uint8_t len, const char* in );
+
 /*
  * get the size (in bytes) of a particular data type. Expects a DLIS_UNORM or
  * similar type code.
