@@ -5,7 +5,7 @@
 
 #include <dlisio/types.h>
 
-#include <dlisio/ext/typeconv.hpp>
+#include <dlisio/ext/types.hpp>
 
 namespace dl {
 

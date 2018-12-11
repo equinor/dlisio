@@ -1,5 +1,5 @@
-#ifndef DLISIO_PYTHON_TYPECONV_HPP
-#define DLISIO_PYTHON_TYPECONV_HPP
+#ifndef DLISIO_EXT_TYPES_HPP
+#define DLISIO_EXT_TYPES_HPP
 
 #include <complex>
 #include <cstdint>
@@ -63,4 +63,4 @@ int status( const char*& xs ) noexcept;
 
 }
 
-#endif //DLISIO_PYTHON_TYPECONV_HPP
+#endif //DLISIO_EXT_TYPES_HPP

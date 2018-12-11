@@ -6,7 +6,7 @@
 #include <string>
 #include <tuple>
 
-#include "typeconv.hpp"
+#include <dlisio/ext/types.hpp>
 
 namespace dl {
 
