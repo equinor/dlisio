@@ -1442,24 +1442,42 @@ TEST_CASE( "attref", "[type]" ) {
     std::vector< char > ident2( 6, ' ' );
     std::vector< char > ident3( 6, ' ' );
 
-    const char* end = dlis_attref( in[ 0 ], &idlen1,
-                                            ident1.data(),
-                                            &origin,
-                                            &copynumber,
-                                            &idlen2,
-                                            ident2.data(),
-                                            &idlen3,
-                                            ident3.data() );
+    SECTION("to native") {
+        const char* end = dlis_attref( in[ 0 ], &idlen1,
+                                                ident1.data(),
+                                                &origin,
+                                                &copynumber,
+                                                &idlen2,
+                                                ident2.data(),
+                                                &idlen3,
+                                                ident3.data() );
 
-    CHECK( idlen1     == idlenOut );
-    CHECK( idlen2     == idlenOut );
-    CHECK( idlen3     == idlenOut );
-    CHECK( origin     == originOut );
-    CHECK( copynumber == copynumberOut );
-    CHECK( std::string( ident1.begin(), ident1.end() ) == identOut );
-    CHECK( std::string( ident2.begin(), ident2.end() ) == identOut );
-    CHECK( std::string( ident3.begin(), ident3.end() ) == identOut );
-    CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 26 ) );
+        CHECK( idlen1     == idlenOut );
+        CHECK( idlen2     == idlenOut );
+        CHECK( idlen3     == idlenOut );
+        CHECK( origin     == originOut );
+        CHECK( copynumber == copynumberOut );
+        CHECK( std::string( ident1.begin(), ident1.end() ) == identOut );
+        CHECK( std::string( ident2.begin(), ident2.end() ) == identOut );
+        CHECK( std::string( ident3.begin(), ident3.end() ) == identOut );
+        CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 26 ) );
+    }
+
+    SECTION("from native") {
+        bytes< 26 > v;
+        const std::uint8_t idlen = 6;
+        const void* end = dlis_attrefo( &v, idlen,
+                                            identOut.c_str(),
+                                            originOut,
+                                            copynumber,
+                                            idlen,
+                                            identOut.c_str(),
+                                            idlen,
+                                            identOut.c_str() );
+
+        CHECK_THAT( in[ 0 ], BytesEquals( v ) );
+        CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+    }
 }
 
 TEST_CASE( "size-of", "[type]" ) {

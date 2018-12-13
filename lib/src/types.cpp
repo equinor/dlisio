@@ -653,6 +653,25 @@ void* dlis_objrefo( void* xs, std::uint8_t ident_len,
     return zs;
 }
 
+void* dlis_attrefo( void* xs, std::uint8_t ident1_len,
+                              const char* ident1,
+                              std::int32_t origin,
+                              std::uint8_t copy_number,
+                              std::uint8_t objname_len,
+                              const char* identifier,
+                              std::uint8_t ident2_len,
+                              const char* ident2 ) {
+
+    void* ys = dlis_idento( xs, ident1_len, ident1 );
+    void* zs = dlis_obnameo( ys, origin,
+                                 copy_number,
+                                 objname_len,
+                                 identifier );
+
+    void* ws = dlis_idento( zs, ident2_len, ident2 );
+    return ws;
+}
+
 void* dlis_unitso( void* xs, std::uint8_t len, const char* in ) {
     void* ys = dlis_ushorto( xs, len );
     std::memcpy( ys, in, (size_t)len );

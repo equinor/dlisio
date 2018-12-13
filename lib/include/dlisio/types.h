@@ -156,6 +156,17 @@ void* dlis_objrefo( void*, uint8_t ident_len,
                            uint8_t copy_number,
                            uint8_t objname_len,
                            const char* identifier );
+
+/* attref = { ident, obname, ident } */
+void* dlis_attrefo( void*, uint8_t ident1_len,
+                           const char* ident1,
+                           int32_t origin,
+                           uint8_t copy_number,
+                           uint8_t objname_len,
+                           const char* identifier,
+                           uint8_t ident2_len,
+                           const char* ident2 );
+
 void* dlis_unitso( void*, uint8_t len, const char* in );
 
 /*
