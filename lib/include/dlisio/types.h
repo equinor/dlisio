@@ -84,8 +84,9 @@ const char* dlis_attref( const char*, int32_t* ident1_len,
                                       char* ident1,
                                       int32_t* origin,
                                       uint8_t* copy_number,
+                                      int32_t* objname_len,
                                       char* identifier,
-                                      int32_t ident2_len,
+                                      int32_t* ident2_len,
                                       char* ident2 );
 
 const char* dlis_status( const char*, uint8_t* );

@@ -259,6 +259,19 @@ const char* dlis_objref( const char* xs, int32_t* ident_len,
     return dlis_obname( xs, origin, copy_number, objname_len, identifier );
 }
 
+const char* dlis_attref( const char* xs, int32_t* ident_len,
+                                         char* ident,
+                                         int32_t* origin,
+                                         uint8_t* copy_number,
+                                         int32_t* objname_len,
+                                         char* identifier,
+                                         int32_t* ident2_len,
+                                         char* ident2 ) {
+    xs = dlis_ident( xs, ident_len, ident );
+    xs = dlis_obname( xs, origin, copy_number, objname_len, identifier );
+    return dlis_ident( xs, ident2_len, ident2 );
+}
+
 const char* dlis_fshort( const char* xs, float* out ) {
     std::uint16_t v;
     const char* newptr = dlis_unorm( xs, &v );

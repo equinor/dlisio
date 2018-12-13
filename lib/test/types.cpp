@@ -1418,6 +1418,50 @@ TEST_CASE( "objref", "[type]" ) {
     }
 }
 
+TEST_CASE( "attref", "[type]" ) {
+    const std::array< bytes< 26 >, 1 > in = {{
+        { 0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72,   // foobar
+          0xC0, 0x00, 0x00, 0x7F,               // 127
+          0x59,                                 // 89
+          0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72,   // foobar
+          0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }  // foobar
+    }};
+
+    const std::int32_t originOut = 127;
+    const std::uint8_t copynumberOut = 89;
+    const std::int32_t idlenOut = 6;
+    std::string identOut = "foobar";
+
+
+    std::int32_t idlen1, origin, idlen2, idlen3;
+    std::uint8_t copynumber;
+    std::vector< char > ident1( 6, ' ' );
+    std::vector< char > ident2( 6, ' ' );
+    std::vector< char > ident3( 6, ' ' );
+
+    const char* end = dlis_attref( in[ 0 ], &idlen1,
+                                            ident1.data(),
+                                            &origin,
+                                            &copynumber,
+                                            &idlen2,
+                                            ident2.data(),
+                                            &idlen3,
+                                            ident3.data() );
+
+    CHECK( idlen1     == idlenOut );
+    CHECK( idlen2     == idlenOut );
+    CHECK( idlen3     == idlenOut );
+    CHECK( origin     == originOut );
+    CHECK( copynumber == copynumberOut );
+    CHECK( std::string( ident1.begin(), ident1.end() ) == identOut );
+    CHECK( std::string( ident2.begin(), ident2.end() ) == identOut );
+    CHECK( std::string( ident3.begin(), ident3.end() ) == identOut );
+    CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 26 ) );
+}
+
 TEST_CASE( "size-of", "[type]" ) {
     CHECK( dlis_sizeof_type( DLIS_FSHORT ) == 2 );
     CHECK( dlis_sizeof_type( DLIS_FSINGL ) == 4 );
