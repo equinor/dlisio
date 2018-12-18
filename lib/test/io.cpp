@@ -60,12 +60,15 @@ TEST_CASE("IFRL in single VRL, unsegmented, minimal size") {
                     + DLIS_LRSH_SIZE + DLIS_VRL_SIZE
                     ;
 
+    dl::obname expected_name {
+        dl::origin{ 1 },
+        1,
+        dl::ident{ "iflr" },
+    };
 
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( x.second.name.origin == 1 );
-    CHECK( x.second.name.copy   == 1 );
-    CHECK( x.second.name.id     == "iflr" );
+    CHECK( x.second.name == expected_name );
     CHECK( fs.tell() == last );
 }
 
@@ -85,11 +88,15 @@ TEST_CASE("IFRL in single VRL, unsegmented, obname and body") {
     fs.write( name.data(), name.size() );
     fs.write( body.data(), body.size() );
 
+    dl::obname expected_name {
+        dl::origin{ 1 },
+        1,
+        dl::ident{ "iflr" },
+    };
+
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( x.second.name.origin == 1 );
-    CHECK( x.second.name.copy   == 1 );
-    CHECK( x.second.name.id     == "iflr" );
+    CHECK( x.second.name == expected_name );
     CHECK( fs.tell() == last );
 }
 
@@ -113,11 +120,15 @@ TEST_CASE("IFRL in single VRL, segmented after obname") {
     write_iflr_segment( fs, body.size() );
     fs.write( body.data(), body.size() );
 
+    dl::obname expected_name {
+        dl::origin{ 1 },
+        1,
+        dl::ident{ "iflr" },
+    };
+
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( x.second.name.origin == 1 );
-    CHECK( x.second.name.copy   == 1 );
-    CHECK( x.second.name.id     == "iflr" );
+    CHECK( x.second.name == expected_name );
     CHECK( fs.tell() == last );
 }
 
@@ -154,11 +165,15 @@ TEST_CASE("IFRL single VRL, full obname first segment") {
     write_iflr_segment( fs, body.size() );
     fs.write( body.data(), body.size() );
 
+    dl::obname expected_name {
+        dl::origin{ 1 },
+        1,
+        dl::ident{ refstr },
+    };
+
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( x.second.name.origin == 1 );
-    CHECK( x.second.name.copy   == 1 );
-    CHECK( x.second.name.id     == refstr );
+    CHECK( x.second.name == expected_name );
     CHECK( fs.tell() == last );
 }
 
@@ -198,11 +213,15 @@ TEST_CASE("IFRL single VRL, full obname split across segments") {
     fs.write( name_snd.data(), name_snd.size() );
     fs.write( body.data(), body.size() );
 
+    dl::obname expected_name {
+        dl::origin{ 1 },
+        1,
+        dl::ident{ refstr },
+    };
+
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( x.second.name.origin == 1 );
-    CHECK( x.second.name.copy   == 1 );
-    CHECK( x.second.name.id     == refstr );
+    CHECK( x.second.name == expected_name );
     CHECK( fs.tell() == last );
 }
 
@@ -243,10 +262,13 @@ TEST_CASE("IFRL obname split across two VRLs") {
     fs.write( name_snd.data(), name_snd.size() );
     fs.write( body.data(), body.size() );
 
+    dl::obname expected_name {
+        dl::origin{ 1 },
+        1,
+        dl::ident{ refstr },
+    };
     const auto x = dl::tag( fs, 0 );
     CHECK( x.first == 0 );
-    CHECK( x.second.name.origin == 1 );
-    CHECK( x.second.name.copy   == 1 );
-    CHECK( x.second.name.id     == refstr );
+    CHECK( x.second.name == expected_name );
     CHECK( fs.tell() == last );
 }

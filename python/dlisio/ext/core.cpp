@@ -27,11 +27,11 @@ using namespace py::literals;
 using File = dl::basic_file< std::ifstream >;
 
 namespace pybind11 { namespace detail {
-template <> struct type_caster< dl::datetime > {
+template <> struct type_caster< dl::dtime > {
 public:
-    PYBIND11_TYPE_CASTER(dl::datetime, _("datetime.datetime"));
+    PYBIND11_TYPE_CASTER(dl::dtime, _("datetime.datetime"));
 
-    static handle cast( dl::datetime src, return_value_policy, handle ) {
+    static handle cast( dl::dtime src, return_value_policy, handle ) {
         // TODO: add TZ info
         return PyDateTime_FromDateAndTime( src.Y,
                                            src.M,
@@ -76,7 +76,7 @@ long uvari( const char*& xs ) noexcept;
 std::string ident( const char*& xs );
 std::string ascii( const char*& xs );
 
-dl::datetime dtime( const char*& xs ) noexcept;
+dl::dtime dtime( const char*& xs ) noexcept;
 
 long origin( const char*& xs ) noexcept;
 
@@ -215,8 +215,8 @@ std::string ascii( const char*& xs ) {
     return { str.begin(), str.end() };
 }
 
-dl::datetime dtime( const char*& xs ) noexcept {
-    dl::datetime dt;
+dl::dtime dtime( const char*& xs ) noexcept {
+    dl::dtime dt;
     xs = dlis_dtime( xs, &dt.Y,
                          &dt.TZ,
                          &dt.M,
@@ -403,9 +403,11 @@ py::tuple file::mkindex() {
 
         if ( last.isexplicit ) continue;
 
-        const auto name = py::make_tuple( last.name.origin,
-                                          last.name.copy,
-                                          last.name.id );
+        const auto name = py::make_tuple(
+            static_cast< std::int32_t >( last.name.origin ),
+            static_cast< std::uint8_t >( last.name.copy ),
+            static_cast< const std::string& >( last.name.id )
+        );
 
         if( !implicit_refs.contains( name ) )
             implicit_refs[ name ] = py::list();
