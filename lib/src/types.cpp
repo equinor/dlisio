@@ -396,6 +396,15 @@ const char* dlis_status( const char* xs, std::uint8_t* x ) {
     return dlis_ushort( xs, x );
 }
 
+const char* dlis_units( const char* xs, std::int32_t* len, char* out ) {
+    std::uint8_t ln;
+    xs = dlis_ushort( xs, &ln );
+
+    if( len ) *len = ln;
+    if( out ) std::memcpy( out, xs, ln );
+    return xs + ln;
+}
+
 /*
  * output functions
  */

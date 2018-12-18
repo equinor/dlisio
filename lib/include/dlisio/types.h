@@ -89,7 +89,7 @@ const char* dlis_attref( const char*, int32_t* ident1_len,
                                       char* ident2 );
 
 const char* dlis_status( const char*, uint8_t* );
-const char* dlis_units( const char*, uint8_t*, char* );
+const char* dlis_units( const char*, int32_t*, char* );
 
 /*
  * A family of the reverse operation, i.e. transform a native data type to an

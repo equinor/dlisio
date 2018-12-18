@@ -1057,6 +1057,67 @@ TEST_CASE("identifier (var-length string)", "[type]") {
     }
 }
 
+TEST_CASE("units (var-length string)", "[type]") {
+    std::int32_t len;
+
+    SECTION("empty string has zero length") {
+        dlis_units( "\0", &len, nullptr );
+        CHECK( len == 0 );
+    }
+
+    SECTION("empty string does not affect output") {
+        char str[] = "foobar";
+        dlis_units( "\0", &len, str );
+        CHECK( str == std::string("foobar") );
+    }
+
+    SECTION("single-char string has length 1") {
+        char str[] = "    ";
+        dlis_units( "\x01""a", &len, str );
+        CHECK( str == std::string("a   ") );
+        CHECK( len == 1 );
+    }
+
+    SECTION("single-char string has length 1") {
+        char str[] = "    ";
+        dlis_units( "\x01""a", &len, str );
+        CHECK( str == std::string("a   ") );
+        CHECK( len == 1 );
+    }
+
+    SECTION("can be 255 chars long") {
+        std::vector< char > str( 255, ' ' );
+        const std::string expected =
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
+            "tristique enim ac leo tristique, eu finibus enim pharetra. "
+            "Donec ac elit congue, viverra mauris nec, maximus mauris. "
+            "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
+            "quis metus.";
+
+        const std::string in = "\xFF" + expected;
+
+        dlis_units( in.c_str(), &len, nullptr );
+        CHECK( len == 255 );
+        dlis_units( in.c_str(), &len, str.data() );
+        CHECK( std::string( str.begin(), str.end() ) == expected );
+
+    }
+
+    SECTION("returns pointer past read data") {
+        const char in[] = "\x32"
+                          "Lorem ipsum dolor sit amet, consectetur adipiscing";
+
+        const char* noread = dlis_units( in, &len, nullptr );
+        CHECK( len == 50 );
+        CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
+
+        char out[ 50 ] = {};
+        const char* withread = dlis_units( in, &len, out );
+        CHECK( len == 50 );
+        CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
+    }
+}
+
 TEST_CASE("origin", "[type]") {
     SECTION("4-byte") {
         const std::array< bytes<4>, 9 > in = {{
