@@ -46,6 +46,267 @@ public:
 
 namespace {
 
+namespace conv {
+
+int sshort( const char*& xs ) noexcept;
+int snorm( const char*& xs ) noexcept;
+long slong( const char*& xs ) noexcept;
+
+int ushort( const char*& xs ) noexcept;
+int unorm( const char*& xs ) noexcept;
+long ulong( const char*& xs ) noexcept;
+
+float fshort( const char*& xs ) noexcept;
+float fsingl(  const char*& xs ) noexcept;
+double fdoubl( const char*& xs ) noexcept;
+
+float isingl(  const char*& xs ) noexcept;
+float vsingl(  const char*& xs ) noexcept;
+
+std::pair< float, float > fsing1( const char*& xs ) noexcept;
+std::tuple< float, float, float > fsing2( const char*& xs ) noexcept;
+std::complex< float > csingl( const char*& xs ) noexcept;
+
+std::pair< double, double > fdoub1( const char*& xs ) noexcept;
+std::tuple< double, double, double > fdoub2( const char*& xs ) noexcept;
+std::complex< double > cdoubl( const char*& xs ) noexcept;
+
+long uvari( const char*& xs ) noexcept;
+
+std::string ident( const char*& xs );
+std::string ascii( const char*& xs );
+
+dl::datetime dtime( const char*& xs ) noexcept;
+
+long origin( const char*& xs ) noexcept;
+
+std::tuple< long, int, std::string > obname( const char*& xs );
+std::tuple< long, int, std::string > obname( const char*& xs, int nmemb );
+std::tuple< std::string, long, int, std::string > objref( const char*& xs );
+
+int status( const char*& xs ) noexcept;
+
+int sshort( const char*& xs ) noexcept {
+    std::int8_t x;
+    xs = dlis_sshort( xs, &x );
+    return x;
+}
+
+int snorm( const char*& xs ) noexcept {
+    std::int16_t x;
+    xs = dlis_snorm( xs, &x );
+    return x;
+}
+
+long slong( const char*& xs ) noexcept {
+    std::int32_t x;
+    xs = dlis_slong( xs, &x );
+    return x;
+}
+
+int ushort( const char*& xs ) noexcept {
+    std::uint8_t x;
+    xs = dlis_ushort( xs, &x );
+    return x;
+}
+
+int unorm( const char*& xs ) noexcept {
+    std::uint16_t x;
+    xs = dlis_unorm( xs, &x );
+    return x;
+}
+
+long ulong( const char*& xs ) noexcept {
+    std::uint32_t x;
+    xs = dlis_ulong( xs, &x );
+    return x;
+}
+
+float fshort( const char*& xs ) noexcept {
+    float x;
+    xs = dlis_fshort( xs, &x );
+    return x;
+}
+
+float fsingl(  const char*& xs ) noexcept {
+    float x;
+    xs = dlis_fsingl( xs, &x );
+    return x;
+}
+
+double fdoubl( const char*& xs ) noexcept {
+    double x;
+    xs = dlis_fdoubl( xs, &x );
+    return x;
+}
+
+float isingl(  const char*& xs ) noexcept {
+    float x;
+    xs = dlis_isingl( xs, &x );
+    return x;
+}
+
+float vsingl(  const char*& xs ) noexcept {
+    float x;
+    xs = dlis_vsingl( xs, &x );
+    return x;
+}
+
+std::pair< float, float > fsing1( const char*& xs ) noexcept {
+    float V, A;
+    xs = dlis_fsing1( xs, &V, &A );
+    return { V, A };
+}
+
+std::tuple< float, float, float > fsing2( const char*& xs ) noexcept {
+    float V, A, B;
+    xs = dlis_fsing2( xs, &V, &A, &B );
+    return std::make_tuple( V, A, B );
+}
+
+std::complex< float > csingl( const char*& xs ) noexcept {
+    float R, I;
+    xs = dlis_csingl( xs, &R, &I );
+    return { R, I };
+}
+
+std::pair< double, double > fdoub1( const char*& xs ) noexcept {
+    double V, A;
+    xs = dlis_fdoub1( xs, &V, &A );
+    return std::make_pair( V, A );
+}
+
+std::tuple< double, double, double > fdoub2( const char*& xs ) noexcept {
+    double V, A, B;
+    xs = dlis_fdoub2( xs, &V, &A, &B );
+    return std::make_tuple( V, A, B );
+}
+
+std::complex< double > cdoubl( const char*& xs ) noexcept {
+    double R, I;
+    xs = dlis_cdoubl( xs, &R, &I );
+    return { R, I };
+}
+
+long uvari( const char*& xs ) noexcept {
+    std::int32_t x;
+    xs = dlis_uvari( xs, &x );
+    return x;
+}
+
+std::string ident( const char*& xs ) {
+    char str[ 256 ];
+    std::int32_t len;
+
+    dlis_ident( xs, &len, nullptr );
+    xs = dlis_ident( xs, &len, str );
+
+    return { str, str + len };
+}
+
+std::string ascii( const char*& xs ) {
+    std::vector< char > str;
+    std::int32_t len;
+
+    dlis_ascii( xs, &len, nullptr );
+    str.resize( len );
+    xs = dlis_ascii( xs, &len, str.data() );
+
+    return { str.begin(), str.end() };
+}
+
+dl::datetime dtime( const char*& xs ) noexcept {
+    dl::datetime dt;
+    xs = dlis_dtime( xs, &dt.Y,
+                         &dt.TZ,
+                         &dt.M,
+                         &dt.D,
+                         &dt.H,
+                         &dt.MN,
+                         &dt.S,
+                         &dt.MS );
+    dt.Y = dlis_year( dt.Y );
+    return dt;
+}
+
+long origin( const char*& xs ) noexcept {
+    std::int32_t x;
+    xs = dlis_origin( xs, &x );
+    return x;
+}
+
+std::tuple< long, int, std::string > obname( const char*& xs ) {
+    char str[ 256 ];
+    std::int32_t len;
+
+    std::int32_t orig;
+    std::uint8_t copy;
+
+    xs = dlis_obname( xs, &orig, &copy, &len, str );
+    return std::make_tuple( orig, copy, std::string( str, str + len ) );
+}
+
+std::tuple< long, int, std::string > obname( const char*& xs, int nmemb ) {
+    if( nmemb < 4 ) {
+        /*
+         * safeguard against too-few-bytes to read the integer parts of the obname
+         */
+        std::string msg = "obname is minimum 5 bytes, nmemb was "
+                        + std::to_string( nmemb );
+        throw std::length_error( msg );
+    }
+
+    char str[ 256 ] = {};
+    std::int32_t orig;
+    std::uint8_t copy;
+    std::int32_t len;
+    std::uint8_t name_len;
+
+    const auto* ptr = xs;
+    ptr = dlis_origin( ptr, &orig );
+    ptr = dlis_ushort( ptr, &copy );
+    ptr = dlis_ushort( ptr, &name_len );
+    const auto int_len = std::distance( xs, ptr );
+
+    if( int_len + name_len > nmemb ) {
+        std::string msg = "expected obname length (= "
+                        + std::to_string(int_len + name_len) + ") < nmemb ("
+                        + "= " + std::to_string( nmemb ) + ")";
+        throw std::length_error( msg );
+    }
+
+    // TODO: stronger exception guarantee?
+    xs = dlis_ident( ptr - 1, &len, str );
+    return std::make_tuple( orig, copy, str );
+}
+
+std::tuple< std::string, long, int, std::string > objref( const char*& xs ) {
+    char strid[ 256 ];
+    char strobj[ 256 ];
+    std::int32_t lenid;
+    std::int32_t lenobj;
+
+    std::int32_t orig;
+    std::uint8_t copy;
+
+    xs = dlis_objref( xs,
+                      &lenid, strid,
+                      &orig, &copy, &lenobj, strobj );
+
+    return std::make_tuple(
+        std::string( strid, strid + lenid ),
+        orig, copy, std::string( strobj, strobj + lenobj )
+    );
+}
+
+int status( const char*& xs ) noexcept {
+    std::uint8_t x;
+    xs = dlis_status( xs, &x );
+    return x;
+}
+
+}
+
 py::dict SUL( const char* buffer ) {
     char id[ 61 ] = {};
     int seqnum, major, minor, layout;
@@ -155,35 +416,35 @@ py::tuple file::mkindex() {
     return py::make_tuple( bookmarks, explicits, implicit_refs );
 }
 
-py::object conv( int reprc, py::buffer b ) {
+py::object convert( int reprc, py::buffer b ) {
     const auto* xs = static_cast< const char* >( b.request().ptr );
     switch( reprc ) {
-        case DLIS_FSHORT: return py::cast( dl::fshort( xs ) );
-        case DLIS_FSINGL: return py::cast( dl::fsingl( xs ) );
-        case DLIS_FSING1: return py::cast( dl::fsing1( xs ) );
-        case DLIS_FSING2: return py::cast( dl::fsing2( xs ) );
-        case DLIS_ISINGL: return py::cast( dl::isingl( xs ) );
-        case DLIS_VSINGL: return py::cast( dl::vsingl( xs ) );
-        case DLIS_FDOUBL: return py::cast( dl::fdoubl( xs ) );
-        case DLIS_FDOUB1: return py::cast( dl::fdoub1( xs ) );
-        case DLIS_FDOUB2: return py::cast( dl::fdoub2( xs ) );
-        case DLIS_CSINGL: return py::cast( dl::csingl( xs ) );
-        case DLIS_CDOUBL: return py::cast( dl::cdoubl( xs ) );
-        case DLIS_SSHORT: return py::cast( dl::sshort( xs ) );
-        case DLIS_SNORM:  return py::cast( dl:: snorm( xs ) );
-        case DLIS_SLONG:  return py::cast( dl:: slong( xs ) );
-        case DLIS_USHORT: return py::cast( dl::ushort( xs ) );
-        case DLIS_UNORM:  return py::cast( dl:: unorm( xs ) );
-        case DLIS_ULONG:  return py::cast( dl:: ulong( xs ) );
-        case DLIS_UVARI:  return py::cast( dl:: uvari( xs ) );
-        case DLIS_IDENT:  return py::cast( dl:: ident( xs ) );
-        case DLIS_ASCII:  return py::cast( dl:: ascii( xs ) );
-        case DLIS_DTIME:  return py::cast( dl:: dtime( xs ) );
-        case DLIS_STATUS: return py::cast( dl::status( xs ) );
-        case DLIS_ORIGIN: return py::cast( dl::origin( xs ) );
-        case DLIS_OBNAME: return py::cast( dl::obname( xs ).as_tuple() );
-        case DLIS_OBJREF: return py::cast( dl::objref( xs ) );
-        case DLIS_UNITS:  return py::cast( dl:: ident( xs ) );
+        case DLIS_FSHORT: return py::cast( conv::fshort( xs ) );
+        case DLIS_FSINGL: return py::cast( conv::fsingl( xs ) );
+        case DLIS_FSING1: return py::cast( conv::fsing1( xs ) );
+        case DLIS_FSING2: return py::cast( conv::fsing2( xs ) );
+        case DLIS_ISINGL: return py::cast( conv::isingl( xs ) );
+        case DLIS_VSINGL: return py::cast( conv::vsingl( xs ) );
+        case DLIS_FDOUBL: return py::cast( conv::fdoubl( xs ) );
+        case DLIS_FDOUB1: return py::cast( conv::fdoub1( xs ) );
+        case DLIS_FDOUB2: return py::cast( conv::fdoub2( xs ) );
+        case DLIS_CSINGL: return py::cast( conv::csingl( xs ) );
+        case DLIS_CDOUBL: return py::cast( conv::cdoubl( xs ) );
+        case DLIS_SSHORT: return py::cast( conv::sshort( xs ) );
+        case DLIS_SNORM:  return py::cast( conv:: snorm( xs ) );
+        case DLIS_SLONG:  return py::cast( conv:: slong( xs ) );
+        case DLIS_USHORT: return py::cast( conv::ushort( xs ) );
+        case DLIS_UNORM:  return py::cast( conv:: unorm( xs ) );
+        case DLIS_ULONG:  return py::cast( conv:: ulong( xs ) );
+        case DLIS_UVARI:  return py::cast( conv:: uvari( xs ) );
+        case DLIS_IDENT:  return py::cast( conv:: ident( xs ) );
+        case DLIS_ASCII:  return py::cast( conv:: ascii( xs ) );
+        case DLIS_DTIME:  return py::cast( conv:: dtime( xs ) );
+        case DLIS_STATUS: return py::cast( conv::status( xs ) );
+        case DLIS_ORIGIN: return py::cast( conv::origin( xs ) );
+        case DLIS_OBNAME: return py::cast( conv::obname( xs ) );
+        case DLIS_OBJREF: return py::cast( conv::objref( xs ) );
+        case DLIS_UNITS:  return py::cast( conv:: ident( xs ) );
 
         default:
             throw py::value_error( "unknown representation code "
@@ -196,32 +457,32 @@ py::list getarray( const char*& xs, int count, int reprc ) {
 
     for( int i = 0; i < count; ++i ) {
         switch( reprc ) {
-            case DLIS_FSHORT: l.append( dl::fshort( xs ) ); break;
-            case DLIS_FSINGL: l.append( dl::fsingl( xs ) ); break;
-            case DLIS_FSING1: l.append( dl::fsing1( xs ) ); break;
-            case DLIS_FSING2: l.append( dl::fsing2( xs ) ); break;
-            case DLIS_ISINGL: l.append( dl::isingl( xs ) ); break;
-            case DLIS_VSINGL: l.append( dl::vsingl( xs ) ); break;
-            case DLIS_FDOUBL: l.append( dl::fdoubl( xs ) ); break;
-            case DLIS_FDOUB1: l.append( dl::fdoub1( xs ) ); break;
-            case DLIS_FDOUB2: l.append( dl::fdoub2( xs ) ); break;
-            case DLIS_CSINGL: l.append( dl::csingl( xs ) ); break;
-            case DLIS_CDOUBL: l.append( dl::cdoubl( xs ) ); break;
-            case DLIS_SSHORT: l.append( dl::sshort( xs ) ); break;
-            case DLIS_SNORM:  l.append( dl:: snorm( xs ) ); break;
-            case DLIS_SLONG:  l.append( dl:: slong( xs ) ); break;
-            case DLIS_USHORT: l.append( dl::ushort( xs ) ); break;
-            case DLIS_UNORM:  l.append( dl:: unorm( xs ) ); break;
-            case DLIS_ULONG:  l.append( dl:: ulong( xs ) ); break;
-            case DLIS_UVARI:  l.append( dl:: uvari( xs ) ); break;
-            case DLIS_IDENT:  l.append( dl:: ident( xs ) ); break;
-            case DLIS_ASCII:  l.append( dl:: ascii( xs ) ); break;
-            case DLIS_DTIME:  l.append( dl:: dtime( xs ) ); break;
-            case DLIS_STATUS: l.append( dl::status( xs ) ); break;
-            case DLIS_ORIGIN: l.append( dl::origin( xs ) ); break;
-            case DLIS_OBNAME: l.append( dl::obname( xs ).as_tuple() ); break;
-            case DLIS_OBJREF: l.append( dl::objref( xs ) ); break;
-            case DLIS_UNITS:  l.append( dl:: ident( xs ) ); break;
+            case DLIS_FSHORT: l.append( conv::fshort( xs ) ); break;
+            case DLIS_FSINGL: l.append( conv::fsingl( xs ) ); break;
+            case DLIS_FSING1: l.append( conv::fsing1( xs ) ); break;
+            case DLIS_FSING2: l.append( conv::fsing2( xs ) ); break;
+            case DLIS_ISINGL: l.append( conv::isingl( xs ) ); break;
+            case DLIS_VSINGL: l.append( conv::vsingl( xs ) ); break;
+            case DLIS_FDOUBL: l.append( conv::fdoubl( xs ) ); break;
+            case DLIS_FDOUB1: l.append( conv::fdoub1( xs ) ); break;
+            case DLIS_FDOUB2: l.append( conv::fdoub2( xs ) ); break;
+            case DLIS_CSINGL: l.append( conv::csingl( xs ) ); break;
+            case DLIS_CDOUBL: l.append( conv::cdoubl( xs ) ); break;
+            case DLIS_SSHORT: l.append( conv::sshort( xs ) ); break;
+            case DLIS_SNORM:  l.append( conv:: snorm( xs ) ); break;
+            case DLIS_SLONG:  l.append( conv:: slong( xs ) ); break;
+            case DLIS_USHORT: l.append( conv::ushort( xs ) ); break;
+            case DLIS_UNORM:  l.append( conv:: unorm( xs ) ); break;
+            case DLIS_ULONG:  l.append( conv:: ulong( xs ) ); break;
+            case DLIS_UVARI:  l.append( conv:: uvari( xs ) ); break;
+            case DLIS_IDENT:  l.append( conv:: ident( xs ) ); break;
+            case DLIS_ASCII:  l.append( conv:: ascii( xs ) ); break;
+            case DLIS_DTIME:  l.append( conv:: dtime( xs ) ); break;
+            case DLIS_STATUS: l.append( conv::status( xs ) ); break;
+            case DLIS_ORIGIN: l.append( conv::origin( xs ) ); break;
+            case DLIS_OBNAME: l.append( conv::obname( xs ) ); break;
+            case DLIS_OBJREF: l.append( conv::objref( xs ) ); break;
+            case DLIS_UNITS:  l.append( conv:: ident( xs ) ); break;
 
             default:
                 throw py::value_error( "unknown representation code "
@@ -235,32 +496,32 @@ py::list getarray( const char*& xs, int count, int reprc ) {
 void skiparray( const char*& xs, int count, int reprc ) {
     for( int i = 0; i < count; ++i ) {
         switch( reprc ) {
-            case DLIS_FSHORT: dl::fshort( xs ); break;
-            case DLIS_FSINGL: dl::fsingl( xs ); break;
-            case DLIS_FSING1: dl::fsing1( xs ); break;
-            case DLIS_FSING2: dl::fsing2( xs ); break;
-            case DLIS_ISINGL: dl::isingl( xs ); break;
-            case DLIS_VSINGL: dl::vsingl( xs ); break;
-            case DLIS_FDOUBL: dl::fdoubl( xs ); break;
-            case DLIS_FDOUB1: dl::fdoub1( xs ); break;
-            case DLIS_FDOUB2: dl::fdoub2( xs ); break;
-            case DLIS_CSINGL: dl::csingl( xs ); break;
-            case DLIS_CDOUBL: dl::cdoubl( xs ); break;
-            case DLIS_SSHORT: dl::sshort( xs ); break;
-            case DLIS_SNORM:  dl:: snorm( xs ); break;
-            case DLIS_SLONG:  dl:: slong( xs ); break;
-            case DLIS_USHORT: dl::ushort( xs ); break;
-            case DLIS_UNORM:  dl:: unorm( xs ); break;
-            case DLIS_ULONG:  dl:: ulong( xs ); break;
-            case DLIS_UVARI:  dl:: uvari( xs ); break;
-            case DLIS_IDENT:  dl:: ident( xs ); break;
-            case DLIS_ASCII:  dl:: ascii( xs ); break;
-            case DLIS_DTIME:  dl:: dtime( xs ); break;
-            case DLIS_STATUS: dl::status( xs ); break;
-            case DLIS_ORIGIN: dl::origin( xs ); break;
-            case DLIS_OBNAME: dl::obname( xs ); break;
-            case DLIS_OBJREF: dl::objref( xs ); break;
-            case DLIS_UNITS:  dl:: ident( xs ); break;
+            case DLIS_FSHORT: conv::fshort( xs ); break;
+            case DLIS_FSINGL: conv::fsingl( xs ); break;
+            case DLIS_FSING1: conv::fsing1( xs ); break;
+            case DLIS_FSING2: conv::fsing2( xs ); break;
+            case DLIS_ISINGL: conv::isingl( xs ); break;
+            case DLIS_VSINGL: conv::vsingl( xs ); break;
+            case DLIS_FDOUBL: conv::fdoubl( xs ); break;
+            case DLIS_FDOUB1: conv::fdoub1( xs ); break;
+            case DLIS_FDOUB2: conv::fdoub2( xs ); break;
+            case DLIS_CSINGL: conv::csingl( xs ); break;
+            case DLIS_CDOUBL: conv::cdoubl( xs ); break;
+            case DLIS_SSHORT: conv::sshort( xs ); break;
+            case DLIS_SNORM:  conv:: snorm( xs ); break;
+            case DLIS_SLONG:  conv:: slong( xs ); break;
+            case DLIS_USHORT: conv::ushort( xs ); break;
+            case DLIS_UNORM:  conv:: unorm( xs ); break;
+            case DLIS_ULONG:  conv:: ulong( xs ); break;
+            case DLIS_UVARI:  conv:: uvari( xs ); break;
+            case DLIS_IDENT:  conv:: ident( xs ); break;
+            case DLIS_ASCII:  conv:: ascii( xs ); break;
+            case DLIS_DTIME:  conv:: dtime( xs ); break;
+            case DLIS_STATUS: conv::status( xs ); break;
+            case DLIS_ORIGIN: conv::origin( xs ); break;
+            case DLIS_OBNAME: conv::obname( xs ); break;
+            case DLIS_OBJREF: conv::objref( xs ); break;
+            case DLIS_UNITS:  conv:: ident( xs ); break;
 
             default:
                 throw py::value_error( "unknown representation code "
@@ -430,10 +691,10 @@ object_template explicit_template( const char*& cur, const char* end ) {
             flags.label = 1;
         }
 
-                          col["label"] = dl::ident( cur );
-        if( flags.count ) col["count"] = count = dl::uvari( cur );
-        if( flags.reprc ) col["reprc"] = reprc = dl::ushort( cur );
-        if( flags.units ) col["units"] = dl::ident( cur );
+                          col["label"] = conv::ident( cur );
+        if( flags.count ) col["count"] = count = conv::uvari( cur );
+        if( flags.reprc ) col["reprc"] = reprc = conv::ushort( cur );
+        if( flags.units ) col["units"] = conv::ident( cur );
         if( flags.value ) col["value"] = getarray( cur, count, reprc );
 
         if( flags.invariant ) cols.invariant.push_back( std::move( col ) );
@@ -467,8 +728,8 @@ py::dict eflr( const char* cur, const char* end ) {
                                  "after SET component" );
     }
 
-    if( set.type ) record["type"] = dl::ident( cur );
-    if( set.name ) record["name"] = dl::ident( cur );
+    if( set.type ) record["type"] = conv::ident( cur );
+    if( set.name ) record["name"] = conv::ident( cur );
 
     auto tmpl = explicit_template( cur, end );
 
@@ -485,7 +746,7 @@ py::dict eflr( const char* cur, const char* end ) {
          * just assume obname. objects have to specify it, and if it is unset
          * then UserWarning has already been emitted
          */
-        auto name = dl::obname( cur );
+        auto name = conv::obname( cur );
 
         /*
          * each object is a row in a table of attributes. If the object is cut
@@ -507,12 +768,12 @@ py::dict eflr( const char* cur, const char* end ) {
 
             if( flags.label ) {
                 user_warning( "ATTRIB:label set, but must be null - was "
-                            + dl::ident( cur ) );
+                            + conv::ident( cur ) );
             }
 
-            if( flags.count ) cell["count"] = dl::uvari( cur );
-            if( flags.reprc ) cell["reprc"] = dl::ushort( cur );
-            if( flags.units ) cell["units"] = dl::ident( cur );
+            if( flags.count ) cell["count"] = conv::uvari( cur );
+            if( flags.reprc ) cell["reprc"] = conv::ushort( cur );
+            if( flags.units ) cell["units"] = conv::ident( cur );
             if( flags.value ) {
                 /*
                  * count/repr can both be set by this label, and by the
@@ -527,7 +788,7 @@ py::dict eflr( const char* cur, const char* end ) {
 
         /* patch invariant-attributes onto the record */
         row.insert( row.end(), tmpl.invariant.begin(), tmpl.invariant.end() );
-        const auto pyname = py::make_tuple( name.origin, name.copy, name.id );
+        const auto pyname = py::cast( name );
         objects[pyname] = row;
     }
 
@@ -614,8 +875,8 @@ py::object file::iflr_chunk( const dl::bookmark& mark,
     auto cat = catrecord( this->fs, mark.residual );
     const char* ptr = cat.data();
 
-    dl::obname( ptr );
-    auto frameno = dl::uvari( ptr );
+    conv::obname( ptr );
+    auto frameno = conv::uvari( ptr );
 
     const auto is_constant_size = [](int reprc) {
         switch( reprc ) {
@@ -751,7 +1012,7 @@ PYBIND11_MODULE(core, m) {
         return eflr( ptr, ptr + len );
     } );
 
-    m.def( "conv", conv );
+    m.def( "conv", convert );
 
     py::class_< file >( m, "file" )
         .def( py::init< const std::string& >() )
