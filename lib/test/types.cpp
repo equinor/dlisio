@@ -796,11 +796,11 @@ TEST_CASE("single precision complex float", "[type]") {
     };
 
     SECTION("to native") {
-        for( std::size_t j = 0; j < inputs.size(); ++j ) {
-            float r, i;
-            dlis_fsing1( inputs[ i  ], &r, &i );
-            CHECK( r == expectedR[ i ] );
-            CHECK( i == expectedI[ i ] );
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float V, A;
+            dlis_fsing1( inputs[ i ], &V, &A );
+            CHECK( V == expectedR[ i ] );
+            CHECK( A == expectedI[ i ] );
         }
     }
 
@@ -962,11 +962,11 @@ TEST_CASE("double precision complex float", "[type]") {
     };
 
     SECTION("to native") {
-        for( std::size_t j = 0; j < inputs.size(); ++j ) {
-            double r, i;
-            dlis_cdoubl( inputs[ i ], &r, &i );
-            CHECK( r == expectedR[ i ] );
-            CHECK( i == expectedI[ i ] );
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double re, im;
+            dlis_cdoubl( inputs[ i ], &re, &im );
+            CHECK( re == expectedR[ i ] );
+            CHECK( im == expectedI[ i ] );
         }
     }
 
