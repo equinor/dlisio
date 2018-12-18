@@ -7,6 +7,10 @@
 #include <utility>
 #include <vector>
 
+#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+#define BOOST_MPL_LIMIT_LIST_SIZE 30
+#include <boost/variant.hpp>
+
 #include <dlisio/types.h>
 
 #include "strong-typedef.hpp"
@@ -120,6 +124,113 @@ struct attref {
             && this->label== rhs.label;
     }
 };
+
+using value_vector = boost::variant<
+    std::vector< fshort >,
+    std::vector< fsingl >,
+    std::vector< fsing1 >,
+    std::vector< fsing2 >,
+    std::vector< isingl >,
+    std::vector< vsingl >,
+    std::vector< fdoubl >,
+    std::vector< fdoub1 >,
+    std::vector< fdoub2 >,
+    std::vector< csingl >,
+    std::vector< cdoubl >,
+    std::vector< sshort >,
+    std::vector< snorm  >,
+    std::vector< slong  >,
+    std::vector< ushort >,
+    std::vector< unorm  >,
+    std::vector< ulong  >,
+    std::vector< uvari  >,
+    std::vector< ident  >,
+    std::vector< ascii  >,
+    std::vector< dtime  >,
+    std::vector< origin >,
+    std::vector< obname >,
+    std::vector< objref >,
+    std::vector< attref >,
+    std::vector< status >,
+    std::vector< units  >
+>;
+
+struct object_attribute {
+    dl::ident           label = {};
+    dl::uvari           count = dl::uvari{ 1 };
+    representation_code reprc = representation_code::ident;
+    dl::units           units = {};
+    dl::value_vector    value = {};
+};
+
+using object_template = std::vector< object_attribute >;
+
+const char* parse_template( const char*,
+                            const char*,
+                            object_template& ) noexcept (false);
+
+
+/*
+ * implementations
+ */
+template < typename T >
+void object_attribute::into( T& x, bool allow_empty ) const noexcept (false) {
+    // TODO: catch boost-get error,
+    // then re-throw as something suitable with a better message
+    // ?
+
+    if (this->reprc != dl::typeinfo< T >::reprc) {
+        throw std::invalid_argument( "mismatching reprc" );
+    }
+
+    if (this->value.which() == 0 && allow_empty) {
+        /*
+         * set to default-constructed of correct type
+         *
+         * this might need to change if ABSENT is important enough to
+         * distinguish between default-constructed values and explicitly unset
+         * values
+         */
+        x = T();
+        return;
+    }
+
+    // TODO: if count > 1, fail with warning?
+    using Vec = std::vector< T >;
+    x = boost::get< Vec >( this->value ).front();
+}
+
+template <>
+void object_attribute::into( dl::representation_code& x, bool allow_empty )
+const noexcept (false) {
+    if (this->value.which() == 0 && allow_empty)
+        return;
+
+    dl::ushort tmp;
+    this->into( tmp, allow_empty );
+    x = static_cast< dl::representation_code >( tmp );
+}
+
+template < typename T >
+void object_attribute::into( std::vector< T >& v, bool allow_empty )
+const noexcept (false)
+{
+    // TODO: catch boost-get error,
+    // then re-throw as something suitable with a better message
+    if (this->reprc != dl::typeinfo< T >::reprc) {
+        throw std::invalid_argument( "mismatching reprc" );
+    }
+
+    if (this->value.which() == 0 && allow_empty) {
+        return;
+    }
+
+    using Vec = std::vector< T >;
+    v = boost::get< Vec >( this->value );
+}
+
+object_set parse_eflr( const char*, const char*, int ) noexcept (false);
+
 }
 
 #endif //DLISIO_EXT_TYPES_HPP

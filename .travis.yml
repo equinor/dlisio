@@ -30,6 +30,7 @@ addons:
             - cmake
             - cmake-data
             - g++-7
+            - libboost-dev
 
 matrix:
     fast_finish: true

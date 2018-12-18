@@ -17,13 +17,15 @@ endif()
 set(python ${PYTHON_EXECUTABLE})
 set(setup.py ${CMAKE_CURRENT_SOURCE_DIR}/setup.py)
 
+set(build_ext build_ext --include-dirs ${Boost_INCLUDE_DIR})
 if (NOT WIN32)
     # setuptools on microsoft compilers doesn't support the --library-dir or
     # --build-dir flag and crashes, so only pass it on non-microsoft platforms
-    set(build_ext build_ext --library-dirs ${CMAKE_CURRENT_SOURCE_DIR}
-                            --rpath ${CMAKE_CURRENT_SOURCE_DIR}
+    set(build_ext_args --library-dirs ${CMAKE_CURRENT_SOURCE_DIR}
+                       --rpath ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
+
 
 add_custom_target(
     dlisio-python ALL
@@ -49,7 +51,7 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:dlisio-extension>
                                      $<TARGET_LINKER_FILE_NAME:dlisio-extension>
 
-    COMMAND ${python} ${setup.py} ${build_ext} build
+    COMMAND ${python} ${setup.py} ${build_ext} ${build_ext_args} build
 )
 
 add_dependencies(dlisio-python dlisio dlisio-extension)

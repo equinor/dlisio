@@ -90,6 +90,8 @@ int dlis_encryption_packet_info( const char*,
  *      ...
  * }
  */
+
+#define DLIS_DESCRIPTOR_SIZE 1
 int dlis_component( uint8_t descriptor, int* role );
 
 int dlis_component_set( uint8_t descriptor,
