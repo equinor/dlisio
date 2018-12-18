@@ -120,7 +120,7 @@ const char* dlis_ulong( const char* xs, std::uint32_t* x ) {
     return xs + sizeof( std::uint32_t );
 }
 
-const char* dlis_uvari( const char* xs, int32_t* out ) {
+const char* dlis_uvari( const char* xs, std::int32_t* out ) {
     /*
      * extract the two high bits. (length-encoding)
      * 0x: 1-byte
@@ -249,23 +249,23 @@ const char* dlis_obname( const char* xs, std::int32_t* origin,
     return dlis_ident( xs, idlen, identifier );
 }
 
-const char* dlis_objref( const char* xs, int32_t* ident_len,
+const char* dlis_objref( const char* xs, std::int32_t* ident_len,
                                          char* ident,
-                                         int32_t* origin,
-                                         uint8_t* copy_number,
-                                         int32_t* objname_len,
+                                         std::int32_t* origin,
+                                         std::uint8_t* copy_number,
+                                         std::int32_t* objname_len,
                                          char* identifier ) {
     xs = dlis_ident( xs, ident_len, ident );
     return dlis_obname( xs, origin, copy_number, objname_len, identifier );
 }
 
-const char* dlis_attref( const char* xs, int32_t* ident_len,
+const char* dlis_attref( const char* xs, std::int32_t* ident_len,
                                          char* ident,
-                                         int32_t* origin,
-                                         uint8_t* copy_number,
-                                         int32_t* objname_len,
+                                         std::int32_t* origin,
+                                         std::uint8_t* copy_number,
+                                         std::int32_t* objname_len,
                                          char* identifier,
-                                         int32_t* ident2_len,
+                                         std::int32_t* ident2_len,
                                          char* ident2 ) {
     xs = dlis_ident( xs, ident_len, ident );
     xs = dlis_obname( xs, origin, copy_number, objname_len, identifier );
