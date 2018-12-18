@@ -84,12 +84,13 @@ const char* dlis_attref( const char*, int32_t* ident1_len,
                                       char* ident1,
                                       int32_t* origin,
                                       uint8_t* copy_number,
+                                      int32_t* objname_len,
                                       char* identifier,
-                                      int32_t ident2_len,
+                                      int32_t* ident2_len,
                                       char* ident2 );
 
 const char* dlis_status( const char*, uint8_t* );
-const char* dlis_units( const char*, uint8_t*, char* );
+const char* dlis_units( const char*, int32_t*, char* );
 
 /*
  * A family of the reverse operation, i.e. transform a native data type to an
@@ -108,7 +109,65 @@ void* dlis_ushorto( void*, uint8_t );
 void* dlis_unormo(  void*, uint16_t );
 void* dlis_ulongo(  void*, uint32_t );
 
+void* dlis_fsinglo( void*, float );
+void* dlis_fdoublo( void*, double );
+
+/* IBM and VAX floats */
+void* dlis_isinglo( void*, float );
+void* dlis_vsinglo( void*, float );
+
+/* complex or validated floats */
+void* dlis_fsing1o( void*, float, float );
+void* dlis_fsing2o( void*, float, float, float );
+void* dlis_csinglo( void*, float, float );
+
+void* dlis_fdoub1o( void*, double, double );
+void* dlis_fdoub2o( void*, double, double, double );
+void* dlis_cdoublo( void*, double, double );
+
 void* dlis_uvario( void*, int32_t, int width );
+
+void* dlis_idento( void*, uint8_t len, const char* in );
+void* dlis_asciio( void*, int32_t len, const char* in, std::uint8_t l = 1 );
+
+void* dlis_origino( void*, int32_t );
+void* dlis_statuso( void*, uint8_t );
+
+int dlis_yearo( int );
+void* dlis_dtimeo( void*, int Y,
+                          int TZ,
+                          int M,
+                          int D,
+                          int H,
+                          int MN,
+                          int S,
+                          int MS );
+
+/* obname = { origin, ushort, ident } */
+void* dlis_obnameo( void*, int32_t origin,
+                           uint8_t copy_number,
+                           uint8_t idlen,
+                           const char* identifier );
+
+/* objref = { ident, obname } */
+void* dlis_objrefo( void*, uint8_t ident_len,
+                           const char* ident,
+                           int32_t origin,
+                           uint8_t copy_number,
+                           uint8_t objname_len,
+                           const char* identifier );
+
+/* attref = { ident, obname, ident } */
+void* dlis_attrefo( void*, uint8_t ident1_len,
+                           const char* ident1,
+                           int32_t origin,
+                           uint8_t copy_number,
+                           uint8_t objname_len,
+                           const char* identifier,
+                           uint8_t ident2_len,
+                           const char* ident2 );
+
+void* dlis_unitso( void*, uint8_t len, const char* in );
 
 /*
  * get the size (in bytes) of a particular data type. Expects a DLIS_UNORM or

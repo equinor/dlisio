@@ -494,7 +494,7 @@ TEST_CASE("short float (16-bit)", "[type]") {
 
 TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
     SECTION("parsed floats match expected result") {
-        const std::array< unsigned char[4], 7 > inputs = {{
+        const std::array< bytes<4>, 7 > inputs = {{
             { 0x00, 0x00, 0x00, 0x00 }, // 0
             { 0x80, 0x00, 0x00, 0x00 }, // -0
             { 0x40, 0x49, 0x0F, 0xDB }, // 3.1415927410125732421875
@@ -506,7 +506,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
 
         const std::array< float, inputs.size() > expected = {
             0,
-            -0,
+            static_cast< float >( std::copysign(0, -1) ),
             3.1415927410125732421875,
             153,
             -153,
@@ -514,10 +514,21 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
             -std::numeric_limits< float >::infinity(),
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            float v;
-            dlis_fsingl( (char*)inputs[ i ], &v );
-            CHECK( v == expected[ i ] );
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                float v;
+                dlis_fsingl( inputs[ i ], &v );
+                CHECK( v == expected[ i ] );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                float v;
+                const void* end = dlis_fsinglo( &v, expected[ i ] );
+                CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 
@@ -539,7 +550,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
 
 TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
     SECTION("parsed doubles match expected result") {
-        const std::array< unsigned char[8], 7 > inputs = {{
+        const std::array< bytes<8>, 7 > inputs = {{
             { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // 0
             { 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // -0
             { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18 }, // ~3.14
@@ -551,7 +562,7 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
 
         const std::array< double, inputs.size() > expected = {
             0,
-            -0,
+            static_cast< float >( std::copysign(0, -1) ),
             3.1415926535897930,
             153,
             -153,
@@ -559,10 +570,21 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
             -std::numeric_limits< double >::infinity(),
         };
 
-        for( std::size_t i = 0; i < expected.size(); ++i ) {
-            double v;
-            dlis_fdoubl( (char*)inputs[ i ], &v );
-            CHECK( v == expected[ i ] );
+        SECTION( "to native" ) {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                double v;
+                dlis_fdoubl( inputs[ i ], &v );
+                CHECK( v == expected[ i ] );
+            }
+        }
+
+        SECTION( "from native" ) {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                double v;
+                const void* end = dlis_fdoublo( &v, expected[ i ] );
+                CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
         }
     }
 
@@ -583,9 +605,8 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
 }
 
 TEST_CASE("ibm single precision float", "[type]") {
-    const std::array< unsigned char[4], 5 > inputs = {{
+    const std::array< bytes< 4 >, 4 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00 }, // 0
-        { 0x80, 0x00, 0x00, 0x00 }, // -0
         { 0x42, 0x99, 0x00, 0x00 }, // 153
         { 0xC2, 0x99, 0x00, 0x00 }, // -153
         { 0xC2, 0x76, 0xA0, 0x00 }, // -118.625
@@ -593,21 +614,31 @@ TEST_CASE("ibm single precision float", "[type]") {
 
     const std::array< float, inputs.size() > expected = {
         0.0,
-        -0.0,
         153.0,
         -153.0,
         -118.625,
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        float v;
-        dlis_isingl( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION( "to native" ) {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v;
+            dlis_isingl( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION( "from native" ) {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            const void* end = dlis_isinglo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+        }
     }
 }
 
 TEST_CASE("vax single precision float", "[type]") {
-    const std::array< unsigned char[4], 3 > inputs = {{
+    const std::array< bytes< 4 >, 3 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00 }, // 0
         { 0x0C, 0x44, 0x00, 0x80 }, // 153
         { 0x0C, 0xC4, 0x00, 0x80 }, // -153
@@ -619,115 +650,334 @@ TEST_CASE("vax single precision float", "[type]") {
         -153,
     };
 
-    for( std::size_t i = 0; i < inputs.size(); ++i ) {
-        float v;
-        dlis_vsingl( (char*)inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+    SECTION( "to native" ) {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v;
+            dlis_vsingl( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION( "from native" ) {
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            const void* end = dlis_vsinglo( &v, expected[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( v ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+        }
     }
 }
 
-TEST_CASE("complex and validated single precision floats", "[type]") {
-    const std::array< unsigned char, 28 > inputs = {
-        0x00, 0x00, 0x00, 0x00, // 0
-        0x80, 0x00, 0x00, 0x00, // -0
-        0x40, 0x49, 0x0F, 0xDB, // 3.1415927410125732421875
-        0x43, 0x19, 0x00, 0x00, // 153
-        0xC3, 0x19, 0x00, 0x00, // -153
-        0x7F, 0x80, 0x00, 0x00, // infinity
-        0xFF, 0x80, 0x00, 0x00, // -infinity
+TEST_CASE("validated single precision float", "[type]") {
+    const std::array< bytes< 8 >, 4 > inputs = {{
+        // 0, -0
+        { 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00 },
+        // 3.1415927410125732421875, -0
+        { 0x40, 0x49, 0x0F, 0xDB, 0x80, 0x00, 0x00, 0x00 },
+        // 153, -153
+        { 0x43, 0x19, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00 },
+        // infinity, -infinity
+        { 0x7F, 0x80, 0x00, 0x00, 0xFF, 0x80, 0x00, 0x00 },
+    }};
+
+    const std::array< float, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        153,
+        std::numeric_limits< float >::infinity(),
     };
 
-    SECTION("validaed single precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( float ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( float );
+    const std::array< float, inputs.size() > expectedA = {
+        static_cast< float >( std::copysign(0, -1) ),
+        static_cast< float >( std::copysign(0, -1) ),
+        -153,
+        -std::numeric_limits< float >::infinity(),
+    };
+
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v, a;
-            float x, y;
-            dlis_fsing1( xs, &v, &a );
-            const char* ys = dlis_fsingl( xs, &x );
-                             dlis_fsingl( ys, &y );
-            CHECK( v == x );
-            CHECK( a == y );
+            dlis_fsing1( inputs[ i ], &v, &a );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i ] );
         }
     }
 
-    SECTION("two-way validated single precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( float ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( float );
-            float v, a, b;
-            float x, y, z;
-            dlis_fsing2( xs, &v, &a, &b );
-            const char* ys = dlis_fsingl( xs, &x );
-            const char* zs = dlis_fsingl( ys, &y );
-                             dlis_fsingl( zs, &z );
-            CHECK( v == x );
-            CHECK( a == y );
-            CHECK( b == z );
-        }
-    }
-
-    SECTION("single precision complex float") {
-        for( std::size_t j = 0; j < inputs.size() / sizeof( float ); ++j ) {
-            const char* xs = (char*)inputs.data() + j * sizeof( float );
-            float r, i;
-            float x, y;
-            dlis_fsing1( xs, &r, &i );
-            const char* ys = dlis_fsingl( xs, &x );
-                             dlis_fsingl( ys, &y );
-            CHECK( r == x );
-            CHECK( i == y );
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double x;
+            const void* end = dlis_fsing1o( &x, expectedV[ i ], expectedA[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
     }
 }
 
-TEST_CASE("complex and validaed double precision floats", "[type]") {
-    const std::array< unsigned char, 56 > inputs = {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0
-        0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // -0
-        0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18, // 3.1415926535897930
-        0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, // 153
-        0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, // -153
-        0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // infinity
-        0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // -infinity
+TEST_CASE("two-way validated single precision float", "[type]") {
+    const std::array< bytes< 12 >, 4 > inputs = {{
+        // 0, -0, 153
+        { 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x43, 0x19, 0x00, 0x00 },
+        // 3.1415927410125732421875, -0, 0
+        { 0x40, 0x49, 0x0F, 0xDB, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 153, -153, -0
+        { 0x43, 0x19, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00 },
+        // infinity, -infinity, -153
+        { 0x7F, 0x80, 0x00, 0x00, 0xFF, 0x80, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00 },
+    }};
+
+    const std::array< float, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        153,
+        std::numeric_limits< float >::infinity(),
     };
 
-    SECTION("validaed double precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( double ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( double );
+    const std::array< float, inputs.size() > expectedA = {
+        static_cast< float >( std::copysign(0, -1) ),
+        static_cast< float >( std::copysign(0, -1) ),
+        -153,
+        -std::numeric_limits< float >::infinity(),
+    };
+
+    const std::array< float, inputs.size() > expectedB = {
+        153,
+        0,
+        static_cast< float >( std::copysign(0, -1) ),
+        -153
+    };
+
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            float v, a, b;
+            dlis_fsing2( inputs[ i ], &v, &a, &b );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i ] );
+            CHECK( b == expectedB[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 12 > x;
+            const void* end = dlis_fsing2o( &x,
+                                            expectedV[ i ],
+                                            expectedA[ i ],
+                                            expectedB[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
+    }
+}
+
+TEST_CASE("single precision complex float", "[type]") {
+    const std::array< bytes< 8 >, 4 > inputs = {{
+        // 0, -0
+        { 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00 },
+        // 3.1415927410125732421875, -0
+        { 0x40, 0x49, 0x0F, 0xDB, 0x80, 0x00, 0x00, 0x00 },
+        // 153, -153
+        { 0x43, 0x19, 0x00, 0x00, 0xC3, 0x19, 0x00, 0x00 },
+        // infinity, -infinity
+        { 0x7F, 0x80, 0x00, 0x00, 0xFF, 0x80, 0x00, 0x00 },
+    }};
+
+    const std::array< float, inputs.size() > expectedR = {
+        0,
+        3.1415926535897930,
+        153,
+        std::numeric_limits< float >::infinity(),
+    };
+
+    const std::array< float, inputs.size() > expectedI = {
+        static_cast< float >( std::copysign(0, -1) ),
+        static_cast< float >( std::copysign(0, -1) ),
+        -153,
+        -std::numeric_limits< float >::infinity(),
+    };
+
+    SECTION("to native") {
+        for( std::size_t j = 0; j < inputs.size(); ++j ) {
+            float r, i;
+            dlis_fsing1( inputs[ i  ], &r, &i );
+            CHECK( r == expectedR[ i ] );
+            CHECK( i == expectedI[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            double x;
+            const void* end = dlis_csinglo( &x,
+                                            expectedR[ i ],
+                                            expectedI[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
+    }
+}
+
+TEST_CASE("validated double precision float", "[type]") {
+    const std::array< bytes< 16 >, 4 > inputs = {{
+        // 0,- 0
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 3.1415926535897930, 153
+        { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        //-153, infinity
+        { 0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // -infinity, 0
+        { 0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    }};
+
+    const std::array< double, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        -153,
+        -std::numeric_limits< double >::infinity(),
+    };
+
+    const std::array< double, inputs.size() > expectedA = {
+        static_cast< double >( std::copysign(0, -1) ),
+        153,
+        std::numeric_limits< double >::infinity(),
+        0
+    };
+
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double v, a;
-            double x, y;
-            dlis_fdoub1( xs, &v, &a );
-            const char* ys = dlis_fdoubl( xs, &x );
-                             dlis_fdoubl( ys, &y );
-            CHECK( v == x );
-            CHECK( a == y );
+            dlis_fdoub1( inputs[ i ], &v, &a );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i] );
         }
     }
 
-    SECTION("two-way validaed double precision float") {
-        for( std::size_t i = 0; i < inputs.size() / sizeof( double ); ++i ) {
-            const char* xs = (char*)inputs.data() + i * sizeof( double );
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 16 > x;
+            const void* end = dlis_fdoub1o( &x,
+                                            expectedV[ i ],
+                                            expectedA[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
+    }
+}
+
+TEST_CASE("two-way validated double precision float", "[type]") {
+    const std::array< bytes< 24 >, 4 > inputs = {{
+        // 0,- 0, 153
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 3.1415926535897930, 153, 0
+        { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        //-153, infinity, -0
+        { 0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // -infinity, 0, -153
+        { 0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    }};
+
+    const std::array< double, inputs.size() > expectedV = {
+        0,
+        3.1415926535897930,
+        -153,
+        -std::numeric_limits< double >::infinity(),
+    };
+
+    const std::array< double, inputs.size() > expectedA = {
+        static_cast< double >( std::copysign(0, -1) ),
+        153,
+        std::numeric_limits< double >::infinity(),
+        0
+    };
+
+    const std::array< double, inputs.size() > expectedB = {
+        153,
+        0,
+        static_cast< double >( std::copysign(0, -1) ),
+        -153
+    };
+
+    SECTION("to native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double v, a, b;
-            double x, y, z;
-            dlis_fdoub2( xs, &v, &a, &b );
-            const char* ys = dlis_fdoubl( xs, &x );
-            const char* zs = dlis_fdoubl( ys, &y );
-                             dlis_fdoubl( zs, &z );
-            CHECK( v == x );
-            CHECK( a == y );
-            CHECK( b == z );
+            dlis_fdoub2( inputs[ i ], &v, &a, &b );
+            CHECK( v == expectedV[ i ] );
+            CHECK( a == expectedA[ i ] );
+            CHECK( b == expectedB[ i ] );
         }
     }
 
-    SECTION("double precision complex float") {
-        for( std::size_t j = 0; j < inputs.size() / sizeof( double ); ++j ) {
-            const char* xs = (char*)inputs.data() + j * sizeof( double );
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 24 > x;
+            const void* end = dlis_fdoub2o( &x,
+                                            expectedV[ i ],
+                                            expectedA[ i ],
+                                            expectedB[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
+        }
+    }
+}
+
+TEST_CASE("double precision complex float", "[type]") {
+    const std::array< bytes< 16 >, 4 > inputs = {{
+        // 0,- 0
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // 3.1415926535897930, 153
+        { 0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2D, 0x18,
+          0x40, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        //-153, infinity
+        { 0xC0, 0x63, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x7F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+        // -infinity, 0
+        { 0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+    }};
+
+    const std::array< double, inputs.size() > expectedR = {
+        0,
+        3.1415926535897930,
+        -153,
+        -std::numeric_limits< double >::infinity(),
+    };
+
+    const std::array< double, inputs.size() > expectedI = {
+        static_cast< double >( std::copysign(0, -1) ),
+        153,
+        std::numeric_limits< double >::infinity(),
+        0
+    };
+
+    SECTION("to native") {
+        for( std::size_t j = 0; j < inputs.size(); ++j ) {
             double r, i;
-            double x, y;
-            dlis_fdoub1( xs, &r, &i );
-            const char* ys = dlis_fdoubl( xs, &x );
-                             dlis_fdoubl( ys, &y );
-            CHECK( r == x );
-            CHECK( i == y );
+            dlis_cdoubl( inputs[ i ], &r, &i );
+            CHECK( r == expectedR[ i ] );
+            CHECK( i == expectedI[ i ] );
+        }
+    }
+
+    SECTION("from native") {
+        for( std::size_t i = 0; i < inputs.size(); ++i ) {
+            bytes< 16 > x;
+            const void* end = dlis_cdoublo( &x,
+                                            expectedR[ i ],
+                                            expectedI[ i ] );
+            CHECK_THAT( inputs[ i ], BytesEquals( x ) );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
     }
 }
@@ -775,6 +1025,7 @@ TEST_CASE("identifier (var-length string)", "[type]") {
         CHECK( len == 255 );
         dlis_ident( in.c_str(), &len, str.data() );
         CHECK( std::string( str.begin(), str.end() ) == expected );
+
     }
 
     SECTION("returns pointer past read data") {
@@ -790,32 +1041,46 @@ TEST_CASE("identifier (var-length string)", "[type]") {
         CHECK( len == 50 );
         CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
     }
+
+    SECTION("from native") {
+        const std::string in = "foobar";
+        const uint8_t length = 6;
+
+        const std::array< bytes< 7 >, 1> expected = {{
+            { 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+        }};
+
+        std::array< char, 7 > x;
+        const void* end = dlis_idento( &x, length, in.c_str() );
+        CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+        CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
+    }
 }
 
-TEST_CASE("ascii (var-length string)", "[type]") {
+TEST_CASE("units (var-length string)", "[type]") {
     std::int32_t len;
 
     SECTION("empty string has zero length") {
-        dlis_ascii( "\0", &len, nullptr );
+        dlis_units( "\0", &len, nullptr );
         CHECK( len == 0 );
     }
 
     SECTION("empty string does not affect output") {
         char str[] = "foobar";
-        dlis_ident( "\0", &len, str );
+        dlis_units( "\0", &len, str );
         CHECK( str == std::string("foobar") );
     }
 
     SECTION("single-char string has length 1") {
         char str[] = "    ";
-        dlis_ident( "\x01""a", &len, str );
+        dlis_units( "\x01""a", &len, str );
         CHECK( str == std::string("a   ") );
         CHECK( len == 1 );
     }
 
     SECTION("single-char string has length 1") {
         char str[] = "    ";
-        dlis_ident( "\x01""a", &len, str );
+        dlis_units( "\x01""a", &len, str );
         CHECK( str == std::string("a   ") );
         CHECK( len == 1 );
     }
@@ -831,51 +1096,190 @@ TEST_CASE("ascii (var-length string)", "[type]") {
 
         const std::string in = "\xFF" + expected;
 
-        dlis_ident( in.c_str(), &len, nullptr );
+        dlis_units( in.c_str(), &len, nullptr );
         CHECK( len == 255 );
-        dlis_ident( in.c_str(), &len, str.data() );
+        dlis_units( in.c_str(), &len, str.data() );
         CHECK( std::string( str.begin(), str.end() ) == expected );
-    }
 
-    SECTION("can be longer than 255 chars ") {
-        std::vector< char > str( 510, ' ' );
-        const std::string expected =
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
-            "tristique enim ac leo tristique, eu finibus enim pharetra. "
-            "Donec ac elit congue, viverra mauris nec, maximus mauris. "
-            "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
-            "quis metus."
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
-            "tristique enim ac leo tristique, eu finibus enim pharetra. "
-            "Donec ac elit congue, viverra mauris nec, maximus mauris. "
-            "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
-            "quis metus.";
-
-        const std::string in = "\x81\xFE" + expected;
-
-        dlis_ascii( in.c_str(), &len, nullptr );
-        CHECK( len == 510 );
-        dlis_ascii( in.c_str(), &len, str.data() );
-        CHECK( std::string( str.begin(), str.end() ) == expected );
     }
 
     SECTION("returns pointer past read data") {
         const char in[] = "\x32"
                           "Lorem ipsum dolor sit amet, consectetur adipiscing";
 
-        const char* noread = dlis_ident( in, &len, nullptr );
+        const char* noread = dlis_units( in, &len, nullptr );
         CHECK( len == 50 );
         CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
 
         char out[ 50 ] = {};
-        const char* withread = dlis_ident( in, &len, out );
+        const char* withread = dlis_units( in, &len, out );
         CHECK( len == 50 );
         CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
+    }
+
+    SECTION("from native") {
+        const std::string in = "foobar";
+        const uint8_t length = 6;
+
+        const std::array< bytes< 7 >, 1> expected = {{
+            { 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+        }};
+
+        std::array< char, 7 > x;
+        const void* end = dlis_unitso( &x, length, in.c_str() );
+        CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+        CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
+    }
+}
+
+TEST_CASE("origin", "[type]") {
+    SECTION("4-byte") {
+        const std::array< bytes<4>, 9 > in = {{
+            { 0xC0, 0x00, 0x00, 0x00 }, // 0
+            { 0xC0, 0x00, 0x00, 0x01 }, // 1
+            { 0xC0, 0x00, 0x00, 0x2E }, // 46
+            { 0xC0, 0x00, 0x00, 0x7F }, // 127
+            { 0xC0, 0x00, 0x01, 0x00 }, // 256
+            { 0xC0, 0x00, 0x8F, 0xFF }, // 36863
+            { 0xC1, 0x00, 0x00, 0x00 }, // 16777216
+            { 0xF0, 0x00, 0xBF, 0xFF }, // 805355519
+            { 0xFF, 0xFF, 0xFF, 0xFF }, // 1073741823 (int-max)
+        }};
+
+        const std::array< std::int32_t, in.size() > expected = {
+            0,
+            1,
+            46,
+            127,
+            256,
+            36863,
+            16777216,
+            805355519,
+            1073741823,
+        };
+
+        SECTION("to native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const char* end = dlis_origin( in[ i ], &v );
+                CHECK( v == expected[ i ] );
+                CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 4) );
+            }
+        }
+
+        SECTION("from native") {
+            for( std::size_t i = 0; i < expected.size(); ++i ) {
+                std::int32_t v;
+                const void* end = dlis_origino( &v, expected[ i ] );
+                CHECK_THAT( in[ i ], BytesEquals( v ) );
+                CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+            }
+        }
+    }
+}
+
+TEST_CASE("ascii (var-length string)", "[type]") {
+    std::int32_t len;
+
+    SECTION("to native") {
+
+        SECTION("empty string has zero length") {
+            dlis_ascii( "\0", &len, nullptr );
+            CHECK( len == 0 );
+        }
+
+        SECTION("empty string does not affect output") {
+            char str[] = "foobar";
+            dlis_ascii( "\0", &len, str );
+            CHECK( str == std::string("foobar") );
+        }
+
+        SECTION("single-char string has length 1") {
+            char str[] = "    ";
+            dlis_ascii( "\x01""a", &len, str );
+            CHECK( str == std::string("a   ") );
+            CHECK( len == 1 );
+        }
+
+        SECTION("single-char string has length 1") {
+            char str[] = "    ";
+            dlis_ascii( "\x01""a", &len, str );
+            CHECK( str == std::string("a   ") );
+            CHECK( len == 1 );
+        }
+
+        SECTION("can be longer than 255 chars ") {
+            std::vector< char > str( 510, ' ' );
+            const std::string expected =
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
+                "tristique enim ac leo tristique, eu finibus enim pharetra. "
+                "Donec ac elit congue, viverra mauris nec, maximus mauris. "
+                "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
+                "quis metus."
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc "
+                "tristique enim ac leo tristique, eu finibus enim pharetra. "
+                "Donec ac elit congue, viverra mauris nec, maximus mauris. "
+                "Integer molestie non mi eget bibendum. Nam dolor nibh, tincidunt "
+                "quis metus.";
+
+            const std::string in = "\x81\xFE" + expected;
+
+            dlis_ascii( in.c_str(), &len, nullptr );
+            CHECK( len == 510 );
+            dlis_ascii( in.c_str(), &len, str.data() );
+            CHECK( std::string( str.begin(), str.end() ) == expected );
+        }
+
+        SECTION("returns pointer past read data") {
+            const char in[] = "\x32"
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing";
+
+            const char* noread = dlis_ascii( in, &len, nullptr );
+            CHECK( len == 50 );
+            CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
+
+            char out[ 50 ] = {};
+            const char* withread = dlis_ascii( in, &len, out );
+            CHECK( len == 50 );
+            CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
+        }
+    }
+
+    SECTION("from native") {
+
+        SECTION("can write the correct string") {
+            const std::string in = "foobar";
+            const int32_t length = 6;
+
+            const std::array< bytes< 7 >, 1> expected = {{
+                { 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+            }};
+
+            std::array< char, 7 > x;
+            const void* end = dlis_asciio( &x, length, in.c_str() );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+            CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
+        }
+
+        SECTION("can write 2-byte len-prefix") {
+            const std::string in = "foobar";
+            const int32_t length = 6;
+
+            const std::array< bytes< 8 >, 1> expected = {{
+                { 0x80, 0x06, 0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }
+            }};
+
+            std::array< char, 8 > x;
+            const void* end = dlis_asciio( &x, length, in.c_str(), 2 );
+            CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
+            CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
+
+        }
     }
 }
 
 TEST_CASE("date-time", "[type]") {
-    std::array< char, 8 > input = {
+    bytes< 8 > input = {
         0x57, // 87
         0x14, // 1, 4
         0x13, // 19
@@ -887,17 +1291,193 @@ TEST_CASE("date-time", "[type]") {
 
     // 9:20:15.62 PM, April 19, 1987 (DST)
     int Y, TZ, M, D, H, MN, S, MS;
-    dlis_dtime( input.data(), &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
 
-    CHECK( Y  == 87 );
-    CHECK( dlis_year( Y ) == 1987 );
-    CHECK( TZ == DLIS_TZ_DST );
-    CHECK( M  == 4 );
-    CHECK( D  == 19 );
-    CHECK( H  == 21 );
-    CHECK( MN == 20 );
-    CHECK( S  == 15 );
-    CHECK( MS == 620 );
+    SECTION("to native") {
+        dlis_dtime( input, &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
+
+        CHECK( Y  == 87 );
+        CHECK( dlis_year( Y ) == 1987 );
+        CHECK( TZ == DLIS_TZ_DST );
+        CHECK( M  == 4 );
+        CHECK( D  == 19 );
+        CHECK( H  == 21 );
+        CHECK( MN == 20 );
+        CHECK( S  == 15 );
+        CHECK( MS == 620 );
+    }
+
+    SECTION("from native") {
+        bytes< 8 > x;
+        const void* end = dlis_dtimeo( &x,
+                                       dlis_yearo( 1987 ),
+                                       DLIS_TZ_DST,
+                                       4,
+                                       19,
+                                       21,
+                                       20,
+                                       15,
+                                       620 );
+        CHECK( intptr_t(end) == intptr_t(&x) + sizeof( x ) );
+        CHECK_THAT( input, BytesEquals( x ) );
+    }
+}
+
+TEST_CASE( "obname", "[type]" ) {
+    const std::array< bytes< 12 >, 1 > in = {{
+        { 0xC0, 0x00, 0x00, 0x7F,               // 127
+          0x59,                                 // 89
+          0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }  // foobar
+    }};
+
+    const std::int32_t originOut = 127;
+    const std::uint8_t copynumberOut = 89;
+    const std::int32_t idlenOut = 6;
+    std::string identOut = "foobar";
+
+
+    std::int32_t origin, idlen;
+    std::uint8_t copynumber;
+    std::vector< char > ident( 6, ' ' );
+
+    SECTION("to native") {
+        const char* end = dlis_obname( in[ 0 ], &origin,
+                                                &copynumber,
+                                                &idlen,
+                                                ident.data() );
+        CHECK( origin     == originOut );
+        CHECK( copynumber == copynumberOut );
+        CHECK( idlen      == idlenOut );
+        CHECK( std::string( ident.begin(), ident.end() ) == identOut );
+        CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 12 ) );
+    }
+
+    SECTION("from native") {
+        bytes< 12 > v;
+        const std::uint8_t idlen = 6;
+        const void* end = dlis_obnameo( &v, originOut,
+                                            copynumber,
+                                            idlen,
+                                            identOut.c_str() );
+
+        CHECK_THAT( in[ 0 ], BytesEquals( v ) );
+        CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+    }
+}
+
+TEST_CASE( "objref", "[type]" ) {
+    const std::array< bytes< 19 >, 1 > in = {{
+        { 0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72,   // foobar
+          0xC0, 0x00, 0x00, 0x7F,               // 127
+          0x59,                                 // 89
+          0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }  // foobar
+    }};
+
+    const std::int32_t originOut = 127;
+    const std::uint8_t copynumberOut = 89;
+    const std::int32_t idlenOut = 6;
+    std::string identOut = "foobar";
+
+
+    std::int32_t idlen1, origin, idlen2;
+    std::uint8_t copynumber;
+    std::vector< char > ident1( 6, ' ' );
+    std::vector< char > ident2( 6, ' ' );
+
+    SECTION("to native") {
+        const char* end = dlis_objref( in[ 0 ], &idlen1,
+                                                ident1.data(),
+                                                &origin,
+                                                &copynumber,
+                                                &idlen2,
+                                                ident2.data() );
+
+        CHECK( idlen1     == idlenOut );
+        CHECK( idlen2     == idlenOut );
+        CHECK( origin     == originOut );
+        CHECK( copynumber == copynumberOut );
+        CHECK( std::string( ident1.begin(), ident1.end() ) == identOut );
+        CHECK( std::string( ident2.begin(), ident2.end() ) == identOut );
+        CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 19 ) );
+    }
+
+    SECTION("from native") {
+        bytes< 19 > v;
+        const std::uint8_t idlen = 6;
+        const void* end = dlis_objrefo( &v, idlen,
+                                            identOut.c_str(),
+                                            originOut,
+                                            copynumber,
+                                            idlen,
+                                            identOut.c_str() );
+
+        CHECK_THAT( in[ 0 ], BytesEquals( v ) );
+        CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+    }
+}
+
+TEST_CASE( "attref", "[type]" ) {
+    const std::array< bytes< 26 >, 1 > in = {{
+        { 0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72,   // foobar
+          0xC0, 0x00, 0x00, 0x7F,               // 127
+          0x59,                                 // 89
+          0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72,   // foobar
+          0x06,                                 // 6
+          0x66, 0x6F, 0x6F, 0x62, 0x61, 0x72 }  // foobar
+    }};
+
+    const std::int32_t originOut = 127;
+    const std::uint8_t copynumberOut = 89;
+    const std::int32_t idlenOut = 6;
+    std::string identOut = "foobar";
+
+
+    std::int32_t idlen1, origin, idlen2, idlen3;
+    std::uint8_t copynumber;
+    std::vector< char > ident1( 6, ' ' );
+    std::vector< char > ident2( 6, ' ' );
+    std::vector< char > ident3( 6, ' ' );
+
+    SECTION("to native") {
+        const char* end = dlis_attref( in[ 0 ], &idlen1,
+                                                ident1.data(),
+                                                &origin,
+                                                &copynumber,
+                                                &idlen2,
+                                                ident2.data(),
+                                                &idlen3,
+                                                ident3.data() );
+
+        CHECK( idlen1     == idlenOut );
+        CHECK( idlen2     == idlenOut );
+        CHECK( idlen3     == idlenOut );
+        CHECK( origin     == originOut );
+        CHECK( copynumber == copynumberOut );
+        CHECK( std::string( ident1.begin(), ident1.end() ) == identOut );
+        CHECK( std::string( ident2.begin(), ident2.end() ) == identOut );
+        CHECK( std::string( ident3.begin(), ident3.end() ) == identOut );
+        CHECK( std::intptr_t(end) == std::intptr_t( in[ 0 ] + 26 ) );
+    }
+
+    SECTION("from native") {
+        bytes< 26 > v;
+        const std::uint8_t idlen = 6;
+        const void* end = dlis_attrefo( &v, idlen,
+                                            identOut.c_str(),
+                                            originOut,
+                                            copynumber,
+                                            idlen,
+                                            identOut.c_str(),
+                                            idlen,
+                                            identOut.c_str() );
+
+        CHECK_THAT( in[ 0 ], BytesEquals( v ) );
+        CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
+    }
 }
 
 TEST_CASE( "size-of", "[type]" ) {
