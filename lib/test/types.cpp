@@ -798,7 +798,7 @@ TEST_CASE("single precision complex float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float V, A;
-            dlis_fsing1( inputs[ i ], &V, &A );
+            dlis_csingl( inputs[ i ], &V, &A );
             CHECK( V == expectedR[ i ] );
             CHECK( A == expectedI[ i ] );
         }
