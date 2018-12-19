@@ -497,6 +497,7 @@ const char* parse_template( const char* cur,
         if (flags.value) cur = elements( cur, attr.count,
                                               attr.reprc,
                                               attr.value );
+        attr.invariant = flags.invariant;
 
         tmp.push_back( std::move( attr ) );
     }

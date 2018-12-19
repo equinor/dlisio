@@ -161,6 +161,7 @@ struct object_attribute {
     representation_code reprc = representation_code::ident;
     dl::units           units = {};
     dl::value_vector    value = {};
+    bool invariant            = false;
 };
 
 using object_template = std::vector< object_attribute >;
