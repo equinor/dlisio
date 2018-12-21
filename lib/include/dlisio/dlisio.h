@@ -185,6 +185,21 @@ enum DLIS_ERRCODE {
     DLIS_UNEXPECTED_VALUE,
 };
 
+enum dlis_eflr_type_code {
+    DLIS_FHLR   = 0,
+    DLIS_OLR    = 1,
+    DLIS_AXIS   = 2,
+    DLIS_CHANNL = 3,
+    DLIS_FRAME  = 4,
+    DLIS_STATIC = 5,
+    DLIS_SCRIPT = 6,
+    DLIS_UPDATE = 7,
+    DLIS_UDI    = 8,
+    DLIS_LNAME  = 9,
+    DLIS_SPEC   = 10,
+    DLIS_DICT   = 11,
+};
+
 
 #ifdef __cplusplus
 }

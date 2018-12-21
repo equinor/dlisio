@@ -9,6 +9,65 @@
 
 namespace {
 
+void user_warning( const std::string& ) noexcept (true) {
+    // TODO:
+}
+
+struct set_descriptor {
+    int role;
+    bool type;
+    bool name;
+};
+
+set_descriptor parse_set_descriptor( const char* cur ) noexcept (false) {
+    std::uint8_t attr;
+    std::memcpy( &attr, cur, DLIS_DESCRIPTOR_SIZE );
+
+    set_descriptor flags;
+    dlis_component( attr, &flags.role );
+
+    switch (flags.role) {
+        case DLIS_ROLE_RDSET:
+        case DLIS_ROLE_RSET:
+        case DLIS_ROLE_SET:
+            break;
+
+        default: {
+            const auto bits = std::bitset< 8 >{ attr }.to_string();
+            const auto msg = std::string("expected SET, RSET or RDSET, was ")
+                           + dlis_component_str( flags.role )
+                           + "(" + bits + ")"
+                           ;
+            throw std::invalid_argument( msg );
+        }
+    }
+
+    int type, name;
+    const auto err = dlis_component_set( attr, flags.role, &type, &name );
+    flags.type = type;
+    flags.name = name;
+
+    switch (err) {
+        case DLIS_OK:
+            break;
+
+        case DLIS_INCONSISTENT:
+            /*
+             * 3.2.2.2 Component usage
+             *  The Set Component contains the Set Type, which is not optional
+             *  and must not be null, and the Set Name, which is optional.
+             */
+            user_warning( "SET:type not set, but must be non-null." );
+            flags.type = true;
+            break;
+
+        default:
+            throw std::runtime_error("unhandled error in dlis_component_set");
+    }
+
+    return flags;
+}
+
 struct attribute_descriptor {
     bool label;
     bool count;
@@ -72,8 +131,31 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
     throw std::runtime_error( "unhandled error in dlis_component_attrib" );
 }
 
-void user_warning( const std::string& ) noexcept (true) {
-    // TODO:
+struct object_descriptor {
+    bool name;
+};
+
+object_descriptor parse_object_descriptor( const char* cur ) {
+    std::uint8_t attr;
+    std::memcpy( &attr, cur, DLIS_DESCRIPTOR_SIZE );
+
+    int role;
+    dlis_component( attr, &role );
+
+    if (role != DLIS_ROLE_OBJECT) {
+        const auto bits = std::bitset< 8 >{ attr }.to_string();
+        const auto msg = std::string("expected OBJECT, was ")
+                       + dlis_component_str( role )
+                       + "(" + bits + ")"
+                       ;
+        throw std::invalid_argument( msg );
+    }
+
+    int name;
+    const auto err = dlis_component_object( attr, role, &name );
+    if (err) user_warning( "OBJECT:name was not set, but must be non-null" );
+
+    return { true };
 }
 
 using std::swap;
@@ -373,30 +455,28 @@ const char* cast( const char* xs,
     return xs;
 }
 
-struct elements_visitor : boost::static_visitor< const char* > {
+struct copy_elements : boost::static_visitor< const char* > {
     const char* begin;
     long count;
 
-    elements_visitor( const char* xs, long n ) :
+    copy_elements( const char* xs, long n ) :
         begin( xs ), count( n )
     {}
 
-    template< typename T >
-    const char* operator()( std::vector< T >& out ) {
-
+    template < typename T >
+    const char* operator()( std::vector< T >& out ) const {
         T elem;
         std::vector< T > tmp;
         auto xs = this->begin;
 
         for( std::int32_t i = 0; i < this->count; ++i ) {
             xs = cast( xs, elem );
-            tmp.push_back( elem );
+            tmp.push_back( std::move( elem ) );
         }
 
         out.swap( tmp );
         return xs;
     }
-
 };
 
 dl::value_vector values_from_reprc( dl::representation_code reprc ) {
@@ -443,15 +523,42 @@ const char* elements( const char* xs, dl::uvari count,
                                       dl::value_vector& vec ) {
     const auto n = static_cast< dl::uvari::value_type >( count );
     dl::value_vector tmp = values_from_reprc( reprc );
-    elements_visitor vs{ xs, n };
+    copy_elements vs{ xs, n };
     xs = boost::apply_visitor( vs, tmp );
-    swap( vec, tmp );
+    vec.swap( tmp );
     return xs;
 }
 
 }
 
 namespace dl {
+
+const std::string& basic_object::get_name() const noexcept (true) {
+    return decay( this->object_name.id );
+}
+
+void basic_object::set_name( std::string name ) noexcept (false) {
+    if (name.size() > 255)
+        throw std::invalid_argument( "identifier len must be < 256" );
+
+    this->object_name.id = dl::ident{ std::move( name ) };
+}
+
+file_header&
+file_header::set( const object_attribute& attr, bool allow_empty )
+noexcept (false) {
+    const auto& label = decay( attr.label );
+
+    if (label == "SEQUENCE-NUMBER") {
+        attr.into( this->sequence_number, allow_empty );
+    }
+    else if (label == "ID") {
+        attr.into( this->id, allow_empty );
+    }
+    else throw std::invalid_argument( "unhandled label " + label );
+
+    return *this;
+}
 
 const char* parse_template( const char* cur,
                             const char* end,
@@ -501,6 +608,228 @@ const char* parse_template( const char* cur,
 
         tmp.push_back( std::move( attr ) );
     }
+}
+
+channel& channel::set( const object_attribute& attr, bool allow_empty ) {
+    using rep = dl::representation_code;
+    const auto& label = decay( attr.label );
+
+    if (label == "LONG-NAME") {
+        if (attr.reprc == rep::ascii)
+            attr.into( boost::get< dl::ascii >( this->name ), allow_empty );
+        else if (attr.reprc == rep::obname)
+            attr.into( boost::get< dl::obname >( this->name ), allow_empty );
+        else
+            throw std::invalid_argument(
+                "invalid reprc in channel LONG-NAME assign"
+            );
+    }
+
+    else if (label == "ELEMENT-LIMIT") {
+        attr.into( this->element_limit, allow_empty );
+    }
+
+    else if (label == "REPRESENTATION-CODE") {
+        attr.into( this->reprc, allow_empty );
+    }
+
+    else if (label == "DIMENSION") {
+        attr.into( this->dimension, allow_empty );
+    }
+
+    else if (label == "UNITS") {
+        /*
+         * 5.5.1
+         * The standard specifies this to be units, but the example logical
+         * record has this as an ident (unspecified representation code)
+         *
+         * Since they're identical in representation (differ only in rule set),
+         * accept both after checking reprc
+         */
+
+        if (attr.reprc == rep::units) {
+            attr.into( this->units, allow_empty );
+        } else if (attr.reprc == rep::ident) {
+            dl::ident tmp;
+            attr.into( tmp, allow_empty );
+            this->units = dl::units{ dl::decay( tmp ) };
+        } else {
+            throw std::invalid_argument( "invalid reprc " +
+                    std::to_string( static_cast< std::uint8_t >( reprc ) ) );
+        }
+    }
+
+    else throw std::invalid_argument( "unhandled label " + label );
+
+    return *this;
+}
+
+unknown_object&
+unknown_object::set( const object_attribute& attr, bool )
+noexcept (false)
+{
+    /*
+     * This is essentially map::insert-or-update
+     *
+     * The allow_empty argument can be ignored, because no semantics or
+     * restrictions are considered for this unknown object. Consumers must
+     * figure out if this is valid, non-null etc. -- just store what's read
+     */
+    const auto eq = [&]( const object_attribute& x ) {
+        return attr.label == x.label;
+    };
+
+    auto itr = std::find_if( this->attributes.begin(),
+                             this->attributes.end(),
+                             eq );
+
+    if (itr == this->attributes.end())
+        this->attributes.push_back(attr);
+    else
+        *itr = attr;
+
+    return *this;
+}
+
+namespace {
+
+template <typename T >
+T defaulted_object( const object_template& tmpl ) noexcept (false) {
+    T def;
+    for( const auto& attr : tmpl )
+        def.set( attr, true );
+
+    return def;
+}
+
+template < typename Object >
+object_vector parse_objects( const object_template& tmpl,
+                             const char* cur,
+                             const char* end ) noexcept (false) {
+
+    std::vector< Object > objs;
+    const auto default_object = defaulted_object< Object >( tmpl );
+
+    while (true) {
+        if (std::distance( cur, end ) <= 0)
+            throw std::out_of_range( "unexpected end-of-record" );
+
+        auto object_flags = parse_object_descriptor( cur );
+        cur += DLIS_DESCRIPTOR_SIZE;
+
+        auto current = default_object;
+        if (object_flags.name) cur = cast( cur, current.object_name );
+
+        for (const auto& template_attr : tmpl) {
+            if (template_attr.invariant) continue;
+            if (cur == end) break;
+
+            const auto flags = parse_attribute_descriptor( cur );
+            if (flags.object) break;
+
+
+            /*
+             * only advance after this is surely not a new object, because if
+             * it's the next object we want to read it again
+             */
+            cur += DLIS_DESCRIPTOR_SIZE;
+
+            auto attr = template_attr;
+            // absent means no meaning, so *unset* whatever is there
+            if (flags.absent) {
+                attr.value = {};
+                current.set(attr, true);
+                continue;
+            }
+
+            if (flags.label) {
+                user_warning( "ATTRIB:label set, but must be null");
+            }
+
+            if (flags.count) cur = cast( cur, attr.count );
+            if (flags.reprc) cur = cast( cur, attr.reprc );
+            if (flags.units) cur = cast( cur, attr.units );
+            if (flags.value) cur = elements( cur, attr.count,
+                                                  attr.reprc,
+                                                  attr.value );
+
+            current.set(attr);
+        }
+
+        objs.push_back( std::move( current ) );
+
+        if (cur == end) break;
+    }
+
+    return objs;
+}
+
+}
+
+object_set parse_eflr( const char* cur, const char* end, int record_type ) {
+    if (std::distance( cur, end ) <= 0)
+        throw std::out_of_range( "eflr must be non-empty" );
+
+    object_set set;
+
+    const auto flags = parse_set_descriptor( cur );
+    cur += DLIS_DESCRIPTOR_SIZE;
+
+    if (std::distance( cur, end ) <= 0) {
+        const auto msg = "unexpected end-of-record after SET descriptor";
+        throw std::out_of_range( msg );
+    }
+
+    /*
+     * TODO: check for every read that inside [begin,end)?
+     */
+    set.role = flags.role;
+    if (flags.type) cur = cast( cur, set.type );
+    if (flags.name) cur = cast( cur, set.name );
+
+    cur = parse_template( cur, end, set.tmpl );
+
+    if (std::distance( cur, end ) <= 0)
+        throw std::out_of_range( "unexpected end-of-record after template" );
+
+    std::string type = dl::decay( set.type );
+    const auto& tmpl = set.tmpl;
+    switch (record_type) {
+        case DLIS_FHLR:
+            if (type != "FILE-HEADER") {
+                user_warning( "segment is FHLR, but object is " + type );
+                type = "FILE-HEADER";
+            }
+            set.objects = parse_objects< dl::file_header >( tmpl, cur, end );
+            break;
+
+        case DLIS_OLR: break;
+        case DLIS_AXIS: break;
+        case DLIS_CHANNL:
+            if (type != "CHANNEL") {
+                user_warning( "segment is CHANNL, but object is " + type );
+                type = "CHANNEL";
+            }
+            set.objects = parse_objects< dl::channel >( tmpl, cur, end );
+            break;
+
+        case DLIS_FRAME: break;
+        case DLIS_STATIC: break;
+        case DLIS_SCRIPT: break;
+        case DLIS_UPDATE: break;
+        case DLIS_UDI: break;
+        case DLIS_LNAME: break;
+        case DLIS_SPEC: break;
+        case DLIS_DICT: break;
+
+        default:
+            set.objects = parse_objects< dl::unknown_object >( tmpl, cur, end );
+            break;
+            /* use of reserved/undefined code */
+            /* this is probably fine, but no more safety checks */
+    }
+
+    return set;
 }
 
 }
