@@ -6,7 +6,7 @@
 #include <string>
 #include <tuple>
 
-#include "typeconv.hpp"
+#include <dlisio/ext/types.hpp>
 
 namespace dl {
 
@@ -21,7 +21,7 @@ struct bookmark {
     int isexplicit = 0;
     int isencrypted = 0;
 
-    object_name name;
+    obname name;
 
     /*
      * only pos is used for seeking and repositioning - tell is used only for
@@ -333,7 +333,7 @@ std::pair< int, bookmark > tag( basic_file< Stream >& fs, int remaining ) {
     char* ptr = body_buffer.data() + 12;
     cursor.strlen = 12 - intlen;
 
-    mark.name.origin = origin;
+    mark.name.origin = dl::origin{ origin };
     mark.name.copy = copynum;
 
     /*
@@ -364,7 +364,7 @@ std::pair< int, bookmark > tag( basic_file< Stream >& fs, int remaining ) {
     }
 
     /* all good - complete the obname */
-    mark.name.id.assign( xs, namelen );
+    mark.name.id = dl::ident{ std::string{ xs, namelen } };
 
     cursor.skip_remaining();
     return { cursor.remaining, mark };

@@ -13,6 +13,7 @@ platform:
 environment:
     TWINE_PASSWORD:
         secure: kTga6+rLL1fNpKqFNcX0QZNyqiYaHsEfSS4k6wvUoTE=
+    BOOSTROOT: C:/Libraries/boost_1_67_0
     matrix:
         - PYTHON: C:\Python35
           PYTHON_VERSION: 35
@@ -47,7 +48,8 @@ build_script:
           pushd build
     - cmake %APPVEYOR_BUILD_FOLDER%
             %W64%
-            -DCMAKE_CXX_FLAGS=/D_CRT_SECURE_NO_WARNINGS
+            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc"
+            -DBOOST_ROOT=%BOOSTROOT%
     - cmake --build .
             --config %configuration%
     - ctest --build-config %configuration%

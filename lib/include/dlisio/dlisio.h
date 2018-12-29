@@ -90,6 +90,8 @@ int dlis_encryption_packet_info( const char*,
  *      ...
  * }
  */
+
+#define DLIS_DESCRIPTOR_SIZE 1
 int dlis_component( uint8_t descriptor, int* role );
 
 int dlis_component_set( uint8_t descriptor,
@@ -181,6 +183,21 @@ enum DLIS_ERRCODE {
     DLIS_OK = 0,
     DLIS_INCONSISTENT,
     DLIS_UNEXPECTED_VALUE,
+};
+
+enum dlis_eflr_type_code {
+    DLIS_FHLR   = 0,
+    DLIS_OLR    = 1,
+    DLIS_AXIS   = 2,
+    DLIS_CHANNL = 3,
+    DLIS_FRAME  = 4,
+    DLIS_STATIC = 5,
+    DLIS_SCRIPT = 6,
+    DLIS_UPDATE = 7,
+    DLIS_UDI    = 8,
+    DLIS_LNAME  = 9,
+    DLIS_SPEC   = 10,
+    DLIS_DICT   = 11,
 };
 
 

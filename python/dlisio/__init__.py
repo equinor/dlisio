@@ -14,7 +14,8 @@ def load(path):
 class dlis(object):
     def __init__(self, path):
         self.fp = core.file(path)
-        self.sul, self.bookmarks, self.explicits, self.implicits = self.fp.mkindex()
+        self.sul = self.fp.sul()
+        self.bookmarks, self.explicits, self.implicits = self.fp.mkindex()
 
     def raw_record(self, i):
         """Get a raw record (as bytes)
