@@ -1356,7 +1356,7 @@ TEST_CASE( "obname", "[type]" ) {
         bytes< 12 > v;
         const std::uint8_t idlen = 6;
         const void* end = dlis_obnameo( &v, originOut,
-                                            copynumber,
+                                            copynumberOut,
                                             idlen,
                                             identOut.c_str() );
 
@@ -1409,7 +1409,7 @@ TEST_CASE( "objref", "[type]" ) {
         const void* end = dlis_objrefo( &v, idlen,
                                             identOut.c_str(),
                                             originOut,
-                                            copynumber,
+                                            copynumberOut,
                                             idlen,
                                             identOut.c_str() );
 
@@ -1469,7 +1469,7 @@ TEST_CASE( "attref", "[type]" ) {
         const void* end = dlis_attrefo( &v, idlen,
                                             identOut.c_str(),
                                             originOut,
-                                            copynumber,
+                                            copynumberOut,
                                             idlen,
                                             identOut.c_str(),
                                             idlen,
