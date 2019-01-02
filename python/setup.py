@@ -75,7 +75,7 @@ setup(
                       'pybind11 >= 2.2',
                       'setuptools_scm',
     ],
-    tests_require = ['pytest', 'hypothesis'],
+    tests_require = ['pytest'],
     cmdclass = { 'build_ext': BuildExt },
     use_scm_version = getversion(),
 )

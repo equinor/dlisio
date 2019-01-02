@@ -1,7 +1,4 @@
 import pytest
-import hypothesis
-from hypothesis import given
-import hypothesis.strategies as st
 
 import dlisio
 
@@ -31,11 +28,6 @@ def test_sul():
 def test_file_properties():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         assert len(f.bookmarks) == 3252
-
-@given(st.integers(min_value = 0, max_value = 3251))
-def test_get_raw_record(i):
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        assert f.raw_record(i)
 
 # The example record from the specification
 stdrecord = bytearray([
@@ -200,21 +192,6 @@ def test_parse_eflr_bytes_truncated():
 
     with pytest.raises(ValueError):
         only_set = dlisio.core.eflr(stdrecord[:1])
-
-
-#only the first 30 or so records are explicit
-@given(st.integers(min_value = 0, max_value = 30))
-def test_bytes_file_eflr_equivalent(i):
-    # it shouldn't matter if the bytes come from python, or are read directly
-    # from the file
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        hypothesis.assume(not f.bookmarks[i].encrypted)
-        hypothesis.assume(f.bookmarks[i].explicit)
-
-        explicit = dlisio.core.eflr(f.raw_record(i))
-        implicit = f.fp.eflr(f.bookmarks[i])
-        assert explicit == implicit
-
 
 def test_read_eflr_metadata():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
