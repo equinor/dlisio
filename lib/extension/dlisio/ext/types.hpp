@@ -49,7 +49,7 @@ enum class representation_code : std::uint8_t {
 };
 
 /*
- * It's _very_ often needed to access the raw underlying type of the strong
+ * It's _very_ often necessary to access the raw underlying type of the strong
  * type aliases for comparisons, literals, or conversions. dl::decay inspects
  * the argument type and essentially static casts it, regardless of which dl
  * type comes in - it's an automation of static_cast<const value_type&>(x)
