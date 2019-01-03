@@ -159,6 +159,7 @@ object_descriptor parse_object_descriptor( const char* cur ) {
 }
 
 using std::swap;
+using boost::swap;
 const char* cast( const char* xs, dl::sshort& i ) noexcept (true) {
     std::int8_t x;
     xs = dlis_sshort( xs, &x );
@@ -544,20 +545,148 @@ void basic_object::set_name( std::string name ) noexcept (false) {
     this->object_name.id = dl::ident{ std::move( name ) };
 }
 
-file_header&
-file_header::set( const object_attribute& attr, bool allow_empty )
-noexcept (false) {
+void file_header::set( const object_attribute& attr ) noexcept (false)
+{
+    const auto& label = decay( attr.label );
+         if (label == "SEQUENCE-NUMBER") attr.into( this->sequence_number );
+    else if (label == "ID")              attr.into( this->id );
+    else throw std::invalid_argument( "unhandled label " + label );
+}
+
+void file_header::remove( const object_attribute& attr ) noexcept (false)
+{
+    const auto& label = decay( attr.label );
+         if (label == "SEQUENCE-NUMBER") this->sequence_number = boost::none;
+    else if (label == "ID")              this->id              = boost::none;
+    else throw std::invalid_argument( "unhandled label " + label );
+}
+
+void channel::set( const object_attribute& attr ) {
+    using rep = dl::representation_code;
     const auto& label = decay( attr.label );
 
-    if (label == "SEQUENCE-NUMBER") {
-        attr.into( this->sequence_number, allow_empty );
+    if (label == "LONG-NAME") {
+        if (attr.reprc == rep::ascii) {
+            dl::ascii tmp;
+            attr.into( tmp );
+            this->name = std::move( tmp );
+        }
+        else if (attr.reprc == rep::obname) {
+            dl::obname tmp;
+            attr.into( tmp );
+            this->name = std::move( tmp );
+        }
+        else
+            throw std::invalid_argument(
+                "invalid reprc in channel LONG-NAME assign"
+            );
     }
-    else if (label == "ID") {
-        attr.into( this->id, allow_empty );
-    }
-    else throw std::invalid_argument( "unhandled label " + label );
 
-    return *this;
+    else if (label == "ELEMENT-LIMIT") {
+        attr.into( this->element_limit );
+    }
+
+    else if (label == "REPRESENTATION-CODE") {
+        attr.into( this->reprc );
+    }
+
+    else if (label == "DIMENSION") {
+        attr.into( this->dimension );
+    }
+
+    else if (label == "UNITS") {
+        /*
+         * 5.5.1
+         * The standard specifies this to be units, but the example logical
+         * record has this as an ident (unspecified representation code)
+         *
+         * Since they're identical in representation (differ only in rule set),
+         * accept both after checking reprc
+         */
+
+        if (attr.reprc == rep::units) {
+            attr.into( this->units );
+        } else if (attr.reprc == rep::ident) {
+            dl::ident tmp;
+            attr.into( tmp );
+            this->units = dl::units{ std::move( dl::decay( tmp ) ) };
+        } else {
+            const auto c = static_cast< std::uint8_t >( attr.reprc );
+            const std::string msg = "unexpected representation code "
+                                  + std::to_string( c )
+                                  + ", expected UNITS or IDENT"
+                                  ;
+            throw std::invalid_argument( msg );
+        }
+    }
+
+    else if (label == "PROPERTIES") {
+        attr.into( this->properties );
+    }
+
+    else if (label == "AXIS") {
+        attr.into( this->axis );
+    }
+
+    else if (label == "SOURCE") {
+        attr.into( this->source );
+    }
+
+    else throw std::invalid_argument( "unhandled label " + label );
+}
+
+void channel::remove( const object_attribute& attr ) {
+    const auto& label = decay( attr.label );
+         if (label == "LONG-NAME")           this->name == boost::none;
+    else if (label == "ELEMENT-LIMIT")       this->name == boost::none;
+    else if (label == "REPRESENTATION-CODE") this->name == boost::none;
+    else if (label == "DIMENSION")           this->name == boost::none;
+    else if (label == "UNITS")               this->name == boost::none;
+    else if (label == "PROPERTIES")          this->name == boost::none;
+    else if (label == "AXIS")                this->name == boost::none;
+    else if (label == "SOURCE")              this->name == boost::none;
+    else throw std::invalid_argument( "unhandled label " + label );
+}
+
+void unknown_object::set( const object_attribute& attr ) noexcept (false) {
+    /*
+     * This is essentially map::insert-or-update
+     */
+    const auto eq = [&]( const object_attribute& x ) {
+        return attr.label == x.label;
+    };
+
+    auto itr = std::find_if( this->attributes.begin(),
+                             this->attributes.end(),
+                             eq );
+
+    if (itr == this->attributes.end())
+        this->attributes.push_back(attr);
+    else
+        *itr = attr;
+}
+
+void unknown_object::remove( const object_attribute& attr ) noexcept (false) {
+    /*
+     * This is essentially map::remove
+     */
+    const auto eq = [&]( const object_attribute& x ) {
+        return attr.label == x.label;
+    };
+
+    auto itr = std::remove_if( this->attributes.begin(),
+                               this->attributes.end(),
+                               eq );
+    /*
+     * For unknown objects, *remove* the attribute itself, rather than setting
+     * it to optional::none. These unknown objects are not as rigidly specified
+     * as the records in appendix A, and since they're essentially dicts there
+     * are few differences between no-such-key and key-to-null value.
+     *
+     * If this distinction is still interesting, the attribute key can be
+     * looked up in the object template.
+     */
+    this->attributes.erase( itr, this->attributes.end() );
 }
 
 const char* parse_template( const char* cur,
@@ -610,92 +739,6 @@ const char* parse_template( const char* cur,
     }
 }
 
-channel& channel::set( const object_attribute& attr, bool allow_empty ) {
-    using rep = dl::representation_code;
-    const auto& label = decay( attr.label );
-
-    if (label == "LONG-NAME") {
-        if (attr.reprc == rep::ascii) {
-            dl::ascii tmp;
-            attr.into( tmp, allow_empty );
-            this->name = std::move( tmp );
-        }
-        else if (attr.reprc == rep::obname) {
-            dl::obname tmp;
-            attr.into( tmp, allow_empty );
-            this->name = std::move( tmp );
-        }
-        else
-            throw std::invalid_argument(
-                "invalid reprc in channel LONG-NAME assign"
-            );
-    }
-
-    else if (label == "ELEMENT-LIMIT") {
-        attr.into( this->element_limit, allow_empty );
-    }
-
-    else if (label == "REPRESENTATION-CODE") {
-        attr.into( this->reprc, allow_empty );
-    }
-
-    else if (label == "DIMENSION") {
-        attr.into( this->dimension, allow_empty );
-    }
-
-    else if (label == "UNITS") {
-        /*
-         * 5.5.1
-         * The standard specifies this to be units, but the example logical
-         * record has this as an ident (unspecified representation code)
-         *
-         * Since they're identical in representation (differ only in rule set),
-         * accept both after checking reprc
-         */
-
-        if (attr.reprc == rep::units) {
-            attr.into( this->units, allow_empty );
-        } else if (attr.reprc == rep::ident) {
-            dl::ident tmp;
-            attr.into( tmp, allow_empty );
-            this->units = dl::units{ dl::decay( tmp ) };
-        } else {
-            throw std::invalid_argument( "invalid reprc " +
-                    std::to_string( static_cast< std::uint8_t >( reprc ) ) );
-        }
-    }
-
-    else throw std::invalid_argument( "unhandled label " + label );
-
-    return *this;
-}
-
-unknown_object&
-unknown_object::set( const object_attribute& attr, bool )
-noexcept (false)
-{
-    /*
-     * This is essentially map::insert-or-update
-     *
-     * The allow_empty argument can be ignored, because no semantics or
-     * restrictions are considered for this unknown object. Consumers must
-     * figure out if this is valid, non-null etc. -- just store what's read
-     */
-    const auto eq = [&]( const object_attribute& x ) {
-        return attr.label == x.label;
-    };
-
-    auto itr = std::find_if( this->attributes.begin(),
-                             this->attributes.end(),
-                             eq );
-
-    if (itr == this->attributes.end())
-        this->attributes.push_back(attr);
-    else
-        *itr = attr;
-
-    return *this;
-}
 
 namespace {
 
@@ -703,7 +746,7 @@ template <typename T >
 T defaulted_object( const object_template& tmpl ) noexcept (false) {
     T def;
     for( const auto& attr : tmpl )
-        def.set( attr, true );
+        def.set( attr );
 
     return def;
 }
@@ -743,8 +786,7 @@ object_vector parse_objects( const object_template& tmpl,
             auto attr = template_attr;
             // absent means no meaning, so *unset* whatever is there
             if (flags.absent) {
-                attr.value = {};
-                current.set(attr, true);
+                current.remove( attr );
                 continue;
             }
 

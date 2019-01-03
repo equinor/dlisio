@@ -11,6 +11,7 @@
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 #define BOOST_MPL_LIMIT_LIST_SIZE 30
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include <dlisio/types.h>
 
@@ -300,9 +301,11 @@ struct object_attribute {
      * mismatch.
      */
     template < typename T >
-    void into( T&, bool allow_empty ) const noexcept (false);
+    void into( T& ) const noexcept (false);
     template < typename T >
-    void into( std::vector< T >&, bool allow_empty ) const noexcept (false);
+    void into( boost::optional< T >& ) const noexcept (false);
+    template < typename T >
+    void into( std::vector< T >& ) const noexcept (false);
 };
 
 /*
@@ -325,61 +328,71 @@ struct basic_object {
  * labels defined by the standard, and sets the right member variable. It must
  * be named set with a compatible signature because it will be invoked from a
  * templated function
+ *
+ * All members in the objects are optionals, because they are by the standard
+ * explicitly nullable (3.2.2, absent values). The standard is a bit unclear if
+ * attributes not in the template are to also be considered absent, but we
+ * consider them the same (i.e. a None value)
  */
 struct file_header : basic_object {
-    dl::ascii sequence_number;
-    dl::ascii id;
-    file_header& set( const object_attribute&, bool = false ) noexcept (false);
+    boost::optional< dl::ascii > sequence_number;
+    boost::optional< dl::ascii > id;
+    void set( const object_attribute& ) noexcept (false);
+    void remove( const object_attribute& ) noexcept (false);
 };
 
 struct origin_object : basic_object {
-    dl::ascii file_id;
-    dl::ident file_set_name;
-    dl::uvari file_set_number;
-    dl::uvari file_number;
-    dl::ident file_type;
-    dl::ascii product;
-    dl::ascii version;
-    std::vector< dl::ascii > programs;
+    boost::optional< dl::ascii > file_id;
+    boost::optional< dl::ident > file_set_name;
+    boost::optional< dl::uvari > file_set_number;
+    boost::optional< dl::uvari > file_number;
+    boost::optional< dl::ident > file_type;
+    boost::optional< dl::ascii > product;
+    boost::optional< dl::ascii > version;
+    boost::optional< std::vector< dl::ascii > > programs;
     /* descent - run nr */
     /* well-id */
-    dl::ascii well_name;
-    dl::ascii field_name;
-    dl::unorm producer_code;
-    dl::ascii producer_name;
-    dl::ascii company;
-    dl::ident namespace_name;
-    dl::uvari namespace_version;
+    boost::optional< dl::ascii > well_name;
+    boost::optional< dl::ascii > field_name;
+    boost::optional< dl::unorm > producer_code;
+    boost::optional< dl::ascii > producer_name;
+    boost::optional< dl::ascii > company;
+    boost::optional< dl::ident > namespace_name;
+    boost::optional< dl::uvari > namespace_version;
 
-    origin_object&
-    set( const object_attribute&, bool = false )
-    noexcept (false);
+    void set( const object_attribute& ) noexcept (false);
+    void remove( const object_attribute& ) noexcept (false);
 };
 
 struct channel : basic_object {
-    boost::variant< dl::obname, dl::ascii > name;
-    dl::representation_code reprc;
-    dl::units units;
-    std::vector< dl::ident > properties;
-    std::vector< dl::uvari > dimension;
-    std::vector< dl::uvari > element_limit;
-    std::vector< dl::obname > axis;
-    dl::objref source;
+    boost::optional< boost::variant< dl::obname, dl::ascii > > name;
+    boost::optional< dl::representation_code > reprc;
+    boost::optional< dl::units > units;
+    boost::optional< std::vector< dl::ident > > properties;
+    boost::optional< std::vector< dl::uvari > > dimension;
+    boost::optional< std::vector< dl::uvari > > element_limit;
+    boost::optional< std::vector< dl::obname > > axis;
+    boost::optional< dl::objref > source;
 
-    channel& set( const object_attribute&, bool = false ) noexcept (false);
+    void set( const object_attribute& ) noexcept (false);
+    void remove( const object_attribute& ) noexcept (false);
 };
 
 /*
  * The fall-through object - RP66 opens for private or company specific
  * records, or otherwise broken entries, that we don't want to discard.
- * Instead, just store the attributes in what is essentially a dictionary
+ * Instead, just store the attributes in what is essentially a dictionary.
+ *
+ * For the unknown_object, the absent attribute *removes* the key-value from
+ * the object altogheter, rather than trying to represent key-with-null-value.
+ * If this information is necessary to make some decision, the corresponding
+ * object set's template can be inspected.
  */
 struct unknown_object : basic_object {
     std::vector< object_attribute > attributes;
 
-    unknown_object&
-    set( const object_attribute&, bool = false )
-    noexcept (false);
+    void set( const object_attribute& ) noexcept (false);
+    void remove( const object_attribute& ) noexcept (false);
 };
 
 /*
@@ -415,26 +428,15 @@ object_set parse_eflr( const char*, const char*, int ) noexcept (false);
  * implementations
  */
 template < typename T >
-void object_attribute::into( T& x, bool allow_empty ) const noexcept (false) {
+void object_attribute::into( T& x ) const noexcept (false) {
     // TODO: catch boost-get error,
     // then re-throw as something suitable with a better message
     // ?
-
     if (this->reprc != dl::typeinfo< T >::reprc) {
         throw std::invalid_argument( "mismatching reprc" );
     }
 
-    if (this->value.which() == 0 && allow_empty) {
-        /*
-         * set to default-constructed of correct type
-         *
-         * this might need to change if ABSENT is important enough to
-         * distinguish between default-constructed values and explicitly unset
-         * values
-         */
-        x = T();
-        return;
-    }
+    if (this->value.which() == 0) return;
 
     // TODO: if count > 1, fail with warning?
     using Vec = std::vector< T >;
@@ -442,18 +444,25 @@ void object_attribute::into( T& x, bool allow_empty ) const noexcept (false) {
 }
 
 template <>
-void object_attribute::into( dl::representation_code& x, bool allow_empty )
+void object_attribute::into( dl::representation_code& x )
 const noexcept (false) {
-    if (this->value.which() == 0 && allow_empty)
-        return;
-
+    if (this->value.which() == 0) return;
     dl::ushort tmp;
-    this->into( tmp, allow_empty );
+    this->into( tmp );
     x = static_cast< dl::representation_code >( tmp );
 }
 
 template < typename T >
-void object_attribute::into( std::vector< T >& v, bool allow_empty )
+void object_attribute::into( boost::optional< T >& x ) const noexcept (false) {
+    if (x) return this->into( *x );
+
+    T tmp;
+    this->into( tmp );
+    *x = std::move( tmp );
+}
+
+template < typename T >
+void object_attribute::into( std::vector< T >& v )
 const noexcept (false)
 {
     // TODO: catch boost-get error,
@@ -462,9 +471,7 @@ const noexcept (false)
         throw std::invalid_argument( "mismatching reprc" );
     }
 
-    if (this->value.which() == 0 && allow_empty) {
-        return;
-    }
+    if (this->value.which() == 0) return;
 
     using Vec = std::vector< T >;
     v = boost::get< Vec >( this->value );
