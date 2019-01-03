@@ -615,10 +615,16 @@ channel& channel::set( const object_attribute& attr, bool allow_empty ) {
     const auto& label = decay( attr.label );
 
     if (label == "LONG-NAME") {
-        if (attr.reprc == rep::ascii)
-            attr.into( boost::get< dl::ascii >( this->name ), allow_empty );
-        else if (attr.reprc == rep::obname)
-            attr.into( boost::get< dl::obname >( this->name ), allow_empty );
+        if (attr.reprc == rep::ascii) {
+            dl::ascii tmp;
+            attr.into( tmp, allow_empty );
+            this->name = std::move( tmp );
+        }
+        else if (attr.reprc == rep::obname) {
+            dl::obname tmp;
+            attr.into( tmp, allow_empty );
+            this->name = std::move( tmp );
+        }
         else
             throw std::invalid_argument(
                 "invalid reprc in channel LONG-NAME assign"
