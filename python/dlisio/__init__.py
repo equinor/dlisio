@@ -58,81 +58,62 @@ class dlis(object):
         self.fp.close()
 
     def getcurves(self, key):
-        _, channels = self.channels_matching(key)
-
         curves = {}
-        for chs in channels.values():
-            channel = chs[-1]
-            root = channel['root']
-            elems = channel['len'][0]
-            dtype = channel['repr'][0]
+        for frame, data in self.channels_matching(key).items():
+            root = frame.name
+            root = (root.origin, root.copynumber, root.id)
+
+            channel = data['channels'].pop()
+            count = np.prod(channel.dimension)
+            dtype = channel.reprc
 
             implicits = self.implicits[root]
-
-            pre = [(c['len'][0], c['repr'][0]) for c in chs[:-1]]
+            pre = [(np.prod(c.dimension), c.reprc) for c in data['channels']]
 
             a = []
             for implicit in implicits:
-                a.append(self.fp.iflr(implicit, pre, elems, dtype))
+                a.append(self.fp.iflr(implicit, pre, count, dtype))
 
             curves[root] = np.array(a)
 
         return curves
 
     def channel_metadata(self, objname):
-        out = {}
         for ex in self.explicits:
-            if ex['type'] != 'CHANNEL':
+            if ex.type != 'CHANNEL':
                 continue
 
-            if objname not in ex['objects']:
-                continue
+            for o in ex.objects:
+                if o.name == objname:
+                    return o
 
-            for prop in ex['objects'][objname]:
-                if prop['label'] == 'REPRESENTATION-CODE':
-                    out['repr'] = prop['value']
-
-                if prop['label'] == 'ELEMENT-LIMIT':
-                    out['len'] = prop['value']
-
-                if prop['label'] == 'DIMENSION':
-                    out['dim'] = prop['value']
-        return out
+        raise ValueError('Could not find object {}'.format(objname))
 
     def channels_matching(self, key):
-        positions = {}
-        for exi, ex in enumerate(self.explicits):
-            if ex['type'] != 'FRAME':
+        frames = {}
+        for ex in self.explicits:
+            if ex.type != 'FRAME':
                 continue
-            for name, properties in ex['objects'].items():
-                for propi, prop in enumerate(properties):
-                    if prop['label'] != 'CHANNELS':
-                        continue
-                    for channeli, (_, _, channel) in enumerate(prop['value']):
-                        if channel != key:
-                            continue
-                        positions[name] = [exi, 'objects', name, propi, 'value', channeli]
 
-        if len(positions) == 0:
+            for frame in ex.objects:
+                for channeli, channel in enumerate(frame.channels, 1):
+                    if channel.id != key: continue
+                    frames[frame] = {
+                            'names': frame.channels[:channeli],
+                            'channels': [],
+                        }
+                    break
+
+
+        if len(frames) == 0:
             raise ValueError('found no frame with the CHANNEL {}'.format(key))
 
-        attr = {}
-        for root, directory in positions.items():
-            ch = self.explicits
-            for d in directory[:-1]:
-                ch = ch[d]
+        for ex in self.explicits:
+            if ex.type != 'CHANNEL': continue
 
-            channel = ch[directory[-1]]
-            attr[channel] = []
+            for ch in ex.objects:
+                for frame, data in frames.items():
+                    if ch.name in data['names']:
+                        data['channels'].append(ch)
+        return frames
 
-            # gather all preceeding channels in the frame, with their metadata
-            # (representation code, elem-count) so that they can be parsed to
-            # read out the appropriate curve
-            #
-            # The requested channel is at [-1]
-            for index, c in enumerate(ch[:directory[-1]+1]):
-                d = { 'index': index, 'root': root }
-                d.update(self.channel_metadata(c))
-                attr[channel].append(d)
-
-        return positions, attr

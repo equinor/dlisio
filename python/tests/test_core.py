@@ -193,59 +193,65 @@ def test_parse_eflr_bytes_truncated():
     with pytest.raises(ValueError):
         only_set = dlisio.core.eflr(stdrecord[:1])
 
+def test_parse_only_channels():
+    with dlisio.load('data/only-channels.dlis') as f:
+        for object_set in f.explicits:
+            if object_set.type != 'CHANNEL': continue
+            assert len(object_set.objects) > 0
+
 def test_read_eflr_metadata():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         record = f.fp.eflr(f.bookmarks[2])
-        assert record['name'] == '51'
-        assert record['type'] == 'EQUIPMENT'
+        assert record.name == '51'
+        assert record.type == 'EQUIPMENT'
 
         record = f.fp.eflr(f.bookmarks[5])
-        assert(record['name'] == '54')
-        assert(record['type'] == 'TOOL')
+        assert record.name == '54'
+        assert record.type == 'TOOL'
 
         record = f.fp.eflr(f.bookmarks[8])
-        assert(record['name'] == '57')
-        assert(record['type'] == '440-CHANNEL')
+        assert record.name == '57'
+        assert record.type == '440-CHANNEL'
 
         record = f.fp.eflr(f.bookmarks[9])
-        assert(record['name'] == '58')
-        assert(record['type'] == 'PARAMETER')
+        assert record.name == '58'
+        assert record.type == 'PARAMETER'
 
         record = f.fp.eflr(f.bookmarks[11])
-        assert(record['name'] == '60')
-        assert(record['type'] == 'PARAMETER')
+        assert record.name == '60'
+        assert record.type == 'PARAMETER'
 
         record = f.fp.eflr(f.bookmarks[13])
-        assert(record['name'] == '62')
-        assert(record['type'] == 'PARAMETER')
+        assert record.name == '62'
+        assert record.type == 'PARAMETER'
 
         record = f.fp.eflr(f.bookmarks[15])
-        assert(record['name'] == '64')
-        assert(record['type'] == 'CALIBRATION-MEASUREMENT')
+        assert record.name == '64'
+        assert record.type == 'CALIBRATION-MEASUREMENT'
 
         record = f.fp.eflr(f.bookmarks[17])
-        assert(record['name'] == '72')
-        assert(record['type'] == 'CALIBRATION-COEFFICIENT')
+        assert record.name == '72'
+        assert record.type == 'CALIBRATION-COEFFICIENT'
 
         record = f.fp.eflr(f.bookmarks[18])
-        assert(record['name'] == '73')
-        assert(record['type'] == 'CALIBRATION-COEFFICIENT')
+        assert record.name == '73'
+        assert record.type == 'CALIBRATION-COEFFICIENT'
 
         record = f.fp.eflr(f.bookmarks[19])
-        assert(record['name'] == '74')
-        assert(record['type'] == 'CALIBRATION')
+        assert record.name == '74'
+        assert record.type == 'CALIBRATION'
 
         record = f.fp.eflr(f.bookmarks[23])
-        assert(record['name'] == '78')
-        assert(record['type'] == 'PROCESS')
+        assert record.name == '78'
+        assert record.type == 'PROCESS'
 
         record = f.fp.eflr(f.bookmarks[24])
-        assert(record['name'] == '79')
-        assert(record['type'] == '440-OP-CORE_TABLES')
+        assert record.name == '79'
+        assert record.type == '440-OP-CORE_TABLES'
 
         record = f.fp.eflr(f.bookmarks[25])
-        assert(record['name'] == '330')
-        assert(record['type'] == '440-OP-CORE_REPORT_FORMAT')
+        assert record.name == '330'
+        assert record.type == '440-OP-CORE_REPORT_FORMAT'
 
 def test_conv():
     dim = bytearray([0x09, 0x44, 0x49, 0x4D, 0x45,

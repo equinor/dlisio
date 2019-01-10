@@ -62,6 +62,7 @@ setup(
             ],
             include_dirs = ['../lib/include',
                             '../lib/extension',
+                            '../external/mpark',
                             get_pybind_include(),
                             get_pybind_include(user=True),
             ],

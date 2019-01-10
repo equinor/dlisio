@@ -36,6 +36,7 @@ target_compile_options(dlisio-extension
 target_link_libraries(dlisio-extension
     PUBLIC dlisio
            Boost::boost
+           mpark-variant
 )
 
 # for now, also install the -extension targets, however, they're not publically

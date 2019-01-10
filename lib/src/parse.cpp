@@ -456,77 +456,49 @@ const char* cast( const char* xs,
     return xs;
 }
 
-struct copy_elements : boost::static_visitor< const char* > {
-    const char* begin;
-    long count;
+template < typename T >
+const char* extract( std::int32_t count,
+                     std::vector< T >& vec,
+                     const char* xs ) noexcept (false) {
 
-    copy_elements( const char* xs, long n ) :
-        begin( xs ), count( n )
-    {}
-
-    template < typename T >
-    const char* operator()( std::vector< T >& out ) const {
-        T elem;
-        std::vector< T > tmp;
-        auto xs = this->begin;
-
-        for( std::int32_t i = 0; i < this->count; ++i ) {
-            xs = cast( xs, elem );
-            tmp.push_back( std::move( elem ) );
-        }
-
-        out.swap( tmp );
-        return xs;
-    }
-};
-
-dl::value_vector values_from_reprc( dl::representation_code reprc ) {
-    using rep = dl::representation_code;
-    switch (reprc) {
-        case rep::fshort: return std::vector< dl::fshort >{};
-        case rep::fsingl: return std::vector< dl::fsingl >{};
-        case rep::fsing1: return std::vector< dl::fsing1 >{};
-        case rep::fsing2: return std::vector< dl::fsing2 >{};
-        case rep::isingl: return std::vector< dl::isingl >{};
-        case rep::vsingl: return std::vector< dl::vsingl >{};
-        case rep::fdoubl: return std::vector< dl::fdoubl >{};
-        case rep::fdoub1: return std::vector< dl::fdoub1 >{};
-        case rep::fdoub2: return std::vector< dl::fdoub2 >{};
-        case rep::csingl: return std::vector< dl::csingl >{};
-        case rep::cdoubl: return std::vector< dl::cdoubl >{};
-        case rep::sshort: return std::vector< dl::sshort >{};
-        case rep::snorm : return std::vector< dl::snorm  >{};
-        case rep::slong : return std::vector< dl::slong  >{};
-        case rep::ushort: return std::vector< dl::ushort >{};
-        case rep::unorm : return std::vector< dl::unorm  >{};
-        case rep::ulong : return std::vector< dl::ulong  >{};
-        case rep::uvari : return std::vector< dl::uvari  >{};
-        case rep::ident : return std::vector< dl::ident  >{};
-        case rep::ascii : return std::vector< dl::ascii  >{};
-        case rep::dtime : return std::vector< dl::dtime  >{};
-        case rep::origin: return std::vector< dl::origin >{};
-        case rep::obname: return std::vector< dl::obname >{};
-        case rep::objref: return std::vector< dl::objref >{};
-        case rep::attref: return std::vector< dl::attref >{};
-        case rep::status: return std::vector< dl::status >{};
-        case rep::units : return std::vector< dl::units  >{};
-
+    T elem;
+    std::vector< T > tmp;
+    for( std::int32_t i = 0; i < count; ++i ) {
+        xs = cast( xs, elem );
+        tmp.push_back( std::move( elem ) );
     }
 
-    const auto msg = "unknown representation code "
-                   + std::to_string( static_cast< std::uint8_t >( reprc ) )
-                   ;
-    throw std::runtime_error( msg );
+    vec.swap( tmp );
+    return xs;
 }
 
-const char* elements( const char* xs, dl::uvari count,
-                                      dl::representation_code reprc,
-                                      dl::value_vector& vec ) {
-    const auto n = static_cast< dl::uvari::value_type >( count );
-    dl::value_vector tmp = values_from_reprc( reprc );
-    copy_elements vs{ xs, n };
-    xs = boost::apply_visitor( vs, tmp );
-    vec.swap( tmp );
+template < typename Monostate, typename... T >
+const char* elements( const char* xs,
+                      dl::uvari count,
+                      dl::representation_code reprc,
+                      mpark::variant< Monostate, T ... >& vec ) {
+    using Vec = typename std::decay< decltype (vec) >::type;
+    static_assert(
+        std::is_same< Vec, dl::value_vector >::value,
+        "element-extraction is only intended to work with vaule_vector "
+        "as source"
+    );
+
+    const auto n = dl::decay( count );
+    /*
+     * use the same trick as object_attribute::into<variant>
+     *
+     * In short, generate an if-else-if sequence and for the matching
+     * representation code, construct the right vector for the variant and
+     * populate it
+     */
+    using sequencer = int[];
+    static_cast< void >( sequencer {
+        ((reprc == dl::typeinfo< typename T::value_type >::reprc)
+        ? xs = extract( n, vec.template emplace< T >(), xs ), 0
+        : 0) ...
+    });
+
     return xs;
 }
 
@@ -534,27 +506,14 @@ const char* elements( const char* xs, dl::uvari count,
 
 namespace dl {
 
-const std::string& basic_object::get_name() const noexcept (true) {
-    return decay( this->object_name.id );
-}
-
-void basic_object::set_name( std::string name ) noexcept (false) {
-    if (name.size() > 255)
-        throw std::invalid_argument( "identifier len must be < 256" );
-
-    this->object_name.id = dl::ident{ std::move( name ) };
-}
-
-void file_header::set( const object_attribute& attr ) noexcept (false)
-{
+void file_header::set( const object_attribute& attr ) noexcept (false) {
     const auto& label = decay( attr.label );
          if (label == "SEQUENCE-NUMBER") attr.into( this->sequence_number );
     else if (label == "ID")              attr.into( this->id );
     else throw std::invalid_argument( "unhandled label " + label );
 }
 
-void file_header::remove( const object_attribute& attr ) noexcept (false)
-{
+void file_header::remove( const object_attribute& attr ) noexcept (false) {
     const auto& label = decay( attr.label );
          if (label == "SEQUENCE-NUMBER") this->sequence_number = boost::none;
     else if (label == "ID")              this->id              = boost::none;
@@ -562,90 +521,52 @@ void file_header::remove( const object_attribute& attr ) noexcept (false)
 }
 
 void channel::set( const object_attribute& attr ) {
-    using rep = dl::representation_code;
     const auto& label = decay( attr.label );
-
-    if (label == "LONG-NAME") {
-        if (attr.reprc == rep::ascii) {
-            dl::ascii tmp;
-            attr.into( tmp );
-            this->name = std::move( tmp );
-        }
-        else if (attr.reprc == rep::obname) {
-            dl::obname tmp;
-            attr.into( tmp );
-            this->name = std::move( tmp );
-        }
-        else
-            throw std::invalid_argument(
-                "invalid reprc in channel LONG-NAME assign"
-            );
-    }
-
-    else if (label == "ELEMENT-LIMIT") {
-        attr.into( this->element_limit );
-    }
-
-    else if (label == "REPRESENTATION-CODE") {
-        attr.into( this->reprc );
-    }
-
-    else if (label == "DIMENSION") {
-        attr.into( this->dimension );
-    }
-
-    else if (label == "UNITS") {
-        /*
-         * 5.5.1
-         * The standard specifies this to be units, but the example logical
-         * record has this as an ident (unspecified representation code)
-         *
-         * Since they're identical in representation (differ only in rule set),
-         * accept both after checking reprc
-         */
-
-        if (attr.reprc == rep::units) {
-            attr.into( this->units );
-        } else if (attr.reprc == rep::ident) {
-            dl::ident tmp;
-            attr.into( tmp );
-            this->units = dl::units{ std::move( dl::decay( tmp ) ) };
-        } else {
-            const auto c = static_cast< std::uint8_t >( attr.reprc );
-            const std::string msg = "unexpected representation code "
-                                  + std::to_string( c )
-                                  + ", expected UNITS or IDENT"
-                                  ;
-            throw std::invalid_argument( msg );
-        }
-    }
-
-    else if (label == "PROPERTIES") {
-        attr.into( this->properties );
-    }
-
-    else if (label == "AXIS") {
-        attr.into( this->axis );
-    }
-
-    else if (label == "SOURCE") {
-        attr.into( this->source );
-    }
-
+         if (label == "LONG-NAME")           attr.into( this->long_name );
+    else if (label == "ELEMENT-LIMIT")       attr.into( this->element_limit );
+    else if (label == "REPRESENTATION-CODE") attr.into( this->reprc );
+    else if (label == "DIMENSION")           attr.into( this->dimension );
+    else if (label == "UNITS")               attr.into( this->units );
+    else if (label == "PROPERTIES")          attr.into( this->properties );
+    else if (label == "AXIS")                attr.into( this->axis );
+    else if (label == "SOURCE")              attr.into( this->source );
     else throw std::invalid_argument( "unhandled label " + label );
 }
 
 void channel::remove( const object_attribute& attr ) {
     const auto& label = decay( attr.label );
-         if (label == "LONG-NAME")           this->name == boost::none;
-    else if (label == "ELEMENT-LIMIT")       this->name == boost::none;
-    else if (label == "REPRESENTATION-CODE") this->name == boost::none;
-    else if (label == "DIMENSION")           this->name == boost::none;
-    else if (label == "UNITS")               this->name == boost::none;
-    else if (label == "PROPERTIES")          this->name == boost::none;
-    else if (label == "AXIS")                this->name == boost::none;
-    else if (label == "SOURCE")              this->name == boost::none;
+         if (label == "LONG-NAME")           this->long_name     = boost::none;
+    else if (label == "ELEMENT-LIMIT")       this->element_limit = boost::none;
+    else if (label == "REPRESENTATION-CODE") this->reprc         = boost::none;
+    else if (label == "DIMENSION")           this->dimension     = boost::none;
+    else if (label == "UNITS")               this->units         = boost::none;
+    else if (label == "PROPERTIES")          this->properties    = boost::none;
+    else if (label == "AXIS")                this->axis          = boost::none;
+    else if (label == "SOURCE")              this->source        = boost::none;
     else throw std::invalid_argument( "unhandled label " + label );
+}
+
+void frame::set( const object_attribute& attr ) {
+    const auto& label = decay( attr.label );
+         if (label == "DESCRIPTION") attr.into( this->description );
+    else if (label == "CHANNELS" )   attr.into( this->channels );
+    else if (label == "INDEX-TYPE")  attr.into( this->index_type );
+    else if (label == "DIRECTION")   attr.into( this->direction );
+    else if (label == "ENCRYPTED")   attr.into( this->encrypted );
+    else if (label == "SPACING")     attr.into( this->spacing );
+    else if (label == "INDEX-MIN")   attr.into( this->index_min );
+    else if (label == "INDEX-MAX")   attr.into( this->index_max );
+    else throw std::invalid_argument( "FRAME: unhandled label " + label );
+}
+
+void frame::remove( const object_attribute& attr ) {
+    const auto& label = decay( attr.label );
+         if (label == "DESCRIPTION") this->description = boost::none;
+    else if (label == "CHANNELS" )   this->channels    = boost::none;
+    else if (label == "INDEX-TYPE")  this->index_type  = boost::none;
+    else if (label == "DIRECTION")   this->direction   = boost::none;
+    else if (label == "ENCRYPTED")   this->encrypted   = boost::none;
+    else throw std::invalid_argument( "FRAME: unhandled label " + label );
 }
 
 void unknown_object::set( const object_attribute& attr ) noexcept (false) {
@@ -851,8 +772,6 @@ object_set parse_eflr( const char* cur, const char* end, int record_type ) {
             set.objects = parse_objects< dl::file_header >( tmpl, cur, end );
             break;
 
-        case DLIS_OLR: break;
-        case DLIS_AXIS: break;
         case DLIS_CHANNL:
             if (type != "CHANNEL") {
                 user_warning( "segment is CHANNL, but object is " + type );
@@ -861,14 +780,24 @@ object_set parse_eflr( const char* cur, const char* end, int record_type ) {
             set.objects = parse_objects< dl::channel >( tmpl, cur, end );
             break;
 
-        case DLIS_FRAME: break;
-        case DLIS_STATIC: break;
-        case DLIS_SCRIPT: break;
-        case DLIS_UPDATE: break;
-        case DLIS_UDI: break;
-        case DLIS_LNAME: break;
-        case DLIS_SPEC: break;
-        case DLIS_DICT: break;
+        case DLIS_FRAME:
+            // TODO: could also be PATH
+            if (type != "FRAME") {
+                user_warning( "segment is FRAME, but object is " + type );
+                type = "FRAME";
+            }
+            set.objects = parse_objects< dl::frame >( tmpl, cur, end );
+            break;
+
+        case DLIS_OLR:
+        case DLIS_AXIS:
+        case DLIS_STATIC:
+        case DLIS_SCRIPT:
+        case DLIS_UPDATE:
+        case DLIS_UDI:
+        case DLIS_LNAME:
+        case DLIS_SPEC:
+        case DLIS_DICT:
 
         default:
             set.objects = parse_objects< dl::unknown_object >( tmpl, cur, end );
