@@ -32,9 +32,12 @@ function pre_build {
              -DBUILD_SHARED_LIBS=ON \
              -DBOOST_ROOT=boost_1_66_0
 
-    if [ -n "$IS_OSX" ];
-        then sudo make install;
-        else make install;
+    if [ -n "$IS_OSX" ]; then
+        sudo make install;
+        sudo cp -r ../external/mpark/mpark /usr/local/include;
+    else
+        make install;
+        cp -r ../external/mpark/mpark /usr/local/include;
     fi
 
     popd

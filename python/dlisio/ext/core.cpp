@@ -8,9 +8,11 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 #include <datetime.h>
 
@@ -27,21 +29,79 @@ using namespace py::literals;
 using File = dl::basic_file< std::ifstream >;
 
 namespace pybind11 { namespace detail {
-template <> struct type_caster< dl::dtime > {
-public:
-    PYBIND11_TYPE_CASTER(dl::dtime, _("datetime.datetime"));
 
-    static handle cast( dl::dtime src, return_value_policy, handle ) {
-        // TODO: add TZ info
-        return PyDateTime_FromDateAndTime( src.Y,
-                                           src.M,
-                                           src.D,
-                                           src.H,
-                                           src.MN,
-                                           src.S,
-                                           src.MS );
+/*
+ * Register boost::optional and mpark::variant type casters, since C++17 is not
+ * a requirement yet, and auto-conversion from optional to None/object and
+ * auto-variant-extraction is desired.
+ *
+ * https://pybind11.readthedocs.io/en/stable/advanced/cast/stl.html
+ */
+
+template < typename T >
+struct type_caster< boost::optional< T > > :
+    optional_caster< boost::optional< T > > {};
+
+template < typename... T >
+struct type_caster< mpark::variant< T... > > :
+    variant_caster< mpark::variant< T... > > {};
+
+/*
+ * Automate the conversion of strong typedefs to python type that corresponds
+ * to the underlying data type (as returned by dl::decay).
+ */
+template < typename T >
+struct dlis_caster {
+    PYBIND11_TYPE_CASTER(T, _("dlisio.core.type.")+_(dl::typeinfo< T >::name));
+
+    static handle cast( const T& src, return_value_policy, handle ) {
+        return py::cast( dl::decay( src ) ).inc_ref();
     }
+
+    /*
+     * For now, do not succeed ever when trying to convert from a python value
+     * to the corresponding C++ value, because it's not used and probably
+     * requires some template specialisation
+     */
+    bool load( handle, bool ) { return false; }
 };
+
+template <>
+handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy, handle )
+{
+    // TODO: add TZ info
+    return PyDateTime_FromDateAndTime( src.Y,
+                                       src.M,
+                                       src.D,
+                                       src.H,
+                                       src.MN,
+                                       src.S,
+                                       src.MS );
+}
+
+/*
+ * Now *register* the strong-typedef type casters with pybind, so that py::cast
+ * and the pybind implicit conversion works.
+ *
+ * Notice that types that just alias native types (std::int32_t/slong etc.)
+ * SHOULD NOT be registered this way, as the conversion already exists, and
+ * would cause an infinite loop in the conversion logic.
+ */
+template <> struct type_caster< dl::fshort > : dlis_caster< dl::fshort > {};
+template <> struct type_caster< dl::isingl > : dlis_caster< dl::isingl > {};
+template <> struct type_caster< dl::vsingl > : dlis_caster< dl::vsingl > {};
+template <> struct type_caster< dl::fsing1 > : dlis_caster< dl::fsing1 > {};
+template <> struct type_caster< dl::fsing2 > : dlis_caster< dl::fsing2 > {};
+template <> struct type_caster< dl::fdoub1 > : dlis_caster< dl::fdoub1 > {};
+template <> struct type_caster< dl::fdoub2 > : dlis_caster< dl::fdoub2 > {};
+template <> struct type_caster< dl::uvari  > : dlis_caster< dl::uvari  > {};
+template <> struct type_caster< dl::ident  > : dlis_caster< dl::ident  > {};
+template <> struct type_caster< dl::ascii  > : dlis_caster< dl::ascii  > {};
+template <> struct type_caster< dl::dtime  > : dlis_caster< dl::dtime  > {};
+template <> struct type_caster< dl::origin > : dlis_caster< dl::origin > {};
+template <> struct type_caster< dl::status > : dlis_caster< dl::status > {};
+template <> struct type_caster< dl::units  > : dlis_caster< dl::units  > {};
+
 }} // namespace pybind11::detail
 
 namespace {
@@ -365,7 +425,7 @@ public:
     py::dict sul();
     py::tuple mkindex();
     py::bytes raw_record( const dl::bookmark& );
-    py::dict eflr( const dl::bookmark& );
+    dl::object_set eflr( const dl::bookmark& );
     py::object iflr_chunk( const dl::bookmark& mark, const std::vector< std::tuple< int, int > >&, int, int );
 
 
@@ -382,7 +442,7 @@ py::dict file::sul() {
 
 py::tuple file::mkindex() {
     std::vector< dl::bookmark > bookmarks;
-    std::vector< py::dict > explicits;
+    std::vector< dl::object_set > explicits;
     py::dict implicit_refs;
     int remaining = 0;
 
@@ -800,7 +860,7 @@ py::dict eflr( const char* cur, const char* end ) {
     return record;
 }
 
-std::vector< char > catrecord( File& fp, int remaining ) {
+std::vector< char > catrecord( File& fp, int remaining, int& category ) {
 
     std::vector< char > cat;
     cat.reserve( 8192 );
@@ -811,6 +871,7 @@ std::vector< char > catrecord( File& fp, int remaining ) {
 
             auto seg = segment_header( fp );
             remaining -= seg.len;
+            category = seg.type;
 
             int explicit_formatting = 0;
             int has_predecessor = 0;
@@ -853,16 +914,19 @@ std::vector< char > catrecord( File& fp, int remaining ) {
 py::bytes file::raw_record( const dl::bookmark& m ) {
     this->fs.seek( m.tell );
 
-    auto cat = catrecord( this->fs, m.residual );
+    int category;
+    auto cat = catrecord( this->fs, m.residual, category );
     return py::bytes( cat.data(), cat.size() );
 }
 
-py::dict file::eflr( const dl::bookmark& mark ) {
-    if( mark.isencrypted ) return py::none();
-    this->fs.seek( mark.tell );
+dl::object_set file::eflr( const dl::bookmark& mark ) {
+    if (mark.isencrypted)
+        throw std::invalid_argument( "encrypted record" );
 
-    auto cat = catrecord( this->fs, mark.residual );
-    return ::eflr( cat.data(), cat.data() + cat.size() );
+    this->fs.seek( mark.tell );
+    int category = -1;
+    auto cat = catrecord( this->fs, mark.residual, category );
+    return dl::parse_eflr( cat.data(), cat.data() + cat.size(), category );
 }
 
 py::object file::iflr_chunk( const dl::bookmark& mark,
@@ -874,7 +938,8 @@ py::object file::iflr_chunk( const dl::bookmark& mark,
 
     this->fs.seek( mark.tell );
 
-    auto cat = catrecord( this->fs, mark.residual );
+    int category;
+    auto cat = catrecord( this->fs, mark.residual, category );
     const char* ptr = cat.data();
 
     conv::obname( ptr );
@@ -948,7 +1013,7 @@ py::object file::iflr_chunk( const dl::bookmark& mark,
     bool constant_size = true;
     int size = 0;
     for( const auto& pair : pre ) {
-        const auto count = std::get< 1 >( pair );
+        const auto count = std::get< 0 >( pair );
         const auto reprc = std::get< 1 >( pair );
         constant_size = constant_size && is_constant_size( reprc );
 
@@ -1025,5 +1090,175 @@ PYBIND11_MODULE(core, m) {
         .def( "raw_record", &file::raw_record )
         .def( "eflr",       &file::eflr )
         .def( "iflr",       &file::iflr_chunk )
-        ;
+    ;
+
+    /*
+     * C++ backed implementation
+     */
+
+    /*
+     * TODO: support constructor with kwargs
+     * TODO: support comparison with tuple
+     * TODO: fmtlib for strings
+     */
+    py::class_< dl::obname >( m, "obname" )
+        .def_readonly( "origin",     &dl::obname::origin )
+        .def_readonly( "copynumber", &dl::obname::copy )
+        .def_readonly( "id",         &dl::obname::id )
+        .def( "__eq__",              &dl::obname::operator == )
+        .def( "__repr__", []( const dl::obname& o ) {
+            return "dlisio.core.obname(id='{}', origin={}, copynum={})"_s
+                    .format( dl::decay(o.id),
+                             dl::decay(o.origin),
+                             dl::decay(o.copy) )
+                    ;
+        })
+    ;
+
+    py::class_< dl::objref >( m, "objref" )
+        .def_readonly( "type", &dl::objref::type )
+        .def_readonly( "name", &dl::objref::name )
+    ;
+
+    /*
+     * Register python bindings for the various objects in Chapter 5: Static
+     * and frame data.
+     *
+     * Since there are converters registered for the strong typedefs,
+     * .def_readonly and a member pointer is all that's necessary to set
+     * properties on the output object.
+     *
+     * Eventually these will probably all be opaque types and not used much
+     * directly by callers
+     */
+
+    py::class_< dl::file_header >( m, "file_header" )
+        .def_readonly( "name",            &dl::basic_object::object_name )
+        .def_readonly( "sequence_number", &dl::file_header::sequence_number )
+        .def_readonly( "id",              &dl::file_header::id )
+    ;
+
+    py::class_< dl::origin_object >( m, "origin_object" )
+        .def_readonly( "name",              &dl::basic_object::object_name )
+        .def_readonly( "file_id",           &dl::origin_object::file_id )
+        .def_readonly( "file_set_name",     &dl::origin_object::file_set_name )
+        .def_readonly( "file_set_number",   &dl::origin_object::file_set_number )
+        .def_readonly( "file_number",       &dl::origin_object::file_number )
+        .def_readonly( "file_type",         &dl::origin_object::file_type )
+        .def_readonly( "product",           &dl::origin_object::product )
+        .def_readonly( "version",           &dl::origin_object::version )
+        .def_readonly( "programs",          &dl::origin_object::programs )
+        .def_readonly( "well_name",         &dl::origin_object::well_name )
+        .def_readonly( "field_name",        &dl::origin_object::field_name )
+        .def_readonly( "producer_code",     &dl::origin_object::producer_code )
+        .def_readonly( "producer_name",     &dl::origin_object::producer_name )
+        .def_readonly( "company",           &dl::origin_object::company )
+        .def_readonly( "namespace_name",    &dl::origin_object::namespace_name )
+        .def_readonly( "namespace_version", &dl::origin_object::namespace_version )
+    ;
+
+    py::class_< dl::channel >( m, "channel" )
+        .def_readonly( "name",          &dl::basic_object::object_name )
+        .def_readonly( "long_name",     &dl::channel::long_name )
+        .def_readonly( "reprc",         &dl::channel::reprc )
+        .def_readonly( "units",         &dl::channel::units )
+        .def_readonly( "properties",    &dl::channel::properties )
+        .def_readonly( "dimension",     &dl::channel::dimension )
+        .def_readonly( "element_limit", &dl::channel::element_limit )
+        .def_readonly( "axis",          &dl::channel::axis )
+        .def_readonly( "source",        &dl::channel::source )
+    ;
+
+    py::class_< dl::frame >( m, "frame" )
+        .def_readonly( "name",          &dl::basic_object::object_name )
+        .def_readonly( "description",   &dl::frame::description )
+        .def_readonly( "channels",      &dl::frame::channels )
+        .def_readonly( "index_type",    &dl::frame::index_type )
+        .def_readonly( "direction",     &dl::frame::direction )
+        .def_readonly( "encrypted",     &dl::frame::encrypted )
+        .def_readonly( "spacing",       &dl::frame::spacing )
+        .def_readonly( "index_min",     &dl::frame::index_min )
+        .def_readonly( "index_max",     &dl::frame::index_max )
+    ;
+
+    py::class_< dl::unknown_object >( m, "unknown_object" )
+        .def_readonly( "name",          &dl::basic_object::object_name )
+        .def( "__len__", []( const dl::unknown_object& o ) {
+            return o.attributes.size();
+        })
+        .def( "__getitem__", []( const dl::unknown_object& o,
+                                 const std::string& key ) {
+            auto eq = [&key]( const dl::object_attribute& attr ) {
+                return dl::decay( attr.label ) == key;
+            };
+
+            auto itr = std::find_if( o.attributes.begin(),
+                                     o.attributes.end(),
+                                     eq );
+
+            if (itr == o.attributes.end())
+                throw std::out_of_range( key );
+
+            return *itr;
+        })
+        .def ("keys", []( const dl::unknown_object& o ) {
+            std::vector< std::string > keys;
+            for (const auto& attr : o.attributes)
+                keys.push_back( dl::decay( attr.label ) );
+            return keys;
+        })
+    ;
+
+    py::class_< dl::object_set >( m, "object_set" )
+        .def_readonly( "type",    &dl::object_set::type )
+        .def_readonly( "name",    &dl::object_set::name )
+        .def_readonly( "objects", &dl::object_set::objects )
+    ;
+
+    py::class_< dl::object_attribute >( m, "object_attribute" )
+        .def_readonly( "label", &dl::object_attribute::label )
+        .def_readonly( "count", &dl::object_attribute::count )
+        .def_readonly( "reprc", &dl::object_attribute::reprc )
+        .def_readonly( "units", &dl::object_attribute::units )
+        .def_readonly( "value", &dl::object_attribute::value )
+        .def( "__repr__", []( const dl::object_attribute& attr ) {
+            return "{}: C={} R={} U={}, V={}"_s.format(
+                dl::decay( attr.label ),
+                dl::decay( attr.count ),
+                dl::decay( attr.reprc ),
+                dl::decay( attr.units ),
+                dl::decay( attr.value )
+            );
+        })
+    ;
+
+    py::enum_< dl::representation_code >( m, "reprc" )
+        .value( "fshort", dl::representation_code::fshort )
+        .value( "fsingl", dl::representation_code::fsingl )
+        .value( "fsing1", dl::representation_code::fsing1 )
+        .value( "fsing2", dl::representation_code::fsing2 )
+        .value( "isingl", dl::representation_code::isingl )
+        .value( "vsingl", dl::representation_code::vsingl )
+        .value( "fdoubl", dl::representation_code::fdoubl )
+        .value( "fdoub1", dl::representation_code::fdoub1 )
+        .value( "fdoub2", dl::representation_code::fdoub2 )
+        .value( "csingl", dl::representation_code::csingl )
+        .value( "cdoubl", dl::representation_code::cdoubl )
+        .value( "sshort", dl::representation_code::sshort )
+        .value( "snorm" , dl::representation_code::snorm  )
+        .value( "slong" , dl::representation_code::slong  )
+        .value( "ushort", dl::representation_code::ushort )
+        .value( "unorm" , dl::representation_code::unorm  )
+        .value( "ulong" , dl::representation_code::ulong  )
+        .value( "uvari" , dl::representation_code::uvari  )
+        .value( "ident" , dl::representation_code::ident  )
+        .value( "ascii" , dl::representation_code::ascii  )
+        .value( "dtime" , dl::representation_code::dtime  )
+        .value( "origin", dl::representation_code::origin )
+        .value( "obname", dl::representation_code::obname )
+        .value( "objref", dl::representation_code::objref )
+        .value( "attref", dl::representation_code::attref )
+        .value( "status", dl::representation_code::status )
+        .value( "units" , dl::representation_code::units  )
+    ;
 }

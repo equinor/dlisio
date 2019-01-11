@@ -19,17 +19,14 @@ env:
         - PLAT=x86_64
         - MB_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION
         - VERSION=$(echo $TRAVIS_TAG | sed s/v//)
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 addons:
     apt:
         sources:
             - george-edison55-precise-backports # cmake 3
-            - ubuntu-toolchain-r-test # gcc-7
         packages:
             - cmake
             - cmake-data
-            - g++-7
             - libboost-dev
 
 matrix:
