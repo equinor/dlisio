@@ -4,6 +4,7 @@ import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+
 class get_pybind_include(object):
     def __init__(self, user=False):
         self.user = user
@@ -39,20 +40,36 @@ class BuildExt(build_ext):
             ext.extra_compile_args = opts
         build_ext.build_extensions(self)
 
-def getversion():
-    if os.path.isdir('.git'):
-        print('Getversion == True')
-        return True
 
-    return {
-        'relative_to': os.path.dirname(os.path.abspath(__file__)),
-    }
+def getversion():
+    pkgversion = { 'version': '0.0.0' }
+    versionfile = 'dlisio/version.py'
+
+    if not os.path.exists(versionfile):
+        return {
+            'use_scm_version': {
+                'relative_to' : os.path.dirname(os.path.abspath(__file__)),
+                'write_to'    : versionfile
+            }
+        }
+
+    import ast
+    with open(versionfile) as f:
+        root = ast.parse(f.read())
+
+    for node in ast.walk(root):
+        if not isinstance(node, ast.Assign): continue
+        if len(node.targets) == 1 and node.targets[0].id == 'version':
+            pkgversion['version'] = node.value.s
+
+    return pkgversion
+
 
 setup(
     name = 'dlisio',
     description = 'DLIS v1',
     long_description = 'DLIS v1',
-    url = 'https://github.com/Statoil/dlisio',
+    url = 'https://github.com/equinor/dlisio',
     packages = ['dlisio'],
     license = 'LGPL-3.0',
     ext_modules = [
@@ -78,5 +95,5 @@ setup(
     ],
     tests_require = ['pytest'],
     cmdclass = { 'build_ext': BuildExt },
-    use_scm_version = getversion(),
+    **getversion()
 )

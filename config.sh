@@ -12,17 +12,6 @@ function pre_build {
 
     curl -sL https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz | tar xz
 
-    # clean dirty files from python/, otherwise it picks up the one built
-    # outside docker and symbols will be too recent for auditwheel
-    git clean -dxf python
-
-    # this is a super hack necessary because setuptools_scm really *really*
-    # expects a .git-directory. The wheel building process does its work in
-    # /tmp, and setuptools_scm crashes because it cannot find the .git dir
-    #
-    # by copying (!) the git dir into python/ this problem goes away
-    cp -r .git python
-
     mkdir build-centos5
     pushd build-centos5
 
@@ -41,4 +30,12 @@ function pre_build {
     fi
 
     popd
+
+    # clean dirty files from python/, otherwise it picks up the one built
+    # outside docker and symbols will be too recent for auditwheel.
+    # setuptools_scm really *really* expects a .git-directory. As the wheel
+    # building process does its work in /tmp, setuptools_scm crashes because it
+    # cannot find the .git dir. Leave version.py so that setuptools can obtain
+    # the version from it
+    git clean -dxf python --exclude python/dlisio/version.py
 }
