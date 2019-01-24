@@ -1108,16 +1108,35 @@ PYBIND11_MODULE(core, m) {
         .def( "__eq__",              &dl::obname::operator == )
         .def( "__repr__", []( const dl::obname& o ) {
             return "dlisio.core.obname(id='{}', origin={}, copynum={})"_s
-                    .format( dl::decay(o.id),
-                             dl::decay(o.origin),
-                             dl::decay(o.copy) )
+                    .format( dl::decay( o.id ),
+                             dl::decay( o.origin ),
+                             dl::decay( o.copy ) )
                     ;
         })
-    ;
+        .def( "__str__", []( const dl::obname& o ) {
+            return "id='{}', origin={}, copynum={}"_s
+                    .format( dl::decay( o.id ),
+                             dl::decay( o.origin ),
+                             dl::decay( o.copy ) )
+                    ;
+        })
+        ;
 
     py::class_< dl::objref >( m, "objref" )
         .def_readonly( "type", &dl::objref::type )
         .def_readonly( "name", &dl::objref::name )
+        .def( "__repr__", []( const dl::objref& o ) {
+            return "dlisio.core.objref(type={}, name=({}))"_s
+                    .format( dl::decay( o.type ),
+                             dl::decay( o.name ) )
+                    ;
+        })
+        .def( "__str__", []( const dl::objref& o ) {
+            return "type={}, name=({})"_s
+                    .format( dl::decay( o.type ),
+                             dl::decay( o.name ) )
+                    ;
+        })
     ;
 
     /*
@@ -1136,6 +1155,22 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "name",            &dl::basic_object::object_name )
         .def_readonly( "sequence_number", &dl::file_header::sequence_number )
         .def_readonly( "id",              &dl::file_header::id )
+        .def( "__repr__", []( const dl::file_header& o ) {
+            return "dlisio.core.file_header(id='{}', origin={}, copynum={})"_s
+                    .format( dl::decay( o.object_name.id ),
+                             dl::decay( o.object_name.origin ),
+                             dl::decay( o.object_name.copy ) )
+                    ;
+        })
+        .def( "__str__", []( const dl::file_header& o ) {
+            return "file_header\nname : (id='{}', origin={}, copynum={})\nseq  : {}\nid   : {}"_s
+                    .format( dl::decay( o.object_name.id ),
+                             dl::decay( o.object_name.origin ),
+                             dl::decay( o.object_name.copy ),
+                             dl::decay( o.sequence_number ),
+                             dl::decay( o.id ) )
+                    ;
+        })
     ;
 
     py::class_< dl::origin_object >( m, "origin_object" )

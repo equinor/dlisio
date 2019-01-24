@@ -193,12 +193,6 @@ def test_parse_eflr_bytes_truncated():
     with pytest.raises(ValueError):
         only_set = dlisio.core.eflr(stdrecord[:1])
 
-def test_parse_only_channels():
-    with dlisio.load('data/only-channels.dlis') as f:
-        for object_set in f.explicits:
-            if object_set.type != 'CHANNEL': continue
-            assert len(object_set.objects) > 0
-
 def test_read_eflr_metadata():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         record = f.fp.eflr(f.bookmarks[2])
@@ -259,3 +253,32 @@ def test_conv():
                     ])
 
     assert dlisio.core.conv(19, dim) == "DIMENSION"
+
+def test_channel_metadata():
+    with dlisio.load('data/only-channels.dlis') as f:
+        channels = [x for x in f.channels if x.name.id == 'TDEP']
+        assert len(channels) == 6
+        for ch in channels:
+            assert ch.name.id == 'TDEP'
+
+def test_frames_metadata():
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        frames = [fr for fr in f.frames if fr.name.id == '2000T']
+        assert len(frames) == 1
+        assert frames[0].name.id         == '2000T'
+        assert frames[0].name.copynumber == 0
+        assert frames[0].name.origin     == 2
+
+def test_channel_matching():
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        frames = [fr for fr in f.frames if fr.haschannel(id='TDEP')]
+        assert len(frames) == 2
+
+        frames = [fr for fr in f.frames if fr.haschannel(origin=2)]
+        assert len(frames) == 2
+
+        frames = [fr for fr in f.frames if fr.haschannel(id='TDEP', origin=2)]
+        assert len(frames) == 2
+
+        frames = [fr for fr in f.frames if fr.haschannel(id='TDEP', origin=2, copy=4)]
+        assert len(frames) == 1
