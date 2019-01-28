@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -415,5 +416,201 @@ const char* dlis_component_str( int tag ) {
         case DLIS_ROLE_RSET:   return "replacement set";
         case DLIS_ROLE_SET:    return "set";
         default:               return "unknown";
+    }
+}
+
+namespace {
+
+/*
+ * The dlis_scanf function uses a dispatch table for interpreting and
+ * expanding raw bytes into native C++ data types.  There are 27 primary
+ * data types specified by RP66 (Appendix B).
+ *
+ * Instead of populating the dispatch table by hand, generate it with the
+ * interpret function. The interpret() function essentially generates this
+ * code for all RP66 data types:
+ *
+ * float f;
+ * src = dlis_fsingl( src, &f );
+ * memcpy( dst, &f, 4 );
+ * dst += 4;
+ */
+
+struct cursor {
+    const char* src;
+    char* dst;
+};
+
+char* pack( char* dst ) {
+    return dst;
+}
+
+template < typename T, typename... Ts >
+char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) {
+    std::memcpy( dst, ptr, sizeof( T ) );
+    dst += sizeof( T );
+    return pack( dst, ptrs ... );
+}
+
+template < typename... Ts >
+char* pack( char* dst,
+            const std::int32_t* len,
+            const char* str,
+            const Ts* ... ptrs )
+{
+    std::memcpy( dst, len, sizeof( *len ) );
+    dst += sizeof( *len );
+    std::memcpy( dst, str, *len );
+    dst += *len;
+    return pack( dst, ptrs ... );
+}
+
+template < typename F, typename... Args >
+cursor interpret( cursor cur, F func, Args ... args ) {
+    cur.src = func( cur.src, std::addressof( args ) ... );
+    cur.dst = pack( cur.dst, std::addressof( args ) ... );
+    return cur;
+}
+
+template < typename... Args >
+cursor interpret( cursor cur, const char* f(const char*, Args* ...) ) {
+    return interpret( cur, f, Args {} ... );
+}
+
+}
+
+int dlis_packf( const char* fmt, const void* src, void* dst ) {
+    cursor cur = {
+        static_cast< const char* >( src ),
+        static_cast< char* >( dst ),
+    };
+
+    while (true) {
+        switch (*fmt++) {
+            case DLIS_FMT_EOL: return DLIS_OK;
+
+            case DLIS_FMT_FSHORT: cur = interpret( cur, dlis_fshort ); break;
+            case DLIS_FMT_FSINGL: cur = interpret( cur, dlis_fsingl ); break;
+            case DLIS_FMT_FSING1: cur = interpret( cur, dlis_fsing1 ); break;
+            case DLIS_FMT_FSING2: cur = interpret( cur, dlis_fsing2 ); break;
+            case DLIS_FMT_ISINGL: cur = interpret( cur, dlis_isingl ); break;
+            case DLIS_FMT_VSINGL: cur = interpret( cur, dlis_vsingl ); break;
+            case DLIS_FMT_FDOUBL: cur = interpret( cur, dlis_fdoubl ); break;
+            case DLIS_FMT_FDOUB1: cur = interpret( cur, dlis_fdoub1 ); break;
+            case DLIS_FMT_FDOUB2: cur = interpret( cur, dlis_fdoub2 ); break;
+            case DLIS_FMT_CSINGL: cur = interpret( cur, dlis_csingl ); break;
+            case DLIS_FMT_CDOUBL: cur = interpret( cur, dlis_cdoubl ); break;
+            case DLIS_FMT_SSHORT: cur = interpret( cur, dlis_sshort ); break;
+            case DLIS_FMT_SNORM:  cur = interpret( cur, dlis_snorm  ); break;
+            case DLIS_FMT_SLONG:  cur = interpret( cur, dlis_slong  ); break;
+            case DLIS_FMT_USHORT: cur = interpret( cur, dlis_ushort ); break;
+            case DLIS_FMT_UNORM:  cur = interpret( cur, dlis_unorm  ); break;
+            case DLIS_FMT_ULONG:  cur = interpret( cur, dlis_ulong  ); break;
+            case DLIS_FMT_UVARI:  cur = interpret( cur, dlis_uvari  ); break;
+            case DLIS_FMT_IDENT:  cur = interpret( cur, dlis_ident  ); break;
+            case DLIS_FMT_ASCII:  cur = interpret( cur, dlis_ascii  ); break;
+            case DLIS_FMT_DTIME:  cur = interpret( cur, dlis_dtime  ); break;
+            case DLIS_FMT_ORIGIN: cur = interpret( cur, dlis_origin ); break;
+            case DLIS_FMT_OBNAME: cur = interpret( cur, dlis_obname ); break;
+            case DLIS_FMT_OBJREF: cur = interpret( cur, dlis_objref ); break;
+            case DLIS_FMT_ATTREF: cur = interpret( cur, dlis_attref ); break;
+            case DLIS_FMT_STATUS: cur = interpret( cur, dlis_status ); break;
+            case DLIS_FMT_UNITS:  cur = interpret( cur, dlis_units  ); break;
+
+            default:
+                return DLIS_UNEXPECTED_VALUE;
+        }
+    }
+
+    return DLIS_OK;
+}
+
+int dlis_pack_varsize( const char* fmt, int* varsize ) {
+    while (true) {
+        switch (*fmt++) {
+            case DLIS_FMT_EOL:
+                *varsize = 0;
+                return DLIS_OK;
+
+            case DLIS_FMT_FSHORT:
+            case DLIS_FMT_FSINGL:
+            case DLIS_FMT_FSING1:
+            case DLIS_FMT_FSING2:
+            case DLIS_FMT_ISINGL:
+            case DLIS_FMT_VSINGL:
+            case DLIS_FMT_FDOUBL:
+            case DLIS_FMT_FDOUB1:
+            case DLIS_FMT_FDOUB2:
+            case DLIS_FMT_CSINGL:
+            case DLIS_FMT_CDOUBL:
+            case DLIS_FMT_SSHORT:
+            case DLIS_FMT_SNORM:
+            case DLIS_FMT_SLONG:
+            case DLIS_FMT_USHORT:
+            case DLIS_FMT_UNORM:
+            case DLIS_FMT_ULONG:
+            case DLIS_FMT_DTIME:
+            case DLIS_FMT_ORIGIN:
+            case DLIS_FMT_STATUS:
+            case DLIS_FMT_UVARI:
+                break;
+
+            case DLIS_FMT_IDENT:
+            case DLIS_FMT_ASCII:
+            case DLIS_FMT_OBNAME:
+            case DLIS_FMT_OBJREF:
+            case DLIS_FMT_ATTREF:
+            case DLIS_FMT_UNITS:
+                *varsize = 1;
+                return DLIS_OK;
+
+            default:
+                return DLIS_INVALID_ARGS;
+        }
+    }
+}
+
+int dlis_pack_size( const char* fmt, int* size ) {
+    int sz = 0;
+    while (true) {
+        switch (*fmt++) {
+            case DLIS_FMT_EOL:
+                *size = sz;
+                return DLIS_OK;
+
+            case DLIS_FMT_FSHORT: sz += DLIS_SIZEOF_FSHORT; break;
+            case DLIS_FMT_FSINGL: sz += DLIS_SIZEOF_FSINGL; break;
+            case DLIS_FMT_FSING1: sz += DLIS_SIZEOF_FSING1; break;
+            case DLIS_FMT_FSING2: sz += DLIS_SIZEOF_FSING2; break;
+            case DLIS_FMT_ISINGL: sz += DLIS_SIZEOF_ISINGL; break;
+            case DLIS_FMT_VSINGL: sz += DLIS_SIZEOF_VSINGL; break;
+            case DLIS_FMT_FDOUBL: sz += DLIS_SIZEOF_FDOUBL; break;
+            case DLIS_FMT_FDOUB1: sz += DLIS_SIZEOF_FDOUB1; break;
+            case DLIS_FMT_FDOUB2: sz += DLIS_SIZEOF_FDOUB2; break;
+            case DLIS_FMT_CSINGL: sz += DLIS_SIZEOF_CSINGL; break;
+            case DLIS_FMT_CDOUBL: sz += DLIS_SIZEOF_CDOUBL; break;
+            case DLIS_FMT_SSHORT: sz += DLIS_SIZEOF_SSHORT; break;
+            case DLIS_FMT_SNORM:  sz += DLIS_SIZEOF_SNORM;  break;
+            case DLIS_FMT_SLONG:  sz += DLIS_SIZEOF_SLONG;  break;
+            case DLIS_FMT_USHORT: sz += DLIS_SIZEOF_USHORT; break;
+            case DLIS_FMT_UNORM:  sz += DLIS_SIZEOF_UNORM;  break;
+            case DLIS_FMT_ULONG:  sz += DLIS_SIZEOF_ULONG;  break;
+            case DLIS_FMT_DTIME:  sz += DLIS_SIZEOF_DTIME;  break;
+            case DLIS_FMT_STATUS: sz += DLIS_SIZEOF_STATUS; break;
+            case DLIS_FMT_ORIGIN: sz += 4;                  break;
+            case DLIS_FMT_UVARI:  sz += 4;                  break;
+
+            case DLIS_FMT_IDENT:
+            case DLIS_FMT_ASCII:
+            case DLIS_FMT_OBNAME:
+            case DLIS_FMT_OBJREF:
+            case DLIS_FMT_ATTREF:
+            case DLIS_FMT_UNITS:
+                *size = sz;
+                return DLIS_INCONSISTENT;
+
+            default:
+                return DLIS_INVALID_ARGS;
+        }
     }
 }

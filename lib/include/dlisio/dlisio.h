@@ -113,6 +113,97 @@ int dlis_component_attrib( uint8_t descriptor,
 
 const char* dlis_component_str( int );
 
+
+#define DLIS_FMT_EOL    '\0'
+#define DLIS_FMT_FSHORT 'r'
+#define DLIS_FMT_FSINGL 'f'
+#define DLIS_FMT_FSING1 'b'
+#define DLIS_FMT_FSING2 'B'
+#define DLIS_FMT_ISINGL 'x'
+#define DLIS_FMT_VSINGL 'V'
+#define DLIS_FMT_FDOUBL 'F'
+#define DLIS_FMT_FDOUB1 'z'
+#define DLIS_FMT_FDOUB2 'Z'
+#define DLIS_FMT_CSINGL 'c'
+#define DLIS_FMT_CDOUBL 'C'
+#define DLIS_FMT_SSHORT 'd'
+#define DLIS_FMT_SNORM  'D'
+#define DLIS_FMT_SLONG  'l'
+#define DLIS_FMT_USHORT 'u'
+#define DLIS_FMT_UNORM  'U'
+#define DLIS_FMT_ULONG  'L'
+#define DLIS_FMT_UVARI  'i'
+#define DLIS_FMT_IDENT  's'
+#define DLIS_FMT_ASCII  'S'
+#define DLIS_FMT_DTIME  'j'
+#define DLIS_FMT_ORIGIN 'J'
+#define DLIS_FMT_OBNAME 'o'
+#define DLIS_FMT_OBJREF 'O'
+#define DLIS_FMT_ATTREF 'A'
+#define DLIS_FMT_STATUS 'q'
+#define DLIS_FMT_UNITS  'Q'
+
+/*
+ * Parse and pack arbitrary data
+ *
+ * The dlis_packf (inspired by sscanf) reads bytes arbitrary bytes in RP66
+ * format, and packs it into the dst area. No padding bytes are inserted, which
+ * means the data can be read from this array by computing the correct offset
+ * and memcpy'd into a typed variable.
+ *
+ * fmt is a sscanf-inspired format string of conversion specifiers
+ * (DLIS_FMT_*). The size of each type depends on the most natural
+ * corresponding C type, e.g. SSHORT is int8_t, and UNORM is uint16_t. The
+ * arguments to a dlis_type() function in dlisio/types.h is the type being used
+ * as a target type for a conversion specifier.
+ *
+ * String types are always written as int32_t + len bytes, without a zero
+ * terminator.
+ *
+ * Example:
+ *
+ * Extracting a frame with three channels:
+ * C1 -> 1x1 unorm (i16)
+ * C2 -> 2x1 fsingle (f32)
+ * C3 -> 1x1 uvari (yields i32)
+ *
+ * int16_t C1;
+ * float C2[2];
+ * int32_t C3;
+ *
+ * unsigned char bytes[2 + 2*4 + 4];
+ * err = dlis_packf( "Uffi", src, bytes );
+ * if (err) exit(1);
+ *
+ * memcpy( &C1, bytes, sizeof(C1) );
+ * memcpy( C2, bytes + 2, sizeof(C2) );
+ * memcpy( &c3, bytes + 10, sizeof(C3) );
+ */
+int dlis_packf( const char* fmt, const void* src, void* dst );
+
+/*
+ * Check if a format string for packing is var-size or fixed-size
+ *
+ * This function is intended for checking if format strings built from
+ * inspecting records is fixed-sized or not, which in turn can guide if it's
+ * possible to random-access onto variables. Note size refers to the size of
+ * the the *output* parameter, i.e. UVARI (variable-length unsigned int) is
+ * considered fixed-size.
+ *
+ * This functionality can be implemented by manually checking if the format
+ * string contains any of "sSoOAQ", but is provided for convenience.
+ *
+ * Returns DLIS_OK on success, and DLIS_INVALID_ARGS if the format strings
+ * contain any invalid format specifier. out is non-zero if there are any
+ * variable-length values in the format specifier, and 0 if all types are
+ * fixed-length. If the function fails, the output variable is untouched.
+ *
+ * To compute the length of a fixed-size string, use dlis_pack_size
+ */
+int dlis_pack_varsize( const char* fmt, int* out );
+
+int dlis_pack_size( const char* fmt, int* size );
+
 /*
  * A table of the record attributes, high bit first:
  *
@@ -183,6 +274,7 @@ enum DLIS_ERRCODE {
     DLIS_OK = 0,
     DLIS_INCONSISTENT,
     DLIS_UNEXPECTED_VALUE,
+    DLIS_INVALID_ARGS,
 };
 
 enum dlis_eflr_type_code {

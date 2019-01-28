@@ -420,3 +420,195 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
         CHECK( !value );
     }
 }
+
+TEST_CASE("pack UVARIs", "[scan]") {
+    const unsigned char source[] = {
+        0xC0, 0x00, 0x00, 0x00, // 0
+        0xC0, 0x00, 0x00, 0x01, // 1
+        0xC0, 0x00, 0x00, 0x2E, // 46
+        0xC0, 0x00, 0x00, 0x7F, // 127
+        0xC0, 0x00, 0x01, 0x00, // 256
+        0xC0, 0x00, 0x8F, 0xFF, // 36863
+        0xC1, 0x00, 0x00, 0x00, // 16777216
+        0xF0, 0x00, 0xBF, 0xFF, // 805355519
+    };
+
+    std::int32_t dst[ 8 ];
+    const char* fmt = "iiiiiiii";
+    const auto err = dlis_packf( fmt, source, dst );
+
+    CHECK( err == DLIS_OK );
+    CHECK( dst[ 0 ] == 0 );
+    CHECK( dst[ 1 ] == 1 );
+    CHECK( dst[ 2 ] == 46 );
+    CHECK( dst[ 3 ] == 127 );
+    CHECK( dst[ 4 ] == 256 );
+    CHECK( dst[ 5 ] == 36863 );
+    CHECK( dst[ 6 ] == 16777216 );
+    CHECK( dst[ 7 ] == 805355519 );
+}
+
+TEST_CASE("pack unsigned integers", "[scan]") {
+    const unsigned char source[] = {
+        0x59, // 89 ushort
+        0xA7, // 167 ushort
+        0x00, 0x99, // 153 unorm
+        0x80, 0x00, // 32768 unorm
+        0x00, 0x00, 0x00, 0x99, // 153 ulong
+        0xFF, 0xFF, 0xFF, 0x67, // 4294967143 ulong
+        0x01, // 1 uvari
+        0x81, 0x00, // 256 uvari
+        0xC0, 0x00, 0x8F, 0xFF, // 36863 uvari
+        0xF0, 0x00, 0xBF, 0xFF, // 805355519 uvari
+    };
+
+    unsigned char dst[30];
+    const char* fmt = "uuUULLiiii";
+    const auto err = dlis_packf( fmt, source, dst );
+
+    CHECK( err == DLIS_OK );
+
+    std::uint8_t us[2];
+    std::memcpy( us, dst, sizeof( us ) );
+    CHECK( us[ 0 ] == 89 );
+    CHECK( us[ 1 ] == 167 );
+
+    std::uint16_t un[2];
+    std::memcpy( un, dst + 2, sizeof( un ) );
+    CHECK( un[ 0 ] == 153 );
+    CHECK( un[ 1 ] == 32768 );
+
+    std::uint32_t ul[2];
+    std::memcpy( ul, dst + 6, sizeof( ul ) );
+    CHECK( ul[ 0 ] == 153 );
+    CHECK( ul[ 1 ] == 4294967143 );
+
+    std::int32_t uv[4];
+    std::memcpy( uv, dst + 14, sizeof( uv ) );
+    CHECK( uv[ 0 ] == 1 );
+    CHECK( uv[ 1 ] == 256 );
+    CHECK( uv[ 2 ] == 36863 );
+    CHECK( uv[ 3 ] == 805355519 );
+}
+
+TEST_CASE("pack signed integers", "[scan]") {
+    const unsigned char source[] = {
+        0x59, // 89 sshort
+        0xA7, // -89 sshort
+        0x00, 0x99, // 153 snorm
+        0xFF, 0x67, // -153 snorm
+        0x00, 0x00, 0x00, 0x99, // 153 slong
+        0xFF, 0xFF, 0xFF, 0x67, // -153 slong
+        0x7F, 0xFF, 0xFF, 0xFF, // ~2.1b slong (int-max)
+    };
+
+    unsigned char dst[18];
+    const char* fmt = "ddDDlll";
+    const auto err = dlis_packf( fmt, source, dst );
+
+    CHECK( err == DLIS_OK );
+
+    std::int8_t ss[2];
+    std::memcpy( ss, dst, sizeof( ss ) );
+    CHECK( ss[ 0 ] == 89 );
+    CHECK( ss[ 1 ] == -89 );
+
+    std::int16_t sn[2];
+    std::memcpy( sn, dst + 2, sizeof( sn ) );
+    CHECK( sn[ 0 ] == 153 );
+    CHECK( sn[ 1 ] == -153 );
+
+    std::int32_t sl[3];
+    std::memcpy( sl, dst + 6, sizeof( sl ) );
+    CHECK( sl[ 0 ] == 153 );
+    CHECK( sl[ 1 ] == -153 );
+    CHECK( sl[ 2 ] == 2147483647 );
+}
+
+TEST_CASE("pack var-size fails with invalid specifier") {
+    int vsize;
+    CHECK( dlis_pack_varsize( "w",  &vsize ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "lw", &vsize ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "wl", &vsize ) == DLIS_INVALID_ARGS );
+}
+
+namespace {
+
+bool pack_varsize( const char* fmt ) {
+    int vsize;
+    CHECK( dlis_pack_varsize( fmt, &vsize ) == DLIS_OK );
+    return vsize;
+};
+
+}
+
+TEST_CASE("pack var-size with all-constant specifiers") {
+    CHECK( !pack_varsize( "r" ) );
+    CHECK( !pack_varsize( "f" ) );
+    CHECK( !pack_varsize( "b" ) );
+    CHECK( !pack_varsize( "B" ) );
+    CHECK( !pack_varsize( "x" ) );
+    CHECK( !pack_varsize( "V" ) );
+    CHECK( !pack_varsize( "F" ) );
+    CHECK( !pack_varsize( "z" ) );
+    CHECK( !pack_varsize( "Z" ) );
+    CHECK( !pack_varsize( "c" ) );
+    CHECK( !pack_varsize( "C" ) );
+    CHECK( !pack_varsize( "d" ) );
+    CHECK( !pack_varsize( "D" ) );
+    CHECK( !pack_varsize( "l" ) );
+    CHECK( !pack_varsize( "u" ) );
+    CHECK( !pack_varsize( "U" ) );
+    CHECK( !pack_varsize( "L" ) );
+    CHECK( !pack_varsize( "j" ) );
+    CHECK( !pack_varsize( "J" ) );
+    CHECK( !pack_varsize( "q" ) );
+    CHECK( !pack_varsize( "i" ) );
+
+    CHECK( !pack_varsize( "rfbBxVFzZcCdDluULjJqi" ) );
+}
+
+TEST_CASE("pack var-size with all-variable specifiers") {
+    CHECK( pack_varsize( "s" ) );
+    CHECK( pack_varsize( "S" ) );
+    CHECK( pack_varsize( "o" ) );
+    CHECK( pack_varsize( "O" ) );
+    CHECK( pack_varsize( "A" ) );
+    CHECK( pack_varsize( "Q" ) );
+
+    CHECK( pack_varsize( "sSoOAQ" ) );
+}
+
+namespace {
+
+int packsize( const char* fmt ) {
+    int size;
+    CHECK( dlis_pack_size( fmt, &size ) == DLIS_OK );
+    return size;
+};
+
+}
+
+TEST_CASE("pack size single values") {
+    CHECK( packsize( "r" ) == 2 );
+    CHECK( packsize( "f" ) == 4 );
+    CHECK( packsize( "b" ) == 8 );
+    CHECK( packsize( "B" ) == 12 );
+    CHECK( packsize( "x" ) == 4 );
+    CHECK( packsize( "V" ) == 4 );
+    CHECK( packsize( "F" ) == 8 );
+    CHECK( packsize( "z" ) == 16 );
+    CHECK( packsize( "Z" ) == 24 );
+    CHECK( packsize( "c" ) == 8 );
+    CHECK( packsize( "C" ) == 16 );
+    CHECK( packsize( "d" ) == 1 );
+    CHECK( packsize( "D" ) == 2 );
+    CHECK( packsize( "l" ) == 4 );
+    CHECK( packsize( "u" ) == 1 );
+    CHECK( packsize( "U" ) == 2 );
+    CHECK( packsize( "L" ) == 4 );
+    CHECK( packsize( "i" ) == 4 );
+    CHECK( packsize( "j" ) == 8 );
+    CHECK( packsize( "J" ) == 4 );
+    CHECK( packsize( "q" ) == 1 );
+}
