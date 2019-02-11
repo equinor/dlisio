@@ -1,6 +1,7 @@
 #ifndef DLISIO_H
 #define DLISIO_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -237,6 +238,130 @@ enum dlis_segment_attribute {
 };
 
 /*
+ * Find offsets of logical records
+ *
+ * Finding the offsets where logical segments start is not quite straight
+ * forward, because logical records aren't required to align with visible
+ * record envelopes. Additionally, there's no requirement that visible records
+ * nor logical records are of equal length. Furthermore, there are files out
+ * there with number of logical records in the millions.
+ *
+ * This function finds the start of logical records [1], and outputs:
+ * 1. the (negative) distance from end to record
+ * 2. the bytes *remaining* in this visible record
+ * 3. if this record is explicitly formatted or not
+ *
+ * Because it's unknown how many records there are in a file (or even a section
+ * of a file), pre-allocation of output arrays is impractical. Instead, it is
+ * designed to be "resumable" - when allocated output arrays are exhausted, the
+ * function returns (with DLIS_OK), and more space can be allocated (or
+ * something else altogether). If invoked again with the same initial_residual,
+ * end, and count, and next as the new begin, the effect will be the same as if
+ * the larger allocation was given to the original call.
+ *
+ * It records the (record - end) negative distance, because it makes "fixing"
+ * the offsets (i.e. making them 0-offset from start-of-file) easier with
+ * multiple invocations. It also allows begin to change, which is more natural
+ * than the one-beyond-last. For a reference, see examples.
+ *
+ * Using begin/end pairs of pointers allows this function to find positions of
+ * logical records from the middle of files and sequences, and leaves actual
+ * reading from file/disk to the caller. This is particularly useful with
+ * memory mapped files, as it would be an efficient code path to quickly
+ * indexing a new file.
+ *
+ * No arrays are compressed, i.e. the tells[0], residuals[0] and explicits[0]
+ * all describe the same logical record.
+ *
+ * Records are read until either:
+ * 1. the end-of-file is reached (given by end)
+ * 2. allocsize records are read
+ *
+ * Both are considered success, and return DLIS_OK. If end-of-file is reached
+ * => next == end
+ *
+ * For every recorded record, count is incremented. Count *must* be initialised
+ * before calling this function. Count is *not* reset between invocations.
+ *
+ * Arguments
+ * ---------
+ * begin: start of memory area
+ * end: one-beyond memory area
+ * allocsize: the size allocated in tells/residuals/explicits. this is an upper
+ *            bound on the number of records read for this invocation
+ * initial_residual: how far into the previous visible envlope begin is. If
+ *                   called from the start of the file (past the storage unit
+ *                   label) this should be 0. Upon return, this will be the
+ *                   remaining bytes of the current VRL at the end of the
+ *                   previously-read record, i.e. the value needed to resume.
+ * next: the first byte past the end. For successive invocations, this points
+ *       to the first, un-read record.
+ * count: incremented for every logical record - this is the size of output
+ *        arrays
+ * tells: distances begin, record
+ * residuals: bytes remaining in this visible record
+ * explicits: if record is explicit
+ *
+ * next and explicits are optional, and can be NULL. However, unless deciding
+ * information is sourced elsewhere, it will now be impossible to distinguish
+ * some cases
+ *
+ * When non-ok error codes are returned, all outputs are updated to the last
+ * good known value. This allows manual investigation of issues, before the
+ * mapping is resumed. When encountering broken files or minor protocol
+ * violations, this enables skipping bits and resuming interpretation.
+ *
+ * Errors
+ * ------
+ *  DLIS_OK: when all records in [begin, end) are recorded, or when reading the
+ *           next record would overflow allocsize. To determine which one,
+ *           check the value of next. If next == end, all records are read.
+ *
+ * Examples
+ * --------
+ *
+ * count = 0;
+ * initial_residual = 0;
+ * begin = file.begin + 80; // start-of-file + SUL
+ * while (true) {
+ *     err = dlis_record_offset( begin,
+ *                               end,
+ *                               allocsize,
+ *                               &initial_residual,
+ *                               &next,
+ *                               &count,
+ *                               count + tells,
+ *                               count + residuals,
+ *                               count + explicits );
+ *
+ *     if (err != DLIS_OK) exit(EXIT_FAILURE);
+ *     if (next == end) break;
+ *
+ *     double_arraysize(allocsize, &tells, &residuals, &explicits);
+ *     begin = next;
+ * }
+ *
+ * size_t filesize = file.begin + 80;
+ * for (int i = 0; i < count; ++i)
+ *     tells[i] += filesize;
+ *
+ * Evident from this example, only tells needs to be updated. count,
+ * initial_residual, and begin/next are designed to carry between calls.
+ *
+ * [1] not segments
+ */
+int dlis_index_records( const char* begin,
+                        const char* end,
+                        size_t allocsize,
+                        int* initial_residual,
+                        const char** next,
+                        int* count,
+                        long long* tells,
+                        int* residuals,
+                        int* explicits );
+
+
+/*
  * A table of the component roles, given by the three high bits of the
  * dlis_component
  *
@@ -275,6 +400,7 @@ enum DLIS_ERRCODE {
     DLIS_INCONSISTENT,
     DLIS_UNEXPECTED_VALUE,
     DLIS_INVALID_ARGS,
+    DLIS_TRUNCATED,
 };
 
 enum dlis_eflr_type_code {
