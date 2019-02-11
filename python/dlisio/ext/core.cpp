@@ -1261,4 +1261,52 @@ PYBIND11_MODULE(core, m) {
         .value( "status", dl::representation_code::status )
         .value( "units" , dl::representation_code::units  )
     ;
+
+    py::class_< dl::record >( m, "record", py::buffer_protocol() )
+        .def_property_readonly( "explicit",  &dl::record::isexplicit )
+        .def_property_readonly( "encrypted", &dl::record::isencrypted )
+        .def_readonly( "consistent", &dl::record::consistent )
+        .def_readonly( "type", &dl::record::type )
+        .def_buffer( []( dl::record& rec ) -> py::buffer_info {
+            const auto fmt = py::format_descriptor< char >::format();
+            return py::buffer_info(
+                rec.data.data(),    /* Pointer to buffer */
+                sizeof(char),       /* Size of one scalar */
+                fmt,                /* Python struct-style format descriptor */
+                1,                  /* Number of dimensions */
+                { rec.data.size() },/* Buffer dimensions */
+                { 1 }               /* Strides (in bytes) for each index */
+            );
+        })
+    ;
+
+    py::class_< dl::stream >( m, "stream" )
+        .def( py::init< const std::string& >() )
+        .def( "reindex", &dl::stream::reindex )
+        .def( "__getitem__", [](dl::stream& o, int i) { return o.at(i); })
+        .def( "close", &dl::stream::close )
+        .def( "get", []( dl::stream& s, py::buffer b, long long off, int n ) {
+            auto info = b.request();
+            if (info.size < n) {
+                std::string msg =
+                      "buffer to small: buffer.size (which is "
+                    + std::to_string( info.size ) + ") < "
+                    + "n (which is " + std::to_string( n ) + ")"
+                ;
+                throw std::invalid_argument( msg );
+            }
+
+            s.read( static_cast< char* >( info.ptr ), off, n );
+        })
+    ;
+
+    m.def( "findoffsets", []( const std::string& path ) {
+        const auto ofs = dl::findoffsets( path );
+        return py::make_tuple( ofs.tells, ofs.residuals, ofs.explicits );
+    });
+
+    m.def( "marks", [] ( const std::string& path ) {
+        auto marks = dl::findoffsets( path );
+        return py::make_tuple( marks.residuals, marks.tells );
+    });
 }
