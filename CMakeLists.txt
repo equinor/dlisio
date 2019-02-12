@@ -35,6 +35,7 @@ find_package(Boost 1.53
 
 add_subdirectory(external/catch2)
 add_subdirectory(external/mpark)
+add_subdirectory(external/mio)
 add_subdirectory(lib)
 add_subdirectory(bin)
 add_subdirectory(python)

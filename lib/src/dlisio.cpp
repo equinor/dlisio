@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <ciso646>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -612,5 +613,79 @@ int dlis_pack_size( const char* fmt, int* size ) {
             default:
                 return DLIS_INVALID_ARGS;
         }
+    }
+}
+
+int dlis_index_records( const char* begin,
+                        const char* end,
+                        std::size_t allocsize,
+                        int* initial_residual,
+                        const char** next,
+                        int* count,
+                        long long* tells,
+                        int* residuals,
+                        int* explicits ) {
+
+    if (begin >= end) return DLIS_INVALID_ARGS;
+
+    int remaining = *initial_residual;
+    auto* ptr = begin;
+    if (next) *next = begin;
+
+    while (true) {
+        if (ptr == end)     return DLIS_OK;
+        if (allocsize == 0) return DLIS_OK;
+
+        --allocsize;
+        *tells++ = ptr - end;
+        *residuals++ = remaining;
+
+        int isexplicit = 0;
+
+        while (true) {
+            if (remaining == 0) {
+                /* Read VRL */
+                int len, version;
+                const auto err = dlis_vrl( ptr, &len, &version );
+
+                if (err) return DLIS_INCONSISTENT;
+
+                if (end - DLIS_VRL_SIZE < ptr) return DLIS_TRUNCATED;
+
+                remaining = len - DLIS_VRL_SIZE;
+                ptr += DLIS_VRL_SIZE;
+            }
+
+            /* read LRSH */
+            int len, type;
+            std::uint8_t attrs;
+            const auto err = dlis_lrsh( ptr, &len, &attrs, &type );
+
+            if (end - len < ptr) return DLIS_TRUNCATED;
+
+            ptr += len;
+            remaining -= len;
+
+            if (err) return DLIS_INCONSISTENT;
+
+            isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
+
+            if (not (attrs & DLIS_SEGATTR_SUCCSEG))
+                break;
+        }
+
+        /*
+         * It's only a full record is read and considered "committed". While
+         * tells and residuals are updated, this is to be considered an
+         * implementation detail, and the values are deemed unreliable until
+         * also count is updated.
+         *
+         * TODO: does it affect performance writing these out in the loop?
+         * maybe write on return only
+         */
+        if (next) *next = ptr;
+        if (explicits) *explicits++ = isexplicit;
+        *initial_residual = remaining;
+        *count += 1;
     }
 }

@@ -24,6 +24,7 @@ install(EXPORT dlisio DESTINATION share/dlisio/cmake FILE dlisio-config.cmake)
 export(TARGETS dlisio FILE dlisio-config.cmake)
 
 add_library(dlisio-extension src/parse.cpp
+                             src/io.cpp
 )
 target_include_directories(dlisio-extension
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/extension>
@@ -37,6 +38,7 @@ target_link_libraries(dlisio-extension
     PUBLIC dlisio
            Boost::boost
            mpark-variant
+           mio
 )
 
 # for now, also install the -extension targets, however, they're not publically
