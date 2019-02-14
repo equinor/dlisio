@@ -286,6 +286,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
 
         int len, version;
         char buffer[ DLIS_VRL_SIZE ];
+        this->fs.read( buffer, DLIS_VRL_SIZE );
         const auto err = dlis_vrl( buffer, &len, &version );
 
         if (err) consistent = false;
