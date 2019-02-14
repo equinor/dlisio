@@ -184,8 +184,8 @@ record& stream::at( int i, record& rec ) noexcept (false) {
             this->fs.read( buffer, DLIS_LRSH_SIZE );
             const auto err = dlis_lrsh( buffer, &len, &attrs, &type );
 
-            len -= DLIS_LRSH_SIZE;
             remaining -= len;
+            len -= DLIS_LRSH_SIZE;
 
             if (err) consistent = false;
             attributes.push_back( attrs );
