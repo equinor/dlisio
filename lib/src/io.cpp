@@ -238,7 +238,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
              */
             if (has_trailing_length) chop( rec.data, 2 );
             if (has_checksum)        chop( rec.data, 2 );
-            if( has_padding ) {
+            if (has_padding) {
                 std::uint8_t padcount = 0;
                 const auto* pad = rec.data.data() + rec.data.size() - 1;
                 dlis_ushort( pad, &padcount );
