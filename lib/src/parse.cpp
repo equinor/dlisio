@@ -159,7 +159,6 @@ object_descriptor parse_object_descriptor( const char* cur ) {
 }
 
 using std::swap;
-using boost::swap;
 const char* cast( const char* xs, dl::sshort& i ) noexcept (true) {
     std::int8_t x;
     xs = dlis_sshort( xs, &x );
@@ -506,70 +505,7 @@ const char* elements( const char* xs,
 
 namespace dl {
 
-void file_header::set( const object_attribute& attr ) noexcept (false) {
-    const auto& label = decay( attr.label );
-         if (label == "SEQUENCE-NUMBER") attr.into( this->sequence_number );
-    else if (label == "ID")              attr.into( this->id );
-    else throw std::invalid_argument( "unhandled label " + label );
-}
-
-void file_header::remove( const object_attribute& attr ) noexcept (false) {
-    const auto& label = decay( attr.label );
-         if (label == "SEQUENCE-NUMBER") this->sequence_number = boost::none;
-    else if (label == "ID")              this->id              = boost::none;
-    else throw std::invalid_argument( "unhandled label " + label );
-}
-
-void channel::set( const object_attribute& attr ) {
-    const auto& label = decay( attr.label );
-         if (label == "LONG-NAME")           attr.into( this->long_name );
-    else if (label == "ELEMENT-LIMIT")       attr.into( this->element_limit );
-    else if (label == "REPRESENTATION-CODE") attr.into( this->reprc );
-    else if (label == "DIMENSION")           attr.into( this->dimension );
-    else if (label == "UNITS")               attr.into( this->units );
-    else if (label == "PROPERTIES")          attr.into( this->properties );
-    else if (label == "AXIS")                attr.into( this->axis );
-    else if (label == "SOURCE")              attr.into( this->source );
-    else throw std::invalid_argument( "unhandled label " + label );
-}
-
-void channel::remove( const object_attribute& attr ) {
-    const auto& label = decay( attr.label );
-         if (label == "LONG-NAME")           this->long_name     = boost::none;
-    else if (label == "ELEMENT-LIMIT")       this->element_limit = boost::none;
-    else if (label == "REPRESENTATION-CODE") this->reprc         = boost::none;
-    else if (label == "DIMENSION")           this->dimension     = boost::none;
-    else if (label == "UNITS")               this->units         = boost::none;
-    else if (label == "PROPERTIES")          this->properties    = boost::none;
-    else if (label == "AXIS")                this->axis          = boost::none;
-    else if (label == "SOURCE")              this->source        = boost::none;
-    else throw std::invalid_argument( "unhandled label " + label );
-}
-
-void frame::set( const object_attribute& attr ) {
-    const auto& label = decay( attr.label );
-         if (label == "DESCRIPTION") attr.into( this->description );
-    else if (label == "CHANNELS" )   attr.into( this->channels );
-    else if (label == "INDEX-TYPE")  attr.into( this->index_type );
-    else if (label == "DIRECTION")   attr.into( this->direction );
-    else if (label == "ENCRYPTED")   attr.into( this->encrypted );
-    else if (label == "SPACING")     attr.into( this->spacing );
-    else if (label == "INDEX-MIN")   attr.into( this->index_min );
-    else if (label == "INDEX-MAX")   attr.into( this->index_max );
-    else throw std::invalid_argument( "FRAME: unhandled label " + label );
-}
-
-void frame::remove( const object_attribute& attr ) {
-    const auto& label = decay( attr.label );
-         if (label == "DESCRIPTION") this->description = boost::none;
-    else if (label == "CHANNELS" )   this->channels    = boost::none;
-    else if (label == "INDEX-TYPE")  this->index_type  = boost::none;
-    else if (label == "DIRECTION")   this->direction   = boost::none;
-    else if (label == "ENCRYPTED")   this->encrypted   = boost::none;
-    else throw std::invalid_argument( "FRAME: unhandled label " + label );
-}
-
-void unknown_object::set( const object_attribute& attr ) noexcept (false) {
+void basic_object::set( const object_attribute& attr ) noexcept (false) {
     /*
      * This is essentially map::insert-or-update
      */
@@ -587,7 +523,7 @@ void unknown_object::set( const object_attribute& attr ) noexcept (false) {
         *itr = attr;
 }
 
-void unknown_object::remove( const object_attribute& attr ) noexcept (false) {
+void basic_object::remove( const object_attribute& attr ) noexcept (false) {
     /*
      * This is essentially map::remove
      */
@@ -598,16 +534,30 @@ void unknown_object::remove( const object_attribute& attr ) noexcept (false) {
     auto itr = std::remove_if( this->attributes.begin(),
                                this->attributes.end(),
                                eq );
-    /*
-     * For unknown objects, *remove* the attribute itself, rather than setting
-     * it to optional::none. These unknown objects are not as rigidly specified
-     * as the records in appendix A, and since they're essentially dicts there
-     * are few differences between no-such-key and key-to-null value.
-     *
-     * If this distinction is still interesting, the attribute key can be
-     * looked up in the object template.
-     */
+
     this->attributes.erase( itr, this->attributes.end() );
+}
+
+std::size_t basic_object::len() const noexcept (true) {
+    return this->attributes.size();
+}
+
+const object_attribute&
+basic_object::at( const std::string& key )
+const noexcept (false)
+{
+    auto eq = [&key]( const dl::object_attribute& attr ) {
+        return dl::decay( attr.label ) == key;
+    };
+
+    auto itr = std::find_if( this->attributes.begin(),
+                             this->attributes.end(),
+                             eq );
+
+    if (itr == this->attributes.end())
+        throw std::out_of_range( key );
+
+    return *itr;
 }
 
 const char* parse_template( const char* cur,
@@ -663,22 +613,20 @@ const char* parse_template( const char* cur,
 
 namespace {
 
-template <typename T >
-T defaulted_object( const object_template& tmpl ) noexcept (false) {
-    T def;
-    for( const auto& attr : tmpl )
+basic_object defaulted_object( const object_template& tmpl ) noexcept (false) {
+    basic_object def;
+    for (const auto& attr : tmpl)
         def.set( attr );
 
     return def;
 }
 
-template < typename Object >
 object_vector parse_objects( const object_template& tmpl,
                              const char* cur,
                              const char* end ) noexcept (false) {
 
-    std::vector< Object > objs;
-    const auto default_object = defaulted_object< Object >( tmpl );
+    object_vector objs;
+    const auto default_object = defaulted_object( tmpl );
 
     while (true) {
         if (std::distance( cur, end ) <= 0)
@@ -735,7 +683,7 @@ object_vector parse_objects( const object_template& tmpl,
 
 }
 
-object_set parse_eflr( const char* cur, const char* end, int record_type ) {
+object_set parse_objects( const char* cur, const char* end ) {
     if (std::distance( cur, end ) <= 0)
         throw std::out_of_range( "eflr must be non-empty" );
 
@@ -762,50 +710,7 @@ object_set parse_eflr( const char* cur, const char* end, int record_type ) {
         throw std::out_of_range( "unexpected end-of-record after template" );
 
     std::string type = dl::decay( set.type );
-    const auto& tmpl = set.tmpl;
-    switch (record_type) {
-        case DLIS_FHLR:
-            if (type != "FILE-HEADER") {
-                user_warning( "segment is FHLR, but object is " + type );
-                type = "FILE-HEADER";
-            }
-            set.objects = parse_objects< dl::file_header >( tmpl, cur, end );
-            break;
-
-        case DLIS_CHANNL:
-            if (type != "CHANNEL") {
-                user_warning( "segment is CHANNL, but object is " + type );
-                type = "CHANNEL";
-            }
-            set.objects = parse_objects< dl::channel >( tmpl, cur, end );
-            break;
-
-        case DLIS_FRAME:
-            // TODO: could also be PATH
-            if (type != "FRAME") {
-                user_warning( "segment is FRAME, but object is " + type );
-                type = "FRAME";
-            }
-            set.objects = parse_objects< dl::frame >( tmpl, cur, end );
-            break;
-
-        case DLIS_OLR:
-        case DLIS_AXIS:
-        case DLIS_STATIC:
-        case DLIS_SCRIPT:
-        case DLIS_UPDATE:
-        case DLIS_UDI:
-        case DLIS_LNAME:
-        case DLIS_SPEC:
-        case DLIS_DICT:
-
-        default:
-            set.objects = parse_objects< dl::unknown_object >( tmpl, cur, end );
-            break;
-            /* use of reserved/undefined code */
-            /* this is probably fine, but no more safety checks */
-    }
-
+    set.objects = parse_objects( set.tmpl, cur, end );
     return set;
 }
 
