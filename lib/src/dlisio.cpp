@@ -579,27 +579,27 @@ int dlis_pack_size( const char* fmt, int* size ) {
                 *size = sz;
                 return DLIS_OK;
 
-            case DLIS_FMT_FSHORT: sz += DLIS_SIZEOF_FSHORT; break;
-            case DLIS_FMT_FSINGL: sz += DLIS_SIZEOF_FSINGL; break;
-            case DLIS_FMT_FSING1: sz += DLIS_SIZEOF_FSING1; break;
-            case DLIS_FMT_FSING2: sz += DLIS_SIZEOF_FSING2; break;
-            case DLIS_FMT_ISINGL: sz += DLIS_SIZEOF_ISINGL; break;
-            case DLIS_FMT_VSINGL: sz += DLIS_SIZEOF_VSINGL; break;
-            case DLIS_FMT_FDOUBL: sz += DLIS_SIZEOF_FDOUBL; break;
-            case DLIS_FMT_FDOUB1: sz += DLIS_SIZEOF_FDOUB1; break;
-            case DLIS_FMT_FDOUB2: sz += DLIS_SIZEOF_FDOUB2; break;
-            case DLIS_FMT_CSINGL: sz += DLIS_SIZEOF_CSINGL; break;
-            case DLIS_FMT_CDOUBL: sz += DLIS_SIZEOF_CDOUBL; break;
-            case DLIS_FMT_SSHORT: sz += DLIS_SIZEOF_SSHORT; break;
-            case DLIS_FMT_SNORM:  sz += DLIS_SIZEOF_SNORM;  break;
-            case DLIS_FMT_SLONG:  sz += DLIS_SIZEOF_SLONG;  break;
-            case DLIS_FMT_USHORT: sz += DLIS_SIZEOF_USHORT; break;
-            case DLIS_FMT_UNORM:  sz += DLIS_SIZEOF_UNORM;  break;
-            case DLIS_FMT_ULONG:  sz += DLIS_SIZEOF_ULONG;  break;
-            case DLIS_FMT_DTIME:  sz += DLIS_SIZEOF_DTIME;  break;
-            case DLIS_FMT_STATUS: sz += DLIS_SIZEOF_STATUS; break;
-            case DLIS_FMT_ORIGIN: sz += 4;                  break;
-            case DLIS_FMT_UVARI:  sz += 4;                  break;
+            case DLIS_FMT_FSHORT: sz += sizeof(float);         break;
+            case DLIS_FMT_FSINGL: sz += sizeof(float);         break;
+            case DLIS_FMT_FSING1: sz += sizeof(float) * 2;     break;
+            case DLIS_FMT_FSING2: sz += sizeof(float) * 3;     break;
+            case DLIS_FMT_ISINGL: sz += sizeof(float);         break;
+            case DLIS_FMT_VSINGL: sz += sizeof(float);         break;
+            case DLIS_FMT_FDOUBL: sz += sizeof(double);        break;
+            case DLIS_FMT_FDOUB1: sz += sizeof(double) * 2;    break;
+            case DLIS_FMT_FDOUB2: sz += sizeof(double) * 3;    break;
+            case DLIS_FMT_CSINGL: sz += sizeof(float) * 2;     break;
+            case DLIS_FMT_CDOUBL: sz += sizeof(double) * 2;    break;
+            case DLIS_FMT_SSHORT: sz += sizeof(std::int8_t);   break;
+            case DLIS_FMT_SNORM:  sz += sizeof(std::int16_t);  break;
+            case DLIS_FMT_SLONG:  sz += sizeof(std::int32_t);  break;
+            case DLIS_FMT_USHORT: sz += sizeof(std::uint8_t);  break;
+            case DLIS_FMT_UNORM:  sz += sizeof(std::uint16_t); break;
+            case DLIS_FMT_ULONG:  sz += sizeof(std::uint32_t); break;
+            case DLIS_FMT_DTIME:  sz += sizeof(int) * 8;       break;
+            case DLIS_FMT_STATUS: sz += sizeof(std::int8_t);   break;
+            case DLIS_FMT_ORIGIN: sz += sizeof(std::int32_t);  break;
+            case DLIS_FMT_UVARI:  sz += sizeof(std::int32_t);  break;
 
             case DLIS_FMT_IDENT:
             case DLIS_FMT_ASCII:

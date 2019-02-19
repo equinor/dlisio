@@ -860,7 +860,7 @@ int packsize( const char* fmt ) {
 }
 
 TEST_CASE("pack size single values") {
-    CHECK( packsize( "r" ) == 2 );
+    CHECK( packsize( "r" ) == 4 );
     CHECK( packsize( "f" ) == 4 );
     CHECK( packsize( "b" ) == 8 );
     CHECK( packsize( "B" ) == 12 );
@@ -878,7 +878,7 @@ TEST_CASE("pack size single values") {
     CHECK( packsize( "U" ) == 2 );
     CHECK( packsize( "L" ) == 4 );
     CHECK( packsize( "i" ) == 4 );
-    CHECK( packsize( "j" ) == 8 );
+    CHECK( packsize( "j" ) == 32 );
     CHECK( packsize( "J" ) == 4 );
     CHECK( packsize( "q" ) == 1 );
 }
