@@ -211,6 +211,28 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::objref >( m, "objref" )
         .def_readonly( "type", &dl::objref::type )
         .def_readonly( "name", &dl::objref::name )
+        .def( "__repr__", []( const dl::objref& o ) {
+            return "dlisio.core.objref(id='{}', origin={}, copynum={}, type={})"_s
+                    .format( dl::decay(o.name.id),
+                             dl::decay(o.name.origin),
+                             dl::decay(o.name.copy),
+                             dl::decay(o.type) )
+                    ;
+        })
+    ;
+
+    py::class_< dl::attref >( m, "attref" )
+        .def_readonly( "type", &dl::attref::type )
+        .def_readonly( "name", &dl::attref::name )
+        .def_readonly( "label", &dl::attref::label )
+        .def( "__repr__", []( const dl::attref& o ) {
+            return "dlisio.core.attref(id='{}', origin={}, copynum={}, type={})"_s
+                    .format( dl::decay(o.name.id),
+                             dl::decay(o.name.origin),
+                             dl::decay(o.name.copy),
+                             dl::decay(o.type) )
+                    ;
+        })
     ;
 
     py::class_< dl::basic_object >( m, "basic_object" )
