@@ -147,10 +147,10 @@ const char* dlis_component_str( int );
 /*
  * Parse and pack arbitrary data
  *
- * The dlis_packf (inspired by sscanf) reads bytes arbitrary bytes in RP66
- * format, and packs it into the dst area. No padding bytes are inserted, which
- * means the data can be read from this array by computing the correct offset
- * and memcpy'd into a typed variable.
+ * The dlis_packf (inspired by sscanf) reads arbitrary bytes in RP66 format,
+ * and pack them into the dst area as native C data. No padding bytes are
+ * inserted, which means the data can be read from this array by computing the
+ * correct offset and memcpy'd into a typed variable.
  *
  * fmt is a sscanf-inspired format string of conversion specifiers
  * (DLIS_FMT_*). The size of each type depends on the most natural
