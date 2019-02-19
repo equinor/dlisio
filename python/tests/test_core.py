@@ -137,3 +137,58 @@ stdrecord = bytearray([
     # 0x00, 0x00,
     # 0x00, 0x26, # length = 38
 ])
+
+def test_objects():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        objects = f.objects
+        assert len(list(objects)) == 876
+
+def test_channels():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        channel = next(f.channels)
+        assert channel.name.id         == "TDEP"
+        assert channel.name.origin     == 2
+        assert channel.name.copynumber == 0
+        assert channel.long_name       == "6-Inch Frame Depth"
+        assert channel.type            == "channel"
+        assert channel.reprc           == 2
+        assert channel.properties      == ["440-BASIC"]
+        assert channel.dimension       == [1]
+        assert channel.axis            == []
+        assert channel.element_limit   == [1]
+        assert channel.units           == "0.1 in"
+        assert channel.source is None
+
+def test_frames():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        frame = next(f.frames)
+        assert frame.name.id         == "2000T"
+        assert frame.name.origin     == 2
+        assert frame.name.copynumber == 0
+        assert frame.type            == "frame"
+        assert frame.direction       == "INCREASING"
+        assert frame.spacing         == 2000
+        assert frame.index_type      == "TIME"
+        assert frame.index_min       == 33354518
+        assert frame.index_max       == 35194520
+        assert len(frame.channels)   == 4
+        assert frame.encrypted   is None
+        assert frame.description is None
+
+        fchannels = [ch for ch in f.channels if frame.haschannel(ch)]
+        assert len(fchannels) == len(frame.channels)
+
+def test_Unknown():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        unknown = next(f.unknowns)
+        assert unknown.type == "unknown"
+        assert len(list(f.unknowns)) == 770
+
+def test_object():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        name = ("2000T", 2, 0)
+        frame = f.getobject(name=name, type='frame')
+
+        assert frame.name.id == "2000T"
+        assert frame.name.origin == 2
+        assert frame.name.copynumber == 0
