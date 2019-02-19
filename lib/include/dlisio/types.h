@@ -89,6 +89,7 @@ const char* dlis_attref( const char*, int32_t* ident1_len,
                                       int32_t* ident2_len,
                                       char* ident2 );
 
+/* status is a boolean */
 const char* dlis_status( const char*, uint8_t* );
 const char* dlis_units( const char*, int32_t*, char* );
 
