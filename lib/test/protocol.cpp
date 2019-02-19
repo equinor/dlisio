@@ -84,6 +84,49 @@ SULv1 parse_sulv1( const std::string& sul ) {
     return v1;
 }
 
+void check_pack_varsize(const char* fmt, bool is_varsize)
+{
+    int varsize;
+    const auto err = dlis_pack_varsize(fmt, &varsize);
+    CHECK( err == DLIS_OK );
+    if(is_varsize)
+    {
+        CHECK( varsize == 1 );
+    }else
+    {
+        CHECK( varsize == 0 );
+    }
+}
+
+void check_packsize_ok(const char* fmt, int expected_size)
+{
+    check_pack_varsize(fmt, false);
+    int size;
+    const auto err = dlis_pack_size( fmt, &size );
+    CHECK( err == DLIS_OK );
+    CHECK( size == expected_size );
+}
+
+void check_packsize_inconsistent(const char* fmt)
+{
+    check_pack_varsize(fmt, true);
+    int size;
+    const auto err = dlis_pack_size( fmt, &size );
+    CHECK( err == DLIS_INCONSISTENT );
+}
+
+void check_packsize_invalid_arguments(const char* fmt)
+{
+    int varsize;
+    auto err = dlis_pack_varsize(fmt, &varsize);
+    CHECK( err == DLIS_INVALID_ARGS );
+
+    int size;
+    err = dlis_pack_size( fmt, &size );
+    CHECK( err == DLIS_INVALID_ARGS );
+}
+
+
 TEST_CASE("A simple, well-formatted SULv1", "[sul][v1]") {
 
     SULv1 ref;
@@ -691,7 +734,8 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
     }
 }
 
-TEST_CASE("pack UVARIs", "[scan]") {
+TEST_CASE("pack UVARIs and ORIGINs", "[scan]") {
+    const int test_len = 8;
     const unsigned char source[] = {
         0xC0, 0x00, 0x00, 0x00, // 0
         0xC0, 0x00, 0x00, 0x01, // 1
@@ -703,8 +747,10 @@ TEST_CASE("pack UVARIs", "[scan]") {
         0xF0, 0x00, 0xBF, 0xFF, // 805355519
     };
 
-    std::int32_t dst[ 8 ];
-    const char* fmt = "iiiiiiii";
+    const char* fmt = "iJiJiJiJ";
+    check_packsize_ok(fmt, 4 * test_len);
+
+    std::int32_t dst[ test_len ];
     const auto err = dlis_packf( fmt, source, dst );
 
     CHECK( err == DLIS_OK );
@@ -730,12 +776,20 @@ TEST_CASE("pack unsigned integers", "[scan]") {
         0x81, 0x00, // 256 uvari
         0xC0, 0x00, 0x8F, 0xFF, // 36863 uvari
         0xF0, 0x00, 0xBF, 0xFF, // 805355519 uvari
+        0xC0, 0x00, 0x40, 0x00, // 16384 uvari (first with 4 bytes)
+        0xBF, 0xFF, //16383 uvari (last with 2 bytes)
+        0x80, 0x80, //128 uvari (first with 2 bytes)
+        0x7F, //127 uvari (last with 1 byte)
+        0x80, 0x01, //1 uvari (on 2 bytes)
     };
 
-    unsigned char dst[30];
-    const char* fmt = "uuUULLiiii";
-    const auto err = dlis_packf( fmt, source, dst );
+    const int expected_size = (1 * 2) + (2 * 2) + (4 * 2) + (4 * 9);
+    unsigned char dst[expected_size];
+    const char* fmt = "uuUULLiiiiiiiii";
 
+    check_packsize_ok(fmt, expected_size);
+
+    const auto err = dlis_packf( fmt, source, dst );
     CHECK( err == DLIS_OK );
 
     std::uint8_t us[2];
@@ -753,12 +807,17 @@ TEST_CASE("pack unsigned integers", "[scan]") {
     CHECK( ul[ 0 ] == 153 );
     CHECK( ul[ 1 ] == 4294967143 );
 
-    std::int32_t uv[4];
+    std::int32_t uv[9];
     std::memcpy( uv, dst + 14, sizeof( uv ) );
     CHECK( uv[ 0 ] == 1 );
     CHECK( uv[ 1 ] == 256 );
     CHECK( uv[ 2 ] == 36863 );
     CHECK( uv[ 3 ] == 805355519 );
+    CHECK( uv[ 4 ] == 16384 );
+    CHECK( uv[ 5 ] == 16383 );
+    CHECK( uv[ 6 ] == 128 );
+    CHECK( uv[ 7 ] == 127 );
+    CHECK( uv[ 8 ] == 1 );
 }
 
 TEST_CASE("pack signed integers", "[scan]") {
@@ -772,10 +831,13 @@ TEST_CASE("pack signed integers", "[scan]") {
         0x7F, 0xFF, 0xFF, 0xFF, // ~2.1b slong (int-max)
     };
 
-    unsigned char dst[18];
+    const int expected_size = (1 * 2) + (2 * 2) + (4 * 3);
+    unsigned char dst[expected_size];
     const char* fmt = "ddDDlll";
-    const auto err = dlis_packf( fmt, source, dst );
 
+    check_packsize_ok(fmt, expected_size);
+
+    const auto err = dlis_packf( fmt, source, dst );
     CHECK( err == DLIS_OK );
 
     std::int8_t ss[2];
@@ -794,6 +856,416 @@ TEST_CASE("pack signed integers", "[scan]") {
     CHECK( sl[ 1 ] == -153 );
     CHECK( sl[ 2 ] == 2147483647 );
 }
+
+TEST_CASE("pack floats", "[scan]") {
+    const int test_len = 8;
+    const unsigned char source[] = {
+        0x4C, 0x88, // 153 fshort
+        0x80, 0x00, //-1 fshort
+        0x3F, 0x80, 0x00, 0x00, //1 fsingl
+        0xC3, 0x19, 0x00, 0x00, //-153 fsingl
+        0xC1, 0xC0, 0x00, 0x00, //-12 isingl
+        0x45, 0x10, 0x00, 0x08, //65536.5 isingl
+        0xAA, 0xC2, 0x00, 0x00, //-26.5 vsingl
+        0x00, 0x3F, 0x00, 0x00, //0.125 vsingl
+    };
+
+    const int expected_size = (test_len * 4);
+    const char* fmt = "rrffxxVV";
+
+    check_packsize_ok(fmt, expected_size);
+
+    float dst[test_len];
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    CHECK( dst[ 0 ] == 153.0 );
+    CHECK( dst[ 1 ] == -1.0 );
+    CHECK( dst[ 2 ] == 1.0 );
+    CHECK( dst[ 3 ] == -153.0 );
+    CHECK( dst[ 4 ] == -12 );
+    CHECK( dst[ 5 ] == 65536.5 );
+    CHECK( dst[ 6 ] == -26.5 );
+    CHECK( dst[ 7 ] == 0.125 );
+}
+
+TEST_CASE("pack statistical", "[scan]") {
+    const unsigned char source[] = {
+        0x41, 0xE4, 0x00, 0x00, //28.5 fsing1 V
+        0x3F, 0x00, 0x00, 0x00, //0.5 fsing1 A
+        0xC3, 0x00, 0x00, 0x00, //-128 fsing2 V
+        0x40, 0x70, 0x00, 0x00, //3.75 fsing2 A
+        0x3E, 0x00, 0x00, 0x00, //0.125 fsing2 B
+        0xC0, 0x8F, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, //-1000 fdoubl1 V
+        0x3F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //1 fdoub11 A
+        0xC0, 0xBA, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, //-6787 fdoubl2 V
+        0x3F, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //0.015625 fdoubl2 A
+        0x3F, 0xA4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //0.0390625 fdoubl2 B
+    };
+
+
+    const char* fmt = "bBzZ";
+    const int expected_size = 4 * 2 + 4 * 3 + 8 * 2 + 8 * 3;
+    check_packsize_ok(fmt, expected_size);
+
+    unsigned char dst[expected_size];
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    float fs1[2];
+    std::memcpy( fs1, dst, sizeof( fs1 ) );
+    CHECK( fs1[ 0 ] == 28.5 );
+    CHECK( fs1[ 1 ] == 0.5 );
+
+    float fs2[3];
+    std::memcpy( fs2, dst + 8, sizeof( fs2 ) );
+    CHECK( fs2[ 0 ] == -128 );
+    CHECK( fs2[ 1 ] == 3.75 );
+    CHECK( fs2[ 2 ] == 0.125 );
+
+    double fd1[2];
+    std::memcpy( fd1, dst + 20, sizeof( fd1 ) );
+    CHECK( fd1[ 0 ] == -1000 );
+    CHECK( fd1[ 1 ] == 1 );
+
+    double fd2[3];
+    std::memcpy( fd2, dst + 36, sizeof( fd2 ) );
+    CHECK( fd2[ 0 ] == -6787 );
+    CHECK( fd2[ 1 ] == 0.015625 );
+    CHECK( fd2[ 2 ] == 0.0390625 );
+}
+
+TEST_CASE("pack doubles", "[scan]") {
+    const int test_len = 2;
+    const unsigned char source[] = {
+        0x3F, 0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,// 0.25 fdouble
+        0xC2, 0xF3, 0x78, 0x5F, 0x66, 0x30, 0x1C, 0x0A,// -342523480572352.625 fdouble
+    };
+
+    const int expected_size = (test_len * 8);
+    const char* fmt = "FF";
+
+    check_packsize_ok(fmt, expected_size);
+
+    double dst[test_len];
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    CHECK( dst[ 0 ] == 0.25 );
+    CHECK( dst[ 1 ] == -342523480572352.625 );
+}
+
+TEST_CASE("pack complex", "[scan]") {
+    const unsigned char source[] = {
+        0x41, 0x2C, 0x00, 0x00, //10.75 csingl R
+        0xC1, 0x10, 0x00, 0x00, //-9 csing1 I
+        0x40, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //28 cdoubl R
+        0x40, 0x42, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, //36.5 cdoub1 I
+    };
+
+    const char* fmt = "cC";
+    const int expected_size = 4 * 2 + 8 * 2;
+    check_packsize_ok(fmt, expected_size);
+
+    unsigned char dst[expected_size];
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    float cs[2];
+    std::memcpy( cs, dst, sizeof( cs ) );
+    CHECK( cs[ 0 ] == 10.75 );
+    CHECK( cs[ 1 ] == -9 );
+
+    double cd[2];
+    std::memcpy( cd, dst + 8, sizeof( cd ) );
+    CHECK( cd[ 0 ] == 28 );
+    CHECK( cd[ 1 ] == 36.5 );
+}
+
+
+TEST_CASE("pack datetime", "[scan]") {
+    const int test_len = 2;
+    const unsigned char source[] = {
+        0xFF, 0x2C, 0x1F, 0x00, 0x20, 0x10, 0x00, 0x00, //255Y 2TZ 12M 31D 0H 32MN 16S 0MS
+        0x00, 0x01, 0x01, 0x17, 0x3B, 0x00, 0x03, 0xE7, //0Y 0TZ 1M 1D 23H 59M 0S 999MS
+    };
+
+
+    const int expected_size = (test_len * 32);
+    const char* fmt = "jj";
+
+    check_packsize_ok(fmt, expected_size);
+
+    unsigned char dst[expected_size];
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    int expected[test_len][8] = {
+        {255, 2, 12, 31, 0, 32, 16, 0},
+        {0, 0, 1, 1, 23, 59, 0, 999},
+    };
+
+    for (int i = 0; i < test_len; ++i)
+    {
+        int dt[8];
+        std::memcpy( dt, dst + 32 * i, sizeof( dt ) );
+        for (int j = 0; j < 8; ++j)
+        {
+            CHECK( dt[ j ] == expected[i][j] );
+        }
+    }
+}
+
+
+TEST_CASE("pack status", "[scan]") {
+    const unsigned char source[] = {
+        0x00, // 0 status
+        0x01, // 1 status
+    };
+
+    const int expected_size = 2;
+    unsigned char dst[expected_size];
+    const char* fmt = "qq";
+    check_packsize_ok(fmt, expected_size);
+
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    std::uint8_t st[expected_size];
+    std::memcpy( st, dst, sizeof( st ) );
+    CHECK( st[ 0 ] == 0 );
+    CHECK( st[ 1 ] == 1 );
+}
+
+
+void read_int32(unsigned char dst[], int* dst_index, int expected_value)
+{
+    std::int32_t value;
+    std::memcpy( &value, dst + *dst_index, sizeof(std::int32_t));
+    CHECK( value == expected_value );
+    *dst_index += sizeof(std::int32_t);
+}
+
+void read_int8(unsigned char dst[], int* dst_index, int expected_value)
+{
+    std::uint8_t value = dst[*dst_index];
+    CHECK( value == expected_value);
+    *dst_index += sizeof(std::uint8_t);
+}
+
+void read_varstring(unsigned char dst[], int* dst_index,
+    std::string::size_type expected_length, std::string expected_text)
+{
+    read_int32(dst, dst_index, expected_length);
+
+    char text[expected_length];
+    std::memcpy(text, dst + *dst_index, expected_length);
+    if (expected_text.length() != expected_length)
+    {
+        //V1 doesn't require special treatment of null character
+        CHECK( strncmp(text, expected_text.c_str(), expected_length) == 0);
+    }else{
+        CHECK( std::string (text, expected_length) == expected_text );
+    }
+    *dst_index += expected_length;
+}
+
+
+
+TEST_CASE("pack ident & ascii & unit", "[scan]") {
+    const int test_data_len = 9;
+    const unsigned char source[] = {
+        0x04, 0x54, 0x45, 0x53, 0x54,//"TEST" ident
+        0x05, 0x54, 0x59, 0x50, 0x45, 0x31,//"TYPE1" ident
+        0x05, 0x54, 0x45, 0x53, 0x54, 0x54,//"TESTT" ident
+        0x03, 0x41, 0x42, 0x43, //"ABC" ident
+        0x00, //empty ident
+        0xE, 0x54, 0x45, 0x53, 0x54, 0x54, 0x45, 0x53, 0x54,
+             0x54, 0x45, 0x53, 0x54, 0x54, 0x45, //"TESTTESTTESTTE" ident
+        0x03, 0x41, 0x0A, 0x62, //A <linefeed> b ascii
+        0x80, 0x04, 0x5C, 0x00, 0x7E, 0x00, // \<NULL character>~<NULL character> ascii
+        //0x05, 0x24, 0x20, 0x2F, 0x20, 0xA3 //`$ / £' V2 ascii. Invalid for V1
+        0xD,
+        0x55, 0x20, 0x2D, 0x20, 0x75, 0x6E, 0x69, 0x74, 0x20, 0x28, 0x2F, 0x33, 0x29//U - unit (/3)
+    };
+
+    const char* fmt = "ssssssSSQ";
+    check_packsize_inconsistent(fmt);
+
+    const int expected_size = 4 * test_data_len + (4 + 5 + 5 + 3 + 0 + 14) + (3 + 4) + (13);
+    unsigned char dst[expected_size];
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    struct varstr
+    {
+        std::string::size_type exp_length;
+        std::string exp_text;
+    };
+
+    struct varstr test_data[test_data_len] =
+    {
+        {4, "TEST"},
+        {5, "TYPE1"},
+        {5, "TESTT"},
+        {3, "ABC"},
+        {0, ""},
+        {14, "TESTTESTTESTTE"},
+        {3, "A\nb"},
+        {4, "\\\0~\0"},
+        //{5, "$ / £"}, //test is invalid for V1, valid for V2 only
+        {13, "U - unit (/3)"},
+    };
+
+    struct varstr* test_data_ptr = test_data;
+
+    int dst_index = 0;
+    for (int i=0; i<test_data_len; i++, test_data_ptr++ )
+    {
+        read_varstring(dst, &dst_index, test_data_ptr->exp_length, test_data_ptr->exp_text);
+    }
+
+    CHECK( expected_size == dst_index );
+}
+
+TEST_CASE("pack long ascii ", "[scan]") { //failing one
+    //const int str_len = 301;
+    //unsigned char len_bytes[4] = {0xC0, 0x00, 0x01, 0x2D}; //301
+
+    const int str_len = 243;
+    unsigned char len_bytes[4] = {0xC0, 0x00, 0x00, 0xF3}; //243
+
+    const std::string test_str =
+    //"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. " //58
+    "Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque " //67
+    "penatibus et magnis dis parturient montes, nascetur ridiculus mus. " //67
+    "Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. "//69
+    "Nulla consequat massa quis enim. Doneca.";//40
+
+    CHECK( test_str.length() == str_len);
+
+    unsigned char src[str_len + 4];
+    std::memcpy( src, len_bytes, 4 );
+    std::memcpy( src + 4, test_str.c_str(), str_len);
+
+    const char* fmt = "S";
+    check_packsize_inconsistent(fmt);
+    unsigned char dst[str_len + 4];
+    const auto err = dlis_packf( fmt, src, dst );
+    CHECK( err == DLIS_OK );
+
+    int dst_index = 0;
+    int length = dst[dst_index];
+    CHECK( length == str_len );
+    dst_index += 4;
+
+    CHECK( std::string( &dst[dst_index], &dst[dst_index + length] ) == test_str );
+}
+
+
+TEST_CASE("pack obname", "[scan]") {
+    const unsigned char source[] = {
+        0x81, 0x3A, 0xFF, //"314 O 255 C
+              0x0C, 0x44, 0x4C, 0x49, 0x53, 0x49, 0x4F,
+                   0x44, 0x4C, 0x49, 0x53, 0x49, 0x4F,//DLISIODLISIO I obname
+        0x04, 0x0F, 0x02, 0x44, 0x4C//"4 O 15 C DL I obname
+    };
+
+    int expected_length = (4 + 1 + 16) + (4 + 1 + 6);
+    unsigned char dst[expected_length];
+    const char* fmt = "oo";
+    check_packsize_inconsistent(fmt);
+
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    int dst_index = 0;
+    read_int32(dst, &dst_index, 314);
+    read_int8(dst, &dst_index, 255);
+    read_varstring(dst, &dst_index, 12, std::string("DLISIODLISIO"));
+
+    read_int32(dst, &dst_index, 4);
+    read_int8(dst, &dst_index, 15);
+    read_varstring(dst, &dst_index, 2, std::string("DL"));
+
+    CHECK( expected_length == dst_index );
+}
+
+
+
+TEST_CASE("pack objref", "[scan]") {
+    const unsigned char source[] = {
+    0x07, 0x4C, 0x49, 0x42, 0x52, 0x41, 0x52, 0x59, //LIBRARY T
+          0x01, 0x00, 0x08,//1 NO 0 NC 8 LEN NI
+          0x50, 0x52, 0x4F, 0x54, 0x4F, 0x43, 0x4F, 0x4C, ////PROTOCOL NI obref
+
+
+    };
+
+    int expected_length = (4 + 7 + 4 + 1 + 4 + 8);
+    unsigned char dst[expected_length];
+    const char* fmt = "O";
+    check_packsize_inconsistent(fmt);
+
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    int dst_index = 0;
+    read_varstring(dst, &dst_index, 7, std::string("LIBRARY"));
+    read_int32(dst, &dst_index, 1);
+    read_int8(dst, &dst_index, 0);
+    read_varstring(dst, &dst_index, 8, std::string("PROTOCOL"));
+
+    CHECK( expected_length == dst_index );
+}
+
+
+TEST_CASE("pack attref", "[scan]") {
+    const unsigned char source[] = {
+    0x0A, 0x4C, 0x4F, 0x52, 0x45, 0x4D, 0x49, 0x50, 0x53, 0x55, 0x4D, //LOREMIPSUM T
+          0xC0, 0x00, 0x00, 0x0A, 0x45, 0x0C,//10 (4 bytes) NO 69 NC 12 LEN NI
+          0x44, 0x4F, 0x4C, 0x4F, 0x52, 0x53, 0x49, 0x54, 0x41, 0x4D, 0x45, 0x54, //DOLORSITAMET NI obref
+    0x0D, 0x43, 0x4F, 0x4E, 0x53, 0x45, 0x43, 0x54, 0x45, 0x54, 0x55, 0x45, 0x52, 0x41//CONSECTETUERA T
+    };
+
+    int expected_length = (4 + 10) + (4 + 1) + (4 + 12) + (4 + 13);
+    unsigned char dst[expected_length];
+    const char* fmt = "A";
+    check_packsize_inconsistent(fmt);
+
+    const auto err = dlis_packf( fmt, source, dst );
+    CHECK( err == DLIS_OK );
+
+    int dst_index = 0;
+    read_varstring(dst, &dst_index, 10, std::string("LOREMIPSUM"));
+    read_int32(dst, &dst_index, 10);
+    read_int8(dst, &dst_index, 69);
+    read_varstring(dst, &dst_index, 12, std::string("DOLORSITAMET"));
+    read_varstring(dst, &dst_index, 13, std::string("CONSECTETUERA"));
+
+    CHECK( expected_length == dst_index );
+}
+
+
+TEST_CASE("pack unexpected value", "[scan]") {
+    const unsigned char source[] = {
+        0x59, // 89 sshort
+        0x01, 0x53, //"S" ident
+    };
+
+    unsigned char dst[6];
+    const char* fmt = "ust";
+
+    //check_packsize_invalid_arguments(fmt);
+    //due to inconsistent arg, it doesn't return that it's invalid. Expected?
+
+    const auto err = dlis_packf( fmt, source, dst );
+
+    CHECK( err == DLIS_UNEXPECTED_VALUE);
+    CHECK( dst[0] == 89);
+    CHECK( dst[5] == 'S');
+}
+
 
 TEST_CASE("pack var-size fails with invalid specifier") {
     int vsize;
@@ -860,7 +1332,7 @@ int packsize( const char* fmt ) {
 }
 
 TEST_CASE("pack size single values") {
-    CHECK( packsize( "r" ) == 2 );
+    CHECK( packsize( "r" ) == 4 );
     CHECK( packsize( "f" ) == 4 );
     CHECK( packsize( "b" ) == 8 );
     CHECK( packsize( "B" ) == 12 );
@@ -878,7 +1350,7 @@ TEST_CASE("pack size single values") {
     CHECK( packsize( "U" ) == 2 );
     CHECK( packsize( "L" ) == 4 );
     CHECK( packsize( "i" ) == 4 );
-    CHECK( packsize( "j" ) == 8 );
+    CHECK( packsize( "j" ) == 32 );
     CHECK( packsize( "J" ) == 4 );
     CHECK( packsize( "q" ) == 1 );
 }

@@ -465,11 +465,14 @@ TEST_CASE("variable-length unsigned int", "[type]") {
 }
 
 TEST_CASE("short float (16-bit)", "[type]") {
-    const std::array< unsigned char[2], 7 > inputs = {{
+    const std::array< unsigned char[2], 10 > inputs = {{
         { 0x00, 0x00 }, // 0
-        { 0x7F, 0xF0 }, // 1
+        { 0x40, 0x01 }, // 1
+        { 0x7F, 0xF0 }, // ~1
+        { 0x80, 0x00 }, // -1
         { 0x19, 0x24 }, // ~3.14
         { 0x4C, 0x88 }, // 153
+        { 0x26, 0x49 }, // 153 - non-normalized
         { 0xB3, 0x88 }, // -153
         { 0x7F, 0xFF }, // max
         { 0x80, 0x0F }, // min
@@ -478,7 +481,10 @@ TEST_CASE("short float (16-bit)", "[type]") {
     const std::array< float, inputs.size() > expected = {
         0,
         1,
+        1,
+        -1,
         3.14,
+        153,
         153,
         -153,
         32752,
@@ -639,15 +645,21 @@ TEST_CASE("ibm single precision float", "[type]") {
 
 TEST_CASE("vax single precision float", "[type]") {
     const std::array< bytes< 4 >, 3 > inputs = {{
+    //const std::array< bytes< 4 >, 5 > inputs = {{
         { 0x00, 0x00, 0x00, 0x00 }, // 0
         { 0x0C, 0x44, 0x00, 0x80 }, // 153
         { 0x0C, 0xC4, 0x00, 0x80 }, // -153
+        //{ 0x00, 0x00, 0x00, 0xFF }, // 0 (mantissa can be arbitrary)
+        //{ 0x00, 0x80, 0x00, 0xFF } //e = 0, s = 1 -> should be unspecified
+        //but these two tests should work
     }};
 
     const std::array< float, inputs.size() > expected = {
         0.0,
         153,
         -153,
+        //0.0,
+        //std::nanf("")
     };
 
     SECTION( "to native" ) {
