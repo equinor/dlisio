@@ -423,7 +423,7 @@ const char* dlis_component_str( int tag ) {
 namespace {
 
 /*
- * The dlis_scanf function uses a dispatch table for interpreting and
+ * The ??dlis_scanf?? function uses a dispatch table for interpreting and
  * expanding raw bytes into native C++ data types.  There are 27 primary
  * data types specified by RP66 (Appendix B).
  *
@@ -437,10 +437,19 @@ namespace {
  * dst += 4;
  */
 
+// TODO: mark pack etc as noexcept
+
 struct cursor {
     const char* src;
     char* dst;
 };
+
+
+template < typename... Ts >
+char* pack( char* dst,
+            const std::int32_t* len,
+            const char* str,
+            const Ts* ... ptrs );
 
 char* pack( char* dst ) {
     return dst;
@@ -466,16 +475,28 @@ char* pack( char* dst,
     return pack( dst, ptrs ... );
 }
 
+char* addr( std::array< char, 256 >& t ) { return t.data(); }
+
+template < typename T >
+T* addr( T& t ) { return std::addressof( t ); }
+
+
 template < typename F, typename... Args >
 cursor interpret( cursor cur, F func, Args ... args ) {
-    cur.src = func( cur.src, std::addressof( args ) ... );
-    cur.dst = pack( cur.dst, std::addressof( args ) ... );
+
+    cur.src = func( cur.src, addr( args ) ... );
+    cur.dst = pack( cur.dst, addr( args )... );
     return cur;
 }
 
+template < typename T > struct bless { using type = T; };
+template <> struct bless < char >    { using type = std::array< char, 256 >; };
+
+template < typename T > T init() { return T{}; }
+
 template < typename... Args >
 cursor interpret( cursor cur, const char* f(const char*, Args* ...) ) {
-    return interpret( cur, f, Args {} ... );
+    return interpret( cur, f, init< typename bless< Args >::type >() ... );
 }
 
 }
@@ -485,7 +506,6 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
         static_cast< const char* >( src ),
         static_cast< char* >( dst ),
     };
-
     while (true) {
         switch (*fmt++) {
             case DLIS_FMT_EOL: return DLIS_OK;
@@ -579,7 +599,7 @@ int dlis_pack_size( const char* fmt, int* size ) {
                 *size = sz;
                 return DLIS_OK;
 
-            case DLIS_FMT_FSHORT: sz += DLIS_SIZEOF_FSHORT; break;
+            case DLIS_FMT_FSHORT: sz += 4; break; //changed
             case DLIS_FMT_FSINGL: sz += DLIS_SIZEOF_FSINGL; break;
             case DLIS_FMT_FSING1: sz += DLIS_SIZEOF_FSING1; break;
             case DLIS_FMT_FSING2: sz += DLIS_SIZEOF_FSING2; break;
@@ -596,7 +616,7 @@ int dlis_pack_size( const char* fmt, int* size ) {
             case DLIS_FMT_USHORT: sz += DLIS_SIZEOF_USHORT; break;
             case DLIS_FMT_UNORM:  sz += DLIS_SIZEOF_UNORM;  break;
             case DLIS_FMT_ULONG:  sz += DLIS_SIZEOF_ULONG;  break;
-            case DLIS_FMT_DTIME:  sz += DLIS_SIZEOF_DTIME;  break;
+            case DLIS_FMT_DTIME:  sz += 32;  break; //it should be 32 not 8, changed
             case DLIS_FMT_STATUS: sz += DLIS_SIZEOF_STATUS; break;
             case DLIS_FMT_ORIGIN: sz += 4;                  break;
             case DLIS_FMT_UVARI:  sz += 4;                  break;

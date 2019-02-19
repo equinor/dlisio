@@ -229,6 +229,7 @@ const char* dlis_dtime( const char* xs, int* Y,
 
     xs += sizeof( x );
 
+    //why not to call dlis_unorm
     std::uint16_t ms;
     std::memcpy( &ms, xs, sizeof( ms ) );
     *MS = ntoh( ms );
@@ -357,6 +358,7 @@ const char* dlis_vsingl( const char* xs, float* out ) {
     float exponent = float( exp_bits );
     float significand = frac_bits / float( 0x00800000 );
 
+    //mantissa checked first. per spec mantissa doesnt matter in many cases
     if (exp_bits)
         *out = sign * (0.5 + significand) * std::pow(2.0f, exponent - 128.0f);
     else if (!sign_bit)
@@ -409,6 +411,7 @@ const char* dlis_status( const char* xs, std::uint8_t* x ) {
     return dlis_ushort( xs, x );
 }
 
+//copy past ident
 const char* dlis_units( const char* xs, std::int32_t* len, char* out ) {
     std::uint8_t ln;
     xs = dlis_ushort( xs, &ln );

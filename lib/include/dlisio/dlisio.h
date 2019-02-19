@@ -139,22 +139,23 @@ const char* dlis_component_str( int );
 #define DLIS_FMT_DTIME  'j'
 #define DLIS_FMT_ORIGIN 'J'
 #define DLIS_FMT_OBNAME 'o'
-#define DLIS_FMT_OBJREF 'O'
+#define DLIS_FMT_OBJREF 'O'//is O ever a good idea?
 #define DLIS_FMT_ATTREF 'A'
 #define DLIS_FMT_STATUS 'q'
 #define DLIS_FMT_UNITS  'Q'
 
+
 /*
  * Parse and pack arbitrary data
  *
- * The dlis_packf (inspired by sscanf) reads bytes arbitrary bytes in RP66
- * format, and packs it into the dst area. No padding bytes are inserted, which
+ * The dlis_packf (inspired by sscanf) reads ??bytes arbitrary bytes?? in RP66
+ * format, and packs it(?) into the dst area. No padding bytes are inserted, which
  * means the data can be read from this array by computing the correct offset
  * and memcpy'd into a typed variable.
  *
  * fmt is a sscanf-inspired format string of conversion specifiers
  * (DLIS_FMT_*). The size of each type depends on the most natural
- * corresponding C type, e.g. SSHORT is int8_t, and UNORM is uint16_t. The
+ * corresponding C type, e.g. SSHORT is int8_t, and UNORM is uint16_t. ??would full table be useful to anyone?? The
  * arguments to a dlis_type() function in dlisio/types.h is the type being used
  * as a target type for a conversion specifier.
  *
