@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <vector>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -423,13 +424,13 @@ const char* dlis_component_str( int tag ) {
 namespace {
 
 /*
- * The dlis_scanf function uses a dispatch table for interpreting and
- * expanding raw bytes into native C++ data types.  There are 27 primary
- * data types specified by RP66 (Appendix B).
+ * The dlis_packf function uses a dispatch table for interpreting and expanding
+ * raw bytes into native C++ data types. There are 27 primary data types
+ * specified by RP66 (Appendix B).
  *
  * Instead of populating the dispatch table by hand, generate it with the
- * interpret function. The interpret() function essentially generates this
- * code for all RP66 data types:
+ * interpret function. The interpret() function essentially generates this code
+ * for all RP66 data types:
  *
  * float f;
  * src = dlis_fsingl( src, &f );
@@ -442,12 +443,22 @@ struct cursor {
     char* dst;
 };
 
-char* pack( char* dst ) {
+/*
+ * Forward-declare the with-string overload so that all packs know to consider
+ * it when recursing pack(dst, ptrs, ...)
+ */
+template < typename... Ts >
+char* pack( char* dst,
+            const std::int32_t* len,
+            const char* str,
+            const Ts* ... ptrs ) noexcept (true);
+
+char* pack( char* dst ) noexcept (true) {
     return dst;
 }
 
 template < typename T, typename... Ts >
-char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) {
+char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) noexcept (true) {
     std::memcpy( dst, ptr, sizeof( T ) );
     dst += sizeof( T );
     return pack( dst, ptrs ... );
@@ -457,7 +468,7 @@ template < typename... Ts >
 char* pack( char* dst,
             const std::int32_t* len,
             const char* str,
-            const Ts* ... ptrs )
+            const Ts* ... ptrs ) noexcept (true)
 {
     std::memcpy( dst, len, sizeof( *len ) );
     dst += sizeof( *len );
@@ -466,16 +477,57 @@ char* pack( char* dst,
     return pack( dst, ptrs ... );
 }
 
+using str = std::array< char, 256 >;
+
+char* address( str& t ) noexcept (true) {
+    return t.data();
+}
+
+template < typename T >
+T* address( T& t ) noexcept (true) {
+    return std::addressof( t );
+}
+
+template < typename T >
+T init() noexcept (true) { return T(); }
+
+template < >
+str init< str >() noexcept (true) {
+    /*
+     * initialise a fresh object with {}, otherwise there are complaints on
+     * missing-field-initializers when T is a std::array
+     */
+    return str {{}};
+}
+
+/*
+ * Map char to std::array<char, 256> (max-len for ident and units), so
+ * functions taking char* arguments get big-enough and initialised memory to
+ * write to. All integral types just pass through
+ */
+template < typename T > struct bless { using type = T; };
+template <> struct bless< char >     { using type = str; };
+
 template < typename F, typename... Args >
-cursor interpret( cursor cur, F func, Args ... args ) {
-    cur.src = func( cur.src, std::addressof( args ) ... );
-    cur.dst = pack( cur.dst, std::addressof( args ) ... );
+cursor interpret( cursor cur, F func, Args ... args ) noexcept (true) {
+    cur.src = func( cur.src, address( args ) ... );
+    cur.dst = pack( cur.dst, address( args ) ... );
     return cur;
 }
 
 template < typename... Args >
-cursor interpret( cursor cur, const char* f(const char*, Args* ...) ) {
-    return interpret( cur, f, Args {} ... );
+cursor interpret( cursor cur, const char* f(const char*, Args* ...) )
+noexcept (true)
+{
+    /*
+     * the inner-interpret takes pointers to initialised variables which serve
+     * as buffers for func to write into, and pack to read from. It's
+     * essentially creating a tuple< Args ... > by abusing function parameters
+     * to statically create function calls with enough space on the stack, and
+     * dispatch to the right function reference for the actual byte-to-variable
+     * work
+     */
+    return interpret( cur, f, init< typename bless< Args >::type >() ... );
 }
 
 }
@@ -486,6 +538,7 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
         static_cast< char* >( dst ),
     };
 
+    std::vector< char > ascii;
     while (true) {
         switch (*fmt++) {
             case DLIS_FMT_EOL: return DLIS_OK;
@@ -509,7 +562,6 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
             case DLIS_FMT_ULONG:  cur = interpret( cur, dlis_ulong  ); break;
             case DLIS_FMT_UVARI:  cur = interpret( cur, dlis_uvari  ); break;
             case DLIS_FMT_IDENT:  cur = interpret( cur, dlis_ident  ); break;
-            case DLIS_FMT_ASCII:  cur = interpret( cur, dlis_ascii  ); break;
             case DLIS_FMT_DTIME:  cur = interpret( cur, dlis_dtime  ); break;
             case DLIS_FMT_ORIGIN: cur = interpret( cur, dlis_origin ); break;
             case DLIS_FMT_OBNAME: cur = interpret( cur, dlis_obname ); break;
@@ -517,6 +569,19 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
             case DLIS_FMT_ATTREF: cur = interpret( cur, dlis_attref ); break;
             case DLIS_FMT_STATUS: cur = interpret( cur, dlis_status ); break;
             case DLIS_FMT_UNITS:  cur = interpret( cur, dlis_units  ); break;
+
+            case DLIS_FMT_ASCII: {
+                /*
+                 * ascii is variable-length and practically unbounded, so it
+                 * needs dynamic memory to be correct.
+                 */
+                std::int32_t len;
+                dlis_ascii( cur.src, &len, nullptr );
+                ascii.resize( len );
+                cur.src = dlis_ascii( cur.src, &len, ascii.data() );
+                cur.dst = pack( cur.dst, &len, ascii.data() );
+                break;
+            }
 
             default:
                 return DLIS_UNEXPECTED_VALUE;
