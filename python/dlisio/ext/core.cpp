@@ -235,7 +235,9 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "count", &dl::object_attribute::count )
         .def_readonly( "reprc", &dl::object_attribute::reprc )
         .def_readonly( "units", &dl::object_attribute::units )
-        .def_readonly( "value", &dl::object_attribute::value )
+        .def_property_readonly( "value", []( const dl::object_attribute& attr ) {
+            return attr.value;
+        })
         .def( "__repr__", []( const dl::object_attribute& attr ) {
             return "{}: C={} R={} U={}, V={}"_s.format(
                 dl::decay( attr.label ),

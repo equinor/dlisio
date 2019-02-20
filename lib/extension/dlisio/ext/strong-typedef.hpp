@@ -42,6 +42,11 @@ public:
         noexcept (std::declval< const T& >() >= std::declval< const T& >());
 
     strong_typedef() = default;
+    strong_typedef( const strong_typedef& ) = default;
+    strong_typedef( strong_typedef&& )      = default;
+
+    strong_typedef& operator = ( const strong_typedef& ) = default;
+    strong_typedef& operator = ( strong_typedef&& )      = default;
 
     explicit strong_typedef( const T& x )
         noexcept(strong_typedef::nothrow_copy_constructible);

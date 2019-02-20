@@ -70,7 +70,13 @@ T& decay( T& x ) noexcept (true) {
 
 #define DLIS_REGISTER_TYPEALIAS(name, type) \
     struct name : detail::strong_typedef< name, type > { \
+        name() = default; \
+        name( const name& ) = default; \
+        name( name&& )      = default; \
+        name& operator = ( const name& ) = default; \
+        name& operator = ( name&& )      = default; \
         using detail::strong_typedef< name, type >::strong_typedef; \
+        using detail::strong_typedef< name, type >::operator =; \
     }; \
     inline const type& decay(const name& x) noexcept (true) { \
         return static_cast< const type& >(x); \
