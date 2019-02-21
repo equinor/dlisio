@@ -3,19 +3,25 @@
 
 #include <complex>
 #include <cstdint>
+#include <exception>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 #include <mpark/variant.hpp>
-#include <boost/optional.hpp>
 
 #include <dlisio/types.h>
 
 #include "strong-typedef.hpp"
 
 namespace dl {
+
+struct not_implemented : public std::logic_error {
+    explicit not_implemented( const std::string& msg ) :
+        logic_error( "Not implemented yet: " + msg )
+    {}
+};
 
 enum class representation_code : std::uint8_t {
     fshort = DLIS_FSHORT,
@@ -64,7 +70,13 @@ T& decay( T& x ) noexcept (true) {
 
 #define DLIS_REGISTER_TYPEALIAS(name, type) \
     struct name : detail::strong_typedef< name, type > { \
+        name() = default; \
+        name( const name& ) = default; \
+        name( name&& )      = default; \
+        name& operator = ( const name& ) = default; \
+        name& operator = ( name&& )      = default; \
         using detail::strong_typedef< name, type >::strong_typedef; \
+        using detail::strong_typedef< name, type >::operator =; \
     }; \
     inline const type& decay(const name& x) noexcept (true) { \
         return static_cast< const type& >(x); \
@@ -389,8 +401,6 @@ struct object_attribute {
      */
     template < typename T >
     void into( T& )                      const noexcept (false);
-    template < typename T >
-    void into( boost::optional< T >& )   const noexcept (false);
     template < typename... T >
     void into( mpark::variant< T... >& ) const noexcept (false);
     template < typename T >
@@ -451,98 +461,15 @@ using object_template = std::vector< object_attribute >;
  * All objects have an object name (3.2.2.1 Component Descriptor figure 3-4)
  */
 struct basic_object {
+    void set( const object_attribute& )    noexcept (false);
+    void remove( const object_attribute& ) noexcept (false);
+
+    std::size_t len() const noexcept (true);
+    const dl::object_attribute&
+    at( const std::string& ) const noexcept (false);
+
     dl::obname object_name;
-};
-
-struct file_header : basic_object {
-    boost::optional< dl::ascii > sequence_number;
-    boost::optional< dl::ascii > id;
-    void set( const object_attribute& )    noexcept (false);
-    void remove( const object_attribute& ) noexcept (false);
-};
-
-struct origin_object : basic_object {
-    boost::optional< dl::ascii > file_id;
-    boost::optional< dl::ident > file_set_name;
-    boost::optional< dl::uvari > file_set_number;
-    boost::optional< dl::uvari > file_number;
-    boost::optional< dl::ident > file_type;
-    boost::optional< dl::ascii > product;
-    boost::optional< dl::ascii > version;
-
-    boost::optional< std::vector< dl::ascii > > programs;
-    /*
-     * The descent/run nr are vendor specific and unspecified, so for now
-     * ignore them
-     */
-    /* descent - run nr */
-    /* well-id */
-
-    boost::optional< dl::ascii > well_name;
-    boost::optional< dl::ascii > field_name;
-    boost::optional< dl::unorm > producer_code;
-    boost::optional< dl::ascii > producer_name;
-    boost::optional< dl::ascii > company;
-    boost::optional< dl::ident > namespace_name;
-    boost::optional< dl::uvari > namespace_version;
-
-    void set( const object_attribute& )    noexcept (false);
-    void remove( const object_attribute& ) noexcept (false);
-};
-
-struct channel : basic_object {
-    /*
-     * 5.5.1
-     * The standard specifies units to be UNITS, but the example logical record
-     * has this as an ident (unspecified representation code)
-     *
-     * The standard is also unclear on whether LONG-NAME is ascii or obname, or
-     * if both are acceptable
-     */
-    using long_name_type = mpark::variant< dl::obname, dl::ascii >;
-
-    boost::optional< long_name_type >            long_name;
-    boost::optional< std::vector< dl::ident > >  properties;
-    boost::optional< dl::representation_code >   reprc;
-    boost::optional< dl::units >                 units;
-    boost::optional< std::vector< dl::uvari > >  dimension;
-    boost::optional< std::vector< dl::obname > > axis;
-    boost::optional< std::vector< dl::uvari > >  element_limit;
-    boost::optional< dl::objref >                source;
-
-    void set( const object_attribute& )    noexcept (false);
-    void remove( const object_attribute& ) noexcept (false);
-};
-
-struct frame : basic_object {
-    boost::optional< dl::ascii >                  description;
-    boost::optional< std::vector< dl::obname > >  channels;
-    boost::optional< dl::ident >                  index_type;
-    boost::optional< dl::ident >                  direction;
-    boost::optional< dl::integral >               encrypted;
-    boost::optional< dl::numeric >                spacing;
-    boost::optional< dl::numeric >                index_min;
-    boost::optional< dl::numeric >                index_max;
-
-    void set( const object_attribute& )    noexcept (false);
-    void remove( const object_attribute& ) noexcept (false);
-};
-
-/*
- * The fall-through object - RP66 opens for private or company specific
- * records, or otherwise broken entries, that we don't want to discard.
- * Instead, just store the attributes in what is essentially a dictionary.
- *
- * For the unknown_object, the absent attribute *removes* the key-value from
- * the object altogheter, rather than trying to represent key-with-null-value.
- * If this information is necessary to make some decision, the corresponding
- * object set's template can be inspected.
- */
-struct unknown_object : basic_object {
     std::vector< object_attribute > attributes;
-
-    void set( const object_attribute& )    noexcept (false);
-    void remove( const object_attribute& ) noexcept (false);
 };
 
 /*
@@ -552,13 +479,7 @@ struct unknown_object : basic_object {
  *
  * The variant-of-vectors is wells suited for this
  */
-using object_vector = mpark::variant<
-    std::vector< file_header >,
-    std::vector< origin_object >,
-    std::vector< channel >,
-    std::vector< frame >,
-    std::vector< unknown_object >
->;
+using object_vector = std::vector< basic_object >;
 
 struct object_set {
     int role; // TODO: enum class?
@@ -573,7 +494,7 @@ const char* parse_template( const char* begin,
                             object_template& ) noexcept (false);
 
 
-object_set parse_eflr( const char*, const char*, int ) noexcept (false);
+object_set parse_objects( const char*, const char* ) noexcept (false);
 
 /*
  * implementations
@@ -601,12 +522,6 @@ template <>
 inline void object_attribute::into( dl::representation_code& x )
 const noexcept (false) {
     x = static_cast< dl::representation_code >( this->into< dl::ushort >() );
-}
-
-template < typename T >
-void object_attribute::into( boost::optional< T >& x ) const noexcept (false) {
-    if (x) return this->into( *x );
-    x = this->into< T >();
 }
 
 template < typename ... T >

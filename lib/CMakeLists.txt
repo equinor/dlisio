@@ -36,7 +36,6 @@ target_compile_options(dlisio-extension
 )
 target_link_libraries(dlisio-extension
     PUBLIC dlisio
-           Boost::boost
            mpark-variant
            mio
 )
@@ -58,7 +57,6 @@ endif()
 add_executable(testsuite test/testsuite.cpp
                          test/protocol.cpp
                          test/types.cpp
-                         test/io.cpp
 )
 target_link_libraries(testsuite dlisio dlisio-extension catch2)
 add_test(NAME core COMMAND testsuite)

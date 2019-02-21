@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 
+#define DLIS_SUL_SIZE 80
 int dlis_sul( const char* xs,
               int* seqnum,
               int* major,

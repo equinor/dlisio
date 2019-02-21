@@ -11,7 +11,7 @@ def test_sul():
                 'Default Storage Set                                         ',
             ])
 
-    sul = dlisio.core.sul(label)
+    sul = dlisio.core.storage_label(label.encode('ascii'))
     d = {
         'sequence': 1,
         'version': '1.0',
@@ -22,12 +22,8 @@ def test_sul():
 
     assert sul == d
 
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        assert f.sul == d
-
-def test_file_properties():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        assert len(f.bookmarks) == 3252
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        assert f.storage_label() == d
 
 # The example record from the specification
 stdrecord = bytearray([
@@ -142,120 +138,57 @@ stdrecord = bytearray([
     # 0x00, 0x26, # length = 38
 ])
 
-def test_parse_eflr_bytes():
-    objects = dlisio.core.eflr(stdrecord)['objects']
-    names = set([ (0, 0, 'TIME'),
-                  (1, 0, 'PRESSURE'),
-                  (0, 1, 'PAD-ARRAY'),
-                ])
-    assert set(objects.keys()) == names
+def test_objects():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        objects = f.objects
+        assert len(list(objects)) == 876
 
-    def dictify(xs):
-        return { x['label']: x.get('value') for x in xs }
+def test_channels():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        channel = next(f.channels)
+        assert channel.name.id         == "TDEP"
+        assert channel.name.origin     == 2
+        assert channel.name.copynumber == 0
+        assert channel.long_name       == "6-Inch Frame Depth"
+        assert channel.type            == "channel"
+        assert channel.reprc           == 2
+        assert channel.properties      == ["440-BASIC"]
+        assert channel.dimension       == [1]
+        assert channel.axis            == []
+        assert channel.element_limit   == [1]
+        assert channel.units           == "0.1 in"
+        assert channel.source is None
 
-    time = dictify(objects[(0, 0, 'TIME')])
-    dtime = {
-        'LONG-NAME': [(0, 0, '1')],
-        'ELEMENT-LIMIT': [1],
-        'REPRESENTATION-CODE': [2],
-        'UNITS': ['s'],
-        'DIMENSION': [1],
-    }
+def test_frames():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        frame = next(f.frames)
+        assert frame.name.id         == "2000T"
+        assert frame.name.origin     == 2
+        assert frame.name.copynumber == 0
+        assert frame.type            == "frame"
+        assert frame.direction       == "INCREASING"
+        assert frame.spacing         == 2000
+        assert frame.index_type      == "TIME"
+        assert frame.index_min       == 33354518
+        assert frame.index_max       == 35194520
+        assert len(frame.channels)   == 4
+        assert frame.encrypted   is None
+        assert frame.description is None
 
-    assert dtime == time
+        fchannels = [ch for ch in f.channels if frame.haschannel(ch)]
+        assert len(fchannels) == len(frame.channels)
 
-    pressure = dictify(objects[(1, 0, 'PRESSURE')])
-    dpressure = {
-        'LONG-NAME': [(0, 0, '2')],
-        'ELEMENT-LIMIT': [1],
-        'REPRESENTATION-CODE': [7],
-        'UNITS': ['psi'],
-        'DIMENSION': [1],
-    }
+def test_Unknown():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        unknown = next(f.unknowns)
+        assert unknown.type == "unknown"
+        assert len(list(f.unknowns)) == 770
 
-    assert dpressure == pressure
+def test_object():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        name = ("2000T", 2, 0)
+        frame = f.getobject(name=name, type='frame')
 
-    pad = dictify(objects[(0, 1, 'PAD-ARRAY')])
-    dpad = {
-        'LONG-NAME': [(0, 0, '3')],
-        'ELEMENT-LIMIT': [8, 20],
-        'REPRESENTATION-CODE': [13],
-        'UNITS': None,
-        'DIMENSION': [8, 10],
-    }
-
-    assert dpad == pad
-
-def test_parse_eflr_bytes_truncated():
-    with pytest.raises(ValueError):
-        empty = dlisio.core.eflr(bytes([]))
-
-    with pytest.raises(ValueError):
-        only_set = dlisio.core.eflr(stdrecord[:1])
-
-def test_parse_only_channels():
-    with dlisio.load('data/only-channels.dlis') as f:
-        for object_set in f.explicits:
-            if object_set.type != 'CHANNEL': continue
-            assert len(object_set.objects) > 0
-
-def test_read_eflr_metadata():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        record = f.fp.eflr(f.bookmarks[2])
-        assert record.name == '51'
-        assert record.type == 'EQUIPMENT'
-
-        record = f.fp.eflr(f.bookmarks[5])
-        assert record.name == '54'
-        assert record.type == 'TOOL'
-
-        record = f.fp.eflr(f.bookmarks[8])
-        assert record.name == '57'
-        assert record.type == '440-CHANNEL'
-
-        record = f.fp.eflr(f.bookmarks[9])
-        assert record.name == '58'
-        assert record.type == 'PARAMETER'
-
-        record = f.fp.eflr(f.bookmarks[11])
-        assert record.name == '60'
-        assert record.type == 'PARAMETER'
-
-        record = f.fp.eflr(f.bookmarks[13])
-        assert record.name == '62'
-        assert record.type == 'PARAMETER'
-
-        record = f.fp.eflr(f.bookmarks[15])
-        assert record.name == '64'
-        assert record.type == 'CALIBRATION-MEASUREMENT'
-
-        record = f.fp.eflr(f.bookmarks[17])
-        assert record.name == '72'
-        assert record.type == 'CALIBRATION-COEFFICIENT'
-
-        record = f.fp.eflr(f.bookmarks[18])
-        assert record.name == '73'
-        assert record.type == 'CALIBRATION-COEFFICIENT'
-
-        record = f.fp.eflr(f.bookmarks[19])
-        assert record.name == '74'
-        assert record.type == 'CALIBRATION'
-
-        record = f.fp.eflr(f.bookmarks[23])
-        assert record.name == '78'
-        assert record.type == 'PROCESS'
-
-        record = f.fp.eflr(f.bookmarks[24])
-        assert record.name == '79'
-        assert record.type == '440-OP-CORE_TABLES'
-
-        record = f.fp.eflr(f.bookmarks[25])
-        assert record.name == '330'
-        assert record.type == '440-OP-CORE_REPORT_FORMAT'
-
-def test_conv():
-    dim = bytearray([0x09, 0x44, 0x49, 0x4D, 0x45,
-                     0x4E, 0x53, 0x49, 0x4F, 0x4E,
-                    ])
-
-    assert dlisio.core.conv(19, dim) == "DIMENSION"
+        assert frame.name.id == "2000T"
+        assert frame.name.origin == 2
+        assert frame.name.copynumber == 0

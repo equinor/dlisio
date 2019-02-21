@@ -184,8 +184,8 @@ record& stream::at( int i, record& rec ) noexcept (false) {
             this->fs.read( buffer, DLIS_LRSH_SIZE );
             const auto err = dlis_lrsh( buffer, &len, &attrs, &type );
 
-            len -= DLIS_LRSH_SIZE;
             remaining -= len;
+            len -= DLIS_LRSH_SIZE;
 
             if (err) consistent = false;
             attributes.push_back( attrs );
@@ -238,7 +238,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
              */
             if (has_trailing_length) chop( rec.data, 2 );
             if (has_checksum)        chop( rec.data, 2 );
-            if( has_padding ) {
+            if (has_padding) {
                 std::uint8_t padcount = 0;
                 const auto* pad = rec.data.data() + rec.data.size() - 1;
                 dlis_ushort( pad, &padcount );
@@ -286,6 +286,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
 
         int len, version;
         char buffer[ DLIS_VRL_SIZE ];
+        this->fs.read( buffer, DLIS_VRL_SIZE );
         const auto err = dlis_vrl( buffer, &len, &version );
 
         if (err) consistent = false;
