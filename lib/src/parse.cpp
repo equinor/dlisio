@@ -855,7 +855,6 @@ object_set parse_objects( const char* cur, const char* end ) {
     if (std::distance( cur, end ) <= 0)
         throw std::out_of_range( "unexpected end-of-record after template" );
 
-    std::string type = dl::decay( set.type );
     set.objects = parse_objects( set.tmpl, cur, end );
     return set;
 }
