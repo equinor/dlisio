@@ -3,6 +3,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <exception>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -15,6 +16,12 @@
 #include "strong-typedef.hpp"
 
 namespace dl {
+
+struct not_implemented : public std::logic_error {
+    explicit not_implemented( const std::string& msg ) :
+        logic_error( "Not implemented yet: " + msg )
+    {}
+};
 
 enum class representation_code : std::uint8_t {
     fshort = DLIS_FSHORT,

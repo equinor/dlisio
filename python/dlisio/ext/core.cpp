@@ -178,6 +178,8 @@ PYBIND11_MODULE(core, m) {
     py::register_exception_translator( []( std::exception_ptr p ) {
         try {
             if( p ) std::rethrow_exception( p );
+        } catch( const dl::not_implemented& e ) {
+            PyErr_SetString( PyExc_NotImplementedError, e.what() );
         } catch( const io_error& e ) {
             PyErr_SetString( PyExc_IOError, e.what() );
         } catch( const eof_error& e ) {

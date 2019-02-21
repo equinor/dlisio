@@ -456,8 +456,8 @@ const char* cast( const char* xs,
 }
 
 template < typename T >
-const char* extract( std::int32_t count,
-                     std::vector< T >& vec,
+const char* extract( std::vector< T >& vec,
+                     std::int32_t count,
                      const char* xs ) noexcept (false) {
 
     T elem;
@@ -471,32 +471,56 @@ const char* extract( std::int32_t count,
     return xs;
 }
 
-template < typename Monostate, typename... T >
+template < typename T >
+std::vector< T >& reset( dl::value_vector& value ) noexcept (false) {
+    return value.emplace< std::vector< T > >();
+}
+
 const char* elements( const char* xs,
                       dl::uvari count,
                       dl::representation_code reprc,
-                      mpark::variant< Monostate, T ... >& vec ) {
-    using Vec = typename std::decay< decltype (vec) >::type;
-    static_assert(
-        std::is_same< Vec, dl::value_vector >::value,
-        "element-extraction is only intended to work with vaule_vector "
-        "as source"
-    );
+                      dl::value_vector& vec ) {
 
     const auto n = dl::decay( count );
-    /*
-     * use the same trick as object_attribute::into<variant>
-     *
-     * In short, generate an if-else-if sequence and for the matching
-     * representation code, construct the right vector for the variant and
-     * populate it
-     */
-    using sequencer = int[];
-    static_cast< void >( sequencer {
-        ((reprc == dl::typeinfo< typename T::value_type >::reprc)
-        ? xs = extract( n, vec.template emplace< T >(), xs ), 0
-        : 0) ...
-    });
+
+    if (n == 0) {
+        vec = mpark::monostate{};
+        return xs;
+    }
+
+    using rpc = dl::representation_code;
+    switch (reprc) {
+        case rpc::fshort: return extract( reset< dl::fshort >( vec ), n, xs );
+        case rpc::fsingl: return extract( reset< dl::fsingl >( vec ), n, xs );
+        case rpc::fsing1: return extract( reset< dl::fsing1 >( vec ), n, xs );
+        case rpc::fsing2: return extract( reset< dl::fsing2 >( vec ), n, xs );
+        case rpc::isingl: return extract( reset< dl::isingl >( vec ), n, xs );
+        case rpc::vsingl: return extract( reset< dl::vsingl >( vec ), n, xs );
+        case rpc::fdoubl: return extract( reset< dl::fdoubl >( vec ), n, xs );
+        case rpc::fdoub1: return extract( reset< dl::fdoub1 >( vec ), n, xs );
+        case rpc::fdoub2: return extract( reset< dl::fdoub2 >( vec ), n, xs );
+        case rpc::csingl: return extract( reset< dl::csingl >( vec ), n, xs );
+        case rpc::cdoubl: return extract( reset< dl::cdoubl >( vec ), n, xs );
+        case rpc::sshort: return extract( reset< dl::sshort >( vec ), n, xs );
+        case rpc::snorm : return extract( reset< dl::snorm  >( vec ), n, xs );
+        case rpc::slong : return extract( reset< dl::slong  >( vec ), n, xs );
+        case rpc::ushort: return extract( reset< dl::ushort >( vec ), n, xs );
+        case rpc::unorm : return extract( reset< dl::unorm  >( vec ), n, xs );
+        case rpc::ulong : return extract( reset< dl::ulong  >( vec ), n, xs );
+        case rpc::uvari : return extract( reset< dl::uvari  >( vec ), n, xs );
+        case rpc::ident:  return extract( reset< dl::ident  >( vec ), n, xs );
+        case rpc::ascii : return extract( reset< dl::ascii  >( vec ), n, xs );
+        case rpc::dtime : return extract( reset< dl::dtime  >( vec ), n, xs );
+        case rpc::origin: return extract( reset< dl::origin >( vec ), n, xs );
+        case rpc::obname: return extract( reset< dl::obname >( vec ), n, xs );
+        case rpc::objref: return extract( reset< dl::objref >( vec ), n, xs );
+        case rpc::attref: return extract( reset< dl::attref >( vec ), n, xs );
+        case rpc::status: return extract( reset< dl::status >( vec ), n, xs );
+        case rpc::units : return extract( reset< dl::units  >( vec ), n, xs );
+        default:
+            throw std::runtime_error( "unknown representaton code: "
+                + std::to_string( static_cast< int >( reprc ) ) );
+    }
 
     return xs;
 }
@@ -610,7 +634,6 @@ const char* parse_template( const char* cur,
     }
 }
 
-
 namespace {
 
 basic_object defaulted_object( const object_template& tmpl ) noexcept (false) {
@@ -619,6 +642,109 @@ basic_object defaulted_object( const object_template& tmpl ) noexcept (false) {
         def.set( attr );
 
     return def;
+
+}
+
+struct len {
+    template < typename Vec >
+    std::size_t operator () ( const Vec& vec ) const {
+        return vec.size();
+    }
+
+    std::size_t operator () ( const mpark::monostate& ) const {
+        throw std::invalid_argument( "patch: len() called on monostate" );
+    }
+};
+
+struct shrink {
+    std::size_t size;
+    explicit shrink( std::size_t sz ) : size( sz ) {}
+
+    template < typename Vec >
+    std::size_t operator () ( const Vec& vec ) const {
+        return vec.size();
+    }
+
+    std::size_t operator () ( const mpark::monostate& ) const {
+        throw std::invalid_argument( "patch: len() called on monostate" );
+    }
+};
+
+void patch_missing_value( dl::value_vector& value,
+                          std::size_t count,
+                          dl::representation_code reprc )
+noexcept (false)
+{
+    /*
+     * value is *NOT* monostate, i.e. there is a default value.  if count !=
+     * values.size(), resize it.
+     */
+    if (!mpark::holds_alternative< mpark::monostate >(value)) {
+        const auto size = mpark::visit( len(), value );
+        /* same size, so return */
+        if (size == count) return;
+
+        /* smaller, shrink and all is fine */
+        if (size < count) {
+            mpark::visit( shrink( count ), value );
+            return;
+        }
+
+        /*
+         * count is larger, so insert default values, maybe? for now, throw
+         * exception and consider what to do when a file actually uses this
+         * behaviour
+         */
+        std::stringstream msg;
+        msg << "object attribute without value flag and count "
+            << "(which is " << count << ") "
+            << ">= size (which is " << size << ")"
+        ;
+        throw dl::not_implemented( msg.str() );
+    }
+
+    /*
+     * value *is* monstate, so initialize a default value that corresponds to
+     * whatever type is there.
+     *
+     * 3.2.2 EFLR: Component Structure declares ident with the empty string as
+     * a default type, but this is already stored in the defaulted reprc,
+     * making this switch work in the general case
+     */
+
+    using rpc = dl::representation_code;
+    switch (reprc) {
+        case rpc::fshort: reset< dl::fshort >(value).resize(count); return;
+        case rpc::fsingl: reset< dl::fsingl >(value).resize(count); return;
+        case rpc::fsing1: reset< dl::fsing1 >(value).resize(count); return;
+        case rpc::fsing2: reset< dl::fsing2 >(value).resize(count); return;
+        case rpc::isingl: reset< dl::isingl >(value).resize(count); return;
+        case rpc::vsingl: reset< dl::vsingl >(value).resize(count); return;
+        case rpc::fdoubl: reset< dl::fdoubl >(value).resize(count); return;
+        case rpc::fdoub1: reset< dl::fdoub1 >(value).resize(count); return;
+        case rpc::fdoub2: reset< dl::fdoub2 >(value).resize(count); return;
+        case rpc::csingl: reset< dl::csingl >(value).resize(count); return;
+        case rpc::cdoubl: reset< dl::cdoubl >(value).resize(count); return;
+        case rpc::sshort: reset< dl::sshort >(value).resize(count); return;
+        case rpc::snorm:  reset< dl::snorm  >(value).resize(count); return;
+        case rpc::slong:  reset< dl::slong  >(value).resize(count); return;
+        case rpc::ushort: reset< dl::ushort >(value).resize(count); return;
+        case rpc::unorm:  reset< dl::unorm  >(value).resize(count); return;
+        case rpc::ulong:  reset< dl::ulong  >(value).resize(count); return;
+        case rpc::uvari:  reset< dl::uvari  >(value).resize(count); return;
+        case rpc::ident:  reset< dl::ident  >(value).resize(count); return;
+        case rpc::ascii:  reset< dl::ascii  >(value).resize(count); return;
+        case rpc::dtime:  reset< dl::dtime  >(value).resize(count); return;
+        case rpc::origin: reset< dl::origin >(value).resize(count); return;
+        case rpc::obname: reset< dl::obname >(value).resize(count); return;
+        case rpc::objref: reset< dl::objref >(value).resize(count); return;
+        case rpc::attref: reset< dl::attref >(value).resize(count); return;
+        case rpc::status: reset< dl::status >(value).resize(count); return;
+        case rpc::units:  reset< dl::units  >(value).resize(count); return;
+        default:
+            throw std::runtime_error( "unknown representaton code: "
+                    + std::to_string( static_cast< int >( reprc ) ) );
+    }
 }
 
 object_vector parse_objects( const object_template& tmpl,
@@ -669,6 +795,26 @@ object_vector parse_objects( const object_template& tmpl,
             if (flags.value) cur = elements( cur, attr.count,
                                                   attr.reprc,
                                                   attr.value );
+
+            const auto count = dl::decay( attr.count );
+
+            /*
+             * 3.2.2.1 Component Descriptor
+             * When an object attribute count is zero, the value is explicitly
+             * undefined, even if a default exists.
+             *
+             * This is functionally equivalent to the value being marked absent
+             */
+            if (count == 0)
+                attr.value = mpark::monostate{};
+
+            /*
+             * Count is non-zero, but there's no value for this attribute.
+             * Expand what's already defaulted, and if it is monostate, set the
+             * default of that value
+             */
+            if (!flags.value)
+                patch_missing_value( attr.value, count, attr.reprc );
 
             current.set(attr);
         }
