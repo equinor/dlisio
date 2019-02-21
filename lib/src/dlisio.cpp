@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <vector>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -423,13 +424,13 @@ const char* dlis_component_str( int tag ) {
 namespace {
 
 /*
- * The dlis_scanf function uses a dispatch table for interpreting and
- * expanding raw bytes into native C++ data types.  There are 27 primary
- * data types specified by RP66 (Appendix B).
+ * The dlis_packf function uses a dispatch table for interpreting and expanding
+ * raw bytes into native C++ data types. There are 27 primary data types
+ * specified by RP66 (Appendix B).
  *
  * Instead of populating the dispatch table by hand, generate it with the
- * interpret function. The interpret() function essentially generates this
- * code for all RP66 data types:
+ * interpret function. The interpret() function essentially generates this code
+ * for all RP66 data types:
  *
  * float f;
  * src = dlis_fsingl( src, &f );
@@ -442,12 +443,22 @@ struct cursor {
     char* dst;
 };
 
-char* pack( char* dst ) {
+/*
+ * Forward-declare the with-string overload so that all packs know to consider
+ * it when recursing pack(dst, ptrs, ...)
+ */
+template < typename... Ts >
+char* pack( char* dst,
+            const std::int32_t* len,
+            const char* str,
+            const Ts* ... ptrs ) noexcept (true);
+
+char* pack( char* dst ) noexcept (true) {
     return dst;
 }
 
 template < typename T, typename... Ts >
-char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) {
+char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) noexcept (true) {
     std::memcpy( dst, ptr, sizeof( T ) );
     dst += sizeof( T );
     return pack( dst, ptrs ... );
@@ -457,7 +468,7 @@ template < typename... Ts >
 char* pack( char* dst,
             const std::int32_t* len,
             const char* str,
-            const Ts* ... ptrs )
+            const Ts* ... ptrs ) noexcept (true)
 {
     std::memcpy( dst, len, sizeof( *len ) );
     dst += sizeof( *len );
@@ -466,16 +477,57 @@ char* pack( char* dst,
     return pack( dst, ptrs ... );
 }
 
+using str = std::array< char, 256 >;
+
+char* address( str& t ) noexcept (true) {
+    return t.data();
+}
+
+template < typename T >
+T* address( T& t ) noexcept (true) {
+    return std::addressof( t );
+}
+
+template < typename T >
+T init() noexcept (true) { return T(); }
+
+template < >
+str init< str >() noexcept (true) {
+    /*
+     * initialise a fresh object with {}, otherwise there are complaints on
+     * missing-field-initializers when T is a std::array
+     */
+    return str {{}};
+}
+
+/*
+ * Map char to std::array<char, 256> (max-len for ident and units), so
+ * functions taking char* arguments get big-enough and initialised memory to
+ * write to. All integral types just pass through
+ */
+template < typename T > struct bless { using type = T; };
+template <> struct bless< char >     { using type = str; };
+
 template < typename F, typename... Args >
-cursor interpret( cursor cur, F func, Args ... args ) {
-    cur.src = func( cur.src, std::addressof( args ) ... );
-    cur.dst = pack( cur.dst, std::addressof( args ) ... );
+cursor interpret( cursor cur, F func, Args ... args ) noexcept (true) {
+    cur.src = func( cur.src, address( args ) ... );
+    cur.dst = pack( cur.dst, address( args ) ... );
     return cur;
 }
 
 template < typename... Args >
-cursor interpret( cursor cur, const char* f(const char*, Args* ...) ) {
-    return interpret( cur, f, Args {} ... );
+cursor interpret( cursor cur, const char* f(const char*, Args* ...) )
+noexcept (true)
+{
+    /*
+     * the inner-interpret takes pointers to initialised variables which serve
+     * as buffers for func to write into, and pack to read from. It's
+     * essentially creating a tuple< Args ... > by abusing function parameters
+     * to statically create function calls with enough space on the stack, and
+     * dispatch to the right function reference for the actual byte-to-variable
+     * work
+     */
+    return interpret( cur, f, init< typename bless< Args >::type >() ... );
 }
 
 }
@@ -486,6 +538,7 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
         static_cast< char* >( dst ),
     };
 
+    std::vector< char > ascii;
     while (true) {
         switch (*fmt++) {
             case DLIS_FMT_EOL: return DLIS_OK;
@@ -509,7 +562,6 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
             case DLIS_FMT_ULONG:  cur = interpret( cur, dlis_ulong  ); break;
             case DLIS_FMT_UVARI:  cur = interpret( cur, dlis_uvari  ); break;
             case DLIS_FMT_IDENT:  cur = interpret( cur, dlis_ident  ); break;
-            case DLIS_FMT_ASCII:  cur = interpret( cur, dlis_ascii  ); break;
             case DLIS_FMT_DTIME:  cur = interpret( cur, dlis_dtime  ); break;
             case DLIS_FMT_ORIGIN: cur = interpret( cur, dlis_origin ); break;
             case DLIS_FMT_OBNAME: cur = interpret( cur, dlis_obname ); break;
@@ -517,6 +569,19 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
             case DLIS_FMT_ATTREF: cur = interpret( cur, dlis_attref ); break;
             case DLIS_FMT_STATUS: cur = interpret( cur, dlis_status ); break;
             case DLIS_FMT_UNITS:  cur = interpret( cur, dlis_units  ); break;
+
+            case DLIS_FMT_ASCII: {
+                /*
+                 * ascii is variable-length and practically unbounded, so it
+                 * needs dynamic memory to be correct.
+                 */
+                std::int32_t len;
+                dlis_ascii( cur.src, &len, nullptr );
+                ascii.resize( len );
+                cur.src = dlis_ascii( cur.src, &len, ascii.data() );
+                cur.dst = pack( cur.dst, &len, ascii.data() );
+                break;
+            }
 
             default:
                 return DLIS_UNEXPECTED_VALUE;
@@ -579,27 +644,27 @@ int dlis_pack_size( const char* fmt, int* size ) {
                 *size = sz;
                 return DLIS_OK;
 
-            case DLIS_FMT_FSHORT: sz += DLIS_SIZEOF_FSHORT; break;
-            case DLIS_FMT_FSINGL: sz += DLIS_SIZEOF_FSINGL; break;
-            case DLIS_FMT_FSING1: sz += DLIS_SIZEOF_FSING1; break;
-            case DLIS_FMT_FSING2: sz += DLIS_SIZEOF_FSING2; break;
-            case DLIS_FMT_ISINGL: sz += DLIS_SIZEOF_ISINGL; break;
-            case DLIS_FMT_VSINGL: sz += DLIS_SIZEOF_VSINGL; break;
-            case DLIS_FMT_FDOUBL: sz += DLIS_SIZEOF_FDOUBL; break;
-            case DLIS_FMT_FDOUB1: sz += DLIS_SIZEOF_FDOUB1; break;
-            case DLIS_FMT_FDOUB2: sz += DLIS_SIZEOF_FDOUB2; break;
-            case DLIS_FMT_CSINGL: sz += DLIS_SIZEOF_CSINGL; break;
-            case DLIS_FMT_CDOUBL: sz += DLIS_SIZEOF_CDOUBL; break;
-            case DLIS_FMT_SSHORT: sz += DLIS_SIZEOF_SSHORT; break;
-            case DLIS_FMT_SNORM:  sz += DLIS_SIZEOF_SNORM;  break;
-            case DLIS_FMT_SLONG:  sz += DLIS_SIZEOF_SLONG;  break;
-            case DLIS_FMT_USHORT: sz += DLIS_SIZEOF_USHORT; break;
-            case DLIS_FMT_UNORM:  sz += DLIS_SIZEOF_UNORM;  break;
-            case DLIS_FMT_ULONG:  sz += DLIS_SIZEOF_ULONG;  break;
-            case DLIS_FMT_DTIME:  sz += DLIS_SIZEOF_DTIME;  break;
-            case DLIS_FMT_STATUS: sz += DLIS_SIZEOF_STATUS; break;
-            case DLIS_FMT_ORIGIN: sz += 4;                  break;
-            case DLIS_FMT_UVARI:  sz += 4;                  break;
+            case DLIS_FMT_FSHORT: sz += sizeof(float);         break;
+            case DLIS_FMT_FSINGL: sz += sizeof(float);         break;
+            case DLIS_FMT_FSING1: sz += sizeof(float) * 2;     break;
+            case DLIS_FMT_FSING2: sz += sizeof(float) * 3;     break;
+            case DLIS_FMT_ISINGL: sz += sizeof(float);         break;
+            case DLIS_FMT_VSINGL: sz += sizeof(float);         break;
+            case DLIS_FMT_FDOUBL: sz += sizeof(double);        break;
+            case DLIS_FMT_FDOUB1: sz += sizeof(double) * 2;    break;
+            case DLIS_FMT_FDOUB2: sz += sizeof(double) * 3;    break;
+            case DLIS_FMT_CSINGL: sz += sizeof(float) * 2;     break;
+            case DLIS_FMT_CDOUBL: sz += sizeof(double) * 2;    break;
+            case DLIS_FMT_SSHORT: sz += sizeof(std::int8_t);   break;
+            case DLIS_FMT_SNORM:  sz += sizeof(std::int16_t);  break;
+            case DLIS_FMT_SLONG:  sz += sizeof(std::int32_t);  break;
+            case DLIS_FMT_USHORT: sz += sizeof(std::uint8_t);  break;
+            case DLIS_FMT_UNORM:  sz += sizeof(std::uint16_t); break;
+            case DLIS_FMT_ULONG:  sz += sizeof(std::uint32_t); break;
+            case DLIS_FMT_DTIME:  sz += sizeof(int) * 8;       break;
+            case DLIS_FMT_STATUS: sz += sizeof(std::int8_t);   break;
+            case DLIS_FMT_ORIGIN: sz += sizeof(std::int32_t);  break;
+            case DLIS_FMT_UVARI:  sz += sizeof(std::int32_t);  break;
 
             case DLIS_FMT_IDENT:
             case DLIS_FMT_ASCII:
