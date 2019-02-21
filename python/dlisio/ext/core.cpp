@@ -60,6 +60,18 @@ struct dlis_caster {
     bool load( handle, bool ) { return false; }
 };
 
+
+template <>
+struct type_caster< mpark::monostate > {
+    PYBIND11_TYPE_CASTER(mpark::monostate, _("monostate"));
+
+    static handle cast( const mpark::monostate&, return_value_policy, handle ) {
+        return py::none();
+    }
+
+    bool load( handle, bool ) { return false; }
+};
+
 template <>
 handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy, handle )
 {
