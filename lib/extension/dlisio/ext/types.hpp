@@ -321,49 +321,6 @@ using value_vector = mpark::variant<
 >;
 
 /*
- * Some records (e.g. the Frame Logical Record in 5.7 FRAME) have a
- * representation restriction, but in the wild other compatible data types are
- * used as well. Furthermore, some attributes such as the SPACING attribute of
- * the FRAME record are non-sensical if not numeric.
- *
- * To accomodate this, represent these values as a variant of either integral
- * or numeric types.
- *
- * The representation restriction is denoted as R= in Chapter 5 - Static and
- * Frame Data
- */
-using numeric = mpark::variant<
-    dl::fshort,
-    dl::fsingl,
-    dl::fsing1,
-    dl::fsing2,
-    dl::isingl,
-    dl::vsingl,
-    dl::fdoubl,
-    dl::fdoub1,
-    dl::fdoub2,
-    dl::csingl,
-    dl::cdoubl,
-    dl::sshort,
-    dl::snorm,
-    dl::slong,
-    dl::ushort,
-    dl::unorm,
-    dl::ulong,
-    dl::uvari
->;
-
-using integral = mpark::variant<
-    dl::sshort,
-    dl::snorm,
-    dl::slong,
-    dl::ushort,
-    dl::unorm,
-    dl::ulong,
-    dl::uvari
->;
-
-/*
  * The structure of an attribute as described in 3.2.2.1
  */
 struct object_attribute {
@@ -373,49 +330,6 @@ struct object_attribute {
     dl::units           units = {};
     dl::value_vector    value = {};
     bool invariant            = false;
-
-    /*
-     * into is a convenience function for extracting the value from an
-     * attribute (during parsing), and writing into stricter objects,
-     * modelled after the descriptions in chapter 5.
-     *
-     * The into helper automates the checking and unpacking of optionals,
-     * variants, and vectors, into the various members of the object types.
-     * This allows unpacking objects from attributes to look like this:
-     *
-     * void read( const object_attribute& attr ) {
-     *          if (label == "LABEL1") attr.into( this->label1 );
-     *     else if (label == "LABEL2") attr.into( this->label2 );
-     *     ...
-     *     else throw;
-     * }
-     *
-     * attr.into picks the right conversion depending on label being a variant,
-     * vector, raw value, or optional.
-     *
-     * They also automate checking representation code underlying value
-     * mismatch.
-     *
-     * TODO: give decent error messages and exceptions on expected and actual
-     * representation code mismatch
-     */
-    template < typename T >
-    void into( T& )                      const noexcept (false);
-    template < typename... T >
-    void into( mpark::variant< T... >& ) const noexcept (false);
-    template < typename T >
-    void into( std::vector< T >& )       const noexcept (false);
-
-    /*
-     * Sometimes the variant or optional is unset, which means forming a
-     * reference to the underlying object will throw a mpark::get exception. In
-     * these cases, and for exception safety, read from the attribute into a
-     * temporary, and return that, to help invoke the variant/optional-assign
-     * semantics
-     */
-    template < typename T >
-    T into() const noexcept (false);
-
 };
 
 /*
@@ -495,98 +409,6 @@ const char* parse_template( const char* begin,
 
 
 object_set parse_objects( const char*, const char* ) noexcept (false);
-
-/*
- * implementations
- */
-template < typename T >
-void object_attribute::into( T& x ) const noexcept (false) {
-    // TODO: catch variant::get error,
-    // then re-throw as something suitable with a better message
-    // ?
-    if (this->reprc != dl::typeinfo< T >::reprc) {
-        std::string msg = std::to_string( static_cast< int >( this->reprc ) )
-                        + " is not " + dl::typeinfo< T >::name
-                        ;
-        throw std::invalid_argument( "[x] mismatching reprc: " + msg );
-    }
-
-    if (mpark::holds_alternative< mpark::monostate >(this->value))
-        return;
-
-    using Vec = std::vector< T >;
-    x = mpark::get< Vec >( this->value ).front();
-}
-
-template <>
-inline void object_attribute::into( dl::representation_code& x )
-const noexcept (false) {
-    x = static_cast< dl::representation_code >( this->into< dl::ushort >() );
-}
-
-template < typename ... T >
-void object_attribute::into( mpark::variant< T... >& x ) const noexcept (false)
-{
-    if (mpark::holds_alternative< mpark::monostate >(this->value))
-        return;
-
-    /*
-     * "for-each-argument"
-     *
-     * https://isocpp.org/blog/2015/01/for-each-argument-sean-parent
-     *
-     * compile-time generate a series of if-expressions which is conceptually a
-     * switch over the variadic template T, mapped to every type's
-     * representation code.
-     *
-     * This is to avoid having one overload of the into function for every
-     * unique variant.
-     *
-     * essentially boils down to
-     *
-     *      if (reprc == typeinfo< T1 >::reprc) {}
-     * else if (reprc == typeinfo< T2 >::reprc) {}
-     * else if (reprc == typeinfo< T3 >::reprc) {}
-     * ...
-     *
-     * for all combinations of valid variants
-     */
-
-    bool found = false;
-    using sequencer = int[];
-    static_cast< void >( sequencer {
-        ((this->reprc == dl::typeinfo< T >::reprc)
-        ? x = this->into< T >(), found = true, 0
-        : 0) ...
-    });
-
-    if (!found)
-        throw std::invalid_argument("{} requested, but variant held {}");
-}
-
-template < typename T >
-void object_attribute::into( std::vector< T >& v )
-const noexcept (false)
-{
-    // TODO: catch variant::get error,
-    // then re-throw as something suitable with a better message
-    if (this->reprc != dl::typeinfo< T >::reprc) {
-        throw std::invalid_argument( "[vec] mismatching reprc" );
-    }
-
-    if (mpark::holds_alternative< mpark::monostate >(this->value))
-        return;
-
-    using Vec = std::vector< T >;
-    v = mpark::get< Vec >( this->value );
-}
-
-template < typename T >
-T object_attribute::into() const noexcept (false) {
-    T tmp;
-    this->into( tmp );
-    return tmp;
-}
 
 }
 
