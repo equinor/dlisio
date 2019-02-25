@@ -12,7 +12,7 @@ platform:
 
 environment:
     TWINE_PASSWORD:
-        secure: kTga6+rLL1fNpKqFNcX0QZNyqiYaHsEfSS4k6wvUoTE=
+        secure: l6EOt89SzIItVoVNEMhf/fhrJ0o+HVNn0vQmE0Opt9Y=
     matrix:
         - PYTHON: C:\Python35
           PYTHON_VERSION: 35
