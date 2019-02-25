@@ -215,6 +215,28 @@ def test_parameters():
         param = [o for o in f.parameters if o.name.id == "FLSHSTRM"]
         assert len(param) == 1
 
+def test_calibrations():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        calibration = next(f.calibrations)
+        assert calibration.name.id           == "CNU"
+        assert calibration.name.origin       == 2
+        assert calibration.name.copynumber   == 0
+        assert calibration.type              == "calibration"
+        assert len(calibration.parameters)   == 0
+        assert len(calibration.coefficients) == 2
+        assert calibration.method is None
+        assert len(list(calibration.calibrated_channel))   == 1
+        assert len(list(calibration.uncalibrated_channel)) == 1
+
+
+        ref = ("CNU", 2, 0)
+        cal_ch = [o for o in f.calibrations if o.hascalibrated_channel(ref)]
+        assert cal_ch[0] == calibration
+
+        ref = calibration.uncal_ch[0]
+        uncal_ch = [o for o in f.calibrations if o.hasuncalibrated_channel(ref.name)]
+        assert uncal_ch[0] == calibration
+
 def test_contains():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         frame = f.getobject(("2000T", 2, 0), type="frame")
@@ -230,7 +252,7 @@ def test_Unknown():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
-        assert len(list(f.unknowns)) == 542
+        assert len(list(f.unknowns)) == 515
 
 def test_object():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:

@@ -102,6 +102,16 @@ class dlis(object):
         return self._objects.parameters
 
     @property
+    def calibrations(self):
+        """ Read all Calibration objects
+
+        Returns
+        -------
+        calibrations: generator of Calibration objects
+        """
+        return self._objects.calibrations
+
+    @property
     def unknowns(self):
         return self._objects.unknowns
 
