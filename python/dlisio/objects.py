@@ -25,8 +25,9 @@ class Objectpool():
 
         for os in objects:
             for obj in os.objects:
-                 if   os.type == "FRAME"   : obj = Frame(obj)
-                 elif os.type == "CHANNEL" : obj = Channel(obj)
+                 if   os.type == "FRAME"       : obj = Frame(obj)
+                 elif os.type == "CHANNEL"     : obj = Channel(obj)
+                 elif os.type == "TOOL"        : obj = Tool(obj)
                  else: obj = Unknown(obj)
                  self.objects.append(obj)
 
@@ -47,6 +48,9 @@ class Objectpool():
                     if o.name == obj.source.name: obj.source = o
 
         if obj.type == "frame":
+            obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
+
+        if obj.type == "tool":
             obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
 
     def getobject(self, name, type):
@@ -98,6 +102,11 @@ class Objectpool():
     def frames(self):
         """Frame objects"""
         return (o for o in self.objects if o.type == "frame")
+
+    @property
+    def tools(self):
+        """Tool objects"""
+        return (o for o in self.objects if o.type == "tool")
 
     @property
     def unknowns(self):
@@ -271,6 +280,67 @@ class Frame(basic_object):
 
         """
         return self.contains(self.channels, channel)
+
+class Tool(basic_object):
+    """
+    The tool object reflects the logical record type TOOL (listed in Appendix
+    A.2 - Logical Record Types, described in Chapter 5.8.4 - Static and Frame
+    Data, TOOL objects)
+    """
+    def __init__(self, obj):
+        super().__init__(obj, "tool")
+        self.description    = None
+        self.trademark_name = None
+        self.generic_name   = None
+        self.status         = None
+        self.parts          = []
+        self.channels       = []
+        self.parameters     = []
+
+        for attr in obj.values():
+            if attr.value is None: continue
+            if attr.label == "DESCRIPTION"    : self.description    = attr.value[0]
+            if attr.label == "TRADEMARK-NAME" : self.trademark_name = attr.value[0]
+            if attr.label == "GENERIC-NAME"   : self.generic_name   = attr.value[0]
+            if attr.label == "STATUS"         : self.status         = attr.value[0]
+            if attr.label == "PARTS"          : self.parts          = attr.value
+            if attr.label == "CHANNELS"       : self.channels       = attr.value
+            if attr.label == "PARAMETERS"     : self.parameters     = attr.value
+
+    def haschannel(self, channel):
+        """
+        Return True if channels is in tool.channels,
+        else return False
+
+        Parameters
+        ----------
+        channel : dlis.core.obname or tuple(str, int, int)
+
+        Returns
+        -------
+        haschannel : bool
+            True if Tool has the channel obj, else False
+
+        """
+        return self.contains(self.channels, channel)
+
+    def hasparameter(self, param):
+        """
+        Return True if param is in tool.parameters,
+        else return False
+
+        Parameters
+        ----------
+        param : dlis.core.obname or tuple(str, int, int)
+
+        Returns
+        -------
+        hasparam : bool
+            True if Tool has the parameter obj, else False
+
+        """
+        return self.contains(self.parameters, param)
+
 
 class Unknown(basic_object):
     """

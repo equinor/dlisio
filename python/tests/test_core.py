@@ -178,6 +178,27 @@ def test_frames():
         fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]
         assert len(fchannels) == len(frame.channels)
 
+def test_tools():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        tool = next(f.tools)
+        assert tool.name.id         == "MSCT"
+        assert tool.name.origin     == 2
+        assert tool.name.copynumber == 0
+        assert tool.type            == "tool"
+        assert tool.description     == "Mechanical Sidewall Coring Tool"
+        assert tool.trademark_name  == "MSCT-AA"
+        assert tool.generic_name    == "MSCT"
+        assert tool.status          == 1
+        assert len(tool.parameters) == 22
+        assert len(tool.channels)   == 74
+        assert len(tool.parts)      == 9
+
+        channel_matching = [ch for ch in tool.channels if ch.name.id == "UMVL_DL"]
+        assert len(channel_matching) == 1
+
+        assert len(list(f.tools)) == 2
+        tools = [o for o in f.tools if o.name.id == "MSCT"]
+        assert len(tools) == 1
 
 def test_contains():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
@@ -194,7 +215,7 @@ def test_Unknown():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
-        assert len(list(f.unknowns)) == 770
+        assert len(list(f.unknowns)) == 768
 
 def test_object():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
