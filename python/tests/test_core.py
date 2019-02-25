@@ -200,6 +200,21 @@ def test_tools():
         tools = [o for o in f.tools if o.name.id == "MSCT"]
         assert len(tools) == 1
 
+def test_parameters():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        param = next(f.parameters)
+        assert param.name.id         == "FLSHSTRM"
+        assert param.name.origin     == 2
+        assert param.name.copynumber == 0
+        assert param.type            == "parameter"
+        assert param.long_name       == "Flush depth-delayed streams to output at end"
+        assert param.dimension is None
+        assert param.axis      is None
+        assert param.zones     is None
+        assert len(list(f.parameters)) == 226
+        param = [o for o in f.parameters if o.name.id == "FLSHSTRM"]
+        assert len(param) == 1
+
 def test_contains():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         frame = f.getobject(("2000T", 2, 0), type="frame")
@@ -215,7 +230,7 @@ def test_Unknown():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
-        assert len(list(f.unknowns)) == 768
+        assert len(list(f.unknowns)) == 542
 
 def test_object():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:

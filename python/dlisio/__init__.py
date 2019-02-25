@@ -92,6 +92,16 @@ class dlis(object):
         return self._objects.tools
 
     @property
+    def parameters(self):
+        """ Read all Parameter metadata objects
+
+        Returns
+        -------
+        parameters: generator of Parameter objects
+        """
+        return self._objects.parameters
+
+    @property
     def unknowns(self):
         return self._objects.unknowns
 
