@@ -47,14 +47,14 @@ class Objectpool():
                     if o.name == obj.source.name: obj.source = o
 
         if obj.type == "frame":
-            obj.channels = [r for r in self.channels if r.name in obj.channels]
+            obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
 
     def getobject(self, name, type):
         """ return object corresponding to the unique identifier given by name + type
 
         Parameters
         ----------
-        name : tuple or dlisio.core.obname
+        name : tuple(str, int, int) or dlisio.core.obname
         type : str
 
         Returns
@@ -136,6 +136,53 @@ class basic_object():
             s += "\t{}: {}\n".format(key, value)
         return s
 
+    @staticmethod
+    def contains(base, name):
+        """ Check if base cotains obj
+
+        Parameters:
+        ----------
+        base : list of dlis.core.obname or list of any object derived from
+            basic_object, e.g. Channel, Frame
+
+        obj : dlis.core.obname, tuple (str, int, int)
+
+        Returns
+        -------
+        isin : bool
+            True if obj or (name, type) is in base, else False
+
+        Examples
+        --------
+
+        Check if "frame" contain channel:
+
+        >>> ans = contains(frame.channels, obj=channel.name)
+
+        Check if "frame" contains a channel with name:
+        >>> name = ("TDEP", 2, 0)
+        >>> ans = contains(frame.channels, name)
+
+        find all frames that have "channel":
+
+        >>> fr = [o for o in frames if contains(o.channels, obj=channel.name)]
+        """
+        child = None
+        parents = None
+
+        if isinstance(name, core.obname):
+            child = (name.id, name.origin, name.copynumber)
+        else:
+            child = name
+        try:
+            parents = [(o.id, o.origin, o.copynumber) for o in base]
+        except AttributeError:
+            parents = [(o.name.id, o.name.origin, o.name.copynumber) for o in base]
+
+        if any(child == p for p in parents): return True
+
+        return False
+
 class Channel(basic_object):
     """
     The Channel object reflects the logical record type CHANNEL (listed in
@@ -170,7 +217,7 @@ class Channel(basic_object):
 
         Parameters
         ----------
-        obj : dlis.core.obname or any object class derived from basic_object
+        obj : dlis.core.obname or tuple(str, int, int)
 
         Returns
         -------
@@ -178,15 +225,7 @@ class Channel(basic_object):
             True if obj is the source of channel, else False
 
         """
-        if self.source is None: return False
-
-        if isinstance(obj, core.obname): child = obj
-        else : child = obj.name
-
-        if isinstance(self.source, core.obname): parent = self.source
-        else : parent = self.source.name
-
-        return parent == child
+        return self.contains(self.source, obj)
 
 class Frame(basic_object):
     """
@@ -223,7 +262,7 @@ class Frame(basic_object):
 
         Parameters
         ----------
-        channel : dlis.core.obname or Channel object
+        channel : dlis.core.obname or tuple(str, int, int)
 
         Returns
         -------
@@ -231,17 +270,7 @@ class Frame(basic_object):
             True if Frame has the channel obj, else False
 
         """
-        if len(self.channels) == 0: return False
-
-        if isinstance(channel, core.obname): child = channel
-        else : child = channel.name
-
-        for ch in self.channels:
-            if isinstance(ch, core.obname):
-                if ch == child: return True
-            if isinstance(ch, Channel):
-                if ch.name == child: return True
-        return False
+        return self.contains(self.channels, channel)
 
 class Unknown(basic_object):
     """

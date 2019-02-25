@@ -175,8 +175,20 @@ def test_frames():
         assert frame.encrypted   is None
         assert frame.description is None
 
-        fchannels = [ch for ch in f.channels if frame.haschannel(ch)]
+        fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]
         assert len(fchannels) == len(frame.channels)
+
+
+def test_contains():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        frame = f.getobject(("2000T", 2, 0), type="frame")
+        name = ("TDEP", 2, 4)
+        channel = f.getobject(name, type="channel")
+
+        result = frame.contains(frame.channels, channel.name)
+        assert result == True
+        result = frame.contains(frame.channels, name)
+        assert result == True
 
 def test_Unknown():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
