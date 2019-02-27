@@ -25,8 +25,11 @@ class Objectpool():
 
         for os in objects:
             for obj in os.objects:
-                 if   os.type == "FRAME"   : obj = Frame(obj)
-                 elif os.type == "CHANNEL" : obj = Channel(obj)
+                 if   os.type == "FRAME"       : obj = Frame(obj)
+                 elif os.type == "CHANNEL"     : obj = Channel(obj)
+                 elif os.type == "TOOL"        : obj = Tool(obj)
+                 elif os.type == "PARAMETER"   : obj = Parameter(obj)
+                 elif os.type == "CALIBRATION" : obj = Calibration(obj)
                  else: obj = Unknown(obj)
                  self.objects.append(obj)
 
@@ -47,14 +50,23 @@ class Objectpool():
                     if o.name == obj.source.name: obj.source = o
 
         if obj.type == "frame":
-            obj.channels = [r for r in self.channels if r.name in obj.channels]
+            obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
+
+        if obj.type == "tool":
+            obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
+            obj.parameters = [o for o in self.parameters if obj.hasparameter(o.name)]
+
+        if obj.type == "calibration":
+            obj.uncal_ch = [o for o in self.channels if obj.hasuncalibrated_channel(o.name)]
+            obj.cal_ch = [o for o in self.channels if obj.hascalibrated_channel(o.name)]
+            obj.parameters = [o for o in self.parameters if obj.hasparameter(o.name)]
 
     def getobject(self, name, type):
         """ return object corresponding to the unique identifier given by name + type
 
         Parameters
         ----------
-        name : tuple or dlisio.core.obname
+        name : tuple(str, int, int) or dlisio.core.obname
         type : str
 
         Returns
@@ -100,6 +112,21 @@ class Objectpool():
         return (o for o in self.objects if o.type == "frame")
 
     @property
+    def tools(self):
+        """Tool objects"""
+        return (o for o in self.objects if o.type == "tool")
+
+    @property
+    def parameters(self):
+        """Parameter objects"""
+        return (o for o in self.objects if o.type == "parameter")
+
+    @property
+    def calibrations(self):
+        """Calibration objects"""
+        return (o for o in self.objects if o.type == "calibration")
+
+    @property
     def unknowns(self):
         """Frame objects"""
         return (o for o in self.objects if o.type == "unknown")
@@ -136,6 +163,53 @@ class basic_object():
             s += "\t{}: {}\n".format(key, value)
         return s
 
+    @staticmethod
+    def contains(base, name):
+        """ Check if base cotains obj
+
+        Parameters:
+        ----------
+        base : list of dlis.core.obname or list of any object derived from
+            basic_object, e.g. Channel, Frame
+
+        obj : dlis.core.obname, tuple (str, int, int)
+
+        Returns
+        -------
+        isin : bool
+            True if obj or (name, type) is in base, else False
+
+        Examples
+        --------
+
+        Check if "frame" contain channel:
+
+        >>> ans = contains(frame.channels, obj=channel.name)
+
+        Check if "frame" contains a channel with name:
+        >>> name = ("TDEP", 2, 0)
+        >>> ans = contains(frame.channels, name)
+
+        find all frames that have "channel":
+
+        >>> fr = [o for o in frames if contains(o.channels, obj=channel.name)]
+        """
+        child = None
+        parents = None
+
+        if isinstance(name, core.obname):
+            child = (name.id, name.origin, name.copynumber)
+        else:
+            child = name
+        try:
+            parents = [(o.id, o.origin, o.copynumber) for o in base]
+        except AttributeError:
+            parents = [(o.name.id, o.name.origin, o.name.copynumber) for o in base]
+
+        if any(child == p for p in parents): return True
+
+        return False
+
 class Channel(basic_object):
     """
     The Channel object reflects the logical record type CHANNEL (listed in
@@ -170,7 +244,7 @@ class Channel(basic_object):
 
         Parameters
         ----------
-        obj : dlis.core.obname or any object class derived from basic_object
+        obj : dlis.core.obname or tuple(str, int, int)
 
         Returns
         -------
@@ -178,15 +252,7 @@ class Channel(basic_object):
             True if obj is the source of channel, else False
 
         """
-        if self.source is None: return False
-
-        if isinstance(obj, core.obname): child = obj
-        else : child = obj.name
-
-        if isinstance(self.source, core.obname): parent = self.source
-        else : parent = self.source.name
-
-        return parent == child
+        return self.contains(self.source, obj)
 
 class Frame(basic_object):
     """
@@ -223,7 +289,7 @@ class Frame(basic_object):
 
         Parameters
         ----------
-        channel : dlis.core.obname or Channel object
+        channel : dlis.core.obname or tuple(str, int, int)
 
         Returns
         -------
@@ -231,17 +297,170 @@ class Frame(basic_object):
             True if Frame has the channel obj, else False
 
         """
-        if len(self.channels) == 0: return False
+        return self.contains(self.channels, channel)
 
-        if isinstance(channel, core.obname): child = channel
-        else : child = channel.name
+class Tool(basic_object):
+    """
+    The tool object reflects the logical record type TOOL (listed in Appendix
+    A.2 - Logical Record Types, described in Chapter 5.8.4 - Static and Frame
+    Data, TOOL objects)
+    """
+    def __init__(self, obj):
+        super().__init__(obj, "tool")
+        self.description    = None
+        self.trademark_name = None
+        self.generic_name   = None
+        self.status         = None
+        self.parts          = []
+        self.channels       = []
+        self.parameters     = []
 
-        for ch in self.channels:
-            if isinstance(ch, core.obname):
-                if ch == child: return True
-            if isinstance(ch, Channel):
-                if ch.name == child: return True
-        return False
+        for attr in obj.values():
+            if attr.value is None: continue
+            if attr.label == "DESCRIPTION"    : self.description    = attr.value[0]
+            if attr.label == "TRADEMARK-NAME" : self.trademark_name = attr.value[0]
+            if attr.label == "GENERIC-NAME"   : self.generic_name   = attr.value[0]
+            if attr.label == "STATUS"         : self.status         = attr.value[0]
+            if attr.label == "PARTS"          : self.parts          = attr.value
+            if attr.label == "CHANNELS"       : self.channels       = attr.value
+            if attr.label == "PARAMETERS"     : self.parameters     = attr.value
+
+    def haschannel(self, channel):
+        """
+        Return True if channels is in tool.channels,
+        else return False
+
+        Parameters
+        ----------
+        channel : dlis.core.obname or tuple(str, int, int)
+
+        Returns
+        -------
+        haschannel : bool
+            True if Tool has the channel obj, else False
+
+        """
+        return self.contains(self.channels, channel)
+
+    def hasparameter(self, param):
+        """
+        Return True if param is in tool.parameters,
+        else return False
+
+        Parameters
+        ----------
+        param : dlis.core.obname or tuple(str, int, int)
+
+        Returns
+        -------
+        hasparam : bool
+            True if Tool has the parameter obj, else False
+
+        """
+        return self.contains(self.parameters, param)
+
+
+class Parameter(basic_object):
+    """
+    The Parameter object reflects the logical record type PARAMETER (listed in
+    Appendix A.2 - Logical Record Types, described in Chapter 5.8.2 - Static
+    and Frame Data, PARAMETER objects)
+    """
+    def __init__(self, obj):
+        super().__init__(obj, "parameter")
+        self.long_name   = None
+        self.dimension   = None
+        self.axis        = None
+        self.zones       = None
+        self.values      = None
+
+        for attr in obj.values():
+            if attr.value is None: continue
+            if attr.label == "LONG-NAME" : self.long_name = attr.value[0]
+            if attr.label == "DIMENSION" : self.dimension = attr.value
+            if attr.label == "AXIS"      : self.axis      = attr.value
+            if attr.label == "ZONES"     : self.zones     = attr.value
+
+class Calibration(basic_object):
+    """
+    The Calibration reflects the logical record type CALIBRATION (listed in
+    Appendix A.2 - Logical Record Types, described in Chapter 5.8.7.3 - Static and
+    Frame Data, CALIBRATION objects)
+
+    The calibrated_channels and uncalibrated_channels attributes are lists of
+    refrences to Channel objects.
+    """
+    def __init__(self, obj):
+        super().__init__(obj, "calibration")
+        self.method               = None
+        self.calibrated_channel   = []
+        self.uncalibrated_channel = []
+        self.coefficients         = []
+        self.parameters           = []
+
+        for attr in obj.values():
+            if attr.value is None: continue
+            if attr.label == "METHOD":
+                self.method = attr.value[0]
+            if attr.label == "CALIBRATED-CHANNELS":
+                self.calibrated_channel = attr.value
+            if attr.label == "UNCALIBRATED-CHANNELS":
+                self.uncalibrated_channel = attr.value
+            if attr.label == "COEFFICIENTS":
+                self.coefficients = attr.value
+            if attr.label == "PARAMETERS":
+                self.parameters = attr.value
+
+    def hasuncalibrated_channel(self, channel):
+        """
+        Return True if channels is in Calibration.uncal_ch,
+        else return False
+
+        Parameters
+        ----------
+        channel : dlis.core.obname or tuple(str, int, int)
+
+        Returns
+        -------
+        hasuncalchannel : bool
+            True if Calibration has the channel obj in uncal_ch, else False
+
+        """
+        return self.contains(self.uncalibrated_channel, channel)
+
+    def hascalibrated_channel(self, channel):
+        """
+        Return True if channels is in Calibration.cal_ch,
+        else return False
+
+        Parameters
+        ----------
+        channel : dlis.core.obname or tuple(str, int, int)
+
+        Returns
+        -------
+        hasuncalchannel : bool
+            True if Calibration has the channel obj in self.cal_ch, else False
+
+        """
+        return self.contains(self.calibrated_channel, channel)
+
+    def hasparameter(self, param):
+        """
+        Return True if parameter is in calibration.parameter,
+        else return False
+
+        Parameters
+        ----------
+        param : dlis.core.obname, tuple(str, int, int)
+
+        Returns
+        -------
+        hasparameter : bool
+            True if Calibration has the param obj, else False
+
+        """
+        return self.contains(self.parameters, param)
 
 class Unknown(basic_object):
     """

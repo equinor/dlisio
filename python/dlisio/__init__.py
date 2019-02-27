@@ -82,6 +82,36 @@ class dlis(object):
         return self._objects.frames
 
     @property
+    def tools(self):
+        """ Read all Tool metadata objects
+
+        Returns
+        -------
+        tools: generator of Tool objects
+        """
+        return self._objects.tools
+
+    @property
+    def parameters(self):
+        """ Read all Parameter metadata objects
+
+        Returns
+        -------
+        parameters: generator of Parameter objects
+        """
+        return self._objects.parameters
+
+    @property
+    def calibrations(self):
+        """ Read all Calibration objects
+
+        Returns
+        -------
+        calibrations: generator of Calibration objects
+        """
+        return self._objects.calibrations
+
+    @property
     def unknowns(self):
         return self._objects.unknowns
 

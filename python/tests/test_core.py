@@ -175,14 +175,84 @@ def test_frames():
         assert frame.encrypted   is None
         assert frame.description is None
 
-        fchannels = [ch for ch in f.channels if frame.haschannel(ch)]
+        fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]
         assert len(fchannels) == len(frame.channels)
+
+def test_tools():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        tool = next(f.tools)
+        assert tool.name.id         == "MSCT"
+        assert tool.name.origin     == 2
+        assert tool.name.copynumber == 0
+        assert tool.type            == "tool"
+        assert tool.description     == "Mechanical Sidewall Coring Tool"
+        assert tool.trademark_name  == "MSCT-AA"
+        assert tool.generic_name    == "MSCT"
+        assert tool.status          == 1
+        assert len(tool.parameters) == 22
+        assert len(tool.channels)   == 74
+        assert len(tool.parts)      == 9
+
+        channel_matching = [ch for ch in tool.channels if ch.name.id == "UMVL_DL"]
+        assert len(channel_matching) == 1
+
+        assert len(list(f.tools)) == 2
+        tools = [o for o in f.tools if o.name.id == "MSCT"]
+        assert len(tools) == 1
+
+def test_parameters():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        param = next(f.parameters)
+        assert param.name.id         == "FLSHSTRM"
+        assert param.name.origin     == 2
+        assert param.name.copynumber == 0
+        assert param.type            == "parameter"
+        assert param.long_name       == "Flush depth-delayed streams to output at end"
+        assert param.dimension is None
+        assert param.axis      is None
+        assert param.zones     is None
+        assert len(list(f.parameters)) == 226
+        param = [o for o in f.parameters if o.name.id == "FLSHSTRM"]
+        assert len(param) == 1
+
+def test_calibrations():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        calibration = next(f.calibrations)
+        assert calibration.name.id           == "CNU"
+        assert calibration.name.origin       == 2
+        assert calibration.name.copynumber   == 0
+        assert calibration.type              == "calibration"
+        assert len(calibration.parameters)   == 0
+        assert len(calibration.coefficients) == 2
+        assert calibration.method is None
+        assert len(list(calibration.calibrated_channel))   == 1
+        assert len(list(calibration.uncalibrated_channel)) == 1
+
+
+        ref = ("CNU", 2, 0)
+        cal_ch = [o for o in f.calibrations if o.hascalibrated_channel(ref)]
+        assert cal_ch[0] == calibration
+
+        ref = calibration.uncal_ch[0]
+        uncal_ch = [o for o in f.calibrations if o.hasuncalibrated_channel(ref.name)]
+        assert uncal_ch[0] == calibration
+
+def test_contains():
+    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        frame = f.getobject(("2000T", 2, 0), type="frame")
+        name = ("TDEP", 2, 4)
+        channel = f.getobject(name, type="channel")
+
+        result = frame.contains(frame.channels, channel.name)
+        assert result == True
+        result = frame.contains(frame.channels, name)
+        assert result == True
 
 def test_Unknown():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
-        assert len(list(f.unknowns)) == 770
+        assert len(list(f.unknowns)) == 515
 
 def test_object():
     with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
