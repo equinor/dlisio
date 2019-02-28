@@ -24,18 +24,126 @@ void stream_offsets::resize( std::size_t n ) noexcept (false) {
     this->explicits.resize( n );
 }
 
-stream_offsets findoffsets( const std::string& path ) noexcept (false) {
+void map_source( mio::mmap_source& file, const std::string& path ) noexcept (false) {
     std::error_code syserror;
-    mio::mmap_source file;
     file.map( path, 0, mio::map_entire_file, syserror );
     if (syserror) throw std::system_error( syserror );
 
-
-    const auto* begin = file.data() + 80;
-    const auto* end = file.data() + file.size();
-
     if (file.size() == 0)
-        throw std::invalid_argument( "empty file" );
+        throw std::invalid_argument( "non-existent or empty file" );
+}
+
+long long findsul( mio::mmap_source& file ) noexcept (false) {
+    /*
+     * search at most 200 bytes, looking for the SUL
+     *
+     * if it doesn't show up by then it's probably not there, or require other
+     * information
+     *
+     * Return the offset of the _first byte_ of the SUL. In a conforming file,
+     * this is 0.
+     */
+    static const auto needle = "RECORD";
+    static const std::size_t search_limit = 200;
+
+    const auto first = file.data();
+    const auto last = first + (std::min)( file.size(), search_limit );
+    auto itr = std::search( first, last, needle, needle + 6 );
+
+    if (itr == last) {
+        const std::string msg = "searched "
+                              + std::to_string(search_limit)
+                              + " bytes, but could not find SUL"
+                              ;
+        throw dl::not_found( msg );
+    }
+
+    /*
+     * Before the structure field of the SUL there should be 10 bytes, i.e.
+     * sequence-number and DLIS version.
+     */
+    const auto structure_offset = 9;
+
+    if (std::distance( first, itr ) < structure_offset) {
+        auto pos = std::distance( first, itr );
+        const std::string msg = "found 'RECORD' at pos = "
+                              + std::to_string( pos )
+                              + ", but expected pos >= 10"
+                              ;
+        throw std::runtime_error( msg );
+    }
+
+    return std::distance( file.data(), itr - structure_offset );
+}
+
+long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
+    /*
+     * The first VRL does sometimes not immediately follow the SUL (or whatever
+     * came before it), but according to spec it should be a triple of
+     * (len,0xFF,0x01), where len is a UNORM. The second half shouldn't change,
+     * so look for the first occurence of that.
+     *
+     * If that too doesn't work then the file is likely too corrupted to read
+     * without manual intervention
+     */
+
+    if (from < 0) {
+        std::stringstream msg;
+        msg << "from (which is " << from << ") >= 0";
+        throw std::out_of_range(msg.str());
+    }
+
+    if (std::size_t(from) > file.size()) {
+        std::stringstream msg;
+        msg << "from (which is " << from << ") "
+            << "<= file.size (which is " << file.size() << ")"
+        ;
+        throw std::out_of_range(msg.str());
+    }
+
+    static const unsigned char needle[] = { 0xFF, 0x01 };
+    static const auto search_limit = 200;
+
+    const auto limit = std::min< long long >(file.size() - from, search_limit);
+
+    /*
+     * reinterpret the bytes as usigned char*. This is compatible and fine.
+     *
+     * When operator == is ued on the elements, they'll otherwise be promoted
+     * to int, so all of a sudden (char)0xFF != (unsigned char)0xFF. Forcing
+     * the pointer to be unsigend char fixes this issue.
+     */
+    const auto front = reinterpret_cast< const unsigned char* >(file.data());
+    const auto first = front + from;
+    const auto last = first + limit;
+    const auto itr = std::search(first, last, needle, needle + sizeof(needle));
+
+    if (itr == last) {
+        std::stringstream msg;
+        msg << "searched " << limit << " bytes, but could not find VRL";
+        throw dl::not_found( msg.str() );
+    }
+
+    /*
+     * Before the 0xFF 0x01 there should be room for at least an unorm
+     */
+    if (std::distance( first, itr ) < DLIS_SIZEOF_UNORM) {
+        auto pos = std::distance( first, itr );
+        std::stringstream msg;
+        msg << "found 0xFF 0x01 at pos = " << from + pos
+            << ", but expected pos >= " << from + DLIS_SIZEOF_UNORM
+        ;
+        throw std::runtime_error(msg.str());
+    }
+
+    return std::distance(front, itr - DLIS_SIZEOF_UNORM);
+}
+
+stream_offsets findoffsets( mio::mmap_source& file, long long from )
+noexcept (false)
+{
+    const auto* begin = file.data() + from;
+    const auto* end = file.data() + file.size();
 
     // by default, assume ~4K per segment on average. This should be fairly few
     // reallocations, without overshooting too much
@@ -63,14 +171,27 @@ stream_offsets findoffsets( const std::string& path ) noexcept (false) {
                                   count + residuals.data(),
                                   count + explicits.data() );
 
-        if (err == DLIS_TRUNCATED)
-            throw std::runtime_error( "file truncated" );
+        switch (err) {
+            case DLIS_OK: break;
 
-        if (err == DLIS_INCONSISTENT)
-            throw std::runtime_error( "inconsistensies in record sizes" );
+            case DLIS_TRUNCATED:
+                throw std::runtime_error( "file truncated" );
 
-        if (err)
-            throw std::runtime_error( "unknown error " + std::to_string( err ) );
+            case DLIS_INCONSISTENT:
+                throw std::runtime_error( "inconsistensies in record sizes" );
+
+            case DLIS_UNEXPECTED_VALUE: {
+                std::stringstream msg;
+                // TODO: interrogate more?
+                msg << "record-length in record " << count << " corrupted";
+                throw std::runtime_error(msg.str());
+            }
+
+            default:
+                throw std::runtime_error(
+                    "unknown error " + std::to_string( err )
+                );
+        }
 
         if (next == end) break;
 

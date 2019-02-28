@@ -361,13 +361,23 @@ PYBIND11_MODULE(core, m) {
         return objects;
     });
 
-    m.def( "findoffsets", []( const std::string& path ) {
-        const auto ofs = dl::findoffsets( path );
+    py::class_< mio::mmap_source >( m, "mmap_source" )
+        .def( py::init<>() )
+        .def( "map", dl::map_source )
+    ;
+
+    m.def( "findsul", dl::findsul );
+    m.def( "findvrl", dl::findvrl );
+
+    m.def( "findoffsets", []( mio::mmap_source& file, long long from ) {
+        const auto ofs = dl::findoffsets( file, from );
         return py::make_tuple( ofs.tells, ofs.residuals, ofs.explicits );
     });
 
     m.def( "marks", [] ( const std::string& path ) {
-        auto marks = dl::findoffsets( path );
+        mio::mmap_source file;
+        dl::map_source( file, path );
+        auto marks = dl::findoffsets( file, 80 );
         return py::make_tuple( marks.residuals, marks.tells );
     });
 }

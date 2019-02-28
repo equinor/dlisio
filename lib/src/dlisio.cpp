@@ -717,6 +717,15 @@ int dlis_index_records( const char* begin,
 
                 if (end - DLIS_VRL_SIZE < ptr) return DLIS_TRUNCATED;
 
+                /*
+                 * 2.3.6.4 Minimum Visible Record Length
+                 * Since record segments must be at least 16 bytes, the
+                 * effective minimum length for a visible record is 20 bytes
+                 * (including itself), so anything less than that means
+                 * corrupted data
+                 */
+                if (len < 20) return DLIS_UNEXPECTED_VALUE;
+
                 remaining = len - DLIS_VRL_SIZE;
                 ptr += DLIS_VRL_SIZE;
             }
@@ -727,6 +736,8 @@ int dlis_index_records( const char* begin,
             const auto err = dlis_lrsh( ptr, &len, &attrs, &type );
 
             if (end - len < ptr) return DLIS_TRUNCATED;
+
+            if (len < 16) return DLIS_UNEXPECTED_VALUE;
 
             ptr += len;
             remaining -= len;

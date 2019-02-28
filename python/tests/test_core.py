@@ -22,7 +22,7 @@ def test_sul():
 
     assert sul == d
 
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         assert f.storage_label() == d
 
 # The example record from the specification
@@ -139,12 +139,12 @@ stdrecord = bytearray([
 ])
 
 def test_objects():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         objects = f.objects
         assert len(list(objects)) == 876
 
 def test_channels():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         channel = next(f.channels)
         assert channel.name.id         == "TDEP"
         assert channel.name.origin     == 2
@@ -160,7 +160,7 @@ def test_channels():
         assert channel.source is None
 
 def test_frames():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         frame = next(f.frames)
         assert frame.name.id         == "2000T"
         assert frame.name.origin     == 2
@@ -179,7 +179,7 @@ def test_frames():
         assert len(fchannels) == len(frame.channels)
 
 def test_tools():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         tool = next(f.tools)
         assert tool.name.id         == "MSCT"
         assert tool.name.origin     == 2
@@ -201,7 +201,7 @@ def test_tools():
         assert len(tools) == 1
 
 def test_parameters():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         param = next(f.parameters)
         assert param.name.id         == "FLSHSTRM"
         assert param.name.origin     == 2
@@ -216,7 +216,7 @@ def test_parameters():
         assert len(param) == 1
 
 def test_calibrations():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         calibration = next(f.calibrations)
         assert calibration.name.id           == "CNU"
         assert calibration.name.origin       == 2
@@ -238,7 +238,7 @@ def test_calibrations():
         assert uncal_ch[0] == calibration
 
 def test_contains():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         frame = f.getobject(("2000T", 2, 0), type="frame")
         name = ("TDEP", 2, 4)
         channel = f.getobject(name, type="channel")
@@ -249,16 +249,28 @@ def test_contains():
         assert result == True
 
 def test_Unknown():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
         assert len(list(f.unknowns)) == 515
 
 def test_object():
-    with dlisio.open('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         name = ("2000T", 2, 0)
         frame = f.getobject(name=name, type='frame')
 
         assert frame.name.id == "2000T"
         assert frame.name.origin == 2
         assert frame.name.copynumber == 0
+
+def test_load_pre_sul_garbage():
+    with dlisio.load('data/pre-sul-garbage.dlis') as f:
+        with dlisio.load('data/only-channels.dlis') as g:
+            assert f.storage_label() == g.storage_label()
+            assert f.sul_offset == 12
+
+def test_load_pre_vrl_garbage():
+    with dlisio.load('data/pre-sul-pre-vrl-garbage.dlis') as f:
+        with dlisio.load('data/only-channels.dlis') as g:
+            assert f.storage_label() == g.storage_label()
+            assert f.sul_offset == 12

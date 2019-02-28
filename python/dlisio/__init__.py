@@ -9,11 +9,12 @@ except pkg_resources.DistributionNotFound:
     pass
 
 class dlis(object):
-    def __init__(self, stream, explicits):
+    def __init__(self, stream, explicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
         self.object_sets = None
         self._objects = Objectpool(self.objectsets())
+        self.sul_offset = sul_offset
 
     def __enter__(self):
         return self
@@ -22,7 +23,7 @@ class dlis(object):
         self.file.close()
 
     def storage_label(self):
-        blob = self.file.get(bytearray(80), 0, 80)
+        blob = self.file.get(bytearray(80), self.sul_offset, 80)
         return core.storage_label(blob)
 
     def objectsets(self, reload = False):
@@ -116,14 +117,52 @@ class dlis(object):
         return self._objects.unknowns
 
 def open(path):
-    tells, residuals, explicits = core.findoffsets(path)
+    """ Open a file
+
+    Open a low-level file handle. This is not intended for end-users - rather,
+    it's an escape hatch for very broken files that dlisio cannot handle.
+
+    Parameters
+    ----------
+    path : str_like
+
+    Returns
+    -------
+    stream : dlisio.core.stream
+
+    See Also
+    --------
+    dlisio.load
+    """
+    return core.stream(str(path))
+
+def load(path):
+    """ Load a file
+
+    Parameters
+    ----------
+    path : str_like
+
+    Returns
+    -------
+    dlis : dlisio.dlis
+    """
+    path = str(path)
+
+    mmap = core.mmap_source()
+    mmap.map(path)
+
+    sulpos = core.findsul(mmap)
+    vrlpos = core.findvrl(mmap, sulpos + 80)
+
+    tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
     explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
-    stream = core.stream(path)
+    stream = open(path)
 
     try:
         stream.reindex(tells, residuals)
-        f = dlis(stream, explicits)
+        f = dlis(stream, explicits, sul_offset = sulpos)
     except:
         stream.close()
         raise

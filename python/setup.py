@@ -80,6 +80,7 @@ setup(
             include_dirs = ['../lib/include',
                             '../lib/extension',
                             '../external/mpark',
+                            '../external/mio',
                             get_pybind_include(),
                             get_pybind_include(user=True),
             ],
