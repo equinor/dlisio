@@ -116,10 +116,40 @@ class dlis(object):
         return self._objects.unknowns
 
 def open(path):
+    """ Open a file
+
+    Open a low-level file handle. This is not intended for end-users - rather,
+    it's an escape hatch for very broken files that dlisio cannot handle.
+
+    Parameters
+    ----------
+    path : str_like
+
+    Returns
+    -------
+    stream : dlisio.core.stream
+
+    See Also
+    --------
+    dlisio.load
+    """
+    return core.stream(str(path))
+
+def load(path):
+    """ Load a file
+
+    Parameters
+    ----------
+    path : str_like
+
+    Returns
+    -------
+    dlis : dlisio.dlis
+    """
     tells, residuals, explicits = core.findoffsets(path)
     explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
-    stream = core.stream(path)
+    stream = open(path)
 
     try:
         stream.reindex(tells, residuals)
