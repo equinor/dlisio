@@ -171,14 +171,27 @@ noexcept (false)
                                   count + residuals.data(),
                                   count + explicits.data() );
 
-        if (err == DLIS_TRUNCATED)
-            throw std::runtime_error( "file truncated" );
+        switch (err) {
+            case DLIS_OK: break;
 
-        if (err == DLIS_INCONSISTENT)
-            throw std::runtime_error( "inconsistensies in record sizes" );
+            case DLIS_TRUNCATED:
+                throw std::runtime_error( "file truncated" );
 
-        if (err)
-            throw std::runtime_error( "unknown error " + std::to_string( err ) );
+            case DLIS_INCONSISTENT:
+                throw std::runtime_error( "inconsistensies in record sizes" );
+
+            case DLIS_UNEXPECTED_VALUE: {
+                std::stringstream msg;
+                // TODO: interrogate more?
+                msg << "record-length in record " << count << " corrupted";
+                throw std::runtime_error(msg.str());
+            }
+
+            default:
+                throw std::runtime_error(
+                    "unknown error " + std::to_string( err )
+                );
+        }
 
         if (next == end) break;
 
