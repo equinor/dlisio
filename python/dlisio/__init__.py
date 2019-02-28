@@ -9,11 +9,12 @@ except pkg_resources.DistributionNotFound:
     pass
 
 class dlis(object):
-    def __init__(self, stream, explicits):
+    def __init__(self, stream, explicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
         self.object_sets = None
         self._objects = Objectpool(self.objectsets())
+        self.sul_offset = sul_offset
 
     def __enter__(self):
         return self
@@ -22,7 +23,7 @@ class dlis(object):
         self.file.close()
 
     def storage_label(self):
-        blob = self.file.get(bytearray(80), 0, 80)
+        blob = self.file.get(bytearray(80), self.sul_offset, 80)
         return core.storage_label(blob)
 
     def objectsets(self, reload = False):
@@ -151,14 +152,16 @@ def load(path):
     mmap = core.mmap_source()
     mmap.map(path)
 
-    tells, residuals, explicits = core.findoffsets(mmap, 80)
+    sulpos = core.findsul(mmap)
+
+    tells, residuals, explicits = core.findoffsets(mmap, sulpos + 80)
     explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     stream = open(path)
 
     try:
         stream.reindex(tells, residuals)
-        f = dlis(stream, explicits)
+        f = dlis(stream, explicits, sul_offset = sulpos)
     except:
         stream.close()
         raise

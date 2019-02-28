@@ -33,6 +33,49 @@ void map_source( mio::mmap_source& file, const std::string& path ) noexcept (fal
         throw std::invalid_argument( "non-existent or empty file" );
 }
 
+long long findsul( mio::mmap_source& file ) noexcept (false) {
+    /*
+     * search at most 200 bytes, looking for the SUL
+     *
+     * if it doesn't show up by then it's probably not there, or require other
+     * information
+     *
+     * Return the offset of the _first byte_ of the SUL. In a conforming file,
+     * this is 0.
+     */
+    static const auto needle = "RECORD";
+    static const std::size_t search_limit = 200;
+
+    const auto first = file.data();
+    const auto last = first + (std::min)( file.size(), search_limit );
+    auto itr = std::search( first, last, needle, needle + 6 );
+
+    if (itr == last) {
+        const std::string msg = "searched "
+                              + std::to_string(search_limit)
+                              + " bytes, but could not find SUL"
+                              ;
+        throw dl::not_found( msg );
+    }
+
+    /*
+     * Before the structure field of the SUL there should be 10 bytes, i.e.
+     * sequence-number and DLIS version.
+     */
+    const auto structure_offset = 9;
+
+    if (std::distance( first, itr ) < structure_offset) {
+        auto pos = std::distance( first, itr );
+        const std::string msg = "found 'RECORD' at pos = "
+                              + std::to_string( pos )
+                              + ", but expected pos >= 10"
+                              ;
+        throw std::runtime_error( msg );
+    }
+
+    return std::distance( file.data(), itr - structure_offset );
+}
+
 stream_offsets findoffsets( mio::mmap_source& file, long long from )
 noexcept (false)
 {

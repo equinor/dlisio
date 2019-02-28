@@ -262,3 +262,9 @@ def test_object():
         assert frame.name.id == "2000T"
         assert frame.name.origin == 2
         assert frame.name.copynumber == 0
+
+def test_load_pre_sul_garbage():
+    with dlisio.load('data/pre-sul-garbage.dlis') as f:
+        with dlisio.load('data/only-channels.dlis') as g:
+            assert f.storage_label() == g.storage_label()
+            assert f.sul_offset == 12

@@ -366,6 +366,8 @@ PYBIND11_MODULE(core, m) {
         .def( "map", dl::map_source )
     ;
 
+    m.def( "findsul", dl::findsul );
+
     m.def( "findoffsets", []( mio::mmap_source& file, long long from ) {
         const auto ofs = dl::findoffsets( file, from );
         return py::make_tuple( ofs.tells, ofs.residuals, ofs.explicits );
