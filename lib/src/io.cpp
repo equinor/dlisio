@@ -24,18 +24,18 @@ void stream_offsets::resize( std::size_t n ) noexcept (false) {
     this->explicits.resize( n );
 }
 
-stream_offsets findoffsets( const std::string& path ) noexcept (false) {
+void map_source( mio::mmap_source& file, const std::string& path ) noexcept (false) {
     std::error_code syserror;
-    mio::mmap_source file;
     file.map( path, 0, mio::map_entire_file, syserror );
     if (syserror) throw std::system_error( syserror );
 
+    if (file.size() == 0)
+        throw std::invalid_argument( "non-existent or empty file" );
+}
 
+stream_offsets findoffsets( mio::mmap_source& file ) noexcept (false) {
     const auto* begin = file.data() + 80;
     const auto* end = file.data() + file.size();
-
-    if (file.size() == 0)
-        throw std::invalid_argument( "empty file" );
 
     // by default, assume ~4K per segment on average. This should be fairly few
     // reallocations, without overshooting too much

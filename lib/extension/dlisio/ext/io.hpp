@@ -7,6 +7,8 @@
 #include <tuple>
 #include <vector>
 
+#include <mio/mio.hpp>
+
 #include <dlisio/ext/types.hpp>
 
 namespace dl {
@@ -59,7 +61,9 @@ struct stream_offsets {
     void resize( std::size_t ) noexcept (false);
 };
 
-stream_offsets findoffsets( const std::string& path ) noexcept (false);
+void map_source( mio::mmap_source&, const std::string& ) noexcept (false);
+
+stream_offsets findoffsets( mio::mmap_source& path ) noexcept (false);
 
 }
 

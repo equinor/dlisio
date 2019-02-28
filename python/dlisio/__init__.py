@@ -146,7 +146,12 @@ def load(path):
     -------
     dlis : dlisio.dlis
     """
-    tells, residuals, explicits = core.findoffsets(path)
+    path = str(path)
+
+    mmap = core.mmap_source()
+    mmap.map(path)
+
+    tells, residuals, explicits = core.findoffsets(mmap)
     explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     stream = open(path)
