@@ -151,7 +151,7 @@ def load(path):
     mmap = core.mmap_source()
     mmap.map(path)
 
-    tells, residuals, explicits = core.findoffsets(mmap)
+    tells, residuals, explicits = core.findoffsets(mmap, 80)
     explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     stream = open(path)

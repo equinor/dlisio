@@ -33,8 +33,10 @@ void map_source( mio::mmap_source& file, const std::string& path ) noexcept (fal
         throw std::invalid_argument( "non-existent or empty file" );
 }
 
-stream_offsets findoffsets( mio::mmap_source& file ) noexcept (false) {
-    const auto* begin = file.data() + 80;
+stream_offsets findoffsets( mio::mmap_source& file, long long from )
+noexcept (false)
+{
+    const auto* begin = file.data() + from;
     const auto* end = file.data() + file.size();
 
     // by default, assume ~4K per segment on average. This should be fairly few

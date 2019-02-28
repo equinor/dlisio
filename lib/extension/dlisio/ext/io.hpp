@@ -63,7 +63,9 @@ struct stream_offsets {
 
 void map_source( mio::mmap_source&, const std::string& ) noexcept (false);
 
-stream_offsets findoffsets( mio::mmap_source& path ) noexcept (false);
+stream_offsets findoffsets( mio::mmap_source& path,
+                            long long from )
+noexcept (false);
 
 }
 
