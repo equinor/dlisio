@@ -268,3 +268,9 @@ def test_load_pre_sul_garbage():
         with dlisio.load('data/only-channels.dlis') as g:
             assert f.storage_label() == g.storage_label()
             assert f.sul_offset == 12
+
+def test_load_pre_vrl_garbage():
+    with dlisio.load('data/pre-sul-pre-vrl-garbage.dlis') as f:
+        with dlisio.load('data/only-channels.dlis') as g:
+            assert f.storage_label() == g.storage_label()
+            assert f.sul_offset == 12

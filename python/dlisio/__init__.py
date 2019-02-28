@@ -153,8 +153,9 @@ def load(path):
     mmap.map(path)
 
     sulpos = core.findsul(mmap)
+    vrlpos = core.findvrl(mmap, sulpos + 80)
 
-    tells, residuals, explicits = core.findoffsets(mmap, sulpos + 80)
+    tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
     explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     stream = open(path)
