@@ -39,6 +39,7 @@ install:
 
 before_build:
     - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
+    - git submodule update --init --recursive
     - git fetch --tags
 
 build_script:
