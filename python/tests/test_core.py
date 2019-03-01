@@ -274,3 +274,7 @@ def test_load_pre_vrl_garbage():
         with dlisio.load('data/only-channels.dlis') as g:
             assert f.storage_label() == g.storage_label()
             assert f.sul_offset == 12
+
+def test_load_file_with_broken_utf8():
+    with dlisio.load('data/broken-degree-symbol.dlis') as f:
+        pass

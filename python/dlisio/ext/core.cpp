@@ -85,6 +85,70 @@ handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy
                                        src.MS );
 }
 
+namespace {
+
+handle maybe_decode(const std::string& src) noexcept (false) {
+    try {
+        /* was valid UTF-8, all is well*/
+        return py::str(src).inc_ref();
+    } catch(std::runtime_error& e) {
+        PyErr_Clear();
+        /*
+         * The degree symbol is weird in UTF-8, but often shows up
+         *
+         * https://stackoverflow.com/questions/8732025/why-degree-symbol-differs-from-utf-8-from-unicode
+         *
+         * Look for this symbol in the string - if it's there, replace it with
+         * the UTF-8 one and try to return that string. If _that_ fails, return
+         * bytes
+         */
+        auto pos = src.find('\xB0');
+
+        // Ok, so it wasn't the degree symbol being encoded wrong - return the
+        // string as bytes and defer decoding to caller
+        if (pos == std::string::npos)
+            return py::bytes(src).inc_ref();
+
+        std::string source(src);
+        source.insert(pos, 1, '\xC2');
+        while ((pos = source.find('\xB0', pos + 2)) != std::string::npos) {
+            source.insert(pos, 1, '\xC2');
+        }
+
+        /*
+         * Now this should be proper unicode. If it isn't, return bytes again
+         *
+         * TODO: Return-as-bytes should probably not be a silent conversion
+         */
+        try {
+            return py::str(source).inc_ref();
+        } catch (std::runtime_error&) {
+            PyErr_Clear();
+            return py::bytes(src).inc_ref();
+        }
+    }
+}
+
+}
+
+template <>
+handle dlis_caster< dl::ascii >::cast(const dl::ascii& src, return_value_policy, handle)
+{
+    return maybe_decode(dl::decay(src));
+}
+
+template <>
+handle dlis_caster< dl::ident >::cast(const dl::ident& src, return_value_policy, handle)
+{
+    return maybe_decode(dl::decay(src));
+}
+
+template <>
+handle dlis_caster< dl::units >::cast(const dl::units& src, return_value_policy, handle)
+{
+    return maybe_decode(dl::decay(src));
+}
+
 /*
  * Now *register* the strong-typedef type casters with pybind, so that py::cast
  * and the pybind implicit conversion works.
