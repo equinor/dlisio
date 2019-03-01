@@ -4,6 +4,8 @@
 #include <cstring>
 #include <string>
 
+#include <fmt/core.h>
+
 #include <dlisio/dlisio.h>
 #include <dlisio/ext/types.hpp>
 
@@ -34,11 +36,11 @@ set_descriptor parse_set_descriptor( const char* cur ) noexcept (false) {
 
         default: {
             const auto bits = std::bitset< 8 >{ attr }.to_string();
-            const auto msg = std::string("expected SET, RSET or RDSET, was ")
-                           + dlis_component_str( flags.role )
-                           + "(" + bits + ")"
-                           ;
-            throw std::invalid_argument( msg );
+            const auto role = dlis_component_str(flags.role);
+            const auto msg  = "error parsing object set descriptor: "
+                              "expected SET, RSET or RDSET, was {} ({})"
+                            ;
+            throw std::invalid_argument(fmt::format(msg, role, bits));
         }
     }
 
@@ -102,12 +104,14 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
         case DLIS_ROLE_ATTRIB:
             break;
 
-        default:
-            throw std::invalid_argument(
-                std::string("expected ATTRIB, INVATR, or OBJECT, was ")
-                + dlis_component_str( role )
-                + "(" + std::bitset< 8 >( role ).to_string() + ")"
-            );
+        default: {
+            const auto bits = std::bitset< 8 >(role).to_string();
+            const auto was  = dlis_component_str(role);
+            const auto msg  = "error parsing attribute descriptor: "
+                              "expected ATTRIB, INVATR, or OBJECT, was {} ({})"
+                            ;
+            throw std::invalid_argument(fmt::format(msg, was, bits));
+        }
     }
 
     if (flags.object || flags.absent) return flags;
@@ -144,11 +148,11 @@ object_descriptor parse_object_descriptor( const char* cur ) {
 
     if (role != DLIS_ROLE_OBJECT) {
         const auto bits = std::bitset< 8 >{ attr }.to_string();
-        const auto msg = std::string("expected OBJECT, was ")
-                       + dlis_component_str( role )
-                       + "(" + bits + ")"
-                       ;
-        throw std::invalid_argument( msg );
+        const auto was  = dlis_component_str(role);
+        const auto msg  = "error parsing object descriptor: "
+                          "expected OBJECT, was {} ({})"
+                        ;
+        throw std::invalid_argument(fmt::format(msg, was, bits));
     }
 
     int name;
@@ -444,11 +448,10 @@ const char* cast( const char* xs,
     xs = cast( xs, x );
 
     if (x < DLIS_FSHORT || x > DLIS_UNITS) {
-        const auto msg = "invalid representation code (reprc = "
-                       + std::to_string( x )
-                       + "), expected 1 <= reprc <= 27"
+        const auto msg = "invalid representation code {}, "
+                         "expected 1 <= reprc <= 27"
                        ;
-        throw std::invalid_argument(msg);
+        throw std::invalid_argument(fmt::format(msg, x));
     }
 
     reprc = static_cast< dl::representation_code >( x );
@@ -517,9 +520,12 @@ const char* elements( const char* xs,
         case rpc::attref: return extract( reset< dl::attref >( vec ), n, xs );
         case rpc::status: return extract( reset< dl::status >( vec ), n, xs );
         case rpc::units : return extract( reset< dl::units  >( vec ), n, xs );
-        default:
-            throw std::runtime_error( "unknown representaton code: "
-                + std::to_string( static_cast< int >( reprc ) ) );
+        default: {
+            const auto msg = "unable to interpret attribute: "
+                             "unknown representation code {}";
+            const auto code = static_cast< int >(reprc);
+            throw std::runtime_error(fmt::format(msg, code));
+        }
     }
 
     return xs;
@@ -695,12 +701,10 @@ noexcept (false)
          * exception and consider what to do when a file actually uses this
          * behaviour
          */
-        std::stringstream msg;
-        msg << "object attribute without value flag and count "
-            << "(which is " << count << ") "
-            << ">= size (which is " << size << ")"
+        const auto msg = "object attribute without no value value, but count "
+                         "(which is {}) >= size (which is {})"
         ;
-        throw dl::not_implemented( msg.str() );
+        throw dl::not_implemented(fmt::format(msg, count, size));
     }
 
     /*
@@ -741,9 +745,12 @@ noexcept (false)
         case rpc::attref: reset< dl::attref >(value).resize(count); return;
         case rpc::status: reset< dl::status >(value).resize(count); return;
         case rpc::units:  reset< dl::units  >(value).resize(count); return;
-        default:
-            throw std::runtime_error( "unknown representaton code: "
-                    + std::to_string( static_cast< int >( reprc ) ) );
+        default: {
+            const auto msg = "unable to patch attribute with no value: "
+                             "unknown representation code {}";
+            const auto code = static_cast< int >(reprc);
+            throw std::runtime_error(fmt::format(msg, code));
+        }
     }
 }
 
