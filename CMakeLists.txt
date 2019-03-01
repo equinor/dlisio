@@ -32,6 +32,12 @@ set(CMAKE_CXX_STANDARD 11)
 add_subdirectory(external/catch2)
 add_subdirectory(external/mpark)
 add_subdirectory(external/mio)
+add_subdirectory(external/fmt)
+
+if (NOT TARGET fmt)
+    find_package(fmt REQUIRED)
+endif ()
+
 add_subdirectory(lib)
 add_subdirectory(bin)
 add_subdirectory(python)
