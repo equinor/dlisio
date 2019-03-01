@@ -1,14 +1,13 @@
 #include <algorithm>
 #include <cerrno>
 #include <ciso646>
-#include <cstring>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 #include <string>
 #include <system_error>
 #include <vector>
 
+#include <fmt/core.h>
+#include <fmt/format.h>
 #include <mio/mio.hpp>
 
 #include <dlisio/dlisio.h>
@@ -51,11 +50,8 @@ long long findsul( mio::mmap_source& file ) noexcept (false) {
     auto itr = std::search( first, last, needle, needle + 6 );
 
     if (itr == last) {
-        const std::string msg = "searched "
-                              + std::to_string(search_limit)
-                              + " bytes, but could not find SUL"
-                              ;
-        throw dl::not_found( msg );
+        const auto msg = "searched {} bytes, but could not find storage label";
+        throw dl::not_found(fmt::format(msg, search_limit));
     }
 
     /*
@@ -66,11 +62,8 @@ long long findsul( mio::mmap_source& file ) noexcept (false) {
 
     if (std::distance( first, itr ) < structure_offset) {
         auto pos = std::distance( first, itr );
-        const std::string msg = "found 'RECORD' at pos = "
-                              + std::to_string( pos )
-                              + ", but expected pos >= 10"
-                              ;
-        throw std::runtime_error( msg );
+        const auto msg = "found 'RECORD' at pos = {}, but expected pos >= 10";
+        throw std::runtime_error(fmt::format(msg, pos));
     }
 
     return std::distance( file.data(), itr - structure_offset );
@@ -88,17 +81,15 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
      */
 
     if (from < 0) {
-        std::stringstream msg;
-        msg << "from (which is " << from << ") >= 0";
-        throw std::out_of_range(msg.str());
+        const auto msg = "expected from (which is {}) >= 0";
+        throw std::out_of_range(fmt::format(msg, from));
     }
 
     if (std::size_t(from) > file.size()) {
-        std::stringstream msg;
-        msg << "from (which is " << from << ") "
-            << "<= file.size (which is " << file.size() << ")"
+        const auto msg = "expected from (which is {}) "
+                         "<= file.size() (which is {})"
         ;
-        throw std::out_of_range(msg.str());
+        throw std::out_of_range(fmt::format(msg, from, file.size()));
     }
 
     static const unsigned char needle[] = { 0xFF, 0x01 };
@@ -119,21 +110,20 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
     const auto itr = std::search(first, last, needle, needle + sizeof(needle));
 
     if (itr == last) {
-        std::stringstream msg;
-        msg << "searched " << limit << " bytes, but could not find VRL";
-        throw dl::not_found( msg.str() );
+        const auto msg = "searched {} bytes, but could not find a suitable"
+                         "visbile record envelope pattern (0xFF 0x01)"
+        ;
+        throw dl::not_found(fmt::format(msg, limit));
     }
 
     /*
      * Before the 0xFF 0x01 there should be room for at least an unorm
      */
-    if (std::distance( first, itr ) < DLIS_SIZEOF_UNORM) {
-        auto pos = std::distance( first, itr );
-        std::stringstream msg;
-        msg << "found 0xFF 0x01 at pos = " << from + pos
-            << ", but expected pos >= " << from + DLIS_SIZEOF_UNORM
-        ;
-        throw std::runtime_error(msg.str());
+    if (std::distance(first, itr) < DLIS_SIZEOF_UNORM) {
+        const auto pos = std::distance(first, itr) + from;
+        const auto expected = from + DLIS_SIZEOF_UNORM;
+        const auto msg = "found 0xFF 0x01 at pos = {}, but expected pos >= {}";
+        throw std::runtime_error(fmt::format(msg, pos, expected));
     }
 
     return std::distance(front, itr - DLIS_SIZEOF_UNORM);
@@ -181,16 +171,15 @@ noexcept (false)
                 throw std::runtime_error( "inconsistensies in record sizes" );
 
             case DLIS_UNEXPECTED_VALUE: {
-                std::stringstream msg;
                 // TODO: interrogate more?
-                msg << "record-length in record " << count << " corrupted";
-                throw std::runtime_error(msg.str());
+                const auto msg = "record-length in record {} corrupted";
+                throw std::runtime_error(fmt::format(msg, count));
             }
 
-            default:
-                throw std::runtime_error(
-                    "unknown error " + std::to_string( err )
-                );
+            default: {
+                const auto msg = "dlis_index_records: unknown error {}";
+                throw std::runtime_error(fmt::format(msg, err));
+            }
         }
 
         if (next == end) break;
@@ -229,11 +218,8 @@ stream::stream( const std::string& path ) noexcept (false)
 
     this->fs.open( path, std::ios::binary | std::ios::in );
 
-    if (!this->fs.good()) {
-        std::stringstream msg;
-        msg << "unable to open file: " << std::strerror(errno);
-        throw std::invalid_argument( msg.str() );
-    }
+    if (!this->fs.good())
+        throw fmt::system_error(errno, "cannot to open file '{}'", path);
 }
 
 record stream::at( int i ) noexcept (false) {
@@ -338,14 +324,13 @@ record& stream::at( int i, record& rec ) noexcept (false) {
                 const auto vrl_len = remaining + len;
                 const auto tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
                 consistent = false;
-                std::stringstream msg;
-                msg << "visible record/segment inconsistency:"
-                    << " segment (len = " << len << ")"
-                    << " >= visible (len = " << vrl_len << ")"
-                    << " record " << i
-                    << " (tell = " << tell << ")"
+                const auto msg = "visible record/segment inconsistency: "
+                                 "segment (which is {}) "
+                                 ">= visible (which is {}) "
+                                 "in record {} (at tell {})"
                 ;
-                throw std::runtime_error( msg.str() );
+                const auto str = fmt::format(msg, len, vrl_len, i, tell);
+                throw std::runtime_error(str);
             }
 
             const auto prevsize = rec.data.size();
@@ -379,14 +364,17 @@ record& stream::at( int i, record& rec ) noexcept (false) {
                  * This probably comes from consistent, but lying, length
                  * attributes
                  */
-                std::stringstream msg;
-                msg << "non contiguous record: "
-                    << "#" << i << " (tell = " << this->tells.at(i) << ")"
-                    << " ends prematurely at " << this->fs.tellg()
-                    << ", not at "
-                    << "#" << i << " (tell = " << this->tells.at(i + 1) << ")"
+                const auto msg = "non-contiguous record: "
+                                 "#{} (at tell {}) "
+                                 "ends prematurely at {}, "
+                                 "not at #{} (at tell {})"
                 ;
-                throw std::runtime_error( msg.str() );
+
+                const auto tell1 = this->tells.at(i);
+                const auto tell2 = this->tells.at(i + 1);
+                const auto at    = this->fs.tellg();
+                const auto str   = fmt::format(msg, i, tell1, at, i+1, tell2);
+                throw std::runtime_error(msg);
             }
 
 
@@ -426,8 +414,11 @@ void stream::reindex( std::vector< long long > tells,
         throw std::invalid_argument( "residuals must be non-empty" );
 
     if (tells.size() != residuals.size()) {
-        // TODO: fmtlib
-        throw std::invalid_argument( "indices must be same size" );
+        const auto msg = "reindex requires tells.size() which is {}) "
+                         "== residuals.size() (which is {})"
+        ;
+        const auto str = fmt::format(msg, tells.size(), residuals.size());
+        throw std::invalid_argument(str);
     }
 
     // TODO: assert all-positive etc.
@@ -441,15 +432,13 @@ void stream::close() {
 
 void stream::read( char* dst, long long offset, int n ) {
     if (n < 0) {
-        std::stringstream msg;
-        msg << "expected positive n >= 0 (was " << n << ")";
-        throw std::invalid_argument( msg.str() );
+        const auto msg = "expected n (which is {}) >= 0";
+        throw std::invalid_argument(fmt::format(msg, n));
     }
 
     if (offset < 0) {
-        std::stringstream msg;
-        msg << "expected offset >= 0 (was " << offset << ")";
-        throw std::invalid_argument( msg.str() );
+        const auto msg = "expected offset (which is {}) >= 0";
+        throw std::invalid_argument(fmt::format(msg, offset));
     }
 
     this->fs.seekg( offset );

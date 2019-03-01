@@ -38,6 +38,8 @@ target_link_libraries(dlisio-extension
     PUBLIC dlisio
            mpark-variant
            mio
+
+    PRIVATE fmt-header-only
 )
 
 # for now, also install the -extension targets, however, they're not publically
