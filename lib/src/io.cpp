@@ -279,8 +279,15 @@ record& stream::at( int i, record& rec ) noexcept (false) {
 
     this->fs.seekg( tell );
 
-    const auto chop = []( std::vector< char >& vec, int bytes ) {
-        vec.erase( vec.end() - bytes, vec.end() );
+    const auto chop = [](std::vector< char >& vec, int bytes) {
+        const int size = vec.size();
+        const int new_size = (std::max)(0, size - bytes);
+
+        if (size - bytes < 0) {
+            // TODO: user-warning
+            // const auto msg = "at::chop() would remove more bytes than read";
+        }
+        vec.resize(new_size);
     };
 
     while (true) {
