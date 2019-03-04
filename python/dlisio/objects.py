@@ -210,6 +210,18 @@ class basic_object():
 
         return False
 
+
+    def stripspaces(self):
+        for key, value in self.__dict__.items():
+            if isinstance(value, list):
+                try:
+                    for inx, v in enumerate(value):
+                        self.__dict__[key][inx] = v.strip()
+                except:
+                    continue
+            if isinstance(value, str):
+                self.__dict__[key] = value.strip()
+
 class Channel(basic_object):
     """
     The Channel object reflects the logical record type CHANNEL (listed in
@@ -237,6 +249,8 @@ class Channel(basic_object):
             if attr.label == "AXIS"               : self.axis          = attr.value
             if attr.label == "ELEMENT-LIMIT"      : self.element_limit = attr.value
             if attr.label == "SOURCE"             : self.source        = attr.value[0]
+
+        self.stripspaces()
 
     def hassource(self, obj):
         """
@@ -282,6 +296,8 @@ class Frame(basic_object):
             if attr.label == "INDEX-MIN"  : self.index_min   = attr.value[0]
             if attr.label == "INDEX-MAX"  : self.index_max   = attr.value[0]
 
+        self.stripspaces()
+
     def haschannel(self, channel):
         """
         Return True if channels is in frame.channels,
@@ -324,6 +340,8 @@ class Tool(basic_object):
             if attr.label == "PARTS"          : self.parts          = attr.value
             if attr.label == "CHANNELS"       : self.channels       = attr.value
             if attr.label == "PARAMETERS"     : self.parameters     = attr.value
+
+        self.stripspaces()
 
     def haschannel(self, channel):
         """
@@ -381,6 +399,8 @@ class Parameter(basic_object):
             if attr.label == "AXIS"      : self.axis      = attr.value
             if attr.label == "ZONES"     : self.zones     = attr.value
 
+        self.stripspaces()
+
 class Calibration(basic_object):
     """
     The Calibration reflects the logical record type CALIBRATION (listed in
@@ -410,6 +430,8 @@ class Calibration(basic_object):
                 self.coefficients = attr.value
             if attr.label == "PARAMETERS":
                 self.parameters = attr.value
+
+        self.stripspaces()
 
     def hasuncalibrated_channel(self, channel):
         """
@@ -471,7 +493,7 @@ class Unknown(basic_object):
     def __init__(self, obj):
         super().__init__(obj, "unknown")
         self.attributes = {a.label.lower() : a.value for a in obj.values()}
-        self._stripspaces()
+        self.stripspaces()
 
     def __getattr__(self, key):
         return self.attributes[key]
@@ -484,11 +506,3 @@ class Unknown(basic_object):
             s += "\t{}: {}\n".format(key, value)
         s += "\tattic: {}\n".format(self.type)
         return s
-
-    def _stripspaces(self):
-        for key, value in self.attributes.items():
-            if isinstance(value, str): self.attributes[key] = value.strip()
-            if isinstance(value, list):
-                for inx, v in enumerate(value):
-                    if isinstance(v, str):
-                        self.attributes[key][inx] = v.strip()
