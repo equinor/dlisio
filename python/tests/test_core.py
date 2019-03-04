@@ -278,3 +278,13 @@ def test_load_pre_vrl_garbage():
 def test_load_file_with_broken_utf8():
     with dlisio.load('data/broken-degree-symbol.dlis') as f:
         pass
+
+def test_padbytes_as_large_as_record():
+    # 180-byte long explicit record with padding, and padbytes are set to 180
+    # (leaving the resulting len(data) == 0)
+    f = dlisio.open('data/padbytes-large-as-record.dlis')
+    f.reindex([0], [180])
+
+    rec = f.extract([0])[0]
+    assert rec.explicit
+    assert len(memoryview(rec)) == 0
