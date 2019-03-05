@@ -268,6 +268,9 @@ int dlis_vrl( const char* xs,
      * not-ok to flag protocol errors
      *  const auto ff    = dlis::ushort( xs + 2 );
      */
+    //for now just advance pointer by 1
+    ++xs;
+
     std::uint8_t major;
     dlis_ushort( xs, &major );
 
