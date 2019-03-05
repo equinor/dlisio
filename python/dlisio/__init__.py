@@ -40,6 +40,16 @@ class dlis(object):
         return self._objects.allobjects
 
     @property
+    def fileheader(self):
+        """ Read all Fileheader objects
+
+        Returns
+        -------
+        tools: generator of Fileheader objects
+        """
+        return self._objects.fileheader
+
+    @property
     def channels(self):
         """ Read all channel metadata objects
 

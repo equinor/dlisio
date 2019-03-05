@@ -143,6 +143,15 @@ def test_objects():
         objects = f.objects
         assert len(list(objects)) == 876
 
+def test_fileheader():
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        fh = next(f.fileheader)
+        assert fh.name.id == "5"
+        assert fh.name.origin == 2
+        assert fh.name.copynumber == 0
+        assert fh.id == "MSCT_197LTP"
+        assert fh.sequencenr == "197"
+
 def test_channels():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         channel = next(f.channels)
@@ -252,7 +261,7 @@ def test_Unknown():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
-        assert len(list(f.unknowns)) == 515
+        assert len(list(f.unknowns)) == 514
 
 def test_object():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:

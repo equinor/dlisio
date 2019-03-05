@@ -1,4 +1,5 @@
 from . import core
+from .fileheader import Fileheader
 from .frame import Frame
 from .channel import Channel
 from .tool import Tool
@@ -32,7 +33,8 @@ class Objectpool():
 
         for os in objects:
             for obj in os.objects:
-                 if   os.type == "FRAME"       : obj = Frame(obj)
+                 if   os.type == "FILE-HEADER" : obj = Fileheader(obj)
+                 elif os.type == "FRAME"       : obj = Frame(obj)
                  elif os.type == "CHANNEL"     : obj = Channel(obj)
                  elif os.type == "TOOL"        : obj = Tool(obj)
                  elif os.type == "PARAMETER"   : obj = Parameter(obj)
@@ -116,6 +118,11 @@ class Objectpool():
         Returns a generator of all objects on file
         """
         return (o for o in self.objects)
+
+    @property
+    def fileheader(self):
+        """Fileheader objects"""
+        return (o for o in self.objects if o.type == "fileheader")
 
     @property
     def channels(self):
