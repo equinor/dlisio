@@ -1,6 +1,6 @@
 import numpy as np
 from . import core
-from .objects import Objectpool
+from .objectpool import Objectpool
 
 try:
     import pkg_resources
