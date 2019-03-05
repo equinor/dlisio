@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 
 import dlisio
 
@@ -152,6 +153,34 @@ def test_fileheader():
         assert fh.id == "MSCT_197LTP"
         assert fh.sequencenr == "197"
 
+def test_origin():
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
+        origin = next(f.origin)
+
+        assert origin.name.id           == "DLIS_DEFINING_ORIGIN"
+        assert origin.name.origin       == 2
+        assert origin.name.copynumber   == 0
+        assert origin.file_id           == "MSCT_197LTP"
+        assert origin.file_set_name     == "FAROE_PETROLEUM/206_05A-3"
+        assert origin.file_set_nr       == 41
+        assert origin.file_nr           == 167
+        assert origin.file_type         == "STATION LOG"
+        assert origin.product           == "OP"
+        assert origin.version           == "19C0-187"
+        assert len(origin.programs)     == 4
+        assert origin.creation_time     == datetime(2011, 8, 20, 22, 48, 50)
+        assert origin.order_nr          == "BSAX-00003"
+        assert origin.descent_nr        == ["-1"]
+        assert origin.run_nr            == ["1"]
+        assert origin.well_id           == ""
+        assert origin.well_name         == "206/05a-3"
+        assert origin.field_name        == "Fulla"
+        assert origin.producer_code     == 440
+        assert origin.producer_name     == "Schlumberger"
+        assert origin.company           == "Faroe Petroleum"
+        assert origin.namespace_name    == "SLB"
+        assert origin.namespace_version == None
+
 def test_channels():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         channel = next(f.channels)
@@ -261,7 +290,7 @@ def test_Unknown():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
         unknown = next(f.unknowns)
         assert unknown.type == "unknown"
-        assert len(list(f.unknowns)) == 514
+        assert len(list(f.unknowns)) == 513
 
 def test_object():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
