@@ -245,7 +245,7 @@ enum dlis_segment_attribute {
  * forward, because logical records aren't required to align with visible
  * record envelopes. Additionally, there's no requirement that visible records
  * nor logical records are of equal length. Furthermore, there are files out
- * there with number of logical records in the millions.
+ * there with millions of logical records.
  *
  * This function finds the start of logical records [1], and outputs:
  * 1. the (negative) distance from end to record
@@ -288,19 +288,22 @@ enum dlis_segment_attribute {
  * ---------
  * begin: start of memory area
  * end: one-beyond memory area
- * allocsize: the size allocated in tells/residuals/explicits. this is an upper
- *            bound on the number of records read for this invocation
- * initial_residual: how far into the previous visible envlope begin is. If
- *                   called from the start of the file (past the storage unit
+ * allocsize: upper bound on the number of records read for this invocation.
+ *            Should be the same as the size allocated in tells/residuals/explicits.
+ * initial_residual: number of still-to-process bytes in the last seen visible envelope.
+ *                   If called from the start of the file (past the storage unit
  *                   label) this should be 0. Upon return, this will be the
- *                   remaining bytes of the current VRL at the end of the
+ *                   remaining bytes of the current VR at the end of the
  *                   previously-read record, i.e. the value needed to resume.
  * next: the first byte past the end. For successive invocations, this points
  *       to the first, un-read record.
- * count: incremented for every logical record - this is the size of output
- *        arrays
- * tells: distances begin, record
- * residuals: bytes remaining in this visible record
+ * count: number of processed logical records.
+ *        Incremented for every logical record - this is the actual size of output arrays
+ * tells: distance (<=0) from end of the file [end param] to the
+ *        1) start of logical record OR
+ *        2) start of visible envelope if LR alligns with VE boundaries
+ * residuals: bytes remaining for processing in the last encountered visible record.
+ *            For LR alligning with VE boundaries value is 0 (not VE size)
  * explicits: if record is explicit
  *
  * next and explicits are optional, and can be NULL. However, unless deciding
@@ -312,11 +315,16 @@ enum dlis_segment_attribute {
  * mapping is resumed. When encountering broken files or minor protocol
  * violations, this enables skipping bits and resuming interpretation.
  *
- * Errors
- * ------
- *  DLIS_OK: when all records in [begin, end) are recorded, or when reading the
+ * Return value
+ * ------------
+ *  DLIS_OK: when all records in [begin, end) are read, or when reading the
  *           next record would overflow allocsize. To determine which one,
  *           check the value of next. If next == end, all records are read.
+ *  DLIS_TRUNCATED: end was reached before full logical record was read
+ *  DLIS_INVALID_ARGS: begin is same as end
+ *  DLIS_INCONSISTENT: error on reading headers was thrown by internal function
+ *  DLIS_UNEXPECTED_VALUE: VR length < 20 bytes or LRS length < 16
+ *
  *
  * Examples
  * --------
@@ -338,11 +346,11 @@ enum dlis_segment_attribute {
  *     if (err != DLIS_OK) exit(EXIT_FAILURE);
  *     if (next == end) break;
  *
- *     double_arraysize(allocsize, &tells, &residuals, &explicits);
+ *     reallocate(allocsize, &tells, &residuals, &explicits);
  *     begin = next;
  * }
  *
- * size_t filesize = file.begin + 80;
+ * size_t filesize = file.end - file.begin + 80;
  * for (int i = 0; i < count; ++i)
  *     tells[i] += filesize;
  *
