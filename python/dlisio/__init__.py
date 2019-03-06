@@ -1,6 +1,6 @@
 import numpy as np
 from . import core
-from .objects import Objectpool
+from .objectpool import Objectpool
 
 try:
     import pkg_resources
@@ -38,6 +38,26 @@ class dlis(object):
     @property
     def objects(self):
         return self._objects.allobjects
+
+    @property
+    def fileheader(self):
+        """ Read all Fileheader objects
+
+        Returns
+        -------
+        tools: generator of Fileheader objects
+        """
+        return self._objects.fileheader
+
+    @property
+    def origin(self):
+        """ Read all Origin objects
+
+        Returns
+        -------
+        tools: generator of Origin objects
+        """
+        return self._objects.origin
 
     @property
     def channels(self):
