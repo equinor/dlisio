@@ -2,13 +2,24 @@ from .basicobject import BasicObject
 
 
 class Calibration(BasicObject):
-    """
-    The Calibration reflects the logical record type CALIBRATION (listed in
-    Appendix A.2 - Logical Record Types, described in Chapter 5.8.7.3 - Static and
-    Frame Data, CALIBRATION objects)
+    """Calibration
 
-    The calibrated_channels and uncalibrated_channels attributes are lists of
-    refrences to Channel objects.
+    Calibration objects are a collection of measurements and coefficients that
+    defines the calibration process of channel objects.
+
+    Notes
+    -----
+
+    The Calibration reflects the logical record type CALIBRATION, defined in
+    rp66. CALIBRATION records are listen in Appendix A.2 - Logical Record
+    Types and described detail in Chapter 5.8.7.3 - Static and Frame Data,
+    CALIBRATION objects.
+
+    See also
+    --------
+
+    dlisio.Channel : Channel objects.
+    dlisio.Parameter : Parameter objects.
     """
     def __init__(self, obj):
         super().__init__(obj, "calibration")
@@ -35,71 +46,127 @@ class Calibration(BasicObject):
 
     @property
     def method(self):
+        """Method
+
+        The computational method used to calibrate the Channel object(s)
+        defined in *Calibration.calibrated_channel*.
+
+        Returns
+        -------
+
+        method : str
+        """
         return self._method
 
     @property
     def calibrated_channel(self):
+        """Calibrated channel(s)
+
+        List of channels that have been calibrated by the method and
+        coefficients described in this calibration object.
+
+        Returns
+        -------
+
+        calibrated_channel : list of dlisio.Channel
+        """
         return self._calibrated_channel
 
     @property
     def uncalibrated_channel(self):
+        """Uncalibrated channel(s)
+
+        List of uncalibrated channels that along with the method and
+        coefficients makes up the calibrated channels. I.e. the channels as
+        they where before calibration.
+
+        Returns
+        -------
+
+        uncalibrated_channel : list of dlisio.Channel
+        """
         return self._uncalibrated_channel
 
     @property
     def coefficients(self):
+        """Coefficients
+
+        List of coefficient objects that contains coefficients, tolerances and
+        references that have been used in the calibration of the channels
+        listen in *Calibration.calibrated_channels*.
+
+        Returns
+        -------
+
+        coefficients : list of dlisio.core.obname
+            each element is a reference to an coefficient object
+        """
         return self._coefficients
 
     @property
     def parameters(self):
-        return self._parameters
+        """Parameters
 
-    def hasuncalibrated_channel(self, channel):
-        """
-        Return True if channels is in Calibration.uncal_ch,
-        else return False
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or tuple(str, int, int)
+        List of parameter objects that contains both numerical and textual
+        information assosiated with the calibration process.
 
         Returns
         -------
-        hasuncalchannel : bool
-            True if Calibration has the channel obj in uncal_ch, else False
 
+        parameters : list of dlisio.Parameter
+        """
+        return self._parameters
+
+    def hasuncalibrated_channel(self, channel):
+        """Calibration contains uncalibrated channel
+
+        Return True if channels exist in *Calibration.uncalibrated_channel*, else
+        return False.
+
+        Parameters
+        ----------
+        channel : dlis.core.obname or (str, int, int)
+
+        Returns
+        -------
+        contains_channel : bool
+            True if channel exist in *Calibration.uncalibrated_channel*, else
+            False.
         """
         return self.contains(self.uncalibrated_channel, channel)
 
     def hascalibrated_channel(self, channel):
-        """
-        Return True if channels is in Calibration.cal_ch,
-        else return False
+        """Calibration contains calibrated channel
+
+        Return True if channels exist in *Calibration.calibrated_channel*, else
+        return False.
 
         Parameters
         ----------
-        channel : dlis.core.obname or tuple(str, int, int)
+        channel : dlis.core.obname or (str, int, int)
 
         Returns
         -------
-        hasuncalchannel : bool
-            True if Calibration has the channel obj in self.cal_ch, else False
-
+        constains_chanel : bool
+            True if channel exist in *Calibration.calibrated_channel*, else
+            False.
         """
         return self.contains(self.calibrated_channel, channel)
 
     def hasparameter(self, param):
-        """
-        Return True if parameter is in calibration.parameter,
-        else return False
+        """Calibration contains parameter
+
+        Return True if parameter exist in *Calibration.parameters*, else
+        return False.
 
         Parameters
         ----------
-        param : dlis.core.obname, tuple(str, int, int)
+        param : dlis.core.obname, (str, int, int)
 
         Returns
         -------
-        hasparameter : bool
-            True if Calibration has the param obj, else False
-
+        contains_parameter : bool
+            True if parameter exist in *Calibration.parameters*, else
+            False.
         """
         return self.contains(self.parameters, param)

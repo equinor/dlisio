@@ -13,17 +13,17 @@ class Origin(BasicObject):
     object is the Defining object. No two logical files should have identical
     Defining Origins.
 
-    See also
-    --------
-
-    dlisio.objects.Fileheader : Fileheader
-
     Notes
     -----
 
     The Origin object reflects the logical record type ORIGIN, defined in rp66.
     ORIGIN records are listed in Appendix A.2 - Logical Record Types and
     described in detail in Chapter 5.1 - Static and Frame Data, Origin objects.
+
+    See also
+    --------
+
+    dlisio.Fileheader : Fileheader
     """
     def __init__(self, obj):
         super().__init__(obj, "origin")
@@ -97,12 +97,7 @@ class Origin(BasicObject):
     def file_id(self):
         """File-identifier
 
-        An exact copy of the id field in the Fileheader object
-
-        See also
-        --------
-
-        dlisio.objects.Fileheader : Fileheader
+        An exact copy of Fileheader.id
 
         Returns
         -------
@@ -118,12 +113,6 @@ class Origin(BasicObject):
         The name of the File Set that the Logical File is a part of, if
         any. File Set Names are not required to be unique.
 
-        See also
-        --------
-
-        dlisio.objects.Fileheader : Fileheader
-        dlisio.objects.Origin.file_set_nr : file_set_nr
-
         Returns
         -------
 
@@ -138,12 +127,6 @@ class Origin(BasicObject):
         The number of the File Set that the logical file is a part of, if any. The
         file set number is often set to a psudo-random number to distinguish
         different File Sets. However, it is not required to be unique.
-
-        See also
-        --------
-
-        dlisio.objects.Fileheader : Fileheader
-        dlisio.objects.Origin.file_set_name : file_set_name
 
         Returns
         -------
@@ -164,13 +147,6 @@ class Origin(BasicObject):
 
         Note that there is no defined relationship between the file number of
         Logical Files within a Storage Set.
-
-        See also
-        --------
-
-        dlisio.objects.Fileheader : Fileheader
-        dlisio.objects.Origin.file_set_name : file_set_name
-        dlisio.objects.Origin.file_set_number : file_set_number
 
         Returns
         -------
@@ -212,11 +188,6 @@ class Origin(BasicObject):
 
         The version of the software product that created the DLIS-file.
 
-        See also
-        --------
-
-        dlisio.objects.origin.product : product
-
         Returns
         -------
 
@@ -230,11 +201,6 @@ class Origin(BasicObject):
 
         List of programs and services that was a part of the software that
         created the DLIS-file.
-
-        See also
-        --------
-
-        dlisio.objects.origin.product : product
 
         Returns
         -------
@@ -288,8 +254,8 @@ class Origin(BasicObject):
     def run_nr(self):
         """Run number
 
-        A company spesified number. The meaning of this number must be
-        obtained directly from the company.
+        A company spesified number. The meaning of this number must be obtained
+        directly from the company.
 
         Returns
         -------
@@ -302,8 +268,9 @@ class Origin(BasicObject):
     def well_id(self):
         """Well id
 
-        Identifier for the well in which the measurments was taken. When applicable,
-        the API (American Petroleum Institute) Well number should be used.
+        Identifier for the well in which the measurments was taken. When
+        applicable, the API (American Petroleum Institute) Well number should
+        be used.
 
         Returns
         -------
@@ -385,11 +352,6 @@ class Origin(BasicObject):
         A producer-defined namespace for which the object names for this origin
         are defined under.
 
-        See also
-        --------
-
-        dlisio.objects.origin.namespace_version
-
         Returns
         -------
 
@@ -402,11 +364,6 @@ class Origin(BasicObject):
         """Namespace version
 
         The version of the namespace.
-
-        See also
-        --------
-
-        dlisio.objects.origin.namespace_name
 
         Returns
         -------

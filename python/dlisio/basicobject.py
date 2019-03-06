@@ -109,7 +109,7 @@ class BasicObject():
     def contains(base, name):
         """ Check if base cotains obj
 
-        Parameters:
+        Parameters
         ----------
         base : list of dlis.core.obname or list of any object derived from
             dlisio.BasicObject, e.g. Channel, Frame
