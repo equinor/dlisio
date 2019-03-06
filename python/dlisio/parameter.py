@@ -9,17 +9,37 @@ class Parameter(basic_object):
     """
     def __init__(self, obj):
         super().__init__(obj, "parameter")
-        self.long_name   = None
-        self.dimension   = None
-        self.axis        = None
-        self.zones       = None
-        self.values      = None
+        self._long_name = None
+        self._dimension = None
+        self._axis      = None
+        self._zones     = None
+        self._values    = None
 
         for attr in obj.values():
             if attr.value is None: continue
-            if attr.label == "LONG-NAME" : self.long_name = attr.value[0]
-            if attr.label == "DIMENSION" : self.dimension = attr.value
-            if attr.label == "AXIS"      : self.axis      = attr.value
-            if attr.label == "ZONES"     : self.zones     = attr.value
+            if attr.label == "LONG-NAME" : self._long_name = attr.value[0]
+            if attr.label == "DIMENSION" : self._dimension = attr.value
+            if attr.label == "AXIS"      : self._axis      = attr.value
+            if attr.label == "ZONES"     : self._zones     = attr.value
 
         self.stripspaces()
+
+    @property
+    def long_name(self):
+        return self._long_name
+
+    @property
+    def dimension(self):
+        return self._dimension
+
+    @property
+    def axis(self):
+        return self._axis
+
+    @property
+    def zones(self):
+        return self._zones
+
+    @property
+    def values(self):
+        return self._values

@@ -9,25 +9,53 @@ class Tool(basic_object):
     """
     def __init__(self, obj):
         super().__init__(obj, "tool")
-        self.description    = None
-        self.trademark_name = None
-        self.generic_name   = None
-        self.status         = None
-        self.parts          = []
-        self.channels       = []
-        self.parameters     = []
+        self._description    = None
+        self._trademark_name = None
+        self._generic_name   = None
+        self._status         = None
+        self._parts          = []
+        self._channels       = []
+        self._parameters     = []
 
         for attr in obj.values():
             if attr.value is None: continue
-            if attr.label == "DESCRIPTION"    : self.description    = attr.value[0]
-            if attr.label == "TRADEMARK-NAME" : self.trademark_name = attr.value[0]
-            if attr.label == "GENERIC-NAME"   : self.generic_name   = attr.value[0]
-            if attr.label == "STATUS"         : self.status         = attr.value[0]
-            if attr.label == "PARTS"          : self.parts          = attr.value
-            if attr.label == "CHANNELS"       : self.channels       = attr.value
-            if attr.label == "PARAMETERS"     : self.parameters     = attr.value
+            if attr.label == "DESCRIPTION"    : self._description    = attr.value[0]
+            if attr.label == "TRADEMARK-NAME" : self._trademark_name = attr.value[0]
+            if attr.label == "GENERIC-NAME"   : self._generic_name   = attr.value[0]
+            if attr.label == "STATUS"         : self._status         = attr.value[0]
+            if attr.label == "PARTS"          : self._parts          = attr.value
+            if attr.label == "CHANNELS"       : self._channels       = attr.value
+            if attr.label == "PARAMETERS"     : self._parameters     = attr.value
 
         self.stripspaces()
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def trademark_name(self):
+        return self._trademark_name
+
+    @property
+    def generic_name(self):
+        return self._generic_name
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def parts(self):
+        return self._parts
+
+    @property
+    def channels(self):
+        return self._channels
+
+    @property
+    def parameters(self):
+        return self._parameters
 
     def haschannel(self, channel):
         """

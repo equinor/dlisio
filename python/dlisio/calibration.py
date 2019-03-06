@@ -12,26 +12,46 @@ class Calibration(basic_object):
     """
     def __init__(self, obj):
         super().__init__(obj, "calibration")
-        self.method               = None
-        self.calibrated_channel   = []
-        self.uncalibrated_channel = []
-        self.coefficients         = []
-        self.parameters           = []
+        self._method               = None
+        self._calibrated_channel   = []
+        self._uncalibrated_channel = []
+        self._coefficients         = []
+        self._parameters           = []
 
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "METHOD":
-                self.method = attr.value[0]
+                self._method = attr.value[0]
             if attr.label == "CALIBRATED-CHANNELS":
-                self.calibrated_channel = attr.value
+                self._calibrated_channel = attr.value
             if attr.label == "UNCALIBRATED-CHANNELS":
-                self.uncalibrated_channel = attr.value
+                self._uncalibrated_channel = attr.value
             if attr.label == "COEFFICIENTS":
-                self.coefficients = attr.value
+                self._coefficients = attr.value
             if attr.label == "PARAMETERS":
-                self.parameters = attr.value
+                self._parameters = attr.value
 
         self.stripspaces()
+
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def calibrated_channel(self):
+        return self._calibrated_channel
+
+    @property
+    def uncalibrated_channel(self):
+        return self._uncalibrated_channel
+
+    @property
+    def coefficients(self):
+        return self._coefficients
+
+    @property
+    def parameters(self):
+        return self._parameters
 
     def hasuncalibrated_channel(self, channel):
         """

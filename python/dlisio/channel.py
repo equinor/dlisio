@@ -9,27 +9,59 @@ class Channel(basic_object):
     """
     def __init__(self, obj):
         super().__init__(obj, "channel")
-        self.long_name     = None
-        self.reprc         = None
-        self.units         = None
-        self.properties    = []
-        self.dimension     = []
-        self.axis          = []
-        self.element_limit = []
-        self.source        = None
+        self._long_name     = None
+        self._reprc         = None
+        self._units         = None
+        self._properties    = []
+        self._dimension     = []
+        self._axis          = []
+        self._element_limit = []
+        self._source        = None
 
         for attr in obj.values():
             if attr.value is None: continue
-            if attr.label == "LONG-NAME"          : self.long_name     = attr.value[0]
-            if attr.label == "REPRESENTATION-CODE": self.reprc         = attr.value[0]
-            if attr.label == "UNITS"              : self.units         = attr.value[0]
-            if attr.label == "PROPERTIES"         : self.properties    = attr.value
-            if attr.label == "DIMENSION"          : self.dimension     = attr.value
-            if attr.label == "AXIS"               : self.axis          = attr.value
-            if attr.label == "ELEMENT-LIMIT"      : self.element_limit = attr.value
-            if attr.label == "SOURCE"             : self.source        = attr.value[0]
+            if attr.label == "LONG-NAME"          : self._long_name     = attr.value[0]
+            if attr.label == "REPRESENTATION-CODE": self._reprc         = attr.value[0]
+            if attr.label == "UNITS"              : self._units         = attr.value[0]
+            if attr.label == "PROPERTIES"         : self._properties    = attr.value
+            if attr.label == "DIMENSION"          : self._dimension     = attr.value
+            if attr.label == "AXIS"               : self._axis          = attr.value
+            if attr.label == "ELEMENT-LIMIT"      : self._element_limit = attr.value
+            if attr.label == "SOURCE"             : self._source        = attr.value[0]
 
         self.stripspaces()
+
+    @property
+    def long_name(self):
+        return self._long_name
+
+    @property
+    def reprc(self):
+        return self._reprc
+
+    @property
+    def units(self):
+        return self._units
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def dimension(self):
+        return self._dimension
+
+    @property
+    def axis(self):
+        return self._axis
+
+    @property
+    def element_limit(self):
+        return self._element_limit
+
+    @property
+    def source(self):
+        return self._source
 
     def hassource(self, obj):
         """

@@ -54,19 +54,28 @@ class Objectpool():
         if obj.type == "channel":
             if obj.source is not None:
                 for o in self.objects:
-                    if o.name == obj.source.name: obj.source = o
+                    if o.name == obj.source.name: obj._source = o
 
         if obj.type == "frame":
-            obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
+            obj._channels = [o for o in self.channels
+                             if obj.haschannel(o.name)]
 
         if obj.type == "tool":
-            obj.channels = [o for o in self.channels if obj.haschannel(o.name)]
-            obj.parameters = [o for o in self.parameters if obj.hasparameter(o.name)]
+            obj._channels = [o for o in self.channels
+                             if obj.haschannel(o.name)]
+
+            obj._parameters = [o for o in self.parameters
+                               if obj.hasparameter(o.name)]
 
         if obj.type == "calibration":
-            obj.uncal_ch = [o for o in self.channels if obj.hasuncalibrated_channel(o.name)]
-            obj.cal_ch = [o for o in self.channels if obj.hascalibrated_channel(o.name)]
-            obj.parameters = [o for o in self.parameters if obj.hasparameter(o.name)]
+            obj._uncalibrated_channel = [o for o in self.channels
+                                           if obj.hasuncalibrated_channel(o.name)]
+
+            obj._calibrated_channel = [o for o in self.channels
+                                         if obj.hascalibrated_channel(o.name)]
+
+            obj._parameters = [o for o in self.parameters
+                                 if obj.hasparameter(o.name)]
 
     def getobject(self, name, type):
         """ return object corresponding to the unique identifier given by name + type

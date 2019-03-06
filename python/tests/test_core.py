@@ -233,7 +233,7 @@ def test_calibrations():
         cal_ch = [o for o in f.calibrations if o.hascalibrated_channel(ref)]
         assert cal_ch[0] == calibration
 
-        ref = calibration.uncal_ch[0]
+        ref = calibration.uncalibrated_channel[0]
         uncal_ch = [o for o in f.calibrations if o.hasuncalibrated_channel(ref.name)]
         assert uncal_ch[0] == calibration
 
