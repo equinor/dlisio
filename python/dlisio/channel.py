@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Channel(basic_object):
+class Channel(BasicObject):
     """
     The Channel object reflects the logical record type CHANNEL (listed in
     Appendix A.2 - Logical Record Types, described in Chapter 5.5.1 - Static and

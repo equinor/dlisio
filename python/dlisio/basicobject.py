@@ -1,23 +1,20 @@
 from . import core
 
-class basic_object():
-    """
+class BasicObject():
+    """Basic object
     Python representation of the set of logical record types (listed in
     Appendix A - Logical Record Types, described in Chapter 5 - Static and
     Frame Data)
 
-    All object-types are derived from basic_object, but that is just a way of
+    All object-types are derived from BasicObject, but that is just a way of
     adding the object-name field which is present in every object, as well as
     specifying the object type. These two fields makes a unique indentifier for
     the object.
-
-    The attribute attic is a copy of the object as represented on disk and is
-    mainly inteded for debugging purpuses.
     """
     def __init__(self, obj, type):
-        self.name = obj.name
-        self.type = type
-        self.attic = obj
+        self._name = obj.name
+        self._type = type
+        self._attic = obj
 
     def __repr__(self):
         return "dlisio.{}(id={}, origin={}, copynumber={})".format(
@@ -31,6 +28,67 @@ class basic_object():
         for key, value in self.__dict__.items():
             s += "\t{}: {}\n".format(key, value)
         return s
+
+    @property
+    def name(self):
+        """ Name
+
+        Name is the main identifier for dlis-objects and consists of three
+        subfields: id(str), origin(int) and copynumber(int).
+
+        The name is required to be unique for all object of the same type
+        (within a Logical File), e.g: Two channel objects cannot have the same
+        name. However a channel object can have the same name as a frame
+        object.
+
+        Examples
+        --------
+
+        Access each individual field:
+
+        >>> id  = Object.name.id
+        >>> origin = Object.name.origin
+        >>> copynr = Object.name.copynumber
+
+        Returns
+        -------
+
+        name : dlis.core.obname
+        """
+        return self._name
+
+    @property
+    def type(self):
+        """ Type
+
+        The type of the object. Together, the type- and name-attribute form a
+        unique object-identifier across all objects in the Logical File
+
+        Returns
+        -------
+
+        type : str
+        """
+        return self._type
+
+    @property
+    def attic(self):
+        """ The original object as represented on disk
+
+        Attic refers the underlying basic_object, which is a
+        dict-representation of the data on disk
+
+        Notes
+        -----
+
+        This attribute is mainly intended for debugging purpuses
+
+        Returns
+        -------
+
+        attic : dl:basic_object
+        """
+        return self._attic
 
     def stripspaces(self):
         """Strip spaces
@@ -54,7 +112,7 @@ class basic_object():
         Parameters:
         ----------
         base : list of dlis.core.obname or list of any object derived from
-            basic_object, e.g. Channel, Frame
+            dlisio.BasicObject, e.g. Channel, Frame
 
         obj : dlis.core.obname, tuple (str, int, int)
 

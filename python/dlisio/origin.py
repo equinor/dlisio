@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Origin(basic_object):
+class Origin(BasicObject):
     """ Describes the creation of the logical file.
 
     Origin objects is an unique indentifier for a Logical File and it

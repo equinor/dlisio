@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Unknown(basic_object):
+class Unknown(BasicObject):
     """
     The unknown object implements a dict interface and is intended as a
     fall-back object if the object-type is not recognized by dlisio, e.g.

@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Frame(basic_object):
+class Frame(BasicObject):
     """
     The Frame object reflects the logical record type FRAME (listed in
     Appendix A.2 - Logical Record Types, described in Chapter 5.7.1 - Static and

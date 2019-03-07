@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Parameter(basic_object):
+class Parameter(BasicObject):
     """
     The Parameter object reflects the logical record type PARAMETER (listed in
     Appendix A.2 - Logical Record Types, described in Chapter 5.8.2 - Static

@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Calibration(basic_object):
+class Calibration(BasicObject):
     """
     The Calibration reflects the logical record type CALIBRATION (listed in
     Appendix A.2 - Logical Record Types, described in Chapter 5.8.7.3 - Static and

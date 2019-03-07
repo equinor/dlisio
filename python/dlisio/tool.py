@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Tool(basic_object):
+class Tool(BasicObject):
     """
     The tool object reflects the logical record type TOOL (listed in Appendix
     A.2 - Logical Record Types, described in Chapter 5.8.4 - Static and Frame
