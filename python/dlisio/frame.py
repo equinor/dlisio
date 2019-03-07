@@ -14,7 +14,7 @@ class Frame(basic_object):
         self._index_type  = None
         self._direction   = None
         self._spacing     = None
-        self._encrypted   = None
+        self._encrypted   = False
         self._index_min   = None
         self._index_max   = None
 
@@ -25,7 +25,7 @@ class Frame(basic_object):
             if attr.label == "INDEX-TYPE" : self._index_type  = attr.value[0]
             if attr.label == "DIRECTION"  : self._direction   = attr.value[0]
             if attr.label == "SPACING"    : self._spacing     = attr.value[0]
-            if attr.label == "ENCRYPTED"  : self._encrypted   = attr.value[0]
+            if attr.label == "ENCRYPTED"  : self._encrypted   = True
             if attr.label == "INDEX-MIN"  : self._index_min   = attr.value[0]
             if attr.label == "INDEX-MAX"  : self._index_max   = attr.value[0]
 
