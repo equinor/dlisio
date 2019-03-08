@@ -13,13 +13,14 @@
 
 namespace {
 
-bool is_zero_string( const char* xs ) noexcept {
+template <typename F>
+bool is_sul_number_field_valid( const char* xs, F f) noexcept {
     /*
-     * check if a a string legitimately produced zero as output. If so, then
-     * the following holds:
+     * Check that following holds for the current string under xs:
      *
      * * it has zero or more leading spaces (as per isspace)
-     * * it has 1 or more zeros
+     * * it has 1 or more characters
+     * * for all of them f returns True
      * * it ends with a \0 NUL-byte
      *
      * which means it takes C-strings, and the terminating 0 must be inserted
@@ -34,10 +35,25 @@ bool is_zero_string( const char* xs ) noexcept {
     if( *xs == '\0' ) return false;
 
     do {
-        if( *xs != '0' ) return false;
+        if( !f( *xs ) ) break;
     } while( *++xs );
 
+    while( *xs ){
+        if( !std::isspace( *xs ) ) return false;
+        ++xs;
+    }
+
     return true;
+}
+
+bool is_zero_string( const char* xs ) noexcept {
+    auto fn = [](char c) { return c == '0'; };
+    return is_sul_number_field_valid(xs, fn);
+}
+
+bool is_number_string( const char* xs ) noexcept {
+    auto fn = [](char c) { return std::isdigit(c); };
+    return is_sul_number_field_valid(xs, fn);
 }
 
 int parse_revision( const char* rawin, int* major, int* minor ) {
@@ -123,7 +139,8 @@ int sulv1( const char* xs,
      */
 
     std::copy_n( xs + 0, 4, std::begin( buffer ) );
-    const auto seq = std::atoi( buffer.data() );
+    const auto seq = is_number_string(buffer.data()) ?
+                        std::atoi( buffer.data() ) : -1;
 
     /* skip revision, already parsed and known to be V1.00 */
 
@@ -135,7 +152,8 @@ int sulv1( const char* xs,
      * type.
      */
     std::copy_n( xs + 15, 5, std::begin( buffer ) );
-    const auto len = std::atol( buffer.data() );
+    const auto len = is_number_string(buffer.data()) ?
+                        std::atol( buffer.data() ) : -1;
 
     /*
      * In revision 1, only RECORD is a valid structure description, so just
