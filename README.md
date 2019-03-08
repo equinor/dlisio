@@ -2,6 +2,7 @@
 
 [![Travis](https://img.shields.io/travis/equinor/dlisio/master.svg?label=travis)](https://travis-ci.org/equinor/dlisio)
 [![Appveyor](https://ci.appveyor.com/api/projects/status/jdhagpm7jkga07j1?svg=true)](https://ci.appveyor.com/project/jokva/dlisio)
+[![PyPI version](https://badge.fury.io/py/dlisio.svg)](https://badge.fury.io/py/dlisio)
 
 ## Index ##
 
