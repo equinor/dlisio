@@ -1,11 +1,26 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Tool(basic_object):
-    """
-    The tool object reflects the logical record type TOOL (listed in Appendix
-    A.2 - Logical Record Types, described in Chapter 5.8.4 - Static and Frame
-    Data, TOOL objects)
+class Tool(BasicObject):
+    """Tool
+
+    A tool is an ensembly of equiptment that as a whole provide measurements or
+    services. The list of equiptment that makes up the tool can be found in
+    *tool.parts*. Tools objects also keep a list of all channels that where produced by
+    the tool in *tool.channels*.
+
+    Notes
+    -----
+
+    The tool object reflects the logical record type TOOL defined in rp66. TOOL
+    objects are listed in Appendix A.2 - Logical Record Types, described in
+    detail in Chapter 5.8.4 - Static and Frame Data, TOOL objects.
+
+    See also
+    --------
+
+    dlisio.Channel : Channel objects.
+    dlisio.Parameter : Parameter objects.
     """
     def __init__(self, obj):
         super().__init__(obj, "tool")
@@ -31,62 +46,130 @@ class Tool(basic_object):
 
     @property
     def description(self):
+        """Description
+
+        Textual description of the Tool.
+
+        Returns
+        -------
+
+        description : str
+        """
         return self._description
 
     @property
     def trademark_name(self):
+        """Trademark name
+
+        The producer's name for the tool.
+
+        Returns
+        -------
+
+        trademark_name : str
+        """
         return self._trademark_name
 
     @property
     def generic_name(self):
+        """Generic name
+
+        The name generally used by the industry to describe such a tool.
+
+        Returns
+        -------
+
+        generic_name : str
+        """
         return self._generic_name
 
     @property
     def status(self):
+        """Status
+
+        Specifies whether the tool is enabled to provide information to the
+        acquisition system or not.
+
+        Returns
+        -------
+
+        status : int
+            Returns 0 if tool is disabled, 1 if it is enabled. Other values
+            are undefined.
+        """
         return self._status
 
     @property
     def parts(self):
+        """Parts
+
+        A list of Equiptment objects which represent the parts that the tool is
+        made up by.
+
+        Returns
+        -------
+
+        parts : list of dlisio.core.obname
+            each element is a reference to an equiptment object
+        """
         return self._parts
 
     @property
     def channels(self):
+        """Channels
+
+        Channels that are produced by this tool.
+
+        Returns
+        -------
+
+        channels : list of dlisio.Channel
+        """
         return self._channels
 
     @property
     def parameters(self):
-        return self._parameters
+        """Parameters
 
-    def haschannel(self, channel):
-        """
-        Return True if channels is in tool.channels,
-        else return False
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or tuple(str, int, int)
+        Parameter that directly affect or reflect the operation of the tool.
 
         Returns
         -------
-        haschannel : bool
-            True if Tool has the channel obj, else False
 
+        parameters : list of dlisio.Parameter
+        """
+        return self._parameters
+
+    def haschannel(self, channel):
+        """Tool contains channel
+
+        Return True if channels exist in *Tool.channel*, else return False.
+
+        Parameters
+        ----------
+        channel : dlis.core.obname or (str, int, int)
+
+        Returns
+        -------
+        constains_channel : bool
+            True if channel exist in *Tool.channel*, else False.
         """
         return self.contains(self.channels, channel)
 
     def hasparameter(self, param):
-        """
-        Return True if param is in tool.parameters,
-        else return False
+        """Frame contains parameter
+
+        Return True if parameter exist in *Frame.parameters*, else
+        return False.
 
         Parameters
         ----------
-        param : dlis.core.obname or tuple(str, int, int)
+        param : dlis.core.obname, (str, int, int)
 
         Returns
         -------
-        hasparam : bool
-            True if Tool has the parameter obj, else False
-
+        contains_parameter : bool
+            True if parameter exist in *Frame.parameters*, else
+            False.
         """
         return self.contains(self.parameters, param)

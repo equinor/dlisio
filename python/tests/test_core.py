@@ -210,7 +210,7 @@ def test_frames():
         assert frame.index_min       == 33354518
         assert frame.index_max       == 35194520
         assert len(frame.channels)   == 4
-        assert frame.encrypted   is None
+        assert frame.encrypted       == False
         assert frame.description is None
 
         fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]

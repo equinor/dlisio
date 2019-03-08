@@ -12,20 +12,10 @@ from .unknown import Unknown
 class Objectpool():
     """ The Objectpool implements a pool of all metadata objects.
 
-    Linking objects:
-    Some objects have attributes that reference other object of different
-    classes e.g. frames have a channels attribute. The on-disk representation
-    of these attributes are meerly list of unique object names. dlisio resolves
-    these object names an creates refrences to the python objects. However,
-    dlisio assumes that there exist an object with that unique name on file.
-    If not, that entry is silently dropped from the refrencing object
-    attribute.
+    Notes
+    -----
 
-    Note that the attic attribute contains all object attributes as represented
-    on disk. Dropped entries can be identified by simply comparing the the
-    attribute from the python object with the corresponding attribute in attic
-
-    Also note that for now dlisio only support read operarations, hence any
+    For now dlisio only support read operarations, hence any
     user-modification of these objects is NOT reflected on-disk
     """
     def __init__(self, objects):

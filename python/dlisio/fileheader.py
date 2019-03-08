@@ -1,7 +1,7 @@
-from .basic_object import basic_object
+from .basicobject import BasicObject
 
 
-class Fileheader(basic_object):
+class Fileheader(BasicObject):
     """ Fileheader
 
     The Fileheader is an identifier for the Logical File. Below follows a description of the
