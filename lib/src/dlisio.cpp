@@ -189,6 +189,7 @@ int sulv1( const char* xs,
      * are, caller don't care if they're correct or not
      */
     if( seqnum && seq <= 0 ) return DLIS_INCONSISTENT;
+    if( maxlen && len < 0 )  return DLIS_INCONSISTENT;
     if( layout && !rec )     return DLIS_INCONSISTENT;
 
     /*
@@ -198,12 +199,13 @@ int sulv1( const char* xs,
      * includes any leading-spaces leading-zeros optionally-zero terminated
      * strings
      */
-    std::copy_n( xs + 15, 5, std::begin( buffer ) );
-    buffer[ 5 ] = '\0';
-    if( !is_zero_string( buffer.data() ) )
-        return DLIS_INCONSISTENT;
-
-    if( maxlen ) *maxlen = 0;
+    if (maxlen && len == 0){
+        std::copy_n( xs + 15, 5, std::begin( buffer ) );
+        buffer[ 5 ] = '\0';
+        if( !is_zero_string( buffer.data() ) )
+            return DLIS_INCONSISTENT;
+        *maxlen = 0;
+    }
     return DLIS_OK;
 }
 
