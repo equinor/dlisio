@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/*
+ * Read Storage Unit Label (SUL).
+ * seqnum, layout, maxlen and id are nullable
+ * Assure beforehand that xs contains at least DLIS_SUL_SIZE bytes
+ */
 #define DLIS_SUL_SIZE 80
 int dlis_sul( const char* xs,
               int* seqnum,
