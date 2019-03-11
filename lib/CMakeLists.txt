@@ -59,6 +59,9 @@ endif()
 add_executable(testsuite test/testsuite.cpp
                          test/protocol.cpp
                          test/types.cpp
+                         test/sul.cpp
+                         test/pack.cpp
+                         test/index-records.cpp
 )
 target_link_libraries(testsuite dlisio dlisio-extension catch2)
 add_test(NAME core COMMAND testsuite)
