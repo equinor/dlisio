@@ -1,5 +1,7 @@
 from .basicobject import BasicObject
 
+import numpy as np
+
 
 class Frame(BasicObject):
     """Frame-type
@@ -32,6 +34,7 @@ class Frame(BasicObject):
         self._encrypted   = False
         self._index_min   = None
         self._index_max   = None
+        self._dtype       = None
 
         for attr in obj.values():
             if attr.value is None: continue
@@ -45,6 +48,23 @@ class Frame(BasicObject):
             if attr.label == "INDEX-MAX"  : self._index_max   = attr.value[0]
 
         self.stripspaces()
+
+    @property
+    def dtype(self):
+        """dtype
+
+        data-type of each sample in the channel's sample array. The dtype-label
+        is *channel.name.id*.
+
+        Returns
+        -------
+
+        dtype : np.dtype
+        """
+        if self._dtype: return self._dtype
+
+        self._dtype = np.dtype([(ch.name.id, ch.dtype) for ch in self.channels])
+        return self._dtype
 
     @property
     def description(self):

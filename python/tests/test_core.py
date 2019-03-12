@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from datetime import datetime
 
 import dlisio
@@ -299,6 +300,14 @@ def test_object(f):
     assert frame.name.origin == 2
     assert frame.name.copynumber == 0
 
+def test_dtype(f):
+    frames = list(f.frames)
+    dtype1 = frames[0].dtype
+
+    assert dtype1 == np.dtype([('TIME', np.float32),
+                               ('TDEP', np.float32),
+                               ('TENS_SL', np.float32),
+                               ('DEPT_SL', np.float32)])
 def test_load_pre_sul_garbage(channels_f):
     with dlisio.load('data/pre-sul-garbage.dlis') as f:
         assert f.storage_label() == channels_f.storage_label()

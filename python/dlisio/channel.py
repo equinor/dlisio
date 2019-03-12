@@ -1,4 +1,7 @@
 from .basicobject import BasicObject
+from .reprc import dtype
+
+import numpy as np
 
 
 class Channel(BasicObject):
@@ -26,6 +29,7 @@ class Channel(BasicObject):
         self._axis          = []
         self._element_limit = []
         self._source        = None
+        self._dtype         = None
 
         for attr in obj.values():
             if attr.value is None: continue
@@ -39,6 +43,29 @@ class Channel(BasicObject):
             if attr.label == "SOURCE"             : self._source        = attr.value[0]
 
         self.stripspaces()
+
+    @property
+    def dtype(self):
+        """dtype
+
+        data-type of each sample in the channel's sample array. The dtype-label
+        is *channel.name.id*.
+
+        Returns
+        -------
+
+        dtype : np.dtype
+        """
+        if self._dtype: return self._dtype
+
+        if len(self.dimension) == 1:
+            shape = self.dimension[0]
+        else:
+            shape = tuple(self.dimension)
+
+        self._dtype = np.dtype((dtype[self.reprc], shape))
+
+        return self._dtype
 
     @property
     def long_name(self):
