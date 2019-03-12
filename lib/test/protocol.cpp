@@ -180,6 +180,39 @@ TEST_CASE("Object descriptors", "[component][v1]") {
     }
 }
 
+TEST_CASE("simple visible record length header", "[dlis_vrl]") {
+    static const unsigned char data [] = {
+        0x00, 0x22,
+        0xFF,
+        0x01,
+    };
+
+    int len;
+    int version;
+
+    const auto err = dlis_vrl((char*) data, &len, &version);
+    CHECK( err == DLIS_OK );
+    CHECK( len == 34 );
+    CHECK( version ==  1);
+}
+
+TEST_CASE("simple logical record segment header", "[dlis_lrsh]") {
+    static const unsigned char data [] = {
+        0x00, 0x24,
+        0x1F,
+        0x02,
+    };
+
+    int length;
+    uint8_t attrs;
+    int type;
+
+    const auto err = dlis_lrsh((char*) data, &length, &attrs, &type);
+    CHECK( err == DLIS_OK );
+    CHECK( length == 36 );
+    CHECK( attrs == 31 );
+    CHECK( type == 2 );
+}
 
 TEST_CASE("Attribute descriptors", "[component][v1]") {
     int role;
