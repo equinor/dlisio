@@ -457,11 +457,21 @@ char* pack( char* dst ) noexcept (true) {
     return dst;
 }
 
+/*
+ * widen int8 and int16 types to int/uint, and keep every other size as-is
+ */
+template < typename T > struct widen      { using type = T; };
+template <> struct widen< std::int8_t >   { using type = int; };
+template <> struct widen< std::int16_t >  { using type = int; };
+template <> struct widen< std::uint8_t >  { using type = unsigned int; };
+template <> struct widen< std::uint16_t > { using type = unsigned int; };
+
 template < typename T, typename... Ts >
 char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) noexcept (true) {
-    std::memcpy( dst, ptr, sizeof( T ) );
-    dst += sizeof( T );
-    return pack( dst, ptrs ... );
+    typename widen< T >::type tmp = *ptr;
+    std::memcpy(dst, &tmp, sizeof(tmp));
+    dst += sizeof(tmp);
+    return pack(dst, ptrs ...);
 }
 
 template < typename... Ts >
@@ -655,14 +665,14 @@ int dlis_pack_size( const char* fmt, int* size ) {
             case DLIS_FMT_FDOUB2: sz += sizeof(double) * 3;    break;
             case DLIS_FMT_CSINGL: sz += sizeof(float) * 2;     break;
             case DLIS_FMT_CDOUBL: sz += sizeof(double) * 2;    break;
-            case DLIS_FMT_SSHORT: sz += sizeof(std::int8_t);   break;
-            case DLIS_FMT_SNORM:  sz += sizeof(std::int16_t);  break;
+            case DLIS_FMT_SSHORT: sz += sizeof(int);           break;
+            case DLIS_FMT_SNORM:  sz += sizeof(int);           break;
             case DLIS_FMT_SLONG:  sz += sizeof(std::int32_t);  break;
-            case DLIS_FMT_USHORT: sz += sizeof(std::uint8_t);  break;
-            case DLIS_FMT_UNORM:  sz += sizeof(std::uint16_t); break;
+            case DLIS_FMT_USHORT: sz += sizeof(unsigned int);  break;
+            case DLIS_FMT_UNORM:  sz += sizeof(unsigned int);  break;
             case DLIS_FMT_ULONG:  sz += sizeof(std::uint32_t); break;
             case DLIS_FMT_DTIME:  sz += sizeof(int) * 8;       break;
-            case DLIS_FMT_STATUS: sz += sizeof(std::int8_t);   break;
+            case DLIS_FMT_STATUS: sz += sizeof(int);           break;
             case DLIS_FMT_ORIGIN: sz += sizeof(std::int32_t);  break;
             case DLIS_FMT_UVARI:  sz += sizeof(std::int32_t);  break;
 
