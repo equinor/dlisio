@@ -1,3 +1,38 @@
+""" reprc -> formatstring
+
+Conversion from dlis' representation codes to format-string char's.
+"""
+fmt = {
+    "eof"  : '\0',
+    1      : 'r',
+    2      : 'f',
+    3      : 'b',
+    4      : 'B',
+    5      : 'x',
+    6      : 'V',
+    7      : 'F',
+    8      : 'z',
+    9      : 'Z',
+    10     : 'c',
+    11     : 'C',
+    12     : 'd',
+    13     : 'D',
+    14     : 'l',
+    15     : 'u',
+    16     : 'U',
+    17     : 'L',
+    18     : 'i',
+    19     : 's',
+    20     : 'S',
+    21     : 'j',
+    22     : 'J',
+    23     : 'o',
+    24     : 'O',
+    25     : 'A',
+    26     : 'q',
+    27     : 'Q',
+}
+
 """ reprc -> type-string
 Conversion from dlis' representation codes to type-strings that can be
 interpreted by numpy.dtype. int's and uint's are normalized to 4-byte.

@@ -300,6 +300,17 @@ def test_object(f):
     assert frame.name.origin == 2
     assert frame.name.copynumber == 0
 
+def test_fmtstring(f):
+    reference1 = "ffff"
+    reference2 = "ffffffffffffffffffffffffffffffffffffffflfff"
+
+    frames = list(f.frames)
+    fmtstring1 = frames[0].fmtstr()
+    fmtstring2 = frames[1].fmtstr()
+
+    assert fmtstring1 == reference1
+    assert fmtstring2 == reference2
+
 def test_dtype(f):
     frames = list(f.frames)
     dtype1 = frames[0].dtype
