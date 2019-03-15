@@ -47,7 +47,7 @@ class Objectpool():
                  elif os.type == "CALIBRATION" : obj = Calibration.load(obj)
                  else: obj = Unknown.load(obj)
 
-                 cache[fingerprint(obj)] = obj
+                 cache[obj.fingerprint] = obj
                  cache[obj.type].append(obj)
                  self.objects.append(obj)
 

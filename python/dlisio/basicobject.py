@@ -30,6 +30,21 @@ class BasicObject():
         return s
 
     @property
+    def fingerprint(self):
+        """ Object fingerprint
+
+        Return the fingerprint, a unique identifier, for this object. This is
+        basically an objref type from the RP66 standard, but with a pythonic
+        flavour, and suitable for keys in dicts.
+
+        Returns
+        -------
+        fingerprint
+        """
+        name = self.name
+        return (self.type.upper(), name.id, name.origin, name.copynumber)
+
+    @property
     def name(self):
         """ Name
 
