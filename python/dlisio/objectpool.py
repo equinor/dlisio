@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from . import core
 from .fileheader import Fileheader
 from .origin import Origin
@@ -8,6 +10,16 @@ from .parameter import Parameter
 from .calibration import Calibration
 from .unknown import Unknown
 
+def fingerprint(obj, type = None):
+    if type is None:
+        type = obj.type.upper()
+
+    try:
+        name = obj.name
+    except AttributeError:
+        name = obj
+
+    return (type, name.id, name.origin, name.copynumber)
 
 class Objectpool():
     """ The Objectpool implements a pool of all metadata objects.
@@ -22,6 +34,8 @@ class Objectpool():
         self.objects = []
         self.index = 0
 
+        cache = defaultdict(list)
+
         for os in objects:
             for obj in os.objects:
                  if   os.type == "FILE-HEADER" : obj = Fileheader(obj)
@@ -32,10 +46,13 @@ class Objectpool():
                  elif os.type == "PARAMETER"   : obj = Parameter(obj)
                  elif os.type == "CALIBRATION" : obj = Calibration(obj)
                  else: obj = Unknown(obj)
+
+                 cache[fingerprint(obj)] = obj
+                 cache[obj.type].append(obj)
                  self.objects.append(obj)
 
         for obj in self.objects:
-            self.link(obj)
+            self.link(obj, cache)
 
     def __len__(self):
         """x.__len__() <==> len(x)"""
@@ -44,32 +61,43 @@ class Objectpool():
     def __repr__(self):
         return "Objectpool(objects =  {})".format(len(self))
 
-    def link(self, obj):
+    def link(self, obj, cache):
         if obj.type == "channel":
             if obj.source is not None:
-                for o in self.objects:
-                    if o.name == obj.source.name: obj._source = o
+                obj._source = cache[fingerprint(obj.source)]
 
         if obj.type == "frame":
-            obj._channels = [o for o in self.channels
-                             if obj.haschannel(o.name)]
+            obj._channels = [
+                cache[fingerprint(channel, type = 'CHANNEL')]
+                for channel in obj._channels
+            ]
 
         if obj.type == "tool":
-            obj._channels = [o for o in self.channels
-                             if obj.haschannel(o.name)]
+            obj._channels = [
+                cache[fingerprint(channel, type = 'CHANNEL')]
+                for channel in obj._channels
+            ]
 
-            obj._parameters = [o for o in self.parameters
-                               if obj.hasparameter(o.name)]
+            obj._parameters = [
+                cache[fingerprint(channel, type = 'PARAMETER')]
+                for channel in obj._parameters
+            ]
 
         if obj.type == "calibration":
-            obj._uncalibrated_channel = [o for o in self.channels
-                                           if obj.hasuncalibrated_channel(o.name)]
+            obj._uncalibrated_channel = [
+                cache[fingerprint(channel, type = 'CHANNEL')]
+                for channel in obj._uncalibrated_channel
+            ]
 
-            obj._calibrated_channel = [o for o in self.channels
-                                         if obj.hascalibrated_channel(o.name)]
+            obj._calibrated_channel = [
+                cache[fingerprint(channel, type = 'CHANNEL')]
+                for channel in obj._calibrated_channel
+            ]
 
-            obj._parameters = [o for o in self.parameters
-                                 if obj.hasparameter(o.name)]
+            obj._parameters = [
+                cache[fingerprint(channel, type = 'PARAMETER')]
+                for channel in obj._parameters
+            ]
 
     def getobject(self, name, type):
         """ return object corresponding to the unique identifier given by name + type
