@@ -275,6 +275,15 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::objref >( m, "objref" )
         .def_readonly( "type", &dl::objref::type )
         .def_readonly( "name", &dl::objref::name )
+        .def_property_readonly( "fingerprint",
+            [](const dl::objref& ref) {
+                return py::make_tuple(
+                    ref.type,
+                    ref.name.id,
+                    ref.name.origin,
+                    ref.name.copy
+                );
+        })
         .def( "__repr__", []( const dl::objref& o ) {
             return "dlisio.core.objref(id='{}', origin={}, copynum={}, type={})"_s
                     .format( dl::decay(o.name.id),

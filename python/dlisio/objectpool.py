@@ -64,7 +64,7 @@ class Objectpool():
     def link(self, obj, cache):
         if obj.type == "CHANNEL":
             if obj.source is not None:
-                obj._source = cache[fingerprint(obj.source)]
+                obj._source = cache[obj.source.fingerprint]
 
         if obj.type == "FRAME":
             obj._channels = [
