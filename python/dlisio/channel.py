@@ -30,6 +30,7 @@ class Channel(BasicObject):
         self._element_limit = []
         self._source        = None
         self._dtype         = None
+        self.source_ref     = None
 
     @staticmethod
     def load(obj):
@@ -43,7 +44,7 @@ class Channel(BasicObject):
             if attr.label == "DIMENSION"          : self._dimension     = attr.value
             if attr.label == "AXIS"               : self._axis          = attr.value
             if attr.label == "ELEMENT-LIMIT"      : self._element_limit = attr.value
-            if attr.label == "SOURCE"             : self._source        = attr.value[0]
+            if attr.label == "SOURCE"             : self.source_ref     = attr.value[0]
 
         self.stripspaces()
         return self
@@ -205,13 +206,11 @@ class Channel(BasicObject):
     def source(self):
         """Source
 
-        References the source of the channel object, e.g. a Tool, Process or
-        Calibration Object.
+        The source of this channel, e.g. a Tool, Process or Calibration Object.
 
         Returns
         -------
-
-        source : any object derived from dlisio.BasicObject
+        source
         """
         return self._source
 
@@ -230,3 +229,7 @@ class Channel(BasicObject):
             True if obj exist in *Channel.source*, else False.
         """
         return self.contains(self.source, obj)
+
+    def link(self, pool):
+        if self.source_ref is not None:
+            self._source = pool[self.source_ref.fingerprint]

@@ -30,7 +30,9 @@ class Tool(BasicObject):
         self._status         = None
         self._parts          = []
         self._channels       = []
+        self.channels_refs   = []
         self._parameters     = []
+        self.parameters_refs = []
 
     @staticmethod
     def load(obj):
@@ -42,8 +44,8 @@ class Tool(BasicObject):
             if attr.label == "GENERIC-NAME"   : self._generic_name   = attr.value[0]
             if attr.label == "STATUS"         : self._status         = attr.value[0]
             if attr.label == "PARTS"          : self._parts          = attr.value
-            if attr.label == "CHANNELS"       : self._channels       = attr.value
-            if attr.label == "PARAMETERS"     : self._parameters     = attr.value
+            if attr.label == "CHANNELS"       : self.channels_refs   = attr.value
+            if attr.label == "PARAMETERS"     : self.parameters_refs = attr.value
 
         self.stripspaces()
         return self
@@ -177,3 +179,14 @@ class Tool(BasicObject):
             False.
         """
         return self.contains(self.parameters, param)
+
+    def link(self, pool):
+        self._channels = [
+            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            for ref in self.channels_refs
+        ]
+
+        self._parameters = [
+            pool['PARAMETER'][(ref.id, ref.origin, ref.copynumber)]
+            for ref in self.parameters_refs
+        ]

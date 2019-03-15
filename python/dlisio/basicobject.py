@@ -120,6 +120,13 @@ class BasicObject():
                 for inx, v in enumerate(value):
                     self.__dict__[key][inx] = v.strip()
 
+    def link(self, pool):
+        """ Link objects
+
+        The default implementation is a no-op - individual object types
+        themselves are aware on how to link to other objects
+        """
+        pass
 
     @staticmethod
     def contains(base, name):

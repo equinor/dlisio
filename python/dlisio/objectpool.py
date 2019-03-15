@@ -34,7 +34,7 @@ class Objectpool():
         self.objects = []
         self.index = 0
 
-        cache = defaultdict(list)
+        cache = defaultdict(dict)
 
         for os in objects:
             for obj in os.objects:
@@ -47,12 +47,14 @@ class Objectpool():
                  elif os.type == "CALIBRATION" : obj = Calibration.load(obj)
                  else: obj = Unknown.load(obj, type = os.type)
 
+                 name = obj.name
+                 iden = (name.id, name.origin, name.copynumber)
+                 cache[obj.type][iden] = obj
                  cache[obj.fingerprint] = obj
-                 cache[obj.type].append(obj)
                  self.objects.append(obj)
 
         for obj in self.objects:
-            self.link(obj, cache)
+            obj.link(cache)
 
     def __len__(self):
         """x.__len__() <==> len(x)"""
@@ -60,44 +62,6 @@ class Objectpool():
 
     def __repr__(self):
         return "Objectpool(objects =  {})".format(len(self))
-
-    def link(self, obj, cache):
-        if obj.type == "CHANNEL":
-            if obj.source is not None:
-                obj._source = cache[obj.source.fingerprint]
-
-        if obj.type == "FRAME":
-            obj._channels = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._channels
-            ]
-
-        if obj.type == "TOOL":
-            obj._channels = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._channels
-            ]
-
-            obj._parameters = [
-                cache[fingerprint(channel, type = 'PARAMETER')]
-                for channel in obj._parameters
-            ]
-
-        if obj.type == "CALIBRATION":
-            obj._uncalibrated_channel = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._uncalibrated_channel
-            ]
-
-            obj._calibrated_channel = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._calibrated_channel
-            ]
-
-            obj._parameters = [
-                cache[fingerprint(channel, type = 'PARAMETER')]
-                for channel in obj._parameters
-            ]
 
     def getobject(self, name, type):
         """ return object corresponding to the unique identifier given by name + type

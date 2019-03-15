@@ -28,6 +28,7 @@ class Frame(BasicObject):
     def __init__(self, obj = None):
         super().__init__(obj, "FRAME")
         self._description = None
+        self.channel_refs = []
         self._channels    = []
         self._index_type  = None
         self._direction   = None
@@ -44,7 +45,7 @@ class Frame(BasicObject):
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "DESCRIPTION": self._description = attr.value[0]
-            if attr.label == "CHANNELS"   : self._channels    = attr.value
+            if attr.label == "CHANNELS"   : self.channel_refs = attr.value
             if attr.label == "INDEX-TYPE" : self._index_type  = attr.value[0]
             if attr.label == "DIRECTION"  : self._direction   = attr.value[0]
             if attr.label == "SPACING"    : self._spacing     = attr.value[0]
@@ -242,3 +243,9 @@ class Frame(BasicObject):
             True if channel exist in *Frame.channel*, else False.
         """
         return self.contains(self.channels, channel)
+
+    def link(self, pool):
+        self._channels = [
+            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            for ref in self.channel_refs
+        ]

@@ -29,6 +29,10 @@ class Calibration(BasicObject):
         self._coefficients         = []
         self._parameters           = []
 
+        self.parameters_refs       = []
+        self.calibrated_refs       = []
+        self.uncalibrated_refs     = []
+
     @staticmethod
     def load(obj):
         self = Calibration(obj)
@@ -37,13 +41,13 @@ class Calibration(BasicObject):
             if attr.label == "METHOD":
                 self._method = attr.value[0]
             if attr.label == "CALIBRATED-CHANNELS":
-                self._calibrated_channel = attr.value
+                self.calibrated_refs = attr.value
             if attr.label == "UNCALIBRATED-CHANNELS":
-                self._uncalibrated_channel = attr.value
+                self.uncalibrated_refs = attr.value
             if attr.label == "COEFFICIENTS":
                 self._coefficients = attr.value
             if attr.label == "PARAMETERS":
-                self._parameters = attr.value
+                self.parameters_refs = attr.value
 
         self.stripspaces()
         return self
@@ -174,3 +178,19 @@ class Calibration(BasicObject):
             False.
         """
         return self.contains(self.parameters, param)
+
+    def link(self, pool):
+        self._calibrated_channel = [
+            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            for ref in self.calibrated_refs
+        ]
+
+        self._uncalibrated_channel = [
+            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            for ref in self.uncalibrated_refs
+        ]
+
+        self._parameters = [
+            pool['PARAMETER'][(ref.id, ref.origin, ref.copynumber)]
+            for ref in self.parameters_refs
+        ]
