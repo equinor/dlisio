@@ -23,7 +23,7 @@ class Tool(BasicObject):
     dlisio.Parameter : Parameter objects.
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "tool")
+        super().__init__(obj, "TOOL")
         self._description    = None
         self._trademark_name = None
         self._generic_name   = None

@@ -19,7 +19,7 @@ class Parameter(BasicObject):
     PARAMETER objects.
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "parameter")
+        super().__init__(obj, "PARAMETER")
         self._long_name = None
         self._dimension = None
         self._axis      = None

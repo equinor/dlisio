@@ -20,7 +20,7 @@ class Channel(BasicObject):
     objects.
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "channel")
+        super().__init__(obj, "CHANNEL")
         self._long_name     = None
         self._reprc         = None
         self._units         = None

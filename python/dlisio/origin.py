@@ -26,7 +26,7 @@ class Origin(BasicObject):
     dlisio.Fileheader : Fileheader
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "origin")
+        super().__init__(obj, "ORIGIN")
         self._file_id           = None
         self._file_set_name     = None
         self._file_set_nr       = None

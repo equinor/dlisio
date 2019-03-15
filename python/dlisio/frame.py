@@ -26,7 +26,7 @@ class Frame(BasicObject):
     dlisio.Channel : Channel objects.
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "frame")
+        super().__init__(obj, "FRAME")
         self._description = None
         self._channels    = []
         self._index_type  = None

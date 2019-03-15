@@ -194,7 +194,7 @@ def test_channels(f):
     assert channel.name.origin     == 2
     assert channel.name.copynumber == 0
     assert channel.long_name       == "6-Inch Frame Depth"
-    assert channel.type            == "channel"
+    assert channel.type            == "CHANNEL"
     assert channel.reprc           == 2
     assert channel.properties      == ["440-BASIC"]
     assert channel.dimension       == [1]
@@ -208,7 +208,7 @@ def test_frames(f):
     assert frame.name.id         == "2000T"
     assert frame.name.origin     == 2
     assert frame.name.copynumber == 0
-    assert frame.type            == "frame"
+    assert frame.type            == "FRAME"
     assert frame.direction       == "INCREASING"
     assert frame.spacing         == 2000
     assert frame.index_type      == "TIME"
@@ -222,8 +222,8 @@ def test_frames(f):
     assert len(fchannels) == len(frame.channels)
 
 def test_channel_order(f):
-    frame800 = f.getobject(("800T", 2, 0), type="frame")
-    frame2000 = f.getobject(("2000T", 2, 0), type="frame")
+    frame800 = f.getobject(("800T", 2, 0), type="FRAME")
+    frame2000 = f.getobject(("2000T", 2, 0), type="FRAME")
 
     ref2000T = ["TIME", "TDEP", "TENS_SL", "DEPT_SL"]
     ref800T  = ["TIME", "TDEP", "ETIM", "LMVL", "UMVL", "CFLA", "OCD" , "RCMD",
@@ -244,7 +244,7 @@ def test_tools(f):
     assert tool.name.id         == "MSCT"
     assert tool.name.origin     == 2
     assert tool.name.copynumber == 0
-    assert tool.type            == "tool"
+    assert tool.type            == "TOOL"
     assert tool.description     == "Mechanical Sidewall Coring Tool"
     assert tool.trademark_name  == "MSCT-AA"
     assert tool.generic_name    == "MSCT"
@@ -265,7 +265,7 @@ def test_parameters(f):
     assert param.name.id         == "FLSHSTRM"
     assert param.name.origin     == 2
     assert param.name.copynumber == 0
-    assert param.type            == "parameter"
+    assert param.type            == "PARAMETER"
     assert param.long_name       == "Flush depth-delayed streams to output at end"
     assert param.dimension is None
     assert param.axis      is None
@@ -279,7 +279,7 @@ def test_calibrations(f):
     assert calibration.name.id           == "CNU"
     assert calibration.name.origin       == 2
     assert calibration.name.copynumber   == 0
-    assert calibration.type              == "calibration"
+    assert calibration.type              == "CALIBRATION"
     assert len(calibration.parameters)   == 0
     assert len(calibration.coefficients) == 2
     assert calibration.method is None
@@ -296,9 +296,9 @@ def test_calibrations(f):
     assert uncal_ch[0] == calibration
 
 def test_contains(f):
-    frame = f.getobject(("2000T", 2, 0), type="frame")
+    frame = f.getobject(("2000T", 2, 0), type="FRAME")
     name = ("TDEP", 2, 4)
-    channel = f.getobject(name, type="channel")
+    channel = f.getobject(name, type="CHANNEL")
 
     result = frame.contains(frame.channels, channel.name)
     assert result == True
@@ -307,12 +307,12 @@ def test_contains(f):
 
 def test_Unknown(f):
     unknown = next(f.unknowns)
-    assert unknown.type == "unknown"
+    assert isinstance(unknown, dlisio.unknown.Unknown)
     assert len(list(f.unknowns)) == 513
 
 def test_object(f):
     name = ("2000T", 2, 0)
-    frame = f.getobject(name=name, type='frame')
+    frame = f.getobject(name=name, type='FRAME')
 
     assert frame.name.id == "2000T"
     assert frame.name.origin == 2

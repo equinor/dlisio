@@ -46,7 +46,7 @@ class Fileheader(BasicObject):
     Logical Record (FHLR).
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "fileheader")
+        super().__init__(obj, "FILE-HEADER")
         self._sequencenr = None
         self._id         = None
 

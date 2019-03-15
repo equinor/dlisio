@@ -45,7 +45,7 @@ class Objectpool():
                  elif os.type == "TOOL"        : obj = Tool.load(obj)
                  elif os.type == "PARAMETER"   : obj = Parameter.load(obj)
                  elif os.type == "CALIBRATION" : obj = Calibration.load(obj)
-                 else: obj = Unknown.load(obj)
+                 else: obj = Unknown.load(obj, type = os.type)
 
                  cache[obj.fingerprint] = obj
                  cache[obj.type].append(obj)
@@ -62,17 +62,17 @@ class Objectpool():
         return "Objectpool(objects =  {})".format(len(self))
 
     def link(self, obj, cache):
-        if obj.type == "channel":
+        if obj.type == "CHANNEL":
             if obj.source is not None:
                 obj._source = cache[fingerprint(obj.source)]
 
-        if obj.type == "frame":
+        if obj.type == "FRAME":
             obj._channels = [
                 cache[fingerprint(channel, type = 'CHANNEL')]
                 for channel in obj._channels
             ]
 
-        if obj.type == "tool":
+        if obj.type == "TOOL":
             obj._channels = [
                 cache[fingerprint(channel, type = 'CHANNEL')]
                 for channel in obj._channels
@@ -83,7 +83,7 @@ class Objectpool():
                 for channel in obj._parameters
             ]
 
-        if obj.type == "calibration":
+        if obj.type == "CALIBRATION":
             obj._uncalibrated_channel = [
                 cache[fingerprint(channel, type = 'CHANNEL')]
                 for channel in obj._uncalibrated_channel
@@ -142,39 +142,39 @@ class Objectpool():
     @property
     def fileheader(self):
         """Fileheader objects"""
-        return (o for o in self.objects if o.type == "fileheader")
+        return (o for o in self.objects if o.type == "FILE-HEADER")
 
     @property
     def origin(self):
         """Origin objects"""
-        return (o for o in self.objects if o.type == "origin")
+        return (o for o in self.objects if o.type == "ORIGIN")
 
     @property
     def channels(self):
         """Channel objects"""
-        return (o for o in self.objects if o.type == "channel")
+        return (o for o in self.objects if o.type == "CHANNEL")
 
     @property
     def frames(self):
         """Frame objects"""
-        return (o for o in self.objects if o.type == "frame")
+        return (o for o in self.objects if o.type == "FRAME")
 
     @property
     def tools(self):
         """Tool objects"""
-        return (o for o in self.objects if o.type == "tool")
+        return (o for o in self.objects if o.type == "TOOL")
 
     @property
     def parameters(self):
         """Parameter objects"""
-        return (o for o in self.objects if o.type == "parameter")
+        return (o for o in self.objects if o.type == "PARAMETER")
 
     @property
     def calibrations(self):
         """Calibration objects"""
-        return (o for o in self.objects if o.type == "calibration")
+        return (o for o in self.objects if o.type == "CALIBRATION")
 
     @property
     def unknowns(self):
         """Frame objects"""
-        return (o for o in self.objects if o.type == "unknown")
+        return (o for o in self.objects if isinstance(o, Unknown))

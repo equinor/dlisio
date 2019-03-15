@@ -22,7 +22,7 @@ class Calibration(BasicObject):
     dlisio.Parameter : Parameter objects.
     """
     def __init__(self, obj = None):
-        super().__init__(obj, "calibration")
+        super().__init__(obj, "CALIBRATION")
         self._method               = None
         self._calibrated_channel   = []
         self._uncalibrated_channel = []
