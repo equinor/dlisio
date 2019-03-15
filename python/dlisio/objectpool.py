@@ -38,14 +38,14 @@ class Objectpool():
 
         for os in objects:
             for obj in os.objects:
-                 if   os.type == "FILE-HEADER" : obj = Fileheader(obj)
-                 elif os.type == "ORIGIN"      : obj = Origin(obj)
-                 elif os.type == "FRAME"       : obj = Frame(obj)
-                 elif os.type == "CHANNEL"     : obj = Channel(obj)
-                 elif os.type == "TOOL"        : obj = Tool(obj)
-                 elif os.type == "PARAMETER"   : obj = Parameter(obj)
-                 elif os.type == "CALIBRATION" : obj = Calibration(obj)
-                 else: obj = Unknown(obj)
+                 if   os.type == "FILE-HEADER" : obj = Fileheader.load(obj)
+                 elif os.type == "ORIGIN"      : obj = Origin.load(obj)
+                 elif os.type == "FRAME"       : obj = Frame.load(obj)
+                 elif os.type == "CHANNEL"     : obj = Channel.load(obj)
+                 elif os.type == "TOOL"        : obj = Tool.load(obj)
+                 elif os.type == "PARAMETER"   : obj = Parameter.load(obj)
+                 elif os.type == "CALIBRATION" : obj = Calibration.load(obj)
+                 else: obj = Unknown.load(obj)
 
                  cache[fingerprint(obj)] = obj
                  cache[obj.type].append(obj)

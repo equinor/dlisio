@@ -76,7 +76,8 @@ class BasicObject():
         """ The original object as represented on disk
 
         Attic refers the underlying basic_object, which is a
-        dict-representation of the data on disk
+        dict-representation of the data on disk. The attic can be None if this
+        particular instance was not loaded from disk.
 
         Notes
         -----

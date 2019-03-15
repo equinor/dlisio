@@ -25,7 +25,7 @@ class Origin(BasicObject):
 
     dlisio.Fileheader : Fileheader
     """
-    def __init__(self, obj):
+    def __init__(self, obj = None):
         super().__init__(obj, "origin")
         self._file_id           = None
         self._file_set_name     = None
@@ -47,6 +47,10 @@ class Origin(BasicObject):
         self._company           = None
         self._namespace_name    = None
         self._namespace_version = None
+
+    @staticmethod
+    def load(obj):
+        self = Origin(obj)
 
         for attr in obj.values():
             if attr.value is None: continue
@@ -91,7 +95,8 @@ class Origin(BasicObject):
             if attr.label == "NAME-SPACE-VERSION":
                 self._namespace_version = attr.value[0]
 
-            self.stripspaces()
+        self.stripspaces()
+        return self
 
     @property
     def file_id(self):

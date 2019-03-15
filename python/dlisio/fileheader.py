@@ -45,17 +45,21 @@ class Fileheader(BasicObject):
     Types and described in Chapter 5.1 - Static and Frame Data, File Header
     Logical Record (FHLR).
     """
-    def __init__(self, obj):
+    def __init__(self, obj = None):
         super().__init__(obj, "fileheader")
         self._sequencenr = None
         self._id         = None
 
+    @staticmethod
+    def load(obj):
+        self = Fileheader(obj)
         for attr in obj.values():
             if attr.value is None: continue
-            if attr.label == "SEQUENCE-NUMBER" : self._sequencenr = attr.value[0]
-            if attr.label == "ID"              : self._id         = attr.value[0]
+            if attr.label == "SEQUENCE-NUMBER": self._sequencenr = attr.value[0]
+            if attr.label == "ID"             : self._id         = attr.value[0]
 
         self.stripspaces()
+        return self
 
     @property
     def sequencenr(self):

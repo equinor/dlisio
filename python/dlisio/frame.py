@@ -25,7 +25,7 @@ class Frame(BasicObject):
 
     dlisio.Channel : Channel objects.
     """
-    def __init__(self, obj):
+    def __init__(self, obj = None):
         super().__init__(obj, "frame")
         self._description = None
         self._channels    = []
@@ -38,6 +38,9 @@ class Frame(BasicObject):
         self._fmtstr      = ""
         self._dtype       = None
 
+    @staticmethod
+    def load(obj):
+        self = Frame(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "DESCRIPTION": self._description = attr.value[0]
@@ -50,6 +53,7 @@ class Frame(BasicObject):
             if attr.label == "INDEX-MAX"  : self._index_max   = attr.value[0]
 
         self.stripspaces()
+        return self
 
     @property
     def dtype(self):

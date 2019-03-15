@@ -22,7 +22,7 @@ class Tool(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
-    def __init__(self, obj):
+    def __init__(self, obj = None):
         super().__init__(obj, "tool")
         self._description    = None
         self._trademark_name = None
@@ -32,6 +32,9 @@ class Tool(BasicObject):
         self._channels       = []
         self._parameters     = []
 
+    @staticmethod
+    def load(obj):
+        self = Tool(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "DESCRIPTION"    : self._description    = attr.value[0]
@@ -43,6 +46,7 @@ class Tool(BasicObject):
             if attr.label == "PARAMETERS"     : self._parameters     = attr.value
 
         self.stripspaces()
+        return self
 
     @property
     def description(self):
