@@ -10,17 +10,6 @@ from .parameter import Parameter
 from .calibration import Calibration
 from .unknown import Unknown
 
-def fingerprint(obj, type = None):
-    if type is None:
-        type = obj.type.upper()
-
-    try:
-        name = obj.name
-    except AttributeError:
-        name = obj
-
-    return (type, name.id, name.origin, name.copynumber)
-
 class Objectpool():
     """ The Objectpool implements a pool of all metadata objects.
 
