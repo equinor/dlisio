@@ -221,6 +221,24 @@ def test_frames(f):
     fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]
     assert len(fchannels) == len(frame.channels)
 
+def test_channel_order(f):
+    frame800 = f.getobject(("800T", 2, 0), type="frame")
+    frame2000 = f.getobject(("2000T", 2, 0), type="frame")
+
+    ref2000T = ["TIME", "TDEP", "TENS_SL", "DEPT_SL"]
+    ref800T  = ["TIME", "TDEP", "ETIM", "LMVL", "UMVL", "CFLA", "OCD" , "RCMD",
+                "RCPP", "CMRT", "RCNU", "DCFL", "DFS" , "DZER", "RHMD", "HMRT",
+                "RHV" , "RLSW", "MNU" , "S1CY", "S2CY", "RSCU", "RSTS", "UCFL",
+                "CARC", "CMDV", "CMPP", "CNU" , "HMDV", "HV"  , "LSWI", "SCUR",
+                "SSTA", "RCMP", "RHPP", "RRPP", "CMPR", "HPPR", "RPPV", "SMSC",
+                "CMCU", "HMCU", "CMLP"]
+
+    for i, ch in enumerate(frame800.channels):
+        assert ch.name.id == ref800T[i]
+
+    for i, ch in enumerate(frame2000.channels):
+        assert ch.name.id == ref2000T[i]
+
 def test_tools(f):
     tool = next(f.tools)
     assert tool.name.id         == "MSCT"
