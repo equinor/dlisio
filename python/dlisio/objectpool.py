@@ -25,22 +25,28 @@ class Objectpool():
 
         cache = defaultdict(dict)
 
+        switch = {
+            'FILE-HEADER': Fileheader.load,
+            'ORIGIN'     : Origin.load,
+            'FRAME'      : Frame.load,
+            'CHANNEL'    : Channel.load,
+            'TOOL'       : Tool.load,
+            'PARAMETER'  : Parameter.load,
+            'CALIBRATION': Calibration.load,
+        }
+
         for os in objects:
             for obj in os.objects:
-                 if   os.type == "FILE-HEADER" : obj = Fileheader.load(obj)
-                 elif os.type == "ORIGIN"      : obj = Origin.load(obj)
-                 elif os.type == "FRAME"       : obj = Frame.load(obj)
-                 elif os.type == "CHANNEL"     : obj = Channel.load(obj)
-                 elif os.type == "TOOL"        : obj = Tool.load(obj)
-                 elif os.type == "PARAMETER"   : obj = Parameter.load(obj)
-                 elif os.type == "CALIBRATION" : obj = Calibration.load(obj)
-                 else: obj = Unknown.load(obj, type = os.type)
+                try:
+                    obj = switch[os.type](obj)
+                except KeyError:
+                    obj = Unknown.load(obj, type = os.type)
 
-                 name = obj.name
-                 iden = (name.id, name.origin, name.copynumber)
-                 cache[obj.type][iden] = obj
-                 cache[obj.fingerprint] = obj
-                 self.objects.append(obj)
+                name = obj.name
+                iden = (name.id, name.origin, name.copynumber)
+                cache[obj.type][iden] = obj
+                cache[obj.fingerprint] = obj
+                self.objects.append(obj)
 
         for obj in self.objects:
             obj.link(cache)
