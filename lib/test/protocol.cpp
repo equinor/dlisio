@@ -107,6 +107,66 @@ TEST_CASE("A too small encryption packet", "[encpk][v1]") {
     CHECK( err == DLIS_INCONSISTENT );
 }
 
+TEST_CASE("Component roles", "[component][v1]") {
+    const std::uint8_t ABSATTR = 0x11;
+    const std::uint8_t ATTR =    0x39;
+    const std::uint8_t INVATTR = 0x50;
+    const std::uint8_t OBJ =     0x72;
+    const std::uint8_t RES =     0x96;
+    const std::uint8_t RDSET =   0xB5;
+    const std::uint8_t RSET =    0xDA;
+    const std::uint8_t SET =     0xFF;
+
+    int role, name;
+    SECTION("Set" ) {
+        auto const err = dlis_component( SET, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_SET );
+    }
+
+    SECTION("Replacement Set" ) {
+        auto const err = dlis_component( RSET, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_RSET );
+    }
+
+    SECTION("Redundant Set" ) {
+        auto const err = dlis_component( RDSET, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_RDSET );
+    }
+
+    SECTION("Object" ) {
+        auto const err = dlis_component( OBJ, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_OBJECT );
+    }
+
+    SECTION("Attribute" ) {
+        auto const err = dlis_component( ATTR, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_ATTRIB  );
+    }
+
+    SECTION("Invariant Attribute" ) {
+        auto const err = dlis_component( INVATTR, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_INVATR );
+    }
+
+    SECTION("Absent Attribute" ) {
+        auto const err = dlis_component( ABSATTR, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_ABSATR );
+    }
+
+    SECTION("--reserved--" ) {
+        auto const err = dlis_component( RES, &role );
+        CHECK( err == DLIS_OK );
+        CHECK( role == DLIS_ROLE_RESERV );
+    }
+}
+
 TEST_CASE("Set descriptors", "[component][v1]") {
     int role, type, name;
     int err = dlis_component( 0xF8, &role );
@@ -117,6 +177,7 @@ TEST_CASE("Set descriptors", "[component][v1]") {
     const std::uint8_t T  = 0xF0; // 111 10 xxx
     const std::uint8_t N  = 0xE8; // 111 01 xxx
     const std::uint8_t Z  = 0xE0; // 111 00 xxx
+    const std::uint8_t R =  0xA7; // 101 00 111
 
     SECTION("Unexpected value" ) {
         err = dlis_component_set( 0xF8, DLIS_ROLE_OBJECT, &type, &name );
@@ -151,11 +212,19 @@ TEST_CASE("Set descriptors", "[component][v1]") {
         CHECK( !name );
         CHECK( err == DLIS_INCONSISTENT );
     }
+
+    SECTION("SET: reserved values") {
+        err = dlis_component_set( R, DLIS_ROLE_RDSET, &type, &name );
+        CHECK( !type );
+        CHECK( !name );
+        CHECK( err == DLIS_INCONSISTENT );
+    }
 }
 
 TEST_CASE("Object descriptors", "[component][v1]") {
     const std::uint8_t ON = 0x70;
     const std::uint8_t O  = 0x60;
+    const std::uint8_t R  = 0x6F;
 
     int role, name;
     int err = dlis_component( ON, &role );
@@ -177,6 +246,12 @@ TEST_CASE("Object descriptors", "[component][v1]") {
         err = dlis_component_object( O, role, &name );
         CHECK( err == DLIS_INCONSISTENT );
         CHECK( !name );
+    }
+
+    SECTION("Object: reserved values") {
+        err = dlis_component_object( ON, role, &name );
+        CHECK( err == DLIS_OK );
+        CHECK( name );
     }
 }
 
@@ -221,6 +296,7 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
     const std::uint8_t A   = 0x20;
     const std::uint8_t LRV = 0x35;
     const std::uint8_t L   = 0x30;
+    const std::uint8_t CU  = 0x4A;
 
     int err = dlis_component( A, &role );
     CHECK( err == DLIS_OK );
@@ -242,7 +318,8 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
     }
 
     SECTION("Attribute: L") {
-        err = dlis_component_attrib( L, role, &label,
+        err = dlis_component_attrib( L, DLIS_ROLE_INVATR,
+                                              &label,
                                               &count,
                                               &reprc,
                                               &units,
@@ -253,6 +330,21 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
         CHECK( !count );
         CHECK( !reprc );
         CHECK( !units );
+        CHECK( !value );
+    }
+
+    SECTION("Attribute: CU") {
+        err = dlis_component_attrib( CU, role, &label,
+                                               &count,
+                                               &reprc,
+                                               &units,
+                                               &value );
+        CHECK( err == DLIS_OK );
+
+        CHECK( !label );
+        CHECK(  count );
+        CHECK( !reprc );
+        CHECK(  units );
         CHECK( !value );
     }
 }
