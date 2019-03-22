@@ -7,6 +7,7 @@ include(GNUInstallDirs)
 include(TestBigEndian)
 
 option(BUILD_PYTHON "Build Python extension" ON)
+option(BUILD_DOC    "Build documentation"    OFF)
 
 if (NOT MSVC)
     # assuming gcc-style options
@@ -26,6 +27,10 @@ if (NOT MSVC)
 endif()
 
 test_big_endian(BIG_ENDIAN)
+
+# add documentation master target for other documentation sub targets to hook
+# into
+add_custom_target(doc ALL)
 
 set(CMAKE_CXX_STANDARD 11)
 
