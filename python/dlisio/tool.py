@@ -148,11 +148,11 @@ class Tool(BasicObject):
 
     def link(self, pool):
         self._channels = [
-            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.channels_refs
         ]
 
         self._parameters = [
-            pool['PARAMETER'][(ref.id, ref.origin, ref.copynumber)]
+            pool['PARAMETER'][ref.fingerprint('PARAMETER')]
             for ref in self.parameters_refs
         ]

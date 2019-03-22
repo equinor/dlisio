@@ -41,8 +41,7 @@ class BasicObject():
         -------
         fingerprint
         """
-        name = self.name
-        return (self.type.upper(), name.id, name.origin, name.copynumber)
+        return self.name.fingerprint(self.type)
 
     @property
     def name(self):

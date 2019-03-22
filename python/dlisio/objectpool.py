@@ -42,9 +42,7 @@ class Objectpool():
                 except KeyError:
                     obj = Unknown.load(obj, type = os.type)
 
-                name = obj.name
-                iden = (name.id, name.origin, name.copynumber)
-                cache[obj.type][iden] = obj
+                cache[obj.type][obj.name.fingerprint(os.type)] = obj
                 cache[obj.fingerprint] = obj
                 self.objects.append(obj)
 

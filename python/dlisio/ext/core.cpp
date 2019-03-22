@@ -262,6 +262,7 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "origin",     &dl::obname::origin )
         .def_readonly( "copynumber", &dl::obname::copy )
         .def_readonly( "id",         &dl::obname::id )
+        .def( "fingerprint",         &dl::obname::fingerprint )
         .def( "__eq__",              &dl::obname::operator == )
         .def( "__repr__", []( const dl::obname& o ) {
             return "dlisio.core.obname(id='{}', origin={}, copynum={})"_s
@@ -275,22 +276,10 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::objref >( m, "objref" )
         .def_readonly( "type", &dl::objref::type )
         .def_readonly( "name", &dl::objref::name )
-        .def_property_readonly( "fingerprint",
-            [](const dl::objref& ref) {
-                return py::make_tuple(
-                    ref.type,
-                    ref.name.id,
-                    ref.name.origin,
-                    ref.name.copy
-                );
-        })
+        .def_property_readonly("fingerprint", &dl::objref::fingerprint)
         .def( "__repr__", []( const dl::objref& o ) {
-            return "dlisio.core.objref(id='{}', origin={}, copynum={}, type={})"_s
-                    .format( dl::decay(o.name.id),
-                             dl::decay(o.name.origin),
-                             dl::decay(o.name.copy),
-                             dl::decay(o.type) )
-                    ;
+            return "dlisio.core.objref(fingerprint={})"_s
+                    .format(o.fingerprint());
         })
     ;
 

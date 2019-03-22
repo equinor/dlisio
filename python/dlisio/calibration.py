@@ -127,16 +127,16 @@ class Calibration(BasicObject):
 
     def link(self, pool):
         self._calibrated_channel = [
-            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.calibrated_refs
         ]
 
         self._uncalibrated_channel = [
-            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.uncalibrated_refs
         ]
 
         self._parameters = [
-            pool['PARAMETER'][(ref.id, ref.origin, ref.copynumber)]
+            pool['PARAMETER'][ref.fingerprint('PARAMETER')]
             for ref in self.parameters_refs
         ]

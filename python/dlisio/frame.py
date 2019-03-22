@@ -230,6 +230,6 @@ class Frame(BasicObject):
 
     def link(self, pool):
         self._channels = [
-            pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
+            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.channel_refs
         ]
