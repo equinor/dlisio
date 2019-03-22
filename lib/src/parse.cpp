@@ -535,6 +535,19 @@ const char* elements( const char* xs,
 
 namespace dl {
 
+std::string obname::fingerprint(const std::string& type)
+const noexcept (false) {
+    constexpr const auto format = "T.{}-O.{}-C.{}-I.{}";
+    const auto& o = dl::decay(this->origin);
+    const auto& c = dl::decay(this->copy);
+    const auto& i = dl::decay(this->id);
+    return fmt::format(format, type, o, c, i);
+}
+
+std::string objref::fingerprint() const noexcept (false) {
+    return this->name.fingerprint(dl::decay(this->type));
+}
+
 void basic_object::set( const object_attribute& attr ) noexcept (false) {
     /*
      * This is essentially map::insert-or-update

@@ -140,6 +140,8 @@ struct obname {
             && this->copy == rhs.copy
             && this->id == rhs.id;
     }
+
+    std::string fingerprint(const std::string& type) const noexcept (false);
 };
 
 struct objref {
@@ -150,6 +152,8 @@ struct objref {
         return this->type == rhs.type
             && this->name == rhs.name;
     }
+
+    std::string fingerprint() const noexcept (false);
 };
 
 struct attref {
