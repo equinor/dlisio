@@ -146,40 +146,6 @@ class Tool(BasicObject):
         """
         return self._parameters
 
-    def haschannel(self, channel):
-        """Tool contains channel
-
-        Return True if channels exist in *Tool.channel*, else return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        constains_channel : bool
-            True if channel exist in *Tool.channel*, else False.
-        """
-        return self.contains(self.channels, channel)
-
-    def hasparameter(self, param):
-        """Frame contains parameter
-
-        Return True if parameter exist in *Frame.parameters*, else
-        return False.
-
-        Parameters
-        ----------
-        param : dlis.core.obname, (str, int, int)
-
-        Returns
-        -------
-        contains_parameter : bool
-            True if parameter exist in *Frame.parameters*, else
-            False.
-        """
-        return self.contains(self.parameters, param)
-
     def link(self, pool):
         self._channels = [
             pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]

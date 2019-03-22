@@ -125,60 +125,6 @@ class Calibration(BasicObject):
         """
         return self._parameters
 
-    def hasuncalibrated_channel(self, channel):
-        """Calibration contains uncalibrated channel
-
-        Return True if channels exist in *Calibration.uncalibrated_channel*, else
-        return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        contains_channel : bool
-            True if channel exist in *Calibration.uncalibrated_channel*, else
-            False.
-        """
-        return self.contains(self.uncalibrated_channel, channel)
-
-    def hascalibrated_channel(self, channel):
-        """Calibration contains calibrated channel
-
-        Return True if channels exist in *Calibration.calibrated_channel*, else
-        return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        constains_chanel : bool
-            True if channel exist in *Calibration.calibrated_channel*, else
-            False.
-        """
-        return self.contains(self.calibrated_channel, channel)
-
-    def hasparameter(self, param):
-        """Calibration contains parameter
-
-        Return True if parameter exist in *Calibration.parameters*, else
-        return False.
-
-        Parameters
-        ----------
-        param : dlis.core.obname, (str, int, int)
-
-        Returns
-        -------
-        contains_parameter : bool
-            True if parameter exist in *Calibration.parameters*, else
-            False.
-        """
-        return self.contains(self.parameters, param)
-
     def link(self, pool):
         self._calibrated_channel = [
             pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]

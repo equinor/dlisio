@@ -214,22 +214,6 @@ class Channel(BasicObject):
         """
         return self._source
 
-    def hassource(self, obj):
-        """Channel contains obj as source
-
-        Return True if obj exist in *Channel.source*, else return False.
-
-        Parameters
-        ----------
-        obj : dlis.core.obname, (str, int, int)
-
-        Returns
-        -------
-        contains_obj : bool
-            True if obj exist in *Channel.source*, else False.
-        """
-        return self.contains(self.source, obj)
-
     def link(self, pool):
         if self.source_ref is not None:
             self._source = pool[self.source_ref.fingerprint]

@@ -218,9 +218,6 @@ def test_frames(f):
     assert frame.encrypted == False
     assert frame.description is None
 
-    fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]
-    assert len(fchannels) == len(frame.channels)
-
 def test_channel_order(f):
     frame800 = f.getobject(("800T", 2, 0), type="FRAME")
     frame2000 = f.getobject(("2000T", 2, 0), type="FRAME")
@@ -253,9 +250,6 @@ def test_tools(f):
     assert len(tool.channels)   == 74
     assert len(tool.parts)      == 9
 
-    channel_matching = [ch for ch in tool.channels if ch.name.id == "UMVL_DL"]
-    assert len(channel_matching) == 1
-
     assert len(list(f.tools)) == 2
     tools = [o for o in f.tools if o.name.id == "MSCT"]
     assert len(tools) == 1
@@ -285,25 +279,6 @@ def test_calibrations(f):
     assert calibration.method is None
     assert len(list(calibration.calibrated_channel))   == 1
     assert len(list(calibration.uncalibrated_channel)) == 1
-
-
-    ref = ("CNU", 2, 0)
-    cal_ch = [o for o in f.calibrations if o.hascalibrated_channel(ref)]
-    assert cal_ch[0] == calibration
-
-    ref = calibration.uncalibrated_channel[0]
-    uncal_ch = [o for o in f.calibrations if o.hasuncalibrated_channel(ref.name)]
-    assert uncal_ch[0] == calibration
-
-def test_contains(f):
-    frame = f.getobject(("2000T", 2, 0), type="FRAME")
-    name = ("TDEP", 2, 4)
-    channel = f.getobject(name, type="CHANNEL")
-
-    result = frame.contains(frame.channels, channel.name)
-    assert result == True
-    result = frame.contains(frame.channels, name)
-    assert result == True
 
 def test_Unknown(f):
     unknown = next(f.unknowns)

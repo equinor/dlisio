@@ -228,22 +228,6 @@ class Frame(BasicObject):
 
         return self._fmtstr
 
-    def haschannel(self, channel):
-        """ Frame contains channel
-
-        Return True if channels exist in *Frame.channel*, else return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        constains_chanel : bool
-            True if channel exist in *Frame.channel*, else False.
-        """
-        return self.contains(self.channels, channel)
-
     def link(self, pool):
         self._channels = [
             pool['CHANNEL'][(ref.id, ref.origin, ref.copynumber)]
