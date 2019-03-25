@@ -1,4 +1,7 @@
 from .basicobject import BasicObject
+from .reprc import fmt
+
+import numpy as np
 
 
 class Frame(BasicObject):
@@ -32,6 +35,8 @@ class Frame(BasicObject):
         self._encrypted   = False
         self._index_min   = None
         self._index_max   = None
+        self._fmtstr      = ""
+        self._dtype       = None
 
         for attr in obj.values():
             if attr.value is None: continue
@@ -45,6 +50,29 @@ class Frame(BasicObject):
             if attr.label == "INDEX-MAX"  : self._index_max   = attr.value[0]
 
         self.stripspaces()
+
+    @property
+    def dtype(self):
+        """dtype
+
+        data-type of each frame. I.e. the sum of channel.dtype of each channel
+        in self.channels.
+
+        See also
+        --------
+
+        dlisio.Channel.dtype : dtype of each sample in the channel's sample
+        array.
+
+        Returns
+        -------
+
+        dtype : np.dtype
+        """
+        if self._dtype: return self._dtype
+
+        self._dtype = np.dtype([(ch.name.id, ch.dtype) for ch in self.channels])
+        return self._dtype
 
     @property
     def description(self):
@@ -170,6 +198,30 @@ class Frame(BasicObject):
         index_max : undefined
         """
         return self._index_max
+
+    def fmtstr(self):
+        """Generate format-string for Frame
+
+        Generate a format-string for this Frame. All frames of the same
+        Frame-type have the same channels-list resulting in the same
+        format-string for all frames of a given Frame-type.
+
+        The format-string is mainly intended for internal use.
+
+        Returns
+        -------
+
+        fmtstr : str
+        """
+
+        if self._fmtstr: return self._fmtstr
+
+        for ch in self.channels:
+            samples = np.prod(np.array(ch.dimension))
+            reprc = fmt[ch.reprc]
+            self._fmtstr += samples * reprc
+
+        return self._fmtstr
 
     def haschannel(self, channel):
         """ Frame contains channel

@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from datetime import datetime
 
 import dlisio
@@ -220,6 +221,24 @@ def test_frames(f):
     fchannels = [ch for ch in f.channels if frame.haschannel(ch.name)]
     assert len(fchannels) == len(frame.channels)
 
+def test_channel_order(f):
+    frame800 = f.getobject(("800T", 2, 0), type="frame")
+    frame2000 = f.getobject(("2000T", 2, 0), type="frame")
+
+    ref2000T = ["TIME", "TDEP", "TENS_SL", "DEPT_SL"]
+    ref800T  = ["TIME", "TDEP", "ETIM", "LMVL", "UMVL", "CFLA", "OCD" , "RCMD",
+                "RCPP", "CMRT", "RCNU", "DCFL", "DFS" , "DZER", "RHMD", "HMRT",
+                "RHV" , "RLSW", "MNU" , "S1CY", "S2CY", "RSCU", "RSTS", "UCFL",
+                "CARC", "CMDV", "CMPP", "CNU" , "HMDV", "HV"  , "LSWI", "SCUR",
+                "SSTA", "RCMP", "RHPP", "RRPP", "CMPR", "HPPR", "RPPV", "SMSC",
+                "CMCU", "HMCU", "CMLP"]
+
+    for i, ch in enumerate(frame800.channels):
+        assert ch.name.id == ref800T[i]
+
+    for i, ch in enumerate(frame2000.channels):
+        assert ch.name.id == ref2000T[i]
+
 def test_tools(f):
     tool = next(f.tools)
     assert tool.name.id         == "MSCT"
@@ -299,6 +318,25 @@ def test_object(f):
     assert frame.name.origin == 2
     assert frame.name.copynumber == 0
 
+def test_fmtstring(f):
+    reference1 = "ffff"
+    reference2 = "ffffffffffffffffffffffffffffffffffffffflfff"
+
+    frames = list(f.frames)
+    fmtstring1 = frames[0].fmtstr()
+    fmtstring2 = frames[1].fmtstr()
+
+    assert fmtstring1 == reference1
+    assert fmtstring2 == reference2
+
+def test_dtype(f):
+    frames = list(f.frames)
+    dtype1 = frames[0].dtype
+
+    assert dtype1 == np.dtype([('TIME', np.float32),
+                               ('TDEP', np.float32),
+                               ('TENS_SL', np.float32),
+                               ('DEPT_SL', np.float32)])
 def test_load_pre_sul_garbage(channels_f):
     with dlisio.load('data/pre-sul-garbage.dlis') as f:
         assert f.storage_label() == channels_f.storage_label()
