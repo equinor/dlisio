@@ -234,6 +234,18 @@ py::dict storage_label( py::buffer b ) {
     );
 }
 
+std::string fingerprint(const std::string& type,
+                        const std::string& id,
+                        std::int32_t origin,
+                        std::uint8_t copy) {
+    dl::objref ref;
+    ref.type = dl::ident{ type };
+    ref.name.origin = dl::origin{ origin };
+    ref.name.copy = dl::ushort{ copy };
+    ref.name.id = dl::ident{ id };
+    return ref.fingerprint();
+}
+
 }
 
 PYBIND11_MODULE(core, m) {
@@ -252,6 +264,7 @@ PYBIND11_MODULE(core, m) {
     });
 
     m.def( "storage_label", storage_label );
+    m.def("fingerprint", fingerprint);
 
     /*
      * TODO: support constructor with kwargs
