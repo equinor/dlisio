@@ -531,9 +531,41 @@ const char* elements( const char* xs,
     return xs;
 }
 
+struct variant_equal {
+    template < typename T, typename U >
+    bool operator () (T&&, U&&) const noexcept (true) {
+        return false;
+    }
+
+    template < typename T >
+    bool operator () (const std::vector< T >& lhs,
+                      const std::vector< T >& rhs)
+    const noexcept (true) {
+        return (lhs.size() == rhs.size())
+            && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+};
+
+bool value_variant_eq(const dl::value_vector& lhs,
+                      const dl::value_vector& rhs)
+noexcept (true) {
+    return mpark::visit(variant_equal{}, lhs, rhs);
+}
+
 }
 
 namespace dl {
+
+bool object_attribute::operator == (const object_attribute& o)
+const noexcept (true) {
+    return this->label == o.label
+        && this->count == o.count
+        && this->reprc == o.reprc
+        && this->units == o.units
+        // invariant doesn't matter for attribute equality,
+        // so ignore it
+        && value_variant_eq(this->value, o.value);
+}
 
 std::string obname::fingerprint(const std::string& type)
 const noexcept (false) {
@@ -623,6 +655,18 @@ const noexcept (false)
         throw std::out_of_range( key );
 
     return *itr;
+}
+
+bool basic_object::operator == (const basic_object& o) const noexcept (true) {
+    return this->object_name       == o.object_name
+        && this->attributes.size() == o.attributes.size()
+        && std::equal(this->attributes.begin(),
+                      this->attributes.end(),
+                      o.attributes.begin());
+}
+
+bool basic_object::operator != (const basic_object& o) const noexcept (true) {
+    return !(*this == o);
 }
 
 const char* parse_template( const char* cur,

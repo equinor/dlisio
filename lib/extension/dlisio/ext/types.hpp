@@ -83,6 +83,8 @@ T& decay( T& x ) noexcept (true) {
         name& operator = ( name&& )      = default; \
         using detail::strong_typedef< name, type >::strong_typedef; \
         using detail::strong_typedef< name, type >::operator =; \
+        using detail::strong_typedef< name, type >::operator ==; \
+        using detail::strong_typedef< name, type >::operator !=; \
     }; \
     inline const type& decay(const name& x) noexcept (true) { \
         return static_cast< const type& >(x); \
@@ -104,8 +106,29 @@ DLIS_REGISTER_TYPEALIAS(status, std::uint8_t)
 #undef DLIS_REGISTER_TYPEALIAS
 
 template< typename T, int > struct validated;
-template< typename T > struct validated< T, 2 > { T V, A; };
-template< typename T > struct validated< T, 3 > { T V, A, B; };
+template< typename T >
+struct validated< T, 2 > {
+    T V, A;
+
+    bool operator == (const validated& o) const noexcept (true) {
+        return this->V == o.V && this->A == o.A;
+    }
+
+    bool operator != (const validated& o) const noexcept (true) {
+        return !(*this == o);
+    }
+};
+template< typename T > struct validated< T, 3 > {
+    T V, A, B;
+
+    bool operator == (const validated& o) const noexcept (true) {
+        return this->V == o.V && this->A == o.A && this->B == o.B;
+    }
+
+    bool operator != (const validated& o) const noexcept (true) {
+        return !(*this == o);
+    }
+};
 
 using fsing1 = validated< float, 2 >;
 using fsing2 = validated< float, 3 >;
@@ -128,6 +151,22 @@ using cdoubl = std::complex< fdoubl >;
 
 struct dtime {
     int Y, TZ, M, D, H, MN, S, MS;
+
+    bool operator == (const dtime& o) const noexcept (true) {
+        return this->Y  == o.Y
+            && this->TZ == o.TZ
+            && this->M  == o.M
+            && this->D  == o.D
+            && this->H  == o.H
+            && this->MN == o.MN
+            && this->S  == o.S
+            && this->MS == o.MS
+        ;
+    }
+
+    bool operator != (const dtime& o) const noexcept (true) {
+        return !(*this == o);
+    }
 };
 
 struct obname {
@@ -139,6 +178,10 @@ struct obname {
         return this->origin == rhs.origin
             && this->copy == rhs.copy
             && this->id == rhs.id;
+    }
+
+    bool operator != (const obname& o) const noexcept (true) {
+        return !(*this == o);
     }
 
     std::string fingerprint(const std::string& type) const noexcept (false);
@@ -153,6 +196,10 @@ struct objref {
             && this->name == rhs.name;
     }
 
+    bool operator != (const objref& o) const noexcept (true) {
+        return !(*this == o);
+    }
+
     std::string fingerprint() const noexcept (false);
 };
 
@@ -165,6 +212,10 @@ struct attref {
         return this->type == rhs.type
             && this->name == rhs.name
             && this->label== rhs.label;
+    }
+
+    bool operator != (const attref& o) const noexcept (true) {
+        return !(*this == o);
     }
 };
 
@@ -340,6 +391,8 @@ struct object_attribute {
     dl::units           units = {};
     dl::value_vector    value = {};
     bool invariant            = false;
+
+    bool operator == (const object_attribute& ) const noexcept (true);
 };
 
 /*
@@ -391,6 +444,9 @@ struct basic_object {
     std::size_t len() const noexcept (true);
     const dl::object_attribute&
     at( const std::string& ) const noexcept (false);
+
+    bool operator == (const basic_object&) const noexcept (true);
+    bool operator != (const basic_object&) const noexcept (true);
 
     dl::obname object_name;
     std::vector< object_attribute > attributes;

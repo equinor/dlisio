@@ -264,6 +264,7 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "id",         &dl::obname::id )
         .def( "fingerprint",         &dl::obname::fingerprint )
         .def( "__eq__",              &dl::obname::operator == )
+        .def( "__ne__",              &dl::obname::operator != )
         .def( "__repr__", []( const dl::obname& o ) {
             return "dlisio.core.obname(id='{}', origin={}, copynum={})"_s
                     .format( dl::decay(o.id),
@@ -287,6 +288,8 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "type", &dl::attref::type )
         .def_readonly( "name", &dl::attref::name )
         .def_readonly( "label", &dl::attref::label )
+        .def( "__eq__", &dl::attref::operator == )
+        .def( "__ne__", &dl::attref::operator != )
         .def( "__repr__", []( const dl::attref& o ) {
             return "dlisio.core.attref(id='{}', origin={}, copynum={}, type={})"_s
                     .format( dl::decay(o.name.id),
@@ -301,6 +304,8 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "name", &dl::basic_object::object_name )
         .def( "__len__",       &dl::basic_object::len )
         .def( "__getitem__",   &dl::basic_object::at )
+        .def( "__eq__",        &dl::basic_object::operator == )
+        .def( "__ne__",        &dl::basic_object::operator != )
         .def( "values", []( const dl::basic_object& o ) {
             auto begin = o.attributes.begin();
             auto end = o.attributes.end();
