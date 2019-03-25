@@ -361,6 +361,39 @@ int dlis_index_records( const char* begin,
                         int* residuals,
                         int* explicits );
 
+/*
+ * Compute a fingerprint, a string-like representation of an object reference.
+ *
+ * All objects specified by RP66 should be uniquely identified by a combination
+ * of the containing set, the origin- and copy number, and an identifier. The
+ * fingerprint function maps these parameters into a unique string of
+ * object_fingerprint_len length that's suitable for identifiers, dictionary
+ * keys etc.
+ *
+ * the len function, like strlen, returns the length *excluding* the
+ * terminating zero ('\0').
+ *
+ * The fingerprint is not guaranteed to be stable between releases of dlisio.
+ * The fingerprint function assumes a buffer of at least fingerprint_len
+ * length, and *does not* write the terminating zero '\0'
+ *
+ * The len function returns the length of the fingerprint in bytes on success,
+ * negative otherwise.
+ */
+int dlis_object_fingerprint_len(int32_t type_len,
+                                const char* type,
+                                int32_t id_len,
+                                const char* id,
+                                int32_t origin,
+                                uint8_t copynum);
+
+int dlis_object_fingerprint(int32_t type_len,
+                            const char* type,
+                            int32_t id_len,
+                            const char* id,
+                            int32_t origin,
+                            uint8_t copynum,
+                            char* fingerprint);
 
 /*
  * A table of the component roles, given by the three high bits of the

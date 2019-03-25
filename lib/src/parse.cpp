@@ -537,11 +537,33 @@ namespace dl {
 
 std::string obname::fingerprint(const std::string& type)
 const noexcept (false) {
-    constexpr const auto format = "T.{}-O.{}-C.{}-I.{}";
-    const auto& o = dl::decay(this->origin);
-    const auto& c = dl::decay(this->copy);
-    const auto& i = dl::decay(this->id);
-    return fmt::format(format, type, o, c, i);
+    const auto& origin = dl::decay(this->origin);
+    const auto& copy = dl::decay(this->copy);
+    const auto& id = dl::decay(this->id);
+
+    auto len = dlis_object_fingerprint_len(type.size(),
+                                           type.data(),
+                                           id.size(),
+                                           id.data(),
+                                           origin,
+                                           copy);
+
+    // TODO: investigate what went wrong here
+    if (len <= 0)
+        throw std::invalid_argument("fingerprint");
+
+    auto str = std::vector< char >(len + 1);
+    auto err = dlis_object_fingerprint(type.size(),
+                                       type.data(),
+                                       id.size(),
+                                       id.data(),
+                                       origin,
+                                       copy,
+                                       str.data());
+
+    if (err) throw std::runtime_error("fingerprint: something went wrong");
+
+    return std::string(str.begin(), str.end());
 }
 
 std::string objref::fingerprint() const noexcept (false) {

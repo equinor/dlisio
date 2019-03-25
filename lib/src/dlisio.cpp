@@ -775,3 +775,57 @@ int dlis_index_records( const char* begin,
         *count += 1;
     }
 }
+
+int dlis_object_fingerprint_len(std::int32_t type_len,
+                                const char*,
+                                std::int32_t id_len,
+                                const char*,
+                                std::int32_t origin,
+                                std::uint8_t copynum) {
+
+    if (origin < 0) return -1;
+
+    const auto orig_len = std::to_string(origin).length();
+    const auto copy_len = std::to_string(copynum).length();
+
+    if (type_len <= 0) return -2;
+    if (id_len <= 0)   return -3;
+    if (origin < 0)  return -4;
+
+    // each element, except the last one, add a constant 3 characters currently,
+    // so return len*3 this might change in the future, and the contents of
+    // type+id might matter, so keep the params around
+    return 11 + type_len + id_len + orig_len + copy_len;
+}
+
+int dlis_object_fingerprint(std::int32_t type_len,
+                            const char* type,
+                            std::int32_t id_len,
+                            const char* id,
+                            std::int32_t origin,
+                            std::uint8_t copynum,
+                            char* fingerprint) {
+
+    if (type_len <= 0) return DLIS_INVALID_ARGS;
+    if (id_len <= 0)   return DLIS_INVALID_ARGS;
+
+    fingerprint = std::copy_n("T.", 2,        fingerprint);
+    fingerprint = std::copy_n(type, type_len, fingerprint);
+    fingerprint = std::copy_n("-",  1,        fingerprint);
+
+    fingerprint = std::copy_n("I.", 2,      fingerprint);
+    fingerprint = std::copy_n(id,   id_len, fingerprint);
+    fingerprint = std::copy_n("-",  1,      fingerprint);
+
+    // TODO: noexcept this?
+    auto orig = std::to_string(origin);
+    fingerprint = std::copy_n("O.", 2,      fingerprint);
+    fingerprint = std::copy(orig.begin(), orig.end(), fingerprint);
+    fingerprint = std::copy_n("-",  1,      fingerprint);
+
+    auto copy = std::to_string(copynum);
+    fingerprint = std::copy_n("C.", 2,      fingerprint);
+                  std::copy(copy.begin(), copy.end(), fingerprint);
+
+    return DLIS_OK;
+}
