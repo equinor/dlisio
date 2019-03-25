@@ -13,7 +13,8 @@ class dlis(object):
         self.file = stream
         self.explicit_indices = explicits
         self.object_sets = None
-        self._objects = Objectpool(self.objectsets())
+        self._objects = Objectpool()
+        self._objects.load(self.objectsets())
         self.sul_offset = sul_offset
 
     def __enter__(self):

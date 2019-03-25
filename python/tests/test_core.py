@@ -151,10 +151,11 @@ stdrecord = bytearray([
 
 def test_objects(f):
     objects = f.objects
-    assert len(list(objects)) == 876
+    assert len(list(objects)) == 864
 
 def test_fileheader(f):
-    fh = next(f.fileheader)
+    key = dlisio.core.fingerprint('FILE-HEADER', '5', 2, 0)
+    fh = f._objects.objects[key]
     assert fh.name.id == "5"
     assert fh.name.origin == 2
     assert fh.name.copynumber == 0
@@ -162,7 +163,8 @@ def test_fileheader(f):
     assert fh.sequencenr == "197"
 
 def test_origin(f):
-    origin = next(f.origin)
+    key = dlisio.core.fingerprint('ORIGIN', 'DLIS_DEFINING_ORIGIN', 2, 0)
+    origin = f._objects.objects[key]
 
     assert origin.name.id           == "DLIS_DEFINING_ORIGIN"
     assert origin.name.origin       == 2
@@ -188,8 +190,9 @@ def test_origin(f):
     assert origin.namespace_name    == "SLB"
     assert origin.namespace_version == None
 
-def test_channels(f):
-    channel = next(f.channels)
+def test_channel(f):
+    key = dlisio.core.fingerprint('CHANNEL', 'TDEP', 2, 0)
+    channel = f._objects.objects[key]
     assert channel.name.id         == "TDEP"
     assert channel.name.origin     == 2
     assert channel.name.copynumber == 0
@@ -203,8 +206,9 @@ def test_channels(f):
     assert channel.units           == "0.1 in"
     assert channel.source is None
 
-def test_frames(f):
-    frame = next(f.frames)
+def test_frame(f):
+    key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
+    frame = f._objects.objects[key]
     assert frame.name.id         == "2000T"
     assert frame.name.origin     == 2
     assert frame.name.copynumber == 0
@@ -219,8 +223,8 @@ def test_frames(f):
     assert frame.description is None
 
 def test_channel_order(f):
-    frame800 = f.getobject(("800T", 2, 0), type="FRAME")
-    frame2000 = f.getobject(("2000T", 2, 0), type="FRAME")
+    key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
+    key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
 
     ref2000T = ["TIME", "TDEP", "TENS_SL", "DEPT_SL"]
     ref800T  = ["TIME", "TDEP", "ETIM", "LMVL", "UMVL", "CFLA", "OCD" , "RCMD",
@@ -230,14 +234,15 @@ def test_channel_order(f):
                 "SSTA", "RCMP", "RHPP", "RRPP", "CMPR", "HPPR", "RPPV", "SMSC",
                 "CMCU", "HMCU", "CMLP"]
 
-    for i, ch in enumerate(frame800.channels):
+    for i, ch in enumerate(f._objects.objects[key800].channels):
         assert ch.name.id == ref800T[i]
 
-    for i, ch in enumerate(frame2000.channels):
+    for i, ch in enumerate(f._objects.objects[key2000].channels):
         assert ch.name.id == ref2000T[i]
 
-def test_tools(f):
-    tool = next(f.tools)
+def test_tool(f):
+    key = dlisio.core.fingerprint('TOOL', 'MSCT', 2, 0)
+    tool = f._objects.objects[key]
     assert tool.name.id         == "MSCT"
     assert tool.name.origin     == 2
     assert tool.name.copynumber == 0
@@ -254,8 +259,9 @@ def test_tools(f):
     tools = [o for o in f.tools if o.name.id == "MSCT"]
     assert len(tools) == 1
 
-def test_parameters(f):
-    param = next(f.parameters)
+def test_parameter(f):
+    key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
+    param = f._objects.objects[key]
     assert param.name.id         == "FLSHSTRM"
     assert param.name.origin     == 2
     assert param.name.copynumber == 0
@@ -269,7 +275,8 @@ def test_parameters(f):
     assert len(param) == 1
 
 def test_calibrations(f):
-    calibration = next(f.calibrations)
+    key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
+    calibration = f._objects.objects[key]
     assert calibration.name.id           == "CNU"
     assert calibration.name.origin       == 2
     assert calibration.name.copynumber   == 0
@@ -281,37 +288,38 @@ def test_calibrations(f):
     assert len(list(calibration.uncalibrated_channel)) == 1
 
 def test_Unknown(f):
-    unknown = next(f.unknowns)
-    assert isinstance(unknown, dlisio.unknown.Unknown)
-    assert len(list(f.unknowns)) == 513
-
-def test_object(f):
-    name = ("2000T", 2, 0)
-    frame = f.getobject(name=name, type='FRAME')
-
-    assert frame.name.id == "2000T"
-    assert frame.name.origin == 2
-    assert frame.name.copynumber == 0
+    unknown = next(iter(f.unknowns))
+    print(unknown)
+    # should have all unknown should have attributes as a field
+    # so this shouldn't be AttributeError
+    _ = unknown.attributes
+    assert len(list(f.unknowns)) == 501
 
 def test_fmtstring(f):
-    reference1 = "ffff"
-    reference2 = "ffffffffffffffffffffffffffffffffffffffflfff"
+    reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
+    reference2 = "ffff"
 
-    frames = list(f.frames)
-    fmtstring1 = frames[0].fmtstr()
-    fmtstring2 = frames[1].fmtstr()
+    key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
+    key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
+
+    frame800 = f._objects.objects[key800]
+    frame2000 = f._objects.objects[key2000]
+
+    fmtstring1 = frame800.fmtstr()
+    fmtstring2 = frame2000.fmtstr()
 
     assert fmtstring1 == reference1
     assert fmtstring2 == reference2
 
 def test_dtype(f):
-    frames = list(f.frames)
-    dtype1 = frames[0].dtype
-
+    key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
+    frame2000 = f._objects.objects[key2000]
+    dtype1 = frame2000.dtype
     assert dtype1 == np.dtype([('TIME', np.float32),
                                ('TDEP', np.float32),
                                ('TENS_SL', np.float32),
                                ('DEPT_SL', np.float32)])
+
 def test_load_pre_sul_garbage(channels_f):
     with dlisio.load('data/pre-sul-garbage.dlis') as f:
         assert f.storage_label() == channels_f.storage_label()

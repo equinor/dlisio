@@ -125,18 +125,18 @@ class Calibration(BasicObject):
         """
         return self._parameters
 
-    def link(self, pool):
+    def link(self, objects, sets):
         self._calibrated_channel = [
-            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.calibrated_refs
         ]
 
         self._uncalibrated_channel = [
-            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.uncalibrated_refs
         ]
 
         self._parameters = [
-            pool['PARAMETER'][ref.fingerprint('PARAMETER')]
+            sets['PARAMETER'][ref.fingerprint('PARAMETER')]
             for ref in self.parameters_refs
         ]

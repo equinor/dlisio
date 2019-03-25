@@ -119,7 +119,7 @@ class BasicObject():
                 for inx, v in enumerate(value):
                     self.__dict__[key][inx] = v.strip()
 
-    def link(self, pool):
+    def link(self, objects, sets):
         """ Link objects
 
         The default implementation is a no-op - individual object types

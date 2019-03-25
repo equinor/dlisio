@@ -228,8 +228,8 @@ class Frame(BasicObject):
 
         return self._fmtstr
 
-    def link(self, pool):
+    def link(self, objects, sets):
         self._channels = [
-            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.channel_refs
         ]

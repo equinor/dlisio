@@ -3,6 +3,7 @@ from .reprc import dtype
 
 import numpy as np
 
+import logging
 
 class Channel(BasicObject):
     """Channel
@@ -214,6 +215,19 @@ class Channel(BasicObject):
         """
         return self._source
 
-    def link(self, pool):
-        if self.source_ref is not None:
-            self._source = pool[self.source_ref.fingerprint]
+    def link(self, objects, sets):
+        if self.source_ref is None:
+            return
+
+        ref = self.source_ref.fingerprint
+        try:
+            self._source = objects[ref]
+        except KeyError:
+            problem = 'channel source referenced, but not found. '
+            ids = 'channel = {}, source = {}'.format(self.fingerprint, ref)
+
+            info = 'not populating source attribute for {}'
+            info = info.format(self.fingerprint)
+
+            logging.warning(problem + ids)
+            logging.info(info)

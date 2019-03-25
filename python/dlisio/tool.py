@@ -146,13 +146,13 @@ class Tool(BasicObject):
         """
         return self._parameters
 
-    def link(self, pool):
+    def link(self, objects, sets):
         self._channels = [
-            pool['CHANNEL'][ref.fingerprint('CHANNEL')]
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.channels_refs
         ]
 
         self._parameters = [
-            pool['PARAMETER'][ref.fingerprint('PARAMETER')]
+            sets['PARAMETER'][ref.fingerprint('PARAMETER')]
             for ref in self.parameters_refs
         ]
