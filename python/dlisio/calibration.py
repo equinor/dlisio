@@ -21,28 +21,36 @@ class Calibration(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
-    def __init__(self, obj):
-        super().__init__(obj, "calibration")
+    def __init__(self, obj = None):
+        super().__init__(obj, "CALIBRATION")
         self._method               = None
         self._calibrated_channel   = []
         self._uncalibrated_channel = []
         self._coefficients         = []
         self._parameters           = []
 
+        self.parameters_refs       = []
+        self.calibrated_refs       = []
+        self.uncalibrated_refs     = []
+
+    @staticmethod
+    def load(obj):
+        self = Calibration(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "METHOD":
                 self._method = attr.value[0]
             if attr.label == "CALIBRATED-CHANNELS":
-                self._calibrated_channel = attr.value
+                self.calibrated_refs = attr.value
             if attr.label == "UNCALIBRATED-CHANNELS":
-                self._uncalibrated_channel = attr.value
+                self.uncalibrated_refs = attr.value
             if attr.label == "COEFFICIENTS":
                 self._coefficients = attr.value
             if attr.label == "PARAMETERS":
-                self._parameters = attr.value
+                self.parameters_refs = attr.value
 
         self.stripspaces()
+        return self
 
     @property
     def method(self):
@@ -117,56 +125,18 @@ class Calibration(BasicObject):
         """
         return self._parameters
 
-    def hasuncalibrated_channel(self, channel):
-        """Calibration contains uncalibrated channel
+    def link(self, objects, sets):
+        self._calibrated_channel = [
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
+            for ref in self.calibrated_refs
+        ]
 
-        Return True if channels exist in *Calibration.uncalibrated_channel*, else
-        return False.
+        self._uncalibrated_channel = [
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
+            for ref in self.uncalibrated_refs
+        ]
 
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        contains_channel : bool
-            True if channel exist in *Calibration.uncalibrated_channel*, else
-            False.
-        """
-        return self.contains(self.uncalibrated_channel, channel)
-
-    def hascalibrated_channel(self, channel):
-        """Calibration contains calibrated channel
-
-        Return True if channels exist in *Calibration.calibrated_channel*, else
-        return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        constains_chanel : bool
-            True if channel exist in *Calibration.calibrated_channel*, else
-            False.
-        """
-        return self.contains(self.calibrated_channel, channel)
-
-    def hasparameter(self, param):
-        """Calibration contains parameter
-
-        Return True if parameter exist in *Calibration.parameters*, else
-        return False.
-
-        Parameters
-        ----------
-        param : dlis.core.obname, (str, int, int)
-
-        Returns
-        -------
-        contains_parameter : bool
-            True if parameter exist in *Calibration.parameters*, else
-            False.
-        """
-        return self.contains(self.parameters, param)
+        self._parameters = [
+            sets['PARAMETER'][ref.fingerprint('PARAMETER')]
+            for ref in self.parameters_refs
+        ]

@@ -25,9 +25,10 @@ class Frame(BasicObject):
 
     dlisio.Channel : Channel objects.
     """
-    def __init__(self, obj):
-        super().__init__(obj, "frame")
+    def __init__(self, obj = None):
+        super().__init__(obj, "FRAME")
         self._description = None
+        self.channel_refs = []
         self._channels    = []
         self._index_type  = None
         self._direction   = None
@@ -38,10 +39,13 @@ class Frame(BasicObject):
         self._fmtstr      = ""
         self._dtype       = None
 
+    @staticmethod
+    def load(obj):
+        self = Frame(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "DESCRIPTION": self._description = attr.value[0]
-            if attr.label == "CHANNELS"   : self._channels    = attr.value
+            if attr.label == "CHANNELS"   : self.channel_refs = attr.value
             if attr.label == "INDEX-TYPE" : self._index_type  = attr.value[0]
             if attr.label == "DIRECTION"  : self._direction   = attr.value[0]
             if attr.label == "SPACING"    : self._spacing     = attr.value[0]
@@ -50,6 +54,7 @@ class Frame(BasicObject):
             if attr.label == "INDEX-MAX"  : self._index_max   = attr.value[0]
 
         self.stripspaces()
+        return self
 
     @property
     def dtype(self):
@@ -223,18 +228,8 @@ class Frame(BasicObject):
 
         return self._fmtstr
 
-    def haschannel(self, channel):
-        """ Frame contains channel
-
-        Return True if channels exist in *Frame.channel*, else return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        constains_chanel : bool
-            True if channel exist in *Frame.channel*, else False.
-        """
-        return self.contains(self.channels, channel)
+    def link(self, objects, sets):
+        self._channels = [
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
+            for ref in self.channel_refs
+        ]

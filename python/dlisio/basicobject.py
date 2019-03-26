@@ -30,6 +30,20 @@ class BasicObject():
         return s
 
     @property
+    def fingerprint(self):
+        """ Object fingerprint
+
+        Return the fingerprint, a unique identifier, for this object. This is
+        basically an objref type from the RP66 standard, but with a pythonic
+        flavour, and suitable for keys in dicts.
+
+        Returns
+        -------
+        fingerprint
+        """
+        return self.name.fingerprint(self.type)
+
+    @property
     def name(self):
         """ Name
 
@@ -76,7 +90,8 @@ class BasicObject():
         """ The original object as represented on disk
 
         Attic refers the underlying basic_object, which is a
-        dict-representation of the data on disk
+        dict-representation of the data on disk. The attic can be None if this
+        particular instance was not loaded from disk.
 
         Notes
         -----
@@ -104,50 +119,10 @@ class BasicObject():
                 for inx, v in enumerate(value):
                     self.__dict__[key][inx] = v.strip()
 
+    def link(self, objects, sets):
+        """ Link objects
 
-    @staticmethod
-    def contains(base, name):
-        """ Check if base cotains obj
-
-        Parameters
-        ----------
-        base : list of dlis.core.obname or list of any object derived from
-            dlisio.BasicObject, e.g. Channel, Frame
-
-        obj : dlis.core.obname, tuple (str, int, int)
-
-        Returns
-        -------
-        isin : bool
-            True if obj or (name, type) is in base, else False
-
-        Examples
-        --------
-
-        Check if "frame" contain channel:
-
-        >>> ans = contains(frame.channels, obj=channel.name)
-
-        Check if "frame" contains a channel with name:
-        >>> name = ("TDEP", 2, 0)
-        >>> ans = contains(frame.channels, name)
-
-        find all frames that have "channel":
-
-        >>> fr = [o for o in frames if contains(o.channels, obj=channel.name)]
+        The default implementation is a no-op - individual object types
+        themselves are aware on how to link to other objects
         """
-        child = None
-        parents = None
-
-        if isinstance(name, core.obname):
-            child = (name.id, name.origin, name.copynumber)
-        else:
-            child = name
-        try:
-            parents = [(o.id, o.origin, o.copynumber) for o in base]
-        except AttributeError:
-            parents = [(o.name.id, o.name.origin, o.name.copynumber) for o in base]
-
-        if any(child == p for p in parents): return True
-
-        return False
+        pass

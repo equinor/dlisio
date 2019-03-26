@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 
 from . import core
 from .fileheader import Fileheader
@@ -10,17 +11,6 @@ from .parameter import Parameter
 from .calibration import Calibration
 from .unknown import Unknown
 
-def fingerprint(obj, type = None):
-    if type is None:
-        type = obj.type.upper()
-
-    try:
-        name = obj.name
-    except AttributeError:
-        name = obj
-
-    return (type, name.id, name.origin, name.copynumber)
-
 class Objectpool():
     """ The Objectpool implements a pool of all metadata objects.
 
@@ -30,29 +20,80 @@ class Objectpool():
     For now dlisio only support read operarations, hence any
     user-modification of these objects is NOT reflected on-disk
     """
-    def __init__(self, objects):
-        self.objects = []
-        self.index = 0
+    def __init__(self):
+        self.objects = {}
+        self.object_sets = defaultdict(dict)
+        self.problematic = []
 
-        cache = defaultdict(list)
+        self.types = {
+            'FILE-HEADER': Fileheader.load,
+            'ORIGIN'     : Origin.load,
+            'FRAME'      : Frame.load,
+            'CHANNEL'    : Channel.load,
+            'TOOL'       : Tool.load,
+            'PARAMETER'  : Parameter.load,
+            'CALIBRATION': Calibration.load,
+        }
 
-        for os in objects:
-            for obj in os.objects:
-                 if   os.type == "FILE-HEADER" : obj = Fileheader(obj)
-                 elif os.type == "ORIGIN"      : obj = Origin(obj)
-                 elif os.type == "FRAME"       : obj = Frame(obj)
-                 elif os.type == "CHANNEL"     : obj = Channel(obj)
-                 elif os.type == "TOOL"        : obj = Tool(obj)
-                 elif os.type == "PARAMETER"   : obj = Parameter(obj)
-                 elif os.type == "CALIBRATION" : obj = Calibration(obj)
-                 else: obj = Unknown(obj)
+    def load(self, sets):
+        """ Load and enrich raw objects into the object pool
 
-                 cache[fingerprint(obj)] = obj
-                 cache[obj.type].append(obj)
-                 self.objects.append(obj)
+        This method converts the raw object sets into first-class dlisio python
+        objects, and puts them in the the objects, object_sets and problematic
+        members.
 
-        for obj in self.objects:
-            self.link(obj, cache)
+        Parameters
+        ----------
+        sets : iterable of object_set
+
+        Notes
+        -----
+        This is a part of the two-phase initialisation of the pool, and should
+        rarely be called as an end user. This is primarily a mechanism for
+        testing and prototyping for developers, and the occasional
+        live-patching of features so that dlisio is useful, even when something
+        in particular is not merged upstream.
+
+        """
+        problem = 'multiple distinct objects '
+        where = 'in set {} ({}). Duplicate fingerprint = {}'
+        action = 'continuing with the last object'
+        duplicate = 'duplicate fingerprint {}'
+
+        objects = {}
+        object_sets = defaultdict(dict)
+        problematic = []
+
+        for os in sets:
+            # TODO: handle replacement sets
+            for o in os.objects:
+                try:
+                    obj = self.types[os.type](o)
+                except KeyError:
+                    obj = Unknown.load(o, type = os.type)
+
+                fingerprint = obj.fingerprint
+                if fingerprint in objects:
+                    original = objects[fingerprint]
+
+                    logging.info(duplicate.format(fingerprint))
+                    if original.attic == obj.attic:
+                        msg = problem + where
+                        msg = msg.format(os.type, os.name, fingerprint)
+                        logging.error(msg)
+                        logging.warning(action)
+                        problematic.append((original, obj))
+
+                objects[fingerprint] = obj
+                object_sets[obj.type][fingerprint] = obj
+
+        for obj in objects.values():
+            obj.link(objects, object_sets)
+
+        self.objects = objects
+        self.object_sets = object_sets
+        self.problematic = problematic
+        return self
 
     def __len__(self):
         """x.__len__() <==> len(x)"""
@@ -60,44 +101,6 @@ class Objectpool():
 
     def __repr__(self):
         return "Objectpool(objects =  {})".format(len(self))
-
-    def link(self, obj, cache):
-        if obj.type == "channel":
-            if obj.source is not None:
-                obj._source = cache[fingerprint(obj.source)]
-
-        if obj.type == "frame":
-            obj._channels = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._channels
-            ]
-
-        if obj.type == "tool":
-            obj._channels = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._channels
-            ]
-
-            obj._parameters = [
-                cache[fingerprint(channel, type = 'PARAMETER')]
-                for channel in obj._parameters
-            ]
-
-        if obj.type == "calibration":
-            obj._uncalibrated_channel = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._uncalibrated_channel
-            ]
-
-            obj._calibrated_channel = [
-                cache[fingerprint(channel, type = 'CHANNEL')]
-                for channel in obj._calibrated_channel
-            ]
-
-            obj._parameters = [
-                cache[fingerprint(channel, type = 'PARAMETER')]
-                for channel in obj._parameters
-            ]
 
     def getobject(self, name, type):
         """ return object corresponding to the unique identifier given by name + type
@@ -137,44 +140,48 @@ class Objectpool():
         """
         Returns a generator of all objects on file
         """
-        return (o for o in self.objects)
+        return self.objects.values()
 
     @property
     def fileheader(self):
         """Fileheader objects"""
-        return (o for o in self.objects if o.type == "fileheader")
+        return self.object_sets['FILE-HEADER'].values()
 
     @property
     def origin(self):
         """Origin objects"""
-        return (o for o in self.objects if o.type == "origin")
+        return self.object_sets['ORIGIN'].values()
 
     @property
     def channels(self):
         """Channel objects"""
-        return (o for o in self.objects if o.type == "channel")
+        return self.object_sets['CHANNEL'].values()
 
     @property
     def frames(self):
         """Frame objects"""
-        return (o for o in self.objects if o.type == "frame")
+        return self.object_sets['FRAME'].values()
 
     @property
     def tools(self):
         """Tool objects"""
-        return (o for o in self.objects if o.type == "tool")
+        return self.object_sets['TOOL'].values()
 
     @property
     def parameters(self):
         """Parameter objects"""
-        return (o for o in self.objects if o.type == "parameter")
+        return self.object_sets['PARAMETER'].values()
 
     @property
     def calibrations(self):
         """Calibration objects"""
-        return (o for o in self.objects if o.type == "calibration")
+        return self.object_sets['CALIBRATION'].values()
 
     @property
     def unknowns(self):
         """Frame objects"""
-        return (o for o in self.objects if o.type == "unknown")
+        return (obj
+            for typename, object_set in self.object_sets.items()
+            for obj in object_set.values()
+            if typename not in self.types
+        )

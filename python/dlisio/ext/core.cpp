@@ -234,6 +234,18 @@ py::dict storage_label( py::buffer b ) {
     );
 }
 
+std::string fingerprint(const std::string& type,
+                        const std::string& id,
+                        std::int32_t origin,
+                        std::uint8_t copy) {
+    dl::objref ref;
+    ref.type = dl::ident{ type };
+    ref.name.origin = dl::origin{ origin };
+    ref.name.copy = dl::ushort{ copy };
+    ref.name.id = dl::ident{ id };
+    return ref.fingerprint();
+}
+
 }
 
 PYBIND11_MODULE(core, m) {
@@ -252,6 +264,7 @@ PYBIND11_MODULE(core, m) {
     });
 
     m.def( "storage_label", storage_label );
+    m.def("fingerprint", fingerprint);
 
     /*
      * TODO: support constructor with kwargs
@@ -262,7 +275,9 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "origin",     &dl::obname::origin )
         .def_readonly( "copynumber", &dl::obname::copy )
         .def_readonly( "id",         &dl::obname::id )
+        .def( "fingerprint",         &dl::obname::fingerprint )
         .def( "__eq__",              &dl::obname::operator == )
+        .def( "__ne__",              &dl::obname::operator != )
         .def( "__repr__", []( const dl::obname& o ) {
             return "dlisio.core.obname(id='{}', origin={}, copynum={})"_s
                     .format( dl::decay(o.id),
@@ -275,13 +290,10 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::objref >( m, "objref" )
         .def_readonly( "type", &dl::objref::type )
         .def_readonly( "name", &dl::objref::name )
+        .def_property_readonly("fingerprint", &dl::objref::fingerprint)
         .def( "__repr__", []( const dl::objref& o ) {
-            return "dlisio.core.objref(id='{}', origin={}, copynum={}, type={})"_s
-                    .format( dl::decay(o.name.id),
-                             dl::decay(o.name.origin),
-                             dl::decay(o.name.copy),
-                             dl::decay(o.type) )
-                    ;
+            return "dlisio.core.objref(fingerprint={})"_s
+                    .format(o.fingerprint());
         })
     ;
 
@@ -289,6 +301,8 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "type", &dl::attref::type )
         .def_readonly( "name", &dl::attref::name )
         .def_readonly( "label", &dl::attref::label )
+        .def( "__eq__", &dl::attref::operator == )
+        .def( "__ne__", &dl::attref::operator != )
         .def( "__repr__", []( const dl::attref& o ) {
             return "dlisio.core.attref(id='{}', origin={}, copynum={}, type={})"_s
                     .format( dl::decay(o.name.id),
@@ -303,6 +317,8 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "name", &dl::basic_object::object_name )
         .def( "__len__",       &dl::basic_object::len )
         .def( "__getitem__",   &dl::basic_object::at )
+        .def( "__eq__",        &dl::basic_object::operator == )
+        .def( "__ne__",        &dl::basic_object::operator != )
         .def( "values", []( const dl::basic_object& o ) {
             auto begin = o.attributes.begin();
             auto end = o.attributes.end();

@@ -22,16 +22,21 @@ class Tool(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
-    def __init__(self, obj):
-        super().__init__(obj, "tool")
+    def __init__(self, obj = None):
+        super().__init__(obj, "TOOL")
         self._description    = None
         self._trademark_name = None
         self._generic_name   = None
         self._status         = None
         self._parts          = []
         self._channels       = []
+        self.channels_refs   = []
         self._parameters     = []
+        self.parameters_refs = []
 
+    @staticmethod
+    def load(obj):
+        self = Tool(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "DESCRIPTION"    : self._description    = attr.value[0]
@@ -39,10 +44,11 @@ class Tool(BasicObject):
             if attr.label == "GENERIC-NAME"   : self._generic_name   = attr.value[0]
             if attr.label == "STATUS"         : self._status         = attr.value[0]
             if attr.label == "PARTS"          : self._parts          = attr.value
-            if attr.label == "CHANNELS"       : self._channels       = attr.value
-            if attr.label == "PARAMETERS"     : self._parameters     = attr.value
+            if attr.label == "CHANNELS"       : self.channels_refs   = attr.value
+            if attr.label == "PARAMETERS"     : self.parameters_refs = attr.value
 
         self.stripspaces()
+        return self
 
     @property
     def description(self):
@@ -140,36 +146,13 @@ class Tool(BasicObject):
         """
         return self._parameters
 
-    def haschannel(self, channel):
-        """Tool contains channel
+    def link(self, objects, sets):
+        self._channels = [
+            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
+            for ref in self.channels_refs
+        ]
 
-        Return True if channels exist in *Tool.channel*, else return False.
-
-        Parameters
-        ----------
-        channel : dlis.core.obname or (str, int, int)
-
-        Returns
-        -------
-        constains_channel : bool
-            True if channel exist in *Tool.channel*, else False.
-        """
-        return self.contains(self.channels, channel)
-
-    def hasparameter(self, param):
-        """Frame contains parameter
-
-        Return True if parameter exist in *Frame.parameters*, else
-        return False.
-
-        Parameters
-        ----------
-        param : dlis.core.obname, (str, int, int)
-
-        Returns
-        -------
-        contains_parameter : bool
-            True if parameter exist in *Frame.parameters*, else
-            False.
-        """
-        return self.contains(self.parameters, param)
+        self._parameters = [
+            sets['PARAMETER'][ref.fingerprint('PARAMETER')]
+            for ref in self.parameters_refs
+        ]

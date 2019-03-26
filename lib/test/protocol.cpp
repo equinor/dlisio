@@ -223,3 +223,35 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
         CHECK( !value );
     }
 }
+
+TEST_CASE("fingerprint length matches bytes written") {
+    std::string type = "CHANNEL";
+    std::string id = "IDENT";
+    auto origin = 0;
+    auto copy = 0;
+
+    auto len = dlis_object_fingerprint_len(
+        type.size(),
+        type.data(),
+        id.size(),
+        id.data(),
+        origin,
+        copy);
+
+    CHECK(len > 0);
+
+    std::vector< char > buffer(1024, 0);
+    auto err = dlis_object_fingerprint(
+        type.size(),
+        type.data(),
+        id.size(),
+        id.data(),
+        origin,
+        copy,
+        buffer.data());
+
+    CHECK(!err);
+
+    auto fingerprint = std::string(buffer.data());
+    CHECK(fingerprint.size() == len);
+}

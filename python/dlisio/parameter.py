@@ -18,14 +18,18 @@ class Parameter(BasicObject):
     Types, described in detail in Chapter 5.8.2 - Static and Frame Data,
     PARAMETER objects.
     """
-    def __init__(self, obj):
-        super().__init__(obj, "parameter")
+    def __init__(self, obj = None):
+        super().__init__(obj, "PARAMETER")
         self._long_name = None
         self._dimension = None
         self._axis      = None
         self._zones     = None
         self._values    = None
 
+
+    @staticmethod
+    def load(obj):
+        self = Parameter(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "LONG-NAME" : self._long_name = attr.value[0]
@@ -34,6 +38,7 @@ class Parameter(BasicObject):
             if attr.label == "ZONES"     : self._zones     = attr.value
 
         self.stripspaces()
+        return self
 
     @property
     def long_name(self):

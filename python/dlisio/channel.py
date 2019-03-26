@@ -3,6 +3,7 @@ from .reprc import dtype
 
 import numpy as np
 
+import logging
 
 class Channel(BasicObject):
     """Channel
@@ -19,8 +20,8 @@ class Channel(BasicObject):
     described in detail in Chapter 5.5.1 - Static and Frame Data, CHANNEL
     objects.
     """
-    def __init__(self, obj):
-        super().__init__(obj, "channel")
+    def __init__(self, obj = None):
+        super().__init__(obj, "CHANNEL")
         self._long_name     = None
         self._reprc         = None
         self._units         = None
@@ -30,7 +31,11 @@ class Channel(BasicObject):
         self._element_limit = []
         self._source        = None
         self._dtype         = None
+        self.source_ref     = None
 
+    @staticmethod
+    def load(obj):
+        self = Channel(obj)
         for attr in obj.values():
             if attr.value is None: continue
             if attr.label == "LONG-NAME"          : self._long_name     = attr.value[0]
@@ -40,9 +45,10 @@ class Channel(BasicObject):
             if attr.label == "DIMENSION"          : self._dimension     = attr.value
             if attr.label == "AXIS"               : self._axis          = attr.value
             if attr.label == "ELEMENT-LIMIT"      : self._element_limit = attr.value
-            if attr.label == "SOURCE"             : self._source        = attr.value[0]
+            if attr.label == "SOURCE"             : self.source_ref     = attr.value[0]
 
         self.stripspaces()
+        return self
 
     @property
     def dtype(self):
@@ -201,28 +207,27 @@ class Channel(BasicObject):
     def source(self):
         """Source
 
-        References the source of the channel object, e.g. a Tool, Process or
-        Calibration Object.
+        The source of this channel, e.g. a Tool, Process or Calibration Object.
 
         Returns
         -------
-
-        source : any object derived from dlisio.BasicObject
+        source
         """
         return self._source
 
-    def hassource(self, obj):
-        """Channel contains obj as source
+    def link(self, objects, sets):
+        if self.source_ref is None:
+            return
 
-        Return True if obj exist in *Channel.source*, else return False.
+        ref = self.source_ref.fingerprint
+        try:
+            self._source = objects[ref]
+        except KeyError:
+            problem = 'channel source referenced, but not found. '
+            ids = 'channel = {}, source = {}'.format(self.fingerprint, ref)
 
-        Parameters
-        ----------
-        obj : dlis.core.obname, (str, int, int)
+            info = 'not populating source attribute for {}'
+            info = info.format(self.fingerprint)
 
-        Returns
-        -------
-        contains_obj : bool
-            True if obj exist in *Channel.source*, else False.
-        """
-        return self.contains(self.source, obj)
+            logging.warning(problem + ids)
+            logging.info(info)
