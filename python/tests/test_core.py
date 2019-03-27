@@ -4,15 +4,7 @@ from datetime import datetime
 
 import dlisio
 
-@pytest.fixture(scope="module", name="f")
-def load_default_file():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        yield f
-
-@pytest.fixture(scope="module", name="channels_f")
-def load_only_channels_file():
-    with dlisio.load('data/only-channels.dlis') as f:
-        yield f
+from . import load_206_DWL, load_only_channels
 
 def test_sul(f):
     label = ''.join([
