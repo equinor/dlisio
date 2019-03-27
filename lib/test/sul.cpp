@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 #include <cstdint>
+#include <map>
 
 #include <catch2/catch.hpp>
 
@@ -201,4 +202,184 @@ TEST_CASE("A well-formatted SULv1 with undefined maxlen", "[sul][v1]") {
         auto v1 = parse_sulv1( label );
         CHECK( v1 == ref );
     }
+}
+
+struct correct_sul
+{
+    std::string seqstr = "   1";
+    std::string revistr  = "V1.00";
+    std::string structur  = "RECORD";
+    std::string maxilen = "08192";
+    std::string id = std::string(60, 'X');
+
+    SULv1 v1;
+
+    protected:
+    void check_sul(std::string exp_input, int exp_return_value){
+        INFO( "Storage unit label:\n" << blockify( exp_input ) );
+        auto err = dlis_sul( exp_input.c_str(),
+                             &v1.seqnum,
+                             &v1.major,
+                             &v1.minor,
+                             &v1.layout,
+                             &v1.maxlen,
+                             v1.id );
+
+        CHECK( err == exp_return_value );
+    }
+};
+
+TEST_CASE_METHOD(correct_sul, "SUL with base check correct values", "[sul]") {
+    check_sul(seqstr + revistr + structur + maxilen + id, DLIS_OK);
+}
+
+
+TEST_CASE_METHOD(correct_sul, "seq can't be null", "[sul]") {
+    check_sul("   0" + revistr + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "seq can't be negative", "[sul]") {
+    check_sul("  -1" + revistr + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "seq can be left-hand formatted", "[sul]") {
+    check_sul("1   " + revistr + structur + maxilen + id, DLIS_OK);
+}
+
+TEST_CASE_METHOD(correct_sul, "seq should be a valid integer", "[sul]") {
+    check_sul("  1." + revistr + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "seq can't contain more than 1 number", "[sul]") {
+    check_sul("1 0 " + revistr + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "seq can't contain invalid characters", "[sul]") {
+    check_sul("A3B!" + revistr + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+
+TEST_CASE_METHOD(correct_sul, "revision V1 is only supported one", "[sul]") {
+    check_sul(seqstr + "V2.00" + structur + maxilen + id, DLIS_UNEXPECTED_VALUE);
+}
+
+TEST_CASE_METHOD(correct_sul, "revision V1.00 is only suppoerted one", "[sul]") {
+    check_sul(seqstr + "V1.99" + structur + maxilen + id, DLIS_UNEXPECTED_VALUE);
+}
+
+TEST_CASE_METHOD(correct_sul, "revision should start from capital", "[sul]") {
+    check_sul(seqstr + "v1.00" + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "revision should be in a valid format", "[sul]") {
+    check_sul(seqstr + "V1.0A" + structur + maxilen + id, DLIS_INCONSISTENT);
+}
+
+
+TEST_CASE_METHOD(correct_sul, "structure should be capital RECORD", "[sul]") {
+    check_sul(seqstr + revistr + "record" + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "structure should have all capitals", "[sul]") {
+    check_sul(seqstr + revistr + "Record" + maxilen + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "structure could be only RECORD", "[sul]") {
+    check_sul(seqstr + revistr + "dlisio" + maxilen + id, DLIS_INCONSISTENT);
+}
+
+
+TEST_CASE_METHOD(correct_sul, "maxlen can't be negative", "[sul]") {
+    check_sul(seqstr + revistr + structur + "   -1" + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen can't be empty", "[sul]") {
+    check_sul(seqstr + revistr + structur + "     " + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen can be left-hand formatted", "[sul]") {
+    check_sul(seqstr + revistr + structur + "128  " + id, DLIS_OK);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen should be an integer", "[sul]") {
+    check_sul(seqstr + revistr + structur + "234.1" + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen should have only 1 number", "[sul]") {
+    check_sul(seqstr + revistr + structur + "222 3" + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen should have only 1 number, even if 0", "[sul]") {
+    check_sul(seqstr + revistr + structur + "0 128" + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen can't have alpha characters", "[sul]") {
+    check_sul(seqstr + revistr + structur + " 123A" + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen could have only preceeding spaces", "[sul]") {
+    check_sul(seqstr + revistr + structur + ".1234" + id, DLIS_INCONSISTENT);
+}
+
+TEST_CASE_METHOD(correct_sul, "maxlen can't consist of invalid characters", "[sul]") {
+    check_sul(seqstr + revistr + structur + "ABCDE" + id, DLIS_INCONSISTENT);
+}
+
+
+TEST_CASE_METHOD(correct_sul, "maxlen can be bigger than supposed VRL", "[sul]") {
+    check_sul(seqstr + revistr + structur + "16385" + id, DLIS_OK);
+}
+
+
+TEST_CASE_METHOD(correct_sul, "SUL with null seqnum", "[sul][nulls]") {
+    auto label = "   0" + revistr + structur + maxilen + id;
+    auto err = dlis_sul( label.c_str(), nullptr, &v1.major, &v1.minor,
+                                        &v1.layout, &v1.maxlen, v1.id );
+    CHECK( err == DLIS_OK );
+    CHECK( v1.layout == DLIS_STRUCTURE_RECORD );
+    CHECK( v1.maxlen == std::stoi(maxilen) );
+    CHECK( v1.id == id );
+}
+
+TEST_CASE_METHOD(correct_sul, "SUL with null layout", "[sul][nulls]") {
+    auto label = seqstr + revistr + "DLISIO" + maxilen + id;
+    auto err = dlis_sul( label.c_str(), &v1.seqnum, &v1.major, &v1.minor,
+                                        nullptr, &v1.maxlen, v1.id );
+    CHECK( err == DLIS_OK );
+    CHECK( v1.seqnum == std::stoi(seqstr) );
+    CHECK( v1.maxlen == std::stoi(maxilen) );
+    CHECK( v1.id == id );
+}
+
+TEST_CASE_METHOD(correct_sul, "SUL with null maxlen", "[sul][nulls]") {
+    auto label = seqstr + revistr + structur + "ABCDE" + id;
+    auto err = dlis_sul( label.c_str(), &v1.seqnum, &v1.major, &v1.minor,
+                                        &v1.layout, nullptr, v1.id );
+    CHECK( err == DLIS_OK );
+    CHECK( v1.seqnum == std::stoi(seqstr) );
+    CHECK( v1.layout == DLIS_STRUCTURE_RECORD );
+    CHECK( v1.id == id );
+}
+
+TEST_CASE_METHOD(correct_sul, "SUL with null id", "[sul][nulls]") {
+    auto label = seqstr + revistr + structur + maxilen + "/0";
+    auto err = dlis_sul( label.c_str(), &v1.seqnum, &v1.major, &v1.minor,
+                                        &v1.layout, &v1.maxlen, nullptr );
+    CHECK( err == DLIS_OK );
+    CHECK( v1.seqnum == std::stoi(seqstr) );
+    CHECK( v1.layout == DLIS_STRUCTURE_RECORD );
+    CHECK( v1.maxlen == std::stoi(maxilen) );
+}
+
+TEST_CASE_METHOD(correct_sul, "SUL with garbage minor/major version", "[sul]") {
+    auto label = seqstr + "ABCDE" + structur + maxilen + id;
+    auto err = dlis_sul( label.c_str(), &v1.seqnum, &v1.major, &v1.minor,
+                                        &v1.layout, &v1.maxlen, v1.id );
+    CHECK( err == DLIS_INCONSISTENT);
+    CHECK( v1.seqnum == std::stoi(seqstr) );
+    CHECK( v1.major == 1 );
+    CHECK( v1.minor == 0 );
+    CHECK( v1.layout == DLIS_STRUCTURE_RECORD );
+    CHECK( v1.maxlen == std::stoi(maxilen) );
+    CHECK( v1.id == id );
 }

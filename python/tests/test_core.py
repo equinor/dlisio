@@ -36,6 +36,41 @@ def test_sul(f):
 
     assert f.storage_label() == d
 
+
+def test_sul_error_values():
+    label = "too short"
+    with pytest.raises(ValueError) as excinfo:
+       dlisio.core.storage_label(label.encode('ascii'))
+    assert 'buffer to small' in str(excinfo.value)
+
+    label = ''.join([
+                '   1',
+                'V2.00',
+                'RECORD',
+                ' 8192',
+                'Default Storage Set                                         ',
+            ])
+
+    with pytest.raises(ValueError) as excinfo:
+        dlisio.core.storage_label(label.encode('ascii'))
+    assert 'unable to parse' in str(excinfo.value)
+
+
+    label = ''.join([
+                '  2 ',
+                'V1.00',
+                'TRASH1',
+                'ZZZZZ',
+                'Default Storage Set                                         ',
+    ])
+
+    with pytest.warns(RuntimeWarning) as warninfo:
+        sul = dlisio.core.storage_label(label.encode('ascii'))
+    assert len(warninfo) == 1
+    assert "label inconsistent" in warninfo[0].message.args[0]
+    assert sul['layout'] == 'unknown'
+
+
 # The example record from the specification
 stdrecord = bytearray([
     # The eflr function assumes unsegmented record

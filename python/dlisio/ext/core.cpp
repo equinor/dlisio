@@ -207,7 +207,7 @@ py::dict storage_label( py::buffer b ) {
 
         // TODO: report more precisely  a lot of stuff can go wrong with the
         // SUL
-        if( err == DLIS_UNEXPECTED_VALUE )
+        case DLIS_UNEXPECTED_VALUE:
             throw py::value_error( "unable to parse storage label" );
 
         case DLIS_INCONSISTENT:
