@@ -268,6 +268,9 @@ int dlis_vrl( const char* xs,
      * not-ok to flag protocol errors
      *  const auto ff    = dlis::ushort( xs + 2 );
      */
+    //for now just advance pointer by 1
+    ++xs;
+
     std::uint8_t major;
     dlis_ushort( xs, &major );
 
@@ -720,12 +723,13 @@ int dlis_index_records( const char* begin,
         while (true) {
             if (remaining == 0) {
                 /* Read VRL */
+
+                if (end - DLIS_VRL_SIZE < ptr) return DLIS_TRUNCATED;
+
                 int len, version;
                 const auto err = dlis_vrl( ptr, &len, &version );
 
                 if (err) return DLIS_INCONSISTENT;
-
-                if (end - DLIS_VRL_SIZE < ptr) return DLIS_TRUNCATED;
 
                 /*
                  * 2.3.6.4 Minimum Visible Record Length
@@ -741,9 +745,12 @@ int dlis_index_records( const char* begin,
             }
 
             /* read LRSH */
+            if (end - DLIS_LRSH_SIZE < ptr) return DLIS_TRUNCATED;
+
             int len, type;
             std::uint8_t attrs;
             const auto err = dlis_lrsh( ptr, &len, &attrs, &type );
+            if (err) return DLIS_INCONSISTENT;
 
             if (end - len < ptr) return DLIS_TRUNCATED;
 
@@ -752,8 +759,7 @@ int dlis_index_records( const char* begin,
             ptr += len;
             remaining -= len;
 
-            if (err) return DLIS_INCONSISTENT;
-
+            // TODO: handle situation where explicit bits are not the same for every segment
             isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
 
             if (not (attrs & DLIS_SEGATTR_SUCCSEG))
