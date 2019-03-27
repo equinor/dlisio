@@ -41,6 +41,7 @@ matrix:
               - SCAN="scan-build --status-bugs"
               - SOURCEDEPLOY=1
               - WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
+              - MKDOC="-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
         - os: osx
           python: 3.5
           language: generic
@@ -78,6 +79,7 @@ install:
                   pytest-runner
                   pybind11
                   hypothesis
+                  sphinx
     - bandit -c bandit.yml -r python/
 
 before_script:
@@ -86,6 +88,7 @@ before_script:
     - $SCAN cmake -DCMAKE_BUILD_TYPE=Release
                   -DBUILD_SHARED_LIBS=ON
                   -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib
+                  $MKDOC
                   ${WERROR}
                   ..
     - popd

@@ -70,6 +70,43 @@ execute_process(COMMAND
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )")
 
+option(BUILD_PYDOC "Build python documentation" OFF)
+
+if(BUILD_DOC)
+    set(BUILD_PYDOC ON)
+endif()
+
+if(BUILD_PYDOC)
+    find_program(sphinx sphinx-build)
+
+    if(NOT sphinx)
+        message(WARNING "Could not find sphinx, skipping python documentation")
+        set(BUILD_PYDOC OFF)
+    endif()
+
+endif()
+
+if(BUILD_PYDOC AND sphinx)
+    # use the -d argument to avoid putting cache dir in docs/, because that
+    # directory will be install'd
+    add_custom_target(pydoc
+        COMMAND ${sphinx}
+            -d ${CMAKE_CURRENT_BINARY_DIR}/.doctrees
+            ${SPHINX_ARGS}
+            ${CMAKE_CURRENT_SOURCE_DIR}/docs
+            ${CMAKE_CURRENT_BINARY_DIR}/docs
+        DEPENDS docs/conf.py
+                docs/index.rst
+                docs/dlisio.rst
+        COMMENT "Building python documentation with sphinx"
+    )
+    add_dependencies(doc pydoc)
+
+    install(
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/dlisio
+    )
+endif()
 # run tests with setup.py test
 # this is very slow compared to invoking pytest directly, but setuptools will
 # copy the built extension into the tree as it sees fit
