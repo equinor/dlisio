@@ -116,7 +116,7 @@ stdrecord = bytearray([
 
     # # segment header #2
     # 0x00, 0x26, # length = 38
-    # 0xE7,
+    # 0xE6, #in spec value is E6 in binary, but E7 in hex; binary is correct
     # 0x03,
 
     # ATTRIB: x2
