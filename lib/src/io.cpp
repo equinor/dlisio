@@ -311,6 +311,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
 
             if (err) consistent = false;
             attributes.push_back( attrs );
+            types.push_back( type );
 
             int explicit_formatting = 0;
             int has_predecessor = 0;
@@ -413,6 +414,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
         this->fs.read( buffer, DLIS_VRL_SIZE );
         const auto err = dlis_vrl( buffer, &len, &version );
 
+        // TODO: for now record closest to VE gets the blame
         if (err) consistent = false;
         if (version != 1) consistent = false;
 
