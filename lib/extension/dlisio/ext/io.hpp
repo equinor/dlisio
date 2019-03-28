@@ -54,6 +54,8 @@ private:
 
 
 struct stream_offsets {
+    /*see dlis_index_records. only change is tells.
+    tells here mean positive distance from the beginning of the file*/
     std::vector< long long > tells;
     std::vector< int > residuals;
     std::vector< int > explicits;
