@@ -541,10 +541,11 @@ PYBIND11_MODULE(core, m) {
             s.read( static_cast< char* >( info.ptr ), off, n );
             return b;
         })
-        .def( "extract", [](dl::stream& s, const std::vector< long long >& tells) {
+        .def( "extract", [](dl::stream& s,
+                            const std::vector< std::size_t >& indices) {
             std::vector< dl::record > recs;
-            recs.reserve( tells.size() );
-            for (auto i : tells) {
+            recs.reserve( indices.size() );
+            for (auto i : indices) {
                 auto rec = s.at( i );
                 if (rec.isencrypted()) continue;
                 recs.push_back( std::move( rec ) );
