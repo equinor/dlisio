@@ -70,6 +70,13 @@ stream_offsets findoffsets( mio::mmap_source& path,
                             long long from )
 noexcept (false);
 
+std::vector< std::pair< std::string, int > >
+findfdata(mio::mmap_source& file,
+          const std::vector< int >& candidates,
+          const std::vector< long long >& tells,
+          const std::vector< int >& residuals)
+noexcept (false);
+
 }
 
 #endif // DLISIO_PYTHON_IO_HPP

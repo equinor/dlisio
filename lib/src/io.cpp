@@ -454,4 +454,40 @@ void stream::read( char* dst, long long offset, int n ) {
     this->fs.read( dst, n );
 }
 
+std::vector< std::pair< std::string, int > >
+findfdata(mio::mmap_source& file,
+          const std::vector< int >& candidates,
+          const std::vector< long long >& tells,
+          const std::vector< int >& residuals)
+noexcept (false) {
+
+    const auto* ptr = file.data();
+    std::vector< std::pair< std::string, int > > xs;
+
+    char fingerprint[280] = {};
+    char name[256] = {};
+
+    for (auto i : candidates) {
+        const auto tell = tells[i];
+        const auto resi = residuals[i];
+        int offset = resi == 0 ? 8 : 4;
+
+        // read LRSH type-field
+        // 0 == FDATA
+        if (*(ptr + tell + offset - 1) != 0) continue;
+
+
+        std::int32_t origin;
+        std::uint8_t copy;
+        std::int32_t idlen;
+        dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
+        std::memset(fingerprint, 0, sizeof(fingerprint));
+        dlis_object_fingerprint(5, "FRAME", idlen, name, origin, copy, fingerprint);
+
+        xs.emplace_back(std::string(fingerprint), i);
+    }
+
+    return xs;
+}
+
 }

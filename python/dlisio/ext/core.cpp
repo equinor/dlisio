@@ -448,6 +448,7 @@ PYBIND11_MODULE(core, m) {
 
     m.def( "findsul", dl::findsul );
     m.def( "findvrl", dl::findvrl );
+    m.def("findfdata", dl::findfdata);
 
     m.def( "findoffsets", []( mio::mmap_source& file, long long from ) {
         const auto ofs = dl::findoffsets( file, from );

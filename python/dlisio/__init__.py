@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 from . import core
 from .objectpool import Objectpool
@@ -16,6 +17,7 @@ class dlis(object):
         self._objects = Objectpool()
         self._objects.load(self.objectsets())
         self.sul_offset = sul_offset
+        self.fdata_index = None
 
     def __enter__(self):
         return self
@@ -184,6 +186,16 @@ def load(path):
     try:
         stream.reindex(tells, residuals)
         f = dlis(stream, explicits, sul_offset = sulpos)
+
+        explicits = set(explicits)
+        candidates = [x for x in range(len(tells)) if x not in explicits]
+
+        # TODO: formalise and improve the indexing of FDATA records
+        index = collections.defaultdict(list)
+        for key, val in core.findfdata(mmap, candidates, tells, residuals):
+            index[key].append(val)
+
+        f.fdata_index = index
     except:
         stream.close()
         raise
