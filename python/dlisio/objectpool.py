@@ -77,7 +77,7 @@ class Objectpool():
                     original = objects[fingerprint]
 
                     logging.info(duplicate.format(fingerprint))
-                    if original.attic == obj.attic:
+                    if original.attic != obj.attic:
                         msg = problem + where
                         msg = msg.format(os.type, os.name, fingerprint)
                         logging.error(msg)

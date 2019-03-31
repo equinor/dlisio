@@ -4,17 +4,9 @@ from datetime import datetime
 
 import dlisio
 
-@pytest.fixture(scope="module", name="f")
-def load_default_file():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as f:
-        yield f
+from . import DWL206, only_channels
 
-@pytest.fixture(scope="module", name="channels_f")
-def load_only_channels_file():
-    with dlisio.load('data/only-channels.dlis') as f:
-        yield f
-
-def test_sul(f):
+def test_sul(DWL206):
     label = ''.join([
                 '   1',
                 'V1.00',
@@ -34,7 +26,7 @@ def test_sul(f):
 
     assert sul == d
 
-    assert f.storage_label() == d
+    assert DWL206.storage_label() == d
 
 
 def test_sul_error_values():
@@ -184,22 +176,22 @@ stdrecord = bytearray([
     # 0x00, 0x26, # length = 38
 ])
 
-def test_objects(f):
-    objects = f.objects
+def test_objects(DWL206):
+    objects = DWL206.objects
     assert len(list(objects)) == 864
 
-def test_fileheader(f):
+def test_fileheader(DWL206):
     key = dlisio.core.fingerprint('FILE-HEADER', '5', 2, 0)
-    fh = f._objects.objects[key]
+    fh = DWL206._objects.objects[key]
     assert fh.name.id == "5"
     assert fh.name.origin == 2
     assert fh.name.copynumber == 0
     assert fh.id == "MSCT_197LTP"
     assert fh.sequencenr == "197"
 
-def test_origin(f):
+def test_origin(DWL206):
     key = dlisio.core.fingerprint('ORIGIN', 'DLIS_DEFINING_ORIGIN', 2, 0)
-    origin = f._objects.objects[key]
+    origin = DWL206._objects.objects[key]
 
     assert origin.name.id           == "DLIS_DEFINING_ORIGIN"
     assert origin.name.origin       == 2
@@ -225,9 +217,9 @@ def test_origin(f):
     assert origin.namespace_name    == "SLB"
     assert origin.namespace_version == None
 
-def test_channel(f):
+def test_channel(DWL206):
     key = dlisio.core.fingerprint('CHANNEL', 'TDEP', 2, 0)
-    channel = f._objects.objects[key]
+    channel = DWL206._objects.objects[key]
     assert channel.name.id         == "TDEP"
     assert channel.name.origin     == 2
     assert channel.name.copynumber == 0
@@ -241,9 +233,9 @@ def test_channel(f):
     assert channel.units           == "0.1 in"
     assert channel.source is None
 
-def test_frame(f):
+def test_frame(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame = f._objects.objects[key]
+    frame = DWL206._objects.objects[key]
     assert frame.name.id         == "2000T"
     assert frame.name.origin     == 2
     assert frame.name.copynumber == 0
@@ -257,7 +249,7 @@ def test_frame(f):
     assert frame.encrypted == False
     assert frame.description is None
 
-def test_channel_order(f):
+def test_channel_order(DWL206):
     key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
     key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
 
@@ -269,15 +261,15 @@ def test_channel_order(f):
                 "SSTA", "RCMP", "RHPP", "RRPP", "CMPR", "HPPR", "RPPV", "SMSC",
                 "CMCU", "HMCU", "CMLP"]
 
-    for i, ch in enumerate(f._objects.objects[key800].channels):
+    for i, ch in enumerate(DWL206._objects.objects[key800].channels):
         assert ch.name.id == ref800T[i]
 
-    for i, ch in enumerate(f._objects.objects[key2000].channels):
+    for i, ch in enumerate(DWL206._objects.objects[key2000].channels):
         assert ch.name.id == ref2000T[i]
 
-def test_tool(f):
+def test_tool(DWL206):
     key = dlisio.core.fingerprint('TOOL', 'MSCT', 2, 0)
-    tool = f._objects.objects[key]
+    tool = DWL206._objects.objects[key]
     assert tool.name.id         == "MSCT"
     assert tool.name.origin     == 2
     assert tool.name.copynumber == 0
@@ -290,13 +282,13 @@ def test_tool(f):
     assert len(tool.channels)   == 74
     assert len(tool.parts)      == 9
 
-    assert len(list(f.tools)) == 2
-    tools = [o for o in f.tools if o.name.id == "MSCT"]
+    assert len(list(DWL206.tools)) == 2
+    tools = [o for o in DWL206.tools if o.name.id == "MSCT"]
     assert len(tools) == 1
 
-def test_parameter(f):
+def test_parameter(DWL206):
     key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
-    param = f._objects.objects[key]
+    param = DWL206._objects.objects[key]
     assert param.name.id         == "FLSHSTRM"
     assert param.name.origin     == 2
     assert param.name.copynumber == 0
@@ -305,13 +297,13 @@ def test_parameter(f):
     assert param.dimension is None
     assert param.axis      is None
     assert param.zones     is None
-    assert len(list(f.parameters)) == 226
-    param = [o for o in f.parameters if o.name.id == "FLSHSTRM"]
+    assert len(list(DWL206.parameters)) == 226
+    param = [o for o in DWL206.parameters if o.name.id == "FLSHSTRM"]
     assert len(param) == 1
 
-def test_calibrations(f):
+def test_calibrations(DWL206):
     key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
-    calibration = f._objects.objects[key]
+    calibration = DWL206._objects.objects[key]
     assert calibration.name.id           == "CNU"
     assert calibration.name.origin       == 2
     assert calibration.name.copynumber   == 0
@@ -322,23 +314,23 @@ def test_calibrations(f):
     assert len(list(calibration.calibrated_channel))   == 1
     assert len(list(calibration.uncalibrated_channel)) == 1
 
-def test_Unknown(f):
-    unknown = next(iter(f.unknowns))
+def test_Unknown(DWL206):
+    unknown = next(iter(DWL206.unknowns))
     print(unknown)
     # should have all unknown should have attributes as a field
     # so this shouldn't be AttributeError
     _ = unknown.attributes
-    assert len(list(f.unknowns)) == 501
+    assert len(list(DWL206.unknowns)) == 501
 
-def test_fmtstring(f):
+def test_fmtstring(DWL206):
     reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
     reference2 = "ffff"
 
     key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
     key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
 
-    frame800 = f._objects.objects[key800]
-    frame2000 = f._objects.objects[key2000]
+    frame800 = DWL206._objects.objects[key800]
+    frame2000 = DWL206._objects.objects[key2000]
 
     fmtstring1 = frame800.fmtstr()
     fmtstring2 = frame2000.fmtstr()
@@ -346,23 +338,23 @@ def test_fmtstring(f):
     assert fmtstring1 == reference1
     assert fmtstring2 == reference2
 
-def test_dtype(f):
+def test_dtype(DWL206):
     key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame2000 = f._objects.objects[key2000]
+    frame2000 = DWL206._objects.objects[key2000]
     dtype1 = frame2000.dtype
     assert dtype1 == np.dtype([('TIME', np.float32),
                                ('TDEP', np.float32),
                                ('TENS_SL', np.float32),
                                ('DEPT_SL', np.float32)])
 
-def test_load_pre_sul_garbage(channels_f):
+def test_load_pre_sul_garbage(only_channels):
     with dlisio.load('data/pre-sul-garbage.dlis') as f:
-        assert f.storage_label() == channels_f.storage_label()
+        assert f.storage_label() == f.storage_label()
         assert f.sul_offset == 12
 
-def test_load_pre_vrl_garbage(channels_f):
+def test_load_pre_vrl_garbage(only_channels):
     with dlisio.load('data/pre-sul-pre-vrl-garbage.dlis') as f:
-        assert f.storage_label() == channels_f.storage_label()
+        assert f.storage_label() == f.storage_label()
         assert f.sul_offset == 12
 
 def test_load_file_with_broken_utf8():
@@ -372,9 +364,12 @@ def test_load_file_with_broken_utf8():
 def test_padbytes_as_large_as_record():
     # 180-byte long explicit record with padding, and padbytes are set to 180
     # (leaving the resulting len(data) == 0)
-    f = dlisio.open('data/padbytes-large-as-record.dlis')
-    f.reindex([0], [180])
+    try:
+        f = dlisio.open('data/padbytes-large-as-record.dlis')
+        f.reindex([0], [180])
 
-    rec = f.extract([0])[0]
-    assert rec.explicit
-    assert len(memoryview(rec)) == 0
+        rec = f.extract([0])[0]
+        assert rec.explicit
+        assert len(memoryview(rec)) == 0
+    finally:
+        f.close()

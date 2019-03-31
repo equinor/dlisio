@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 from . import core
 from .objectpool import Objectpool
@@ -16,6 +17,7 @@ class dlis(object):
         self._objects = Objectpool()
         self._objects.load(self.objectsets())
         self.sul_offset = sul_offset
+        self.fdata_index = None
 
     def __enter__(self):
         return self
@@ -35,6 +37,14 @@ class dlis(object):
 
     def getobject(self, name, type):
         return self._objects.getobject(name, type)
+
+    def curves(self, fingerprint):
+        frame = self._objects.object_sets['FRAME'][fingerprint]
+        fmt = frame.fmtstr()
+        indices = self.fdata_index[fingerprint]
+        a = np.empty(shape = len(indices), dtype = frame.dtype)
+        core.read_all_fdata(fmt, self.file, indices, a)
+        return a
 
     @property
     def objects(self):
@@ -184,6 +194,16 @@ def load(path):
     try:
         stream.reindex(tells, residuals)
         f = dlis(stream, explicits, sul_offset = sulpos)
+
+        explicits = set(explicits)
+        candidates = [x for x in range(len(tells)) if x not in explicits]
+
+        # TODO: formalise and improve the indexing of FDATA records
+        index = collections.defaultdict(list)
+        for key, val in core.findfdata(mmap, candidates, tells, residuals):
+            index[key].append(val)
+
+        f.fdata_index = index
     except:
         stream.close()
         raise

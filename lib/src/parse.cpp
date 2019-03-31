@@ -584,7 +584,7 @@ const noexcept (false) {
     if (len <= 0)
         throw std::invalid_argument("fingerprint");
 
-    auto str = std::vector< char >(len + 1);
+    auto str = std::vector< char >(len);
     auto err = dlis_object_fingerprint(type.size(),
                                        type.data(),
                                        id.size(),
