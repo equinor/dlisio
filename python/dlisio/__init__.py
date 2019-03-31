@@ -38,6 +38,14 @@ class dlis(object):
     def getobject(self, name, type):
         return self._objects.getobject(name, type)
 
+    def curves(self, fingerprint):
+        frame = self._objects.object_sets['FRAME'][fingerprint]
+        fmt = frame.fmtstr()
+        indices = self.fdata_index[fingerprint]
+        a = np.empty(shape = len(indices), dtype = frame.dtype)
+        core.read_all_fdata(fmt, self.file, indices, a)
+        return a
+
     @property
     def objects(self):
         return self._objects.allobjects
