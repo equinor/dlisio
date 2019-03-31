@@ -290,6 +290,8 @@ record& stream::at( int i, record& rec ) noexcept (false) {
         vec.resize(new_size);
     };
 
+    rec.data.clear();
+
     while (true) {
         while (remaining > 0) {
             int len, type;
