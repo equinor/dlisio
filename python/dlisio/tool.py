@@ -1,5 +1,6 @@
-from .basicobject import BasicObject
+import logging
 
+from .basicobject import BasicObject
 
 class Tool(BasicObject):
     """Tool
@@ -147,12 +148,25 @@ class Tool(BasicObject):
         return self._parameters
 
     def link(self, objects, sets):
-        self._channels = [
-            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
-            for ref in self.channels_refs
-        ]
+        channels = sets['CHANNEL']
+        chans = []
+        for ref in self.channels_refs:
+            fp = ref.fingerprint('CHANNEL')
+            try:
+                chans.append(channels[fp])
+            except KeyError:
+                msg = 'missing channel {} referenced from tool {}'
+                logging.warning(msg.format(ref, self.name))
 
-        self._parameters = [
-            sets['PARAMETER'][ref.fingerprint('PARAMETER')]
-            for ref in self.parameters_refs
-        ]
+        parameters = sets['PARAMETER']
+        params = []
+        for ref in self.parameters_refs:
+            fp = ref.fingerprint('PARAMETER')
+            try:
+                params.append(parameters[fp])
+            except KeyError:
+                msg = 'missing parameter {} referenced from tool {}'
+                logging.warning(msg.format(ref, self.name))
+
+        self._channels = chans
+        self._parameters = params
