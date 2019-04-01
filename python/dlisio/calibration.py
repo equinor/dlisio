@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
 
+import logging
 
 class Calibration(BasicObject):
     """Calibration
@@ -126,17 +127,36 @@ class Calibration(BasicObject):
         return self._parameters
 
     def link(self, objects, sets):
-        self._calibrated_channel = [
-            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
-            for ref in self.calibrated_refs
-        ]
+        channels = sets['CHANNEL']
 
-        self._uncalibrated_channel = [
-            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
-            for ref in self.uncalibrated_refs
-        ]
+        calibs = []
+        for ref in self.calibrated_refs:
+            fp = ref.fingerprint('CHANNEL')
+            try:
+                calibs.append(channels[fp])
+            except KeyError:
+                msg = 'missing channel {} referenced from calibration {}'
+                logging.warning(msg.format(ref, self.name))
 
-        self._parameters = [
-            sets['PARAMETER'][ref.fingerprint('PARAMETER')]
-            for ref in self.parameters_refs
-        ]
+        uncalibs = []
+        for ref in self.uncalibrated_refs:
+            fp = ref.fingerprint('CHANNEL')
+            try:
+                uncalibs.append(channels[fp])
+            except KeyError:
+                msg = 'missing channel {} referenced from calibration {}'
+                logging.warning(msg.format(ref, self.name))
+
+        parameters = sets['PARAMETER']
+        params = []
+        for ref in self.parameters_refs:
+            fp = ref.fingerprint('PARAMETER')
+            try:
+                params.append(parameters[fp])
+            except KeyError:
+                msg = 'missing parameter {} referenced from calibration {}'
+                logging.warning(msg.format(ref, self.name))
+
+        self._calibrated_channel = calibs
+        self._uncalibrated_channel = uncalibs
+        self._parameters = params
