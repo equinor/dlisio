@@ -45,8 +45,8 @@ dtype = {
     2      : 'f4',                   #IEEE single precision floating point
     3      : '2f4',                  #Validated single precision floating point
     4      : '3f4',                  #Two-way validated single precision floating point
-    5      : 'i4',                   #IBM single precision floating point
-    6      : 'i4',                   #VAX single precision floating point
+    5      : 'f4',                   #IBM single precision floating point
+    6      : 'f4',                   #VAX single precision floating point
     7      : 'f8',                   #IEEE double precision floating point
     8      : '2f8',                  #Validated double precision floating point
     9      : '3f8',                  #Two-way validated double precision floating point
