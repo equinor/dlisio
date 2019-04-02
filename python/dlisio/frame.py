@@ -76,7 +76,7 @@ class Frame(BasicObject):
         """
         if self._dtype: return self._dtype
 
-        self._dtype = np.dtype([(ch.name.id, ch.dtype) for ch in self.channels])
+        self._dtype = np.dtype([(ch.name, ch.dtype) for ch in self.channels])
         return self._dtype
 
     @property
