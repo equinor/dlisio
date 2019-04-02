@@ -116,7 +116,7 @@ stdrecord = bytearray([
 
     # # segment header #2
     # 0x00, 0x26, # length = 38
-    # 0xE7,
+    # 0xE6, #in spec value is E6 in binary, but E7 in hex; binary is correct
     # 0x03,
 
     # ATTRIB: x2
@@ -373,3 +373,52 @@ def test_padbytes_as_large_as_record():
         assert len(memoryview(rec)) == 0
     finally:
         f.close()
+
+def test_load_small_file():
+    # <4K files infinite loop bug check
+    with dlisio.load('data/example-record.dlis'):
+        pass
+
+def test_load_7K_file_with_several_LR():
+    # 4K-8K files infinite loop bug check
+    with dlisio.load('data/7K-file.dlis'):
+        pass
+
+def test_record_attributes():
+    stream = dlisio.open('data/3-syntactic-logical-records.dlis')
+    tells = [80, 116, 148]
+    residuals = [0, 64, 32]
+    # for the test pretend all 3 records are explicit
+    explicits = [0, 1, 2]
+    stream.reindex(tells, residuals)
+    recs = stream.extract(explicits)
+    buffer = bytearray(1)
+
+    # last record ignored as encrypted
+    assert len(recs) == 2
+
+    assert recs[0].type == 1
+    assert not recs[0].explicit
+    assert not recs[0].encrypted
+    # due to error in VE version
+    assert not recs[0].consistent
+    checked_byte = np.array(recs[0])[1]
+    assert checked_byte == 4
+    stream.get(buffer, tells[0] + 9, 1)
+    assert checked_byte == buffer[0]
+
+    assert recs[1].type == 2
+    assert recs[1].explicit
+    assert not recs[1].encrypted
+    assert recs[1].consistent
+    stream.get(buffer, tells[1] + 5, 1)
+    assert np.array(recs[1])[1] == buffer[0]
+
+    rec3 = stream[2]
+    assert rec3.type == 3
+    assert not rec3.explicit
+    assert rec3.encrypted
+    assert rec3.consistent
+    assert np.array(rec3)[1] == 8
+
+    stream.close()
