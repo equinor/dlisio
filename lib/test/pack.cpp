@@ -14,12 +14,12 @@ namespace {
 struct check_packsize {
     ~check_packsize() {
         std::int32_t size;
-        auto err = dlis_pack_size( fmt, &size );
+        auto err = dlis_pack_size( fmt, nullptr, &size );
         CHECK( err == DLIS_OK );
         CHECK( size == buffer.size() );
 
         int variable;
-        err = dlis_pack_varsize( fmt, &variable );
+        err = dlis_pack_varsize( fmt, nullptr, &variable );
         CHECK( err == DLIS_OK );
         CHECK( !variable );
     }
@@ -79,32 +79,29 @@ TEST_CASE_METHOD(check_packsize, "pack unsigned integers", "[pack]") {
     };
 
     fmt = "uuUULLiiiiiiiii";
-    buffer.resize(  (sizeof(unsigned) * 2)
-                  + (sizeof(unsigned) * 2)
-                  + (sizeof(std::uint32_t) * 2)
-                  + (sizeof(std::int32_t)  * 9));
+    buffer.resize((1 * 2) + (2 * 2) + (4 * 2) + (4 * 9));
     auto* dst = buffer.data();
 
     const auto err = dlis_packf( fmt, source, dst );
     CHECK( err == DLIS_OK );
 
-    unsigned int us[2];
+    std::uint8_t us[2];
     std::memcpy( us, dst, sizeof(us) );
     CHECK( us[ 0 ] == 89 );
     CHECK( us[ 1 ] == 167 );
 
-    unsigned int un[2];
-    std::memcpy( un, dst + 8, sizeof(un) );
+    std::uint16_t un[2];
+    std::memcpy( un, dst + 2, sizeof(un) );
     CHECK( un[ 0 ] == 153 );
     CHECK( un[ 1 ] == 32768 );
 
     std::uint32_t ul[2];
-    std::memcpy( ul, dst + 16, sizeof(ul) );
+    std::memcpy( ul, dst + 6, sizeof(ul) );
     CHECK( ul[ 0 ] == 153 );
     CHECK( ul[ 1 ] == 4294967143 );
 
     std::int32_t uv[9];
-    std::memcpy( uv, dst + 24, sizeof(uv) );
+    std::memcpy( uv, dst + 14, sizeof(uv) );
     CHECK( uv[ 0 ] == 1 );
     CHECK( uv[ 1 ] == 256 );
     CHECK( uv[ 2 ] == 36863 );
@@ -128,26 +125,24 @@ TEST_CASE_METHOD(check_packsize, "pack signed integers", "[pack]") {
     };
 
     fmt = "ddDDlll";
-    buffer.resize(  (sizeof(int) * 2)
-                  + (sizeof(int) * 2)
-                  + (sizeof(std::int32_t) * 3));
+    buffer.resize((1 * 2) + (2 * 2) + (4 * 3));
     auto* dst = buffer.data();
 
     const auto err = dlis_packf( fmt, source, dst );
     CHECK( err == DLIS_OK );
 
-    int ss[2];
+    std::int8_t ss[2];
     std::memcpy( ss, dst, sizeof( ss ) );
     CHECK( ss[ 0 ] == 89 );
     CHECK( ss[ 1 ] == -89 );
 
-    int sn[2];
-    std::memcpy( sn, dst + 8, sizeof( sn ) );
+    std::int16_t sn[2];
+    std::memcpy( sn, dst + 2, sizeof( sn ) );
     CHECK( sn[ 0 ] == 153 );
     CHECK( sn[ 1 ] == -153 );
 
     std::int32_t sl[3];
-    std::memcpy( sl, dst + 16, sizeof( sl ) );
+    std::memcpy( sl, dst + 6, sizeof( sl ) );
     CHECK( sl[ 0 ] == 153 );
     CHECK( sl[ 1 ] == -153 );
     CHECK( sl[ 2 ] == 2147483647 );
@@ -312,18 +307,15 @@ TEST_CASE_METHOD(check_packsize, "pack status", "[pack]") {
         0x01, // 1 status
     };
 
-    buffer.resize(sizeof(int) * 2);
+    buffer.resize( 2 );
     fmt = "qq";
     auto* dst = buffer.data();
 
     const auto err = dlis_packf( fmt, source, dst );
     CHECK( err == DLIS_OK );
 
-    int status[2];
-    std::memcpy(status, dst, buffer.size());
-
-    CHECK( !status[ 0 ] );
-    CHECK(  status[ 1 ] );
+    CHECK( !dst[ 0 ] );
+    CHECK(  dst[ 1 ] );
 }
 
 namespace {
@@ -331,11 +323,11 @@ namespace {
 struct check_is_varsize {
     ~check_is_varsize () {
         int variable;
-        auto err = dlis_pack_varsize( fmt, &variable );
+        auto err = dlis_pack_varsize( fmt, nullptr, &variable );
         CHECK( err == DLIS_OK );
         CHECK( variable );
 
-        err = dlis_pack_size( fmt, &variable );
+        err = dlis_pack_size( fmt, nullptr, &variable );
         CHECK( err == DLIS_INCONSISTENT );
     }
 
@@ -461,10 +453,7 @@ TEST_CASE_METHOD(check_is_varsize, "pack obname", "[pack]") {
         0x44, 0x4C,
     };
 
-    std::vector< char > buffer(
-          (sizeof(std::int32_t) + sizeof(unsigned int) + 16)
-        + (sizeof(std::int32_t) + sizeof(unsigned int) + 6)
-    );
+    std::vector< char > buffer( (4 + 1 + 16) + (4 + 1 + 6) );
     fmt = "oo";
     auto* dst = buffer.data();
 
@@ -472,12 +461,12 @@ TEST_CASE_METHOD(check_is_varsize, "pack obname", "[pack]") {
     CHECK( err == DLIS_OK );
 
     std::int32_t origin;
-    unsigned int copy;
+    std::uint8_t copy;
     std::string id;
 
     std::memcpy( &origin, dst + 0, sizeof(origin) );
     std::memcpy( &copy,   dst + 4, sizeof(copy) );
-    id = readstr( dst + 4 + sizeof(unsigned int) );
+    id = readstr( dst + 5 );
     CHECK( origin == 314 );
     CHECK( copy == 255 );
     CHECK( id == "DLISIODLISIO" );
@@ -486,7 +475,7 @@ TEST_CASE_METHOD(check_is_varsize, "pack obname", "[pack]") {
 
     std::memcpy( &origin, dst + 0, sizeof(origin) );
     std::memcpy( &copy,   dst + 4, sizeof(copy) );
-    id = readstr( dst + 4 + sizeof(unsigned int) );
+    id = readstr( dst + 5 );
     CHECK( origin == 4 );
     CHECK( copy == 15 );
     CHECK( id == "DL" );
@@ -500,10 +489,7 @@ TEST_CASE_METHOD(check_is_varsize, "pack objref", "[pack]") {
         0x08, 0x50, 0x52, 0x4F, 0x54, 0x4F, 0x43, 0x4F, 0x4C, // "PROTOCOL"
     };
 
-    std::vector< char > buffer(
-          sizeof(std::int32_t) + 7
-        + sizeof(std::int32_t) + sizeof(int) + sizeof(std::int32_t) + 8
-    );
+    std::vector< char > buffer(4 + 7 + 4 + 1 + 4 + 8);
     auto* dst = buffer.data();
 
     fmt = "O";
@@ -512,13 +498,13 @@ TEST_CASE_METHOD(check_is_varsize, "pack objref", "[pack]") {
 
     std::string type;
     std::int32_t origin;
-    unsigned int copy;
+    std::uint8_t copy;
     std::string id;
 
     type = readstr( dst + 0 );
     std::memcpy( &origin, dst + 11, sizeof(origin) );
     std::memcpy( &copy,   dst + 15, sizeof(copy) );
-    id = readstr( dst + 15 + sizeof(unsigned int));
+    id = readstr( dst + 16 );
 
     CHECK( type == "LIBRARY" );
     CHECK( 1 == origin );
@@ -544,12 +530,7 @@ TEST_CASE_METHOD(check_is_varsize, "pack attref", "[pack]") {
     };
 
     fmt = "A";
-    std::vector< char > buffer(
-          (sizeof(std::int32_t) + 10)
-        + (sizeof(std::int32_t) + sizeof(unsigned int))
-        + (sizeof(std::int32_t) + 12)
-        + (sizeof(std::int32_t) + 13)
-    );
+    std::vector< char > buffer( (4 + 10) + (4 + 1) + (4 + 12) + (4 + 13) );
     auto* dst = buffer.data();
 
     const auto err = dlis_packf( fmt, source, dst );
@@ -557,15 +538,15 @@ TEST_CASE_METHOD(check_is_varsize, "pack attref", "[pack]") {
 
     std::string type;
     std::int32_t origin;
-    unsigned int copy;
+    std::uint8_t copy;
     std::string id;
     std::string label;
 
     type = readstr( dst + 0 );
     std::memcpy( &origin, dst + 14, sizeof(origin) );
     std::memcpy( &copy,   dst + 18, sizeof(copy) );
-    id = readstr( dst + 18 + sizeof(unsigned int));
-    label = readstr( dst + 34 + sizeof(unsigned int));
+    id = readstr( dst + 19 );
+    label = readstr( dst + 35 );
 
     CHECK( type == "LOREMIPSUM" ) ;
     CHECK( origin == 10 );
@@ -580,35 +561,27 @@ TEST_CASE_METHOD(check_is_varsize, "pack unexpected value", "[pack]") {
         0x01, 0x53, // "S" ident
     };
 
-    unsigned char dst[10];
+    unsigned char dst[6];
     fmt = "ust";
 
     const auto err = dlis_packf( fmt, source, dst );
 
-    int n;
-    std::int32_t len;
-
-    std::memcpy(&n, dst, sizeof(n));
-    std::memcpy(&len, dst + sizeof(n), sizeof(len));
-
-    CHECK(err == DLIS_UNEXPECTED_VALUE);
-    CHECK(n == 89);
-    CHECK(len == 1);
-    CHECK(dst[sizeof(n) + sizeof(len)] == 'S');
+    CHECK( err == DLIS_UNEXPECTED_VALUE);
+    CHECK( dst[0] == 89);
+    CHECK( dst[5] == 'S');
 }
 
 TEST_CASE("pack var-size fails with invalid specifier") {
-    int vsize;
-    CHECK( dlis_pack_varsize( "w",  &vsize ) == DLIS_INVALID_ARGS );
-    CHECK( dlis_pack_varsize( "lw", &vsize ) == DLIS_INVALID_ARGS );
-    CHECK( dlis_pack_varsize( "wl", &vsize ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "w",  nullptr, nullptr ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "lw", nullptr, nullptr ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "wl", nullptr, nullptr ) == DLIS_INVALID_ARGS );
 }
 
 namespace {
 
 bool pack_varsize( const char* fmt ) {
     int vsize;
-    CHECK( dlis_pack_varsize( fmt, &vsize ) == DLIS_OK );
+    CHECK( dlis_pack_varsize( fmt, nullptr, &vsize ) == DLIS_OK );
     return vsize;
 };
 
@@ -655,7 +628,7 @@ namespace {
 
 int packsize( const char* fmt ) {
     int size;
-    CHECK( dlis_pack_size( fmt, &size ) == DLIS_OK );
+    CHECK( dlis_pack_size( fmt, nullptr, &size ) == DLIS_OK );
     return size;
 };
 
@@ -673,14 +646,14 @@ TEST_CASE("pack size single values") {
     CHECK( packsize( "Z" ) == 24 );
     CHECK( packsize( "c" ) == 8 );
     CHECK( packsize( "C" ) == 16 );
-    CHECK( packsize( "d" ) == sizeof(int) );
-    CHECK( packsize( "D" ) == sizeof(int) );
+    CHECK( packsize( "d" ) == 1 );
+    CHECK( packsize( "D" ) == 2 );
     CHECK( packsize( "l" ) == 4 );
-    CHECK( packsize( "u" ) == sizeof(unsigned) );
-    CHECK( packsize( "U" ) == sizeof(unsigned) );
+    CHECK( packsize( "u" ) == 1 );
+    CHECK( packsize( "U" ) == 2 );
     CHECK( packsize( "L" ) == 4 );
     CHECK( packsize( "i" ) == 4 );
     CHECK( packsize( "j" ) == 32 );
     CHECK( packsize( "J" ) == 4 );
-    CHECK( packsize( "q" ) == sizeof(int) );
+    CHECK( packsize( "q" ) == 1 );
 }

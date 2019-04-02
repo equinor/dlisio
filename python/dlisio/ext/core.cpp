@@ -246,55 +246,33 @@ std::string fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
-int expected_size(const char* fmt) {
-    const auto fmt_msg = "invalid format specifier in " + std::string(fmt);
+struct framesize {
+    int src;
+    int dst;
+};
 
-    int varsize = 0;
-    const auto err = dlis_pack_varsize(fmt, &varsize);
+framesize frame_size(const char* fmt) {
+    const auto fmt_str = std::string(fmt);
+    const auto fmt_msg = "invalid format specifier in " + fmt_str;
+
+    int variable;
+    auto err = dlis_pack_varsize(fmt, &variable, nullptr);
     if (err) {
         throw std::invalid_argument(fmt_msg);
     }
 
-    if (varsize) {
-        auto msg = "variable-sized records are not supported. fmtstr = ";
-        throw dl::not_implemented(msg + std::string(fmt));
+    if (variable) {
+        throw dl::not_implemented(fmt_msg + fmt_str);
     }
 
-    int size = 0;
-    while (true) {
-        switch (*fmt++) {
-            case DLIS_FMT_EOL: return size;
-            case DLIS_FMT_FSHORT: size += 4;     break;
-            case DLIS_FMT_FSINGL: size += 4;     break;
-            case DLIS_FMT_FSING1: size += 8;     break;
-            case DLIS_FMT_FSING2: size += 12;    break;
-            case DLIS_FMT_ISINGL: size += 4;     break;
-            case DLIS_FMT_VSINGL: size += 4;     break;
-            case DLIS_FMT_FDOUBL: size += 8;     break;
-            case DLIS_FMT_FDOUB1: size += 16;    break;
-            case DLIS_FMT_FDOUB2: size += 24;    break;
-            case DLIS_FMT_CSINGL: size += 8;     break;
-            case DLIS_FMT_CDOUBL: size += 16;    break;
-            case DLIS_FMT_SSHORT: size += 1;     break;
-            case DLIS_FMT_SNORM:  size += 2;     break;
-            case DLIS_FMT_SLONG:  size += 4;     break;
-            case DLIS_FMT_USHORT: size += 1;     break;
-            case DLIS_FMT_UNORM:  size += 2;     break;
-            case DLIS_FMT_ULONG:  size += 4;     break;
-            case DLIS_FMT_DTIME:  size += 4 * 8; break;
-            case DLIS_FMT_STATUS: size += 1;     break;
-
-            case DLIS_FMT_UVARI:
-            case DLIS_FMT_IDENT:
-            case DLIS_FMT_ASCII:
-            case DLIS_FMT_ORIGIN:
-            case DLIS_FMT_OBNAME:
-            case DLIS_FMT_OBJREF:
-            case DLIS_FMT_ATTREF:
-            case DLIS_FMT_UNITS:
-                throw std::invalid_argument(fmt_msg);
-        }
+    int src = 0;
+    int dst = 0;
+    err = dlis_pack_size(fmt, &src, &dst);
+    if (err) {
+        throw std::invalid_argument(fmt_msg);
     }
+
+    return framesize { src, dst };
 }
 
 void read_all_fdata(const char* fmt,
@@ -310,10 +288,8 @@ noexcept (false) {
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
 
-    int pack_size;
-    dlis_pack_size(fmt, &pack_size);
 
-    const auto fmt_size = expected_size(fmt);
+    auto size = frame_size(fmt);
 
     dl::record record;
     int expected_frameno = 1;
@@ -344,19 +320,19 @@ noexcept (false) {
             }
 
             const auto tail = std::distance(ptr, end);
-            if (tail < fmt_size) {
+            if (tail < size.src) {
                 const auto msg = "unaligned record: tail (which is "
                                + std::to_string(tail)
                                + ") < fmt_size (which is "
-                               + std::to_string(fmt_size)
+                               + std::to_string(size.src)
                                + ")"
                                ;
                 throw std::runtime_error(msg);
             }
 
             dlis_packf(fmt, ptr, dst);
-            dst += pack_size;
-            ptr += fmt_size;
+            dst += size.dst;
+            ptr += size.src;
             expected_frameno = frameno + 1;
 
             if (ptr != end) {
