@@ -52,11 +52,11 @@ dtype = {
     9      : '3f8',                  #Two-way validated double precision floating point
     10     : 'c8',                   #Single precision complex
     11     : 'c16',                  #Double precision complex
-    12     : 'i4',                   #Short signed integer
-    13     : 'i4',                   #Normal signed integer
+    12     : 'i1',                   #Short signed integer
+    13     : 'i2',                   #Normal signed integer
     14     : 'i4',                   #Long signed integer
-    15     : 'u4',                   #Short unsigned integer
-    16     : 'u4',                   #Normal unsigned integer
+    15     : 'u1',                   #Short unsigned integer
+    16     : 'u2',                   #Normal unsigned integer
     17     : 'u4',                   #Long unsigned integer
     18     : 'u4',                   #Variable-length unsigned integer
     19     : 'i1,U',                 #Variable-length identifier
