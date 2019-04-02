@@ -135,9 +135,15 @@ noexcept (false)
     const auto* begin = file.data() + from;
     const auto* end = file.data() + file.size();
 
-    // by default, assume ~4K per segment on average. This should be fairly few
+    constexpr std::size_t min_alloc_size = 2;
+    constexpr auto resize_factor = 1.5;
+    constexpr auto min_new_size = std::size_t(min_alloc_size * resize_factor);
+    static_assert(min_new_size > min_alloc_size,
+                                   "resize should always make size bigger");
+
+    // by default, assume ~4K per record on average. This should be fairly few
     // reallocations, without overshooting too much
-    std::size_t alloc_size = file.size() / 4196;
+    std::size_t alloc_size = std::max(file.size() / 4096, min_alloc_size);
 
     stream_offsets ofs;
     ofs.resize( alloc_size );
@@ -185,7 +191,7 @@ noexcept (false)
         if (next == end) break;
 
         const auto prev_size = tells.size();
-        ofs.resize( prev_size * 1.5 );
+        ofs.resize( prev_size * resize_factor );
 
 
         /* size of the now trailing newly-allocated area */

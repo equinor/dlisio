@@ -373,3 +373,14 @@ def test_padbytes_as_large_as_record():
         assert len(memoryview(rec)) == 0
     finally:
         f.close()
+
+def test_load_small_file():
+    # <4K files infinite loop bug check
+    with dlisio.load('data/example-record.dlis'):
+        pass
+
+def test_load_7K_file_with_several_LR():
+    # 4K-8K files infinite loop bug check
+    with dlisio.load('data/7K-file.dlis'):
+        pass
+
