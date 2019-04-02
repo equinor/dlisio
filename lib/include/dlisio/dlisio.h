@@ -193,26 +193,36 @@ int dlis_packf( const char* fmt, const void* src, void* dst );
  *
  * This function is intended for checking if format strings built from
  * inspecting records is fixed-sized or not, which in turn can guide if it's
- * possible to random-access onto variables. Note size refers to the size of
- * the the *output* parameter, i.e. UVARI (variable-length unsigned int) is
- * considered fixed-size.
+ * possible to random-access onto variables. The output variables are booleans
+ * - the src output is true if the format is variable-size on disk, and the dst
+ * output is true if the format is variable-size *in memory*. This is
+ * determined by the presence of UVARI and ORIGIN which are variable-sized on
+ * disk, but fixed-size in memory.
  *
  * This functionality can be implemented by manually checking if the format
  * string contains any of "sSoOAQ", but is provided for convenience.
  *
  * Returns DLIS_OK on success, and DLIS_INVALID_ARGS if the format strings
- * contain any invalid format specifier. out is non-zero if there are any
- * variable-length values in the format specifier, and 0 if all types are
- * fixed-length. If the function fails, the output variable is untouched.
+ * contain any invalid format specifier. The output params are non-zero if
+ * there are any variable-length values in the format specifier, and 0 if all
+ * types are fixed-length. If the function fails, the output variable is
+ * untouched.
  *
- * To compute the length of a fixed-size string, use dlis_pack_size. This is
- * the length of the packed string *in memory*, i.e. UVARI is 4 bytes, not
- * inconsistent. For individual object sizes, refer to the DLIS_SIZEOF
- * constants in dlisio/types.h
+ * To compute the length of a fixed-size string, use dlis_pack_size. src is the
+ * size of the pack on disk, and dst the length of the packed string in memory,
+ * i.e.  UVARI is 4 bytes, not inconsistent. For individual object sizes, refer
+ * to the DLIS_SIZEOF constants in dlisio/types.h
+ *
+ * NOTE:
+ * dlis_pack_size considers the src variable-size when fmt has UVARI, but the
+ * dst fixed-size. This will return DLIS_OK, but set src to
+ * DLIS_VARIABLE_LENGTH (= 0).
+ *
+ * For both functions, both src and dst can be NULL, in which case no data will
+ * be written.
  */
-int dlis_pack_varsize( const char* fmt, int* out );
-
-int dlis_pack_size( const char* fmt, int* size );
+int dlis_pack_varsize(const char* fmt, int* src, int* dst);
+int dlis_pack_size(const char* fmt, int* src, int* dst);
 
 /*
  * A table of the record attributes, high bit first:

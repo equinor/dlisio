@@ -14,12 +14,12 @@ namespace {
 struct check_packsize {
     ~check_packsize() {
         std::int32_t size;
-        auto err = dlis_pack_size( fmt, &size );
+        auto err = dlis_pack_size( fmt, nullptr, &size );
         CHECK( err == DLIS_OK );
         CHECK( size == buffer.size() );
 
         int variable;
-        err = dlis_pack_varsize( fmt, &variable );
+        err = dlis_pack_varsize( fmt, nullptr, &variable );
         CHECK( err == DLIS_OK );
         CHECK( !variable );
     }
@@ -323,11 +323,11 @@ namespace {
 struct check_is_varsize {
     ~check_is_varsize () {
         int variable;
-        auto err = dlis_pack_varsize( fmt, &variable );
+        auto err = dlis_pack_varsize( fmt, nullptr, &variable );
         CHECK( err == DLIS_OK );
         CHECK( variable );
 
-        err = dlis_pack_size( fmt, &variable );
+        err = dlis_pack_size( fmt, nullptr, &variable );
         CHECK( err == DLIS_INCONSISTENT );
     }
 
@@ -572,17 +572,16 @@ TEST_CASE_METHOD(check_is_varsize, "pack unexpected value", "[pack]") {
 }
 
 TEST_CASE("pack var-size fails with invalid specifier") {
-    int vsize;
-    CHECK( dlis_pack_varsize( "w",  &vsize ) == DLIS_INVALID_ARGS );
-    CHECK( dlis_pack_varsize( "lw", &vsize ) == DLIS_INVALID_ARGS );
-    CHECK( dlis_pack_varsize( "wl", &vsize ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "w",  nullptr, nullptr ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "lw", nullptr, nullptr ) == DLIS_INVALID_ARGS );
+    CHECK( dlis_pack_varsize( "wl", nullptr, nullptr ) == DLIS_INVALID_ARGS );
 }
 
 namespace {
 
 bool pack_varsize( const char* fmt ) {
     int vsize;
-    CHECK( dlis_pack_varsize( fmt, &vsize ) == DLIS_OK );
+    CHECK( dlis_pack_varsize( fmt, nullptr, &vsize ) == DLIS_OK );
     return vsize;
 };
 
@@ -629,7 +628,7 @@ namespace {
 
 int packsize( const char* fmt ) {
     int size;
-    CHECK( dlis_pack_size( fmt, &size ) == DLIS_OK );
+    CHECK( dlis_pack_size( fmt, nullptr, &size ) == DLIS_OK );
     return size;
 };
 
