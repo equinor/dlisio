@@ -12,16 +12,25 @@ class BasicObject():
     the object.
     """
     def __init__(self, obj, type):
-        self._name = obj.name
-        self._type = type
-        self._attic = obj
+        self._type      = type
+        self.name       = None
+        self.origin     = None
+        self.copynumber = None
+        self._attic     = obj
+
+        try:
+            self.name       = obj.name.id
+            self.origin     = obj.name.origin
+            self.copynumber = obj.name.copynumber
+        except AttributeError:
+            pass
 
     def __repr__(self):
         return "dlisio.{}(id={}, origin={}, copynumber={})".format(
                 self.type,
-                self.name.id,
-                self.name.origin,
-                self.name.copynumber)
+                self.name,
+                self.origin,
+                self.copynumber)
 
     def __str__(self):
         s  = "dlisio.{}:\n".format(self.type)
@@ -39,37 +48,13 @@ class BasicObject():
 
         Returns
         -------
-        fingerprint
+
+        fingerprint : str
         """
-        return self.name.fingerprint(self.type)
-
-    @property
-    def name(self):
-        """ Name
-
-        Name is the main identifier for dlis-objects and consists of three
-        subfields: id(str), origin(int) and copynumber(int).
-
-        The name is required to be unique for all object of the same type
-        (within a Logical File), e.g: Two channel objects cannot have the same
-        name. However a channel object can have the same name as a frame
-        object.
-
-        Examples
-        --------
-
-        Access each individual field:
-
-        >>> id  = Object.name.id
-        >>> origin = Object.name.origin
-        >>> copynr = Object.name.copynumber
-
-        Returns
-        -------
-
-        name : dlis.core.obname
-        """
-        return self._name
+        return core.fingerprint(self.type,
+                                self.name,
+                                self.origin,
+                                self.copynumber)
 
     @property
     def type(self):

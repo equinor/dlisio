@@ -183,9 +183,9 @@ def test_objects(DWL206):
 def test_fileheader(DWL206):
     key = dlisio.core.fingerprint('FILE-HEADER', '5', 2, 0)
     fh = DWL206._objects.objects[key]
-    assert fh.name.id == "5"
-    assert fh.name.origin == 2
-    assert fh.name.copynumber == 0
+    assert fh.name == "5"
+    assert fh.origin == 2
+    assert fh.copynumber == 0
     assert fh.id == "MSCT_197LTP"
     assert fh.sequencenr == "197"
 
@@ -193,9 +193,9 @@ def test_origin(DWL206):
     key = dlisio.core.fingerprint('ORIGIN', 'DLIS_DEFINING_ORIGIN', 2, 0)
     origin = DWL206._objects.objects[key]
 
-    assert origin.name.id           == "DLIS_DEFINING_ORIGIN"
-    assert origin.name.origin       == 2
-    assert origin.name.copynumber   == 0
+    assert origin.name              == "DLIS_DEFINING_ORIGIN"
+    assert origin.origin            == 2
+    assert origin.copynumber        == 0
     assert origin.file_id           == "MSCT_197LTP"
     assert origin.file_set_name     == "FAROE_PETROLEUM/206_05A-3"
     assert origin.file_set_nr       == 41
@@ -220,9 +220,9 @@ def test_origin(DWL206):
 def test_channel(DWL206):
     key = dlisio.core.fingerprint('CHANNEL', 'TDEP', 2, 0)
     channel = DWL206._objects.objects[key]
-    assert channel.name.id         == "TDEP"
-    assert channel.name.origin     == 2
-    assert channel.name.copynumber == 0
+    assert channel.name            == "TDEP"
+    assert channel.origin          == 2
+    assert channel.copynumber      == 0
     assert channel.long_name       == "6-Inch Frame Depth"
     assert channel.type            == "CHANNEL"
     assert channel.reprc           == 2
@@ -236,9 +236,9 @@ def test_channel(DWL206):
 def test_frame(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
     frame = DWL206._objects.objects[key]
-    assert frame.name.id         == "2000T"
-    assert frame.name.origin     == 2
-    assert frame.name.copynumber == 0
+    assert frame.name            == "2000T"
+    assert frame.origin          == 2
+    assert frame.copynumber      == 0
     assert frame.type            == "FRAME"
     assert frame.direction       == "INCREASING"
     assert frame.spacing         == 2000
@@ -262,17 +262,17 @@ def test_channel_order(DWL206):
                 "CMCU", "HMCU", "CMLP"]
 
     for i, ch in enumerate(DWL206._objects.objects[key800].channels):
-        assert ch.name.id == ref800T[i]
+        assert ch.name == ref800T[i]
 
     for i, ch in enumerate(DWL206._objects.objects[key2000].channels):
-        assert ch.name.id == ref2000T[i]
+        assert ch.name == ref2000T[i]
 
 def test_tool(DWL206):
     key = dlisio.core.fingerprint('TOOL', 'MSCT', 2, 0)
     tool = DWL206._objects.objects[key]
-    assert tool.name.id         == "MSCT"
-    assert tool.name.origin     == 2
-    assert tool.name.copynumber == 0
+    assert tool.name            == "MSCT"
+    assert tool.origin          == 2
+    assert tool.copynumber      == 0
     assert tool.type            == "TOOL"
     assert tool.description     == "Mechanical Sidewall Coring Tool"
     assert tool.trademark_name  == "MSCT-AA"
@@ -283,30 +283,30 @@ def test_tool(DWL206):
     assert len(tool.parts)      == 9
 
     assert len(list(DWL206.tools)) == 2
-    tools = [o for o in DWL206.tools if o.name.id == "MSCT"]
+    tools = [o for o in DWL206.tools if o.name == "MSCT"]
     assert len(tools) == 1
 
 def test_parameter(DWL206):
     key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
     param = DWL206._objects.objects[key]
-    assert param.name.id         == "FLSHSTRM"
-    assert param.name.origin     == 2
-    assert param.name.copynumber == 0
+    assert param.name            == "FLSHSTRM"
+    assert param.origin          == 2
+    assert param.copynumber      == 0
     assert param.type            == "PARAMETER"
     assert param.long_name       == "Flush depth-delayed streams to output at end"
     assert param.dimension is None
     assert param.axis      is None
     assert param.zones     is None
     assert len(list(DWL206.parameters)) == 226
-    param = [o for o in DWL206.parameters if o.name.id == "FLSHSTRM"]
+    param = [o for o in DWL206.parameters if o.name == "FLSHSTRM"]
     assert len(param) == 1
 
 def test_calibrations(DWL206):
     key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
     calibration = DWL206._objects.objects[key]
-    assert calibration.name.id           == "CNU"
-    assert calibration.name.origin       == 2
-    assert calibration.name.copynumber   == 0
+    assert calibration.name              == "CNU"
+    assert calibration.origin            == 2
+    assert calibration.copynumber        == 0
     assert calibration.type              == "CALIBRATION"
     assert len(calibration.parameters)   == 0
     assert len(calibration.coefficients) == 2
