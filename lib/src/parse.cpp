@@ -573,27 +573,29 @@ const noexcept (false) {
     const auto& copy = dl::decay(this->copy);
     const auto& id = dl::decay(this->id);
 
-    auto len = dlis_object_fingerprint_len(type.size(),
-                                           type.data(),
-                                           id.size(),
-                                           id.data(),
-                                           origin,
-                                           copy);
+    int size;
+    auto err = dlis_object_fingerprint_size(type.size(),
+                                            type.data(),
+                                            id.size(),
+                                            id.data(),
+                                            origin,
+                                            copy,
+                                            &size);
 
-    // TODO: investigate what went wrong here
-    if (len <= 0)
-        throw std::invalid_argument("fingerprint");
+    if (err)
+        throw std::invalid_argument("invalid argument");
 
-    auto str = std::vector< char >(len);
-    auto err = dlis_object_fingerprint(type.size(),
-                                       type.data(),
-                                       id.size(),
-                                       id.data(),
-                                       origin,
-                                       copy,
-                                       str.data());
+    auto str = std::vector< char >(size);
+    err = dlis_object_fingerprint(type.size(),
+                                  type.data(),
+                                  id.size(),
+                                  id.data(),
+                                  origin,
+                                  copy,
+                                  str.data());
 
-    if (err) throw std::runtime_error("fingerprint: something went wrong");
+    if (err)
+        throw std::runtime_error("fingerprint: something went wrong");
 
     return std::string(str.begin(), str.end());
 }
