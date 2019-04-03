@@ -692,19 +692,24 @@ int dlis_pack_varsize(const char* fmt, int* src, int* dst) {
 
 int dlis_pack_size(const char* fmt, int* src, int* dst) {
     bool varsrc = false;
-    int short_correction = 0;
+    int correction = 0;
     int size = 0;
     while (true) {
         switch (*fmt++) {
             case DLIS_FMT_EOL:
-                if (varsrc) short_correction = size;
-                if (src) *src = size - short_correction;
+                if (varsrc) correction = size;
+                if (src) *src = size - correction;
                 if (dst) *dst = size;
                 return DLIS_OK;
 
             case DLIS_FMT_FSHORT:
-                short_correction += 2;
+                correction += sizeof(float) - DLIS_SIZEOF_FSHORT;
                 size += sizeof(float);
+                break;
+
+            case DLIS_FMT_DTIME:
+                correction +=  8 * sizeof(int) - DLIS_SIZEOF_DTIME;
+                size +=  8 * sizeof(int);
                 break;
 
             case DLIS_FMT_FSINGL: size += DLIS_SIZEOF_FSINGL; break;
@@ -723,7 +728,6 @@ int dlis_pack_size(const char* fmt, int* src, int* dst) {
             case DLIS_FMT_USHORT: size += DLIS_SIZEOF_USHORT; break;
             case DLIS_FMT_UNORM:  size += DLIS_SIZEOF_UNORM;  break;
             case DLIS_FMT_ULONG:  size += DLIS_SIZEOF_ULONG;  break;
-            case DLIS_FMT_DTIME:  size += DLIS_SIZEOF_DTIME;  break;
             case DLIS_FMT_STATUS: size += DLIS_SIZEOF_STATUS; break;
 
             case DLIS_FMT_ORIGIN:
