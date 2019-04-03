@@ -120,6 +120,56 @@ int dlis_component_attrib( uint8_t descriptor,
 
 const char* dlis_component_str( int );
 
+/*
+ * Query how many bytes to trim off the end of a record segment
+ *
+ * This function inspects the record segment body, and computes the number of
+ * bytes to trimmed off the end.
+ *
+ * The attributes argument is the attributes byte, described by DLIS_SEGATTR_*,
+ * and the attrs output parameter of dlis_lrsh. begin and end are pointers to
+ * the first and one-past-end of the segment body respectively.
+ *
+ * The output parameter size is the number of bytes to trim.
+ *
+ * Returns DLIS_OK on success.
+ *
+ * Quite often, from a very peculiar interpretation of RP66, the padding
+ * reported by pad bytes is the size of the segment *including the header*, in
+ * which case (sizeof_body-trim < 0). When size > distance(begin, end), this
+ * function returns DLIS_BAD_SIZE. It is up to the caller to determine if this
+ * is an error, and how to handle it. dlisio reports what the file says
+ * faithfully.
+ *
+ * Example:
+ *
+ * read_segment(&buffer, &segment_len);
+ * int size = 0;
+ * err = dlis_trim_record_segment(attrs,
+ *                                buffer.data,
+ *                                buffer.data + buffer.size,
+ *                                &size);
+ *
+ * switch (err) {
+ *     case DLIS_OK:
+ *         buffer.size -= size;
+ *         return OK;
+ *
+ *      case DLIS_BAD_SIZE:
+ *           if (size - buffer.size != DLIS_LRSH_SIZE)
+ *               return report_invalid_padding();
+ *
+ *           buffer.size = 0;
+ *           return OK;
+ *
+ *      default:
+ *           return report_other_error();
+ * }
+ */
+int dlis_trim_record_segment(uint8_t attrs,
+                             const char* begin,
+                             const char* end,
+                             int* size);
 
 #define DLIS_FMT_EOL    '\0'
 #define DLIS_FMT_FSHORT 'r'
@@ -461,6 +511,7 @@ enum DLIS_ERRCODE {
     DLIS_UNEXPECTED_VALUE,
     DLIS_INVALID_ARGS,
     DLIS_TRUNCATED,
+    DLIS_BAD_SIZE,
 };
 
 enum dlis_eflr_type_code {

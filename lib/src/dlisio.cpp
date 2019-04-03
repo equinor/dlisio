@@ -444,6 +444,31 @@ const char* dlis_component_str( int tag ) {
     }
 }
 
+int dlis_trim_record_segment(uint8_t descriptor,
+                             const char* begin,
+                             const char* end,
+                             int* size) {
+    const auto dist = std::distance(begin, end);
+    if (dist < 0) return DLIS_INVALID_ARGS;
+
+    int trim = 0;
+    if (descriptor & DLIS_SEGATTR_CHCKSUM) trim += 2;
+    if (descriptor & DLIS_SEGATTR_TRAILEN) trim += 2;
+    if (descriptor & DLIS_SEGATTR_PADDING) {
+        std::uint8_t pad_len = 0;
+        dlis_ushort((end - 1) - trim, &pad_len);
+        trim += pad_len;
+    }
+
+    if (size)
+        *size = trim;
+
+    if (trim > dist)
+        return DLIS_BAD_SIZE;
+
+    return DLIS_OK;
+}
+
 namespace {
 
 /*

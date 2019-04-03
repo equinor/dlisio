@@ -380,3 +380,150 @@ TEST_CASE("fingerprint length matches bytes written") {
     auto fingerprint = std::string(buffer.data());
     CHECK(fingerprint.size() == len);
 }
+
+namespace {
+
+struct basic_segment {
+    basic_segment() : segment(50, '.') {
+        this->begin = this->segment.data();
+        this->end = this->segment.data() + this->segment.size();
+    }
+
+    std::vector< char > segment;
+    const char* begin;
+    const char* end;
+};
+
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "trimming segment with nothing to trim leaves it unchanged") {
+    const auto expected = 0;
+    int size;
+
+    const std::uint8_t attrs = 0;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "trimming segment with checksum trims 2 bytes") {
+    const auto expected = 2;
+    int size = 0;
+
+    const std::uint8_t attrs = DLIS_SEGATTR_CHCKSUM;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "trimming segment with trailing len trims 2 bytes") {
+    const auto expected = 2;
+    int size = 0;
+
+    const std::uint8_t attrs = DLIS_SEGATTR_TRAILEN;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "trimming segment with trailing len and checksum trims 4 bytes") {
+    const auto expected = 4;
+    int size = 0;
+
+    const std::uint8_t attrs = DLIS_SEGATTR_TRAILEN
+                             | DLIS_SEGATTR_CHCKSUM
+                             ;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "trimming segment with padding trims pad bytes") {
+    const auto pad_len = 8;
+    segment.back() = pad_len;
+    const auto expected = 8;
+    int size = 0;
+
+    const std::uint8_t attrs = DLIS_SEGATTR_PADDING;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "trimming segment with padding, checksum and trailing len trims") {
+    const auto pad_len = 8;
+    segment[segment.size() - 5] = pad_len;
+    const auto expected = pad_len + 4;
+    int size = 0;
+
+    const std::uint8_t attrs = DLIS_SEGATTR_PADDING
+                             | DLIS_SEGATTR_CHCKSUM
+                             | DLIS_SEGATTR_TRAILEN
+                             ;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "padding full segment") {
+    const auto pad_len = segment.size();
+    segment.back() = pad_len;
+
+    int size = 0;
+    const std::uint8_t attrs = DLIS_SEGATTR_PADDING;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == pad_len);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "padding larger than segment") {
+    const auto pad_len = segment.size() + 8;
+    segment.back() = pad_len;
+
+    int size = 0;
+    const std::uint8_t attrs = DLIS_SEGATTR_PADDING;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(err == DLIS_BAD_SIZE);
+    CHECK(size == pad_len);
+}
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "padding larger than segment with checksum") {
+    const auto pad_len = segment.size() + 8;
+    const auto expected = pad_len + 2;
+    segment[segment.size() - 3] = pad_len;
+
+    int size = 0;
+    const std::uint8_t attrs = DLIS_SEGATTR_PADDING
+                             | DLIS_SEGATTR_CHCKSUM
+                             ;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(err == DLIS_BAD_SIZE);
+    CHECK(size == expected);
+}
