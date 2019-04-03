@@ -13,25 +13,70 @@ namespace {
 
 struct check_packsize {
     ~check_packsize() {
-        std::int32_t size;
-        auto err = dlis_pack_size( fmt, nullptr, &size );
-        CHECK( err == DLIS_OK );
-        CHECK( size == buffer.size() );
-
-        int variable;
-        err = dlis_pack_varsize( fmt, nullptr, &variable );
-        CHECK( err == DLIS_OK );
-        CHECK( !variable );
+        pck_check_pack_size();
+        pck_check_pack_varsize();
     }
 
     const char* fmt;
     std::vector< char > buffer;
+    std::vector<unsigned char> source;
+
+    private:
+
+    void pck_check_pack_size(){
+        std::int32_t src_size;
+        std::int32_t dst_size;
+        const auto err = dlis_pack_size( fmt, &src_size, &dst_size );
+        CHECK( !err );
+        CHECK( src_size == source.size() );
+        CHECK( dst_size == buffer.size() );
+    }
+
+    void pck_check_pack_varsize(){
+        int src_variable;
+        int dst_variable;
+        const auto err = dlis_pack_varsize( fmt, &src_variable, &dst_variable );
+        CHECK( !err );
+        CHECK( !src_variable );
+        CHECK( !dst_variable );
+    }
+};
+
+struct check_mixed_packsize {
+    ~check_mixed_packsize() {
+        mix_check_pack_size();
+        mix_check_pack_varsize();
+    }
+
+    const char* fmt;
+    std::vector< char > buffer;
+
+    private:
+
+    void mix_check_pack_size(){
+        std::int32_t src_size;
+        std::int32_t dst_size;
+        const auto err = dlis_pack_size( fmt, &src_size, &dst_size );
+        CHECK( !err );
+        CHECK( src_size == 0 );
+        CHECK( dst_size == buffer.size() );
+    }
+
+    void mix_check_pack_varsize(){
+        int src_variable;
+        int dst_variable;
+        const auto err = dlis_pack_varsize( fmt, &src_variable, &dst_variable );
+        CHECK( !err );
+        CHECK(  src_variable );
+        CHECK( !dst_variable );
+    }
+
 };
 
 }
 
-TEST_CASE_METHOD(check_packsize, "pack UVARIs and ORIGINs", "[pack]") {
-    const unsigned char source[] = {
+TEST_CASE_METHOD(check_mixed_packsize, "pack UVARIs and ORIGINs", "[pack]") {
+    std::vector<unsigned char> source = {
         0xC0, 0x00, 0x00, 0x00, // 0
         0xC0, 0x00, 0x00, 0x01, // 1
         0xC0, 0x00, 0x00, 0x2E, // 46
@@ -46,7 +91,7 @@ TEST_CASE_METHOD(check_packsize, "pack UVARIs and ORIGINs", "[pack]") {
     std::int32_t dst[ 8 ];
     buffer.resize(sizeof(dst));
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
 
     CHECK( err == DLIS_OK );
     CHECK( dst[ 0 ] == 0 );
@@ -59,14 +104,9 @@ TEST_CASE_METHOD(check_packsize, "pack UVARIs and ORIGINs", "[pack]") {
     CHECK( dst[ 7 ] == 805355519 );
 }
 
-TEST_CASE_METHOD(check_packsize, "pack unsigned integers", "[pack]") {
-    const unsigned char source[] = {
-        0x59, // 89 ushort
-        0xA7, // 167 ushort
-        0x00, 0x99, // 153 unorm
-        0x80, 0x00, // 32768 unorm
-        0x00, 0x00, 0x00, 0x99, // 153 ulong
-        0xFF, 0xFF, 0xFF, 0x67, // 4294967143 ulong
+TEST_CASE_METHOD(check_mixed_packsize,
+                 "pack UVARIs and ORIGINs of diff size", "[pack]") {
+    std::vector<unsigned char> source = {
         0x01, // 1 uvari
         0x81, 0x00, // 256 uvari
         0xC0, 0x00, 0x8F, 0xFF, // 36863 uvari
@@ -78,11 +118,39 @@ TEST_CASE_METHOD(check_packsize, "pack unsigned integers", "[pack]") {
         0x80, 0x01, //1 uvari (on 2 bytes)
     };
 
-    fmt = "uuUULLiiiiiiiii";
-    buffer.resize((1 * 2) + (2 * 2) + (4 * 2) + (4 * 9));
+    fmt = "iiiJiiJii";
+    std::int32_t dst[ 9 ];
+    buffer.resize(sizeof(dst));
+
+    const auto err = dlis_packf( fmt, source.data(), dst );
+
+    CHECK( err == DLIS_OK );
+    CHECK( dst[ 0 ] == 1 );
+    CHECK( dst[ 1 ] == 256 );
+    CHECK( dst[ 2 ] == 36863 );
+    CHECK( dst[ 3 ] == 805355519 );
+    CHECK( dst[ 4 ] == 16384 );
+    CHECK( dst[ 5 ] == 16383 );
+    CHECK( dst[ 6 ] == 128 );
+    CHECK( dst[ 7 ] == 127 );
+    CHECK( dst[ 8 ] == 1 );
+}
+
+TEST_CASE_METHOD(check_packsize, "pack unsigned integers", "[pack]") {
+    source = {
+        0x59, // 89 ushort
+        0xA7, // 167 ushort
+        0x00, 0x99, // 153 unorm
+        0x80, 0x00, // 32768 unorm
+        0x00, 0x00, 0x00, 0x99, // 153 ulong
+        0xFF, 0xFF, 0xFF, 0x67, // 4294967143 ulong
+    };
+
+    fmt = "uuUULL";
+    buffer.resize((1 * 2) + (2 * 2) + (4 * 2));
     auto* dst = buffer.data();
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     std::uint8_t us[2];
@@ -99,22 +167,12 @@ TEST_CASE_METHOD(check_packsize, "pack unsigned integers", "[pack]") {
     std::memcpy( ul, dst + 6, sizeof(ul) );
     CHECK( ul[ 0 ] == 153 );
     CHECK( ul[ 1 ] == 4294967143 );
-
-    std::int32_t uv[9];
-    std::memcpy( uv, dst + 14, sizeof(uv) );
-    CHECK( uv[ 0 ] == 1 );
-    CHECK( uv[ 1 ] == 256 );
-    CHECK( uv[ 2 ] == 36863 );
-    CHECK( uv[ 3 ] == 805355519 );
-    CHECK( uv[ 4 ] == 16384 );
-    CHECK( uv[ 5 ] == 16383 );
-    CHECK( uv[ 6 ] == 128 );
-    CHECK( uv[ 7 ] == 127 );
-    CHECK( uv[ 8 ] == 1 );
 }
 
+
+
 TEST_CASE_METHOD(check_packsize, "pack signed integers", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         0x59, // 89 sshort
         0xA7, // -89 sshort
         0x00, 0x99, // 153 snorm
@@ -128,7 +186,7 @@ TEST_CASE_METHOD(check_packsize, "pack signed integers", "[pack]") {
     buffer.resize((1 * 2) + (2 * 2) + (4 * 3));
     auto* dst = buffer.data();
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     std::int8_t ss[2];
@@ -149,7 +207,7 @@ TEST_CASE_METHOD(check_packsize, "pack signed integers", "[pack]") {
 }
 
 TEST_CASE_METHOD(check_packsize, "pack floats", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         0x4C, 0x88, // 153 fshort
         0x80, 0x00, //-1 fshort
         0x3F, 0x80, 0x00, 0x00, //1 fsingl
@@ -164,7 +222,7 @@ TEST_CASE_METHOD(check_packsize, "pack floats", "[pack]") {
     buffer.resize(8 * sizeof(float));
     float* dst = reinterpret_cast< float* >( buffer.data() );
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     CHECK( dst[ 0 ] == 153.0 );
@@ -178,7 +236,7 @@ TEST_CASE_METHOD(check_packsize, "pack floats", "[pack]") {
 }
 
 TEST_CASE_METHOD(check_packsize, "pack statistical", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         0x41, 0xE4, 0x00, 0x00, //28.5 fsing1 V
         0x3F, 0x00, 0x00, 0x00, //0.5 fsing1 A
         0xC3, 0x00, 0x00, 0x00, //-128 fsing2 V
@@ -196,7 +254,7 @@ TEST_CASE_METHOD(check_packsize, "pack statistical", "[pack]") {
     buffer.resize(4 * 2 + 4 * 3 + 8 * 2 + 8 * 3);
     auto* dst = buffer.data();
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     float fs1[2];
@@ -223,7 +281,7 @@ TEST_CASE_METHOD(check_packsize, "pack statistical", "[pack]") {
 }
 
 TEST_CASE_METHOD(check_packsize, "pack doubles", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         0x3F, 0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,// 0.25 fdouble
         0xC2, 0xF3, 0x78, 0x5F, 0x66, 0x30, 0x1C, 0x0A,// -342523480572352.625 fdouble
     };
@@ -232,7 +290,7 @@ TEST_CASE_METHOD(check_packsize, "pack doubles", "[pack]") {
     fmt = "FF";
     auto* dst = reinterpret_cast< double* >( buffer.data() );
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     CHECK( dst[ 0 ] == 0.25 );
@@ -240,7 +298,7 @@ TEST_CASE_METHOD(check_packsize, "pack doubles", "[pack]") {
 }
 
 TEST_CASE_METHOD(check_packsize, "pack complex", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         0x41, 0x2C, 0x00, 0x00, //10.75 csingl R
         0xC1, 0x10, 0x00, 0x00, //-9 csing1 I
         0x40, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //28 cdoubl R
@@ -251,7 +309,7 @@ TEST_CASE_METHOD(check_packsize, "pack complex", "[pack]") {
     buffer.resize( 4 * 2 + 8 * 2 );
     auto* dst = buffer.data();
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     float cs[2];
@@ -267,7 +325,7 @@ TEST_CASE_METHOD(check_packsize, "pack complex", "[pack]") {
 
 
 TEST_CASE_METHOD(check_packsize, "pack datetime", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         // 255Y 2TZ 12M 31D 0H 32MN 16S 0MS
         0xFF, 0x2C, 0x1F, 0x00, 0x20, 0x10, 0x00, 0x00,
 
@@ -279,7 +337,7 @@ TEST_CASE_METHOD(check_packsize, "pack datetime", "[pack]") {
     buffer.resize( 2 * 8 * sizeof(int) );
     auto* dst = reinterpret_cast< int* >( buffer.data() );
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     CHECK( dst[0] == 255 );
@@ -302,7 +360,7 @@ TEST_CASE_METHOD(check_packsize, "pack datetime", "[pack]") {
 }
 
 TEST_CASE_METHOD(check_packsize, "pack status", "[pack]") {
-    const unsigned char source[] = {
+    source = {
         0x00, // 0 status
         0x01, // 1 status
     };
@@ -311,7 +369,7 @@ TEST_CASE_METHOD(check_packsize, "pack status", "[pack]") {
     fmt = "qq";
     auto* dst = buffer.data();
 
-    const auto err = dlis_packf( fmt, source, dst );
+    const auto err = dlis_packf( fmt, source.data(), dst );
     CHECK( err == DLIS_OK );
 
     CHECK( !dst[ 0 ] );
@@ -322,12 +380,14 @@ namespace {
 
 struct check_is_varsize {
     ~check_is_varsize () {
-        int variable;
-        auto err = dlis_pack_varsize( fmt, nullptr, &variable );
+        int src_variable;
+        int dst_variable;
+        auto err = dlis_pack_varsize( fmt, &src_variable, &dst_variable );
         CHECK( err == DLIS_OK );
-        CHECK( variable );
+        CHECK( src_variable );
+        CHECK( dst_variable );
 
-        err = dlis_pack_size( fmt, nullptr, &variable );
+        err = dlis_pack_size( fmt, &src_variable, &dst_variable);
         CHECK( err == DLIS_INCONSISTENT );
     }
 
@@ -555,6 +615,34 @@ TEST_CASE_METHOD(check_is_varsize, "pack attref", "[pack]") {
     CHECK( label == "CONSECTETUERA" );
 }
 
+TEST_CASE_METHOD(check_mixed_packsize, "pack mixed", "[pack]") {
+    std::vector<unsigned char> source = {
+        0x4C, 0x88, // 153 fshort
+        0x81, 0x00, // 256 uvari
+        // 254Y 2TZ 12M 30D 1H 33MN 17S 1MS
+        0xFE, 0x2C, 0x1E, 0x01, 0x21, 0x11, 0x00, 0x01,
+        0x81, 0x01, // 257 origin
+    };
+
+    buffer.resize( 4  + 4 + 32 + 4 );
+    fmt = "rijJ";
+    auto* dst = buffer.data();
+
+    const auto err = dlis_packf( fmt, source.data(), dst );
+    CHECK( err == DLIS_OK );
+
+    float fl[1];
+    std::memcpy( fl, dst, sizeof(fl) );
+    CHECK( fl[ 0 ] == 153.0 );
+
+    std::uint32_t in[10];
+    std::memcpy( in, dst + 4, sizeof(in) );
+    CHECK( in[ 0 ] == 256 );
+    CHECK( in[ 1 ] == 254 );
+    CHECK( in[ 8 ] == 1 );
+    CHECK( in[ 9 ] == 257 );
+}
+
 TEST_CASE_METHOD(check_is_varsize, "pack unexpected value", "[pack]") {
     const unsigned char source[] = {
         0x59, // 89 sshort
@@ -579,81 +667,166 @@ TEST_CASE("pack var-size fails with invalid specifier") {
 
 namespace {
 
-bool pack_varsize( const char* fmt ) {
+bool dst_pack_varsize( const char* fmt ) {
     int vsize;
     CHECK( dlis_pack_varsize( fmt, nullptr, &vsize ) == DLIS_OK );
     return vsize;
 };
 
+bool src_pack_varsize( const char* fmt ) {
+    int vsize;
+    CHECK( dlis_pack_varsize( fmt, &vsize, nullptr ) == DLIS_OK );
+    return vsize;
+};
+
 }
 
-TEST_CASE("pack var-size with all-constant specifiers") {
-    CHECK( !pack_varsize( "r" ) );
-    CHECK( !pack_varsize( "f" ) );
-    CHECK( !pack_varsize( "b" ) );
-    CHECK( !pack_varsize( "B" ) );
-    CHECK( !pack_varsize( "x" ) );
-    CHECK( !pack_varsize( "V" ) );
-    CHECK( !pack_varsize( "F" ) );
-    CHECK( !pack_varsize( "z" ) );
-    CHECK( !pack_varsize( "Z" ) );
-    CHECK( !pack_varsize( "c" ) );
-    CHECK( !pack_varsize( "C" ) );
-    CHECK( !pack_varsize( "d" ) );
-    CHECK( !pack_varsize( "D" ) );
-    CHECK( !pack_varsize( "l" ) );
-    CHECK( !pack_varsize( "u" ) );
-    CHECK( !pack_varsize( "U" ) );
-    CHECK( !pack_varsize( "L" ) );
-    CHECK( !pack_varsize( "j" ) );
-    CHECK( !pack_varsize( "J" ) );
-    CHECK( !pack_varsize( "q" ) );
-    CHECK( !pack_varsize( "i" ) );
+TEST_CASE("destination pack var-size with all-constant specifiers") {
+    CHECK( !dst_pack_varsize( "r" ) );
+    CHECK( !dst_pack_varsize( "f" ) );
+    CHECK( !dst_pack_varsize( "b" ) );
+    CHECK( !dst_pack_varsize( "B" ) );
+    CHECK( !dst_pack_varsize( "x" ) );
+    CHECK( !dst_pack_varsize( "V" ) );
+    CHECK( !dst_pack_varsize( "F" ) );
+    CHECK( !dst_pack_varsize( "z" ) );
+    CHECK( !dst_pack_varsize( "Z" ) );
+    CHECK( !dst_pack_varsize( "c" ) );
+    CHECK( !dst_pack_varsize( "C" ) );
+    CHECK( !dst_pack_varsize( "d" ) );
+    CHECK( !dst_pack_varsize( "D" ) );
+    CHECK( !dst_pack_varsize( "l" ) );
+    CHECK( !dst_pack_varsize( "u" ) );
+    CHECK( !dst_pack_varsize( "U" ) );
+    CHECK( !dst_pack_varsize( "L" ) );
+    CHECK( !dst_pack_varsize( "j" ) );
+    CHECK( !dst_pack_varsize( "J" ) );
+    CHECK( !dst_pack_varsize( "q" ) );
+    CHECK( !dst_pack_varsize( "i" ) );
 
-    CHECK( !pack_varsize( "rfbBxVFzZcCdDluULjJqi" ) );
+    CHECK( !dst_pack_varsize( "rfbBxVFzZcCdDluULjJqi" ) );
 }
 
-TEST_CASE("pack var-size with all-variable specifiers") {
-    CHECK( pack_varsize( "s" ) );
-    CHECK( pack_varsize( "S" ) );
-    CHECK( pack_varsize( "o" ) );
-    CHECK( pack_varsize( "O" ) );
-    CHECK( pack_varsize( "A" ) );
-    CHECK( pack_varsize( "Q" ) );
+TEST_CASE("destination pack var-size with all-variable specifiers") {
+    CHECK( dst_pack_varsize( "s" ) );
+    CHECK( dst_pack_varsize( "S" ) );
+    CHECK( dst_pack_varsize( "o" ) );
+    CHECK( dst_pack_varsize( "O" ) );
+    CHECK( dst_pack_varsize( "A" ) );
+    CHECK( dst_pack_varsize( "Q" ) );
 
-    CHECK( pack_varsize( "sSoOAQ" ) );
+    CHECK( dst_pack_varsize( "sSoOAQ" ) );
+}
+
+
+TEST_CASE("source pack var-size with all-constant specifiers") {
+    CHECK( !src_pack_varsize( "r" ) );
+    CHECK( !src_pack_varsize( "f" ) );
+    CHECK( !src_pack_varsize( "b" ) );
+    CHECK( !src_pack_varsize( "B" ) );
+    CHECK( !src_pack_varsize( "x" ) );
+    CHECK( !src_pack_varsize( "V" ) );
+    CHECK( !src_pack_varsize( "F" ) );
+    CHECK( !src_pack_varsize( "z" ) );
+    CHECK( !src_pack_varsize( "Z" ) );
+    CHECK( !src_pack_varsize( "c" ) );
+    CHECK( !src_pack_varsize( "C" ) );
+    CHECK( !src_pack_varsize( "d" ) );
+    CHECK( !src_pack_varsize( "D" ) );
+    CHECK( !src_pack_varsize( "l" ) );
+    CHECK( !src_pack_varsize( "u" ) );
+    CHECK( !src_pack_varsize( "U" ) );
+    CHECK( !src_pack_varsize( "L" ) );
+    CHECK( !src_pack_varsize( "j" ) );
+    CHECK( !src_pack_varsize( "q" ) );
+
+    CHECK( !src_pack_varsize( "rfbBxVFzZcCdDluULjq" ) );
+}
+
+TEST_CASE("source pack var-size with all-variable specifiers") {
+    CHECK( src_pack_varsize( "s" ) );
+    CHECK( src_pack_varsize( "S" ) );
+    CHECK( src_pack_varsize( "o" ) );
+    CHECK( src_pack_varsize( "O" ) );
+    CHECK( src_pack_varsize( "A" ) );
+    CHECK( src_pack_varsize( "Q" ) );
+    CHECK( src_pack_varsize( "J" ) );
+    CHECK( src_pack_varsize( "i" ) );
+
+    CHECK( src_pack_varsize( "sSoOAQiJ" ) );
 }
 
 namespace {
 
-int packsize( const char* fmt ) {
+int dst_packsize( const char* fmt ) {
     int size;
     CHECK( dlis_pack_size( fmt, nullptr, &size ) == DLIS_OK );
     return size;
 };
 
+
+int src_packsize( const char* fmt ) {
+    int size;
+    CHECK( dlis_pack_size( fmt, &size, nullptr ) == DLIS_OK );
+    return size;
+};
+
 }
 
-TEST_CASE("pack size single values") {
-    CHECK( packsize( "r" ) == 4 );
-    CHECK( packsize( "f" ) == 4 );
-    CHECK( packsize( "b" ) == 8 );
-    CHECK( packsize( "B" ) == 12 );
-    CHECK( packsize( "x" ) == 4 );
-    CHECK( packsize( "V" ) == 4 );
-    CHECK( packsize( "F" ) == 8 );
-    CHECK( packsize( "z" ) == 16 );
-    CHECK( packsize( "Z" ) == 24 );
-    CHECK( packsize( "c" ) == 8 );
-    CHECK( packsize( "C" ) == 16 );
-    CHECK( packsize( "d" ) == 1 );
-    CHECK( packsize( "D" ) == 2 );
-    CHECK( packsize( "l" ) == 4 );
-    CHECK( packsize( "u" ) == 1 );
-    CHECK( packsize( "U" ) == 2 );
-    CHECK( packsize( "L" ) == 4 );
-    CHECK( packsize( "i" ) == 4 );
-    CHECK( packsize( "j" ) == 32 );
-    CHECK( packsize( "J" ) == 4 );
-    CHECK( packsize( "q" ) == 1 );
+TEST_CASE("destination pack size single values consisent") {
+    CHECK( dst_packsize( "r" ) == 4 );
+    CHECK( dst_packsize( "f" ) == 4 );
+    CHECK( dst_packsize( "b" ) == 8 );
+    CHECK( dst_packsize( "B" ) == 12 );
+    CHECK( dst_packsize( "x" ) == 4 );
+    CHECK( dst_packsize( "V" ) == 4 );
+    CHECK( dst_packsize( "F" ) == 8 );
+    CHECK( dst_packsize( "z" ) == 16 );
+    CHECK( dst_packsize( "Z" ) == 24 );
+    CHECK( dst_packsize( "c" ) == 8 );
+    CHECK( dst_packsize( "C" ) == 16 );
+    CHECK( dst_packsize( "d" ) == 1 );
+    CHECK( dst_packsize( "D" ) == 2 );
+    CHECK( dst_packsize( "l" ) == 4 );
+    CHECK( dst_packsize( "u" ) == 1 );
+    CHECK( dst_packsize( "U" ) == 2 );
+    CHECK( dst_packsize( "L" ) == 4 );
+    CHECK( dst_packsize( "i" ) == 4 );
+    CHECK( dst_packsize( "j" ) == 32 );
+    CHECK( dst_packsize( "J" ) == 4 );
+    CHECK( dst_packsize( "q" ) == 1 );
+}
+
+TEST_CASE("source pack size single values consistent") {
+    CHECK( src_packsize( "r" ) == 2 );
+    CHECK( src_packsize( "f" ) == 4 );
+    CHECK( src_packsize( "b" ) == 8 );
+    CHECK( src_packsize( "B" ) == 12 );
+    CHECK( src_packsize( "x" ) == 4 );
+    CHECK( src_packsize( "V" ) == 4 );
+    CHECK( src_packsize( "F" ) == 8 );
+    CHECK( src_packsize( "z" ) == 16 );
+    CHECK( src_packsize( "Z" ) == 24 );
+    CHECK( src_packsize( "c" ) == 8 );
+    CHECK( src_packsize( "C" ) == 16 );
+    CHECK( src_packsize( "d" ) == 1 );
+    CHECK( src_packsize( "D" ) == 2 );
+    CHECK( src_packsize( "l" ) == 4 );
+    CHECK( src_packsize( "u" ) == 1 );
+    CHECK( src_packsize( "U" ) == 2 );
+    CHECK( src_packsize( "L" ) == 4 );
+    CHECK( src_packsize( "j" ) == 8 );
+    CHECK( src_packsize( "q" ) == 1 );
+
+    CHECK( src_packsize( "i" ) == 0 );
+    CHECK( src_packsize( "J" ) == 0 );
+}
+
+TEST_CASE("pack size single values inconsistent") {
+    CHECK( dlis_pack_size( "s" , nullptr, nullptr ) == DLIS_INCONSISTENT );
+    CHECK( dlis_pack_size( "S" , nullptr, nullptr ) == DLIS_INCONSISTENT );
+    CHECK( dlis_pack_size( "o" , nullptr, nullptr ) == DLIS_INCONSISTENT );
+    CHECK( dlis_pack_size( "O" , nullptr, nullptr ) == DLIS_INCONSISTENT );
+    CHECK( dlis_pack_size( "A" , nullptr, nullptr ) == DLIS_INCONSISTENT );
+    CHECK( dlis_pack_size( "Q" , nullptr, nullptr ) == DLIS_INCONSISTENT );
 }
