@@ -349,6 +349,46 @@ TEST_CASE("Attribute descriptors", "[component][v1]") {
     }
 }
 
+TEST_CASE("dlis comp string") {
+    SECTION("DLIS_ROLE_ABSATR"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_ABSATR))
+              == "absent attribute");
+    }
+    SECTION("DLIS_ROLE_ATTRIB"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_ATTRIB))
+              == "attribute");
+    }
+    SECTION("DLIS_ROLE_INVATR"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_INVATR))
+              == "invariant attribute");
+    }
+    SECTION("DLIS_ROLE_OBJECT"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_OBJECT))
+              == "object");
+    }
+    SECTION("DLIS_ROLE_RESERV"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_RESERV))
+              == "reserved");
+    }
+    SECTION("DLIS_ROLE_RDSET"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_RDSET))
+              == "redundant set");
+    }
+    SECTION("DLIS_ROLE_RSET"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_RSET))
+              == "replacement set");
+    }
+    SECTION("DLIS_ROLE_SET"){
+        CHECK( std::string(dlis_component_str(DLIS_ROLE_SET))
+              == "set");
+    }
+    SECTION("uknown"){
+        CHECK( std::string(dlis_component_str(9819))
+              == "unknown");
+    }
+}
+
+
 TEST_CASE("fingerprint length matches bytes written") {
     std::string type = "CHANNEL";
     std::string id = "IDENT";
