@@ -263,6 +263,42 @@ bool type_consistent( const T& ) noexcept (true) {
     return true;
 }
 
+void trim_segment(std::uint8_t attrs,
+                  const char* begin,
+                  int segment_size,
+                  std::vector< char >& segment)
+noexcept (false) {
+    int trim = 0;
+    const auto* end = begin + segment_size;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &trim);
+
+    switch (err) {
+        case DLIS_OK:
+            segment.resize(segment.size() - trim);
+            return;
+
+        case DLIS_BAD_SIZE:
+            if (trim - segment_size != DLIS_LRSH_SIZE) {
+                const auto msg =
+                    "bad segment trim: padbytes (which is {}) "
+                    ">= segment.size() (which is {})";
+                throw std::runtime_error(fmt::format(msg, trim, segment_size));
+            }
+
+            /*
+             * padbytes included the segment header. It's larger than
+             * the segment body, but only because it also counts the
+             * header. accept that, pretend the body was never added,
+             * and move on.
+             */
+            segment.resize(segment.size() - segment_size);
+            return;
+
+        default:
+            throw std::invalid_argument("dlis_trim_record_segment");
+    }
+}
+
 }
 
 /*
@@ -285,17 +321,6 @@ record& stream::at( int i, record& rec ) noexcept (false) {
 
     this->fs.seekg( tell );
 
-    const auto chop = [](std::vector< char >& vec, int bytes) {
-        const int size = vec.size();
-        const int new_size = (std::max)(0, size - bytes);
-
-        if (size - bytes < 0) {
-            // TODO: user-warning
-            // const auto msg = "at::chop() would remove more bytes than read";
-        }
-        vec.resize(new_size);
-    };
-
     rec.data.clear();
 
     while (true) {
@@ -312,23 +337,6 @@ record& stream::at( int i, record& rec ) noexcept (false) {
             if (err) consistent = false;
             attributes.push_back( attrs );
             types.push_back( type );
-
-            int explicit_formatting = 0;
-            int has_predecessor = 0;
-            int has_successor = 0;
-            int is_encrypted = 0;
-            int has_encryption_packet = 0;
-            int has_checksum = 0;
-            int has_trailing_length = 0;
-            int has_padding = 0;
-            dlis_segment_attributes( attrs, &explicit_formatting,
-                                            &has_predecessor,
-                                            &has_successor,
-                                            &is_encrypted,
-                                            &has_encryption_packet,
-                                            &has_checksum,
-                                            &has_trailing_length,
-                                            &has_padding );
 
             if (remaining < 0) {
                 /*
@@ -358,15 +366,10 @@ record& stream::at( int i, record& rec ) noexcept (false) {
              * TODO: verify integrity by checking trailing length
              * TODO: calculate checksum
              */
-            if (has_trailing_length) chop( rec.data, 2 );
-            if (has_checksum)        chop( rec.data, 2 );
-            if (has_padding) {
-                std::uint8_t padcount = 0;
-                const auto* pad = rec.data.data() + rec.data.size() - 1;
-                dlis_ushort( pad, &padcount );
-                chop( rec.data, padcount );
-            }
+            const auto* fst = rec.data.data() + prevsize;
+            trim_segment(attrs, fst, len, rec.data);
 
+            const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
             if (has_successor) continue;
 
             /* read last segment - check consistency and wrap up */
