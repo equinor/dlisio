@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .reprc import fmt
+from ..reprc import fmt
 
 import numpy as np
 

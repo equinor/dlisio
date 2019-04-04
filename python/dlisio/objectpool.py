@@ -2,14 +2,7 @@ from collections import defaultdict
 import logging
 
 from . import core
-from .fileheader import Fileheader
-from .origin import Origin
-from .frame import Frame
-from .channel import Channel
-from .tool import Tool
-from .parameter import Parameter
-from .calibration import Calibration
-from .unknown import Unknown
+from . import objects as record
 
 class Objectpool():
     """ The Objectpool implements a pool of all metadata objects.
@@ -26,13 +19,13 @@ class Objectpool():
         self.problematic = []
 
         self.types = {
-            'FILE-HEADER': Fileheader.load,
-            'ORIGIN'     : Origin.load,
-            'FRAME'      : Frame.load,
-            'CHANNEL'    : Channel.load,
-            'TOOL'       : Tool.load,
-            'PARAMETER'  : Parameter.load,
-            'CALIBRATION': Calibration.load,
+            'FILE-HEADER': record.Fileheader.load,
+            'ORIGIN'     : record.Origin.load,
+            'FRAME'      : record.Frame.load,
+            'CHANNEL'    : record.Channel.load,
+            'TOOL'       : record.Tool.load,
+            'PARAMETER'  : record.Parameter.load,
+            'CALIBRATION': record.Calibration.load,
         }
 
     def load(self, sets):
@@ -70,7 +63,7 @@ class Objectpool():
                 try:
                     obj = self.types[os.type](o)
                 except KeyError:
-                    obj = Unknown.load(o, type = os.type)
+                    obj = record.Unknown.load(o, type = os.type)
 
                 fingerprint = obj.fingerprint
                 if fingerprint in objects:

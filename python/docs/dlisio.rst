@@ -21,7 +21,7 @@ Objects
 
 Basic object
 ------------
-.. autoclass:: dlisio.basicobject.BasicObject()
+.. autoclass:: dlisio.objects.BasicObject()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -29,7 +29,7 @@ Basic object
 
 Calibration
 -----------
-.. autoclass:: dlisio.calibration.Calibration()
+.. autoclass:: dlisio.objects.Calibration()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -39,7 +39,7 @@ Calibration
 
 Channel
 -------
-.. autoclass:: dlisio.channel.Channel()
+.. autoclass:: dlisio.objects.Channel()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -49,7 +49,7 @@ Channel
 
 Frame
 -----
-.. autoclass:: dlisio.frame.Frame()
+.. autoclass:: dlisio.objects.Frame()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -59,7 +59,7 @@ Frame
 
 Fileheader
 ----------
-.. autoclass:: dlisio.fileheader.Fileheader()
+.. autoclass:: dlisio.objects.Fileheader()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -69,7 +69,7 @@ Fileheader
 
 Origin
 ------
-.. autoclass:: dlisio.origin.Origin()
+.. autoclass:: dlisio.objects.Origin()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -79,7 +79,7 @@ Origin
 
 Parameter
 ---------
-.. autoclass:: dlisio.parameter.Parameter()
+.. autoclass:: dlisio.objects.Parameter()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -89,7 +89,7 @@ Parameter
 
 Tool
 ----
-.. autoclass:: dlisio.tool.Tool()
+.. autoclass:: dlisio.objects.Tool()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -99,7 +99,7 @@ Tool
 
 Unknown
 -------
-.. autoclass:: dlisio.unknown.Unknown()
+.. autoclass:: dlisio.objects.Unknown()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:

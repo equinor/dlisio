@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .reprc import dtype
+from ..reprc import dtype
 
 import numpy as np
 

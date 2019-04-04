@@ -1,4 +1,4 @@
-from . import core
+from .. import core
 
 class BasicObject():
     """Basic object
