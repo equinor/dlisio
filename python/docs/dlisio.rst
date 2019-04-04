@@ -11,11 +11,6 @@ File Handle
     :member-order: groupwise
     :undoc-members:
 
-Objectpool
-==========
-.. autoclass:: dlisio.Objectpool()
-    :special-members: __repr__, __len__
-
 Objects
 =======
 

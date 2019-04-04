@@ -182,7 +182,7 @@ def test_objects(DWL206):
 
 def test_fileheader(DWL206):
     key = dlisio.core.fingerprint('FILE-HEADER', '5', 2, 0)
-    fh = DWL206._objects.objects[key]
+    fh = DWL206.objects[key]
     assert fh.name == "5"
     assert fh.origin == 2
     assert fh.copynumber == 0
@@ -191,7 +191,7 @@ def test_fileheader(DWL206):
 
 def test_origin(DWL206):
     key = dlisio.core.fingerprint('ORIGIN', 'DLIS_DEFINING_ORIGIN', 2, 0)
-    origin = DWL206._objects.objects[key]
+    origin = DWL206.objects[key]
 
     assert origin.name              == "DLIS_DEFINING_ORIGIN"
     assert origin.origin            == 2
@@ -219,7 +219,7 @@ def test_origin(DWL206):
 
 def test_channel(DWL206):
     key = dlisio.core.fingerprint('CHANNEL', 'TDEP', 2, 0)
-    channel = DWL206._objects.objects[key]
+    channel = DWL206.objects[key]
     assert channel.name            == "TDEP"
     assert channel.origin          == 2
     assert channel.copynumber      == 0
@@ -235,7 +235,7 @@ def test_channel(DWL206):
 
 def test_frame(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame = DWL206._objects.objects[key]
+    frame = DWL206.objects[key]
     assert frame.name            == "2000T"
     assert frame.origin          == 2
     assert frame.copynumber      == 0
@@ -261,15 +261,15 @@ def test_channel_order(DWL206):
                 "SSTA", "RCMP", "RHPP", "RRPP", "CMPR", "HPPR", "RPPV", "SMSC",
                 "CMCU", "HMCU", "CMLP"]
 
-    for i, ch in enumerate(DWL206._objects.objects[key800].channels):
+    for i, ch in enumerate(DWL206.objects[key800].channels):
         assert ch.name == ref800T[i]
 
-    for i, ch in enumerate(DWL206._objects.objects[key2000].channels):
+    for i, ch in enumerate(DWL206.objects[key2000].channels):
         assert ch.name == ref2000T[i]
 
 def test_tool(DWL206):
     key = dlisio.core.fingerprint('TOOL', 'MSCT', 2, 0)
-    tool = DWL206._objects.objects[key]
+    tool = DWL206.objects[key]
     assert tool.name            == "MSCT"
     assert tool.origin          == 2
     assert tool.copynumber      == 0
@@ -288,7 +288,7 @@ def test_tool(DWL206):
 
 def test_parameter(DWL206):
     key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
-    param = DWL206._objects.objects[key]
+    param = DWL206.objects[key]
     assert param.name            == "FLSHSTRM"
     assert param.origin          == 2
     assert param.copynumber      == 0
@@ -303,7 +303,7 @@ def test_parameter(DWL206):
 
 def test_calibrations(DWL206):
     key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
-    calibration = DWL206._objects.objects[key]
+    calibration = DWL206.objects[key]
     assert calibration.name              == "CNU"
     assert calibration.origin            == 2
     assert calibration.copynumber        == 0
@@ -329,8 +329,8 @@ def test_fmtstring(DWL206):
     key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
     key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
 
-    frame800 = DWL206._objects.objects[key800]
-    frame2000 = DWL206._objects.objects[key2000]
+    frame800 = DWL206.objects[key800]
+    frame2000 = DWL206.objects[key2000]
 
     fmtstring1 = frame800.fmtstr()
     fmtstring2 = frame2000.fmtstr()
@@ -340,7 +340,7 @@ def test_fmtstring(DWL206):
 
 def test_dtype(DWL206):
     key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame2000 = DWL206._objects.objects[key2000]
+    frame2000 = DWL206.objects[key2000]
     dtype1 = frame2000.dtype
     assert dtype1 == np.dtype([('TIME', np.float32),
                                ('TDEP', np.float32),
