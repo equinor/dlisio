@@ -270,7 +270,7 @@ int dlis_find_sul(const char* from,
         return DLIS_NOTFOUND;
 
     /*
-     * Before the structure field of the SUL there should be 10 bytes, i.e.
+     * Before the structure field of the SUL there should be 9 bytes, i.e.
      * sequence-number and DLIS version.
      */
     const auto structure_offset = 9;
