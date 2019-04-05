@@ -34,7 +34,6 @@ void map_source( mio::mmap_source& file, const std::string& path ) noexcept (fal
 
 long long findsul( mio::mmap_source& file ) noexcept (false) {
     long long offset;
-    const auto first = file.data();
     const long long size = file.size();
     const long long search_limit = (std::min)(200LL, size);
     const auto err = dlis_find_sul(file.data(), search_limit, &offset);
