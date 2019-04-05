@@ -1501,7 +1501,7 @@ TEST_CASE( "size-of", "[type]" ) {
     CHECK( dlis_sizeof_type( DLIS_UVARI  ) == 0 );
     CHECK( dlis_sizeof_type( DLIS_IDENT  ) == 0 );
     CHECK( dlis_sizeof_type( DLIS_ASCII  ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_DTIME  ) == 8 * 4 );
+    CHECK( dlis_sizeof_type( DLIS_DTIME  ) == 8 );
     CHECK( dlis_sizeof_type( DLIS_ORIGIN ) == 0 );
     CHECK( dlis_sizeof_type( DLIS_OBNAME ) == 0 );
     CHECK( dlis_sizeof_type( DLIS_OBJREF ) == 0 );
