@@ -383,3 +383,62 @@ TEST_CASE_METHOD(correct_sul, "SUL with garbage minor/major version", "[sul]") {
     CHECK( v1.maxlen == std::stoi(maxilen) );
     CHECK( v1.id == id );
 }
+
+static const char plain_sul[] = "   1"
+                                "V1.00"
+                                "RECORD"
+                                " 8192"
+                                "Default Storage Set "
+                                "                    "
+                                "                    "
+                                ;
+
+TEST_CASE("Find SUL after 14 bytes of garbage", "[sul]") {
+    SULv1 ref;
+    ref.seqnum = 1;
+    ref.major  = 1;
+    ref.minor  = 0;
+    ref.layout = DLIS_STRUCTURE_RECORD;
+    ref.maxlen = 8192;
+    std::strcpy( ref.id, "Default Storage Set "
+                         "                    "
+                         "                    " );
+
+    const std::string noise = "14 bytes noise";
+    const auto reel = noise + plain_sul;
+
+    long long off;
+    const auto err = dlis_find_sul(reel.data(), reel.size(), &off);
+
+    REQUIRE(!err);
+    CHECK(off == noise.size());
+
+    auto label = reel.substr(off);
+    const auto v1 = parse_sulv1(label);
+    CHECK(v1 == ref);
+}
+
+TEST_CASE("Find SUL when there is no garbage", "[sul]") {
+    long long off = -1;
+    const auto err = dlis_find_sul(plain_sul, sizeof(plain_sul), &off);
+
+    CHECK(!err);
+    CHECK(off == 0);
+}
+
+TEST_CASE("find_sul gracefully handles missing SUL", "[sul]") {
+    const auto stream = std::vector< char >(400, '.');
+    long long off;
+    const auto err = dlis_find_sul(stream.data(), stream.size() / 2, &off);
+    CHECK(err == DLIS_NOTFOUND);
+}
+
+TEST_CASE("find_sul gracefully truncated SUL", "[sul]") {
+    const auto shift = 3;
+    auto stream = std::vector< char >(400, '.');
+    std::copy_n(plain_sul + shift, sizeof(plain_sul) - shift, stream.begin());
+
+    long long off;
+    const auto err = dlis_find_sul(stream.data(), stream.size() / 2, &off);
+    CHECK(err == DLIS_INCONSISTENT);
+}
