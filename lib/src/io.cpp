@@ -33,40 +33,29 @@ void map_source( mio::mmap_source& file, const std::string& path ) noexcept (fal
 }
 
 long long findsul( mio::mmap_source& file ) noexcept (false) {
-    /*
-     * search at most 200 bytes, looking for the SUL
-     *
-     * if it doesn't show up by then it's probably not there, or require other
-     * information
-     *
-     * Return the offset of the _first byte_ of the SUL. In a conforming file,
-     * this is 0.
-     */
-    static const auto needle = "RECORD";
-    static const std::size_t search_limit = 200;
+    long long offset;
+    const long long size = file.size();
+    const long long search_limit = (std::min)(200LL, size);
+    const auto err = dlis_find_sul(file.data(), search_limit, &offset);
 
-    const auto first = file.data();
-    const auto last = first + (std::min)( file.size(), search_limit );
-    auto itr = std::search( first, last, needle, needle + 6 );
+    switch (err) {
+        case DLIS_OK:
+            return offset;
 
-    if (itr == last) {
-        const auto msg = "searched {} bytes, but could not find storage label";
-        throw dl::not_found(fmt::format(msg, search_limit));
+        case DLIS_NOTFOUND: {
+            auto msg = "searched {} bytes, but could not find storage label";
+            throw dl::not_found(fmt::format(msg, search_limit));
+        }
+
+        case DLIS_INCONSISTENT: {
+            auto msg = "found something that could be parts of a SUL, "
+                       "file may be corrupted";
+            throw std::runtime_error(msg);
+        }
+
+        default:
+            throw std::runtime_error("dlis_find_sul: unknown error");
     }
-
-    /*
-     * Before the structure field of the SUL there should be 10 bytes, i.e.
-     * sequence-number and DLIS version.
-     */
-    const auto structure_offset = 9;
-
-    if (std::distance( first, itr ) < structure_offset) {
-        auto pos = std::distance( first, itr );
-        const auto msg = "found 'RECORD' at pos = {}, but expected pos >= 10";
-        throw std::runtime_error(fmt::format(msg, pos));
-    }
-
-    return std::distance( file.data(), itr - structure_offset );
 }
 
 long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
