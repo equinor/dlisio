@@ -22,6 +22,35 @@ int dlis_sul( const char* xs,
               int64_t* maxlen,
               char* id );
 
+/*
+ * Look for something that is probably the SUL.
+ *
+ * In some files there are (possibly) random bytes before the SUL. Maybe this
+ * is a proprietary dialect or copies gone wrong, but often the rest of the
+ * file is fine.  This should be one of the first functions to call when
+ * reading a DLIS file.
+ *
+ * Search [begin, begin+limit) for something that looks like it is the SUL.
+ * This check is not exhaustive - call dlis_sul to check that it actually *is*
+ * a SUL.
+ *
+ * The output paramter offset is the offset of the *first byte* of the SUL. If
+ * the file is conforming to the RP66 standard, this should be 0.
+ *
+ * If this function cannot find anything that could be a SUL within the search
+ * limit, it will abort the search and return DLIS_NOTFOUND. If this is the
+ * case, the file is probably broken beyond repair, or not a DLIS file.
+ *
+ * This function returns DLIS_INCONSISTENT if it finds something that looks
+ * like a SUL, but which cannot ever form a proper one. This usually comes from
+ * data being clipped or bytes lost, and manual inspection has to be done to
+ * check what is going on. Sometimes this can be recovered by searching past
+ * this, looking for visible record envelopes.
+ */
+int dlis_find_sul(const char* from,
+                  long long search_limit,
+                  long long* offset);
+
 #define DLIS_VRL_SIZE 4
 int dlis_vrl( const char* xs,
               int* len,
@@ -512,6 +541,7 @@ enum DLIS_ERRCODE {
     DLIS_INVALID_ARGS,
     DLIS_TRUNCATED,
     DLIS_BAD_SIZE,
+    DLIS_NOTFOUND,
 };
 
 enum dlis_eflr_type_code {

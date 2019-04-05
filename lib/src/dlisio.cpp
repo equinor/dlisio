@@ -258,6 +258,29 @@ int dlis_sul( const char* xs,
     return DLIS_UNEXPECTED_VALUE;
 }
 
+int dlis_find_sul(const char* from,
+                  long long search_limit,
+                  long long* offset) {
+
+    static const auto needle = "RECORD";
+    const auto to = from + search_limit;
+    const auto itr = std::search(from, to, needle, needle + 6);
+
+    if (itr == to)
+        return DLIS_NOTFOUND;
+
+    /*
+     * Before the structure field of the SUL there should be 9 bytes, i.e.
+     * sequence-number and DLIS version.
+     */
+    const auto structure_offset = 9;
+    if (std::distance(from, itr) < structure_offset)
+        return DLIS_INCONSISTENT;
+
+    *offset = std::distance(from, itr - structure_offset);
+    return DLIS_OK;
+}
+
 /*
  * hexdump -vn 4 -s 80 dlis
  * 0000050 0020 01ff
