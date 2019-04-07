@@ -51,6 +51,15 @@ int dlis_find_sul(const char* from,
                   long long search_limit,
                   long long* offset);
 
+/*
+ * Look for something that is probably a visible record envelope
+ *
+ * Behaves similarly to dlis_find_sul, but for the visible envelope.
+ */
+int dlis_find_vrl(const char* from,
+                  long long search_limit,
+                  long long* offset);
+
 #define DLIS_VRL_SIZE 4
 int dlis_vrl( const char* xs,
               int* len,

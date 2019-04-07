@@ -271,6 +271,78 @@ TEST_CASE("simple visible record length header", "[dlis_vrl]") {
     CHECK( version ==  1);
 }
 
+TEST_CASE("find visible envelope after 8 bytes of garbage", "[vrl]") {
+    static const unsigned char file[] = {
+        /* garbage */
+        0x01, 0x02, 0x03, 0x04,
+        0x02, 0x03, 0x04, 0x05,
+
+        /* visible envelope */
+        0x00, 0x22,
+        0xFF,
+        0x01,
+
+        /* segment header */
+        0x00, 0x04,
+        0x1F,
+        0x02,
+    };
+
+    long long off;
+    const auto* ptr = reinterpret_cast< const char* >(file);
+    const auto err = dlis_find_vrl(ptr, sizeof(file), &off);
+
+    REQUIRE(!err);
+    CHECK(off == 8);
+}
+
+TEST_CASE("find visible envelope when there is no garbage", "[vrl]") {
+    static const unsigned char file[] = {
+        /* visible envelope */
+        0x00, 0x22,
+        0xFF,
+        0x01,
+
+        /* segment header */
+        0x00, 0x04,
+        0x1F,
+        0x02,
+    };
+
+    long long off;
+    const auto* ptr = reinterpret_cast< const char* >(file);
+    const auto err = dlis_find_vrl(ptr, sizeof(file), &off);
+
+    REQUIRE(!err);
+    CHECK(off == 0);
+}
+
+TEST_CASE("find_vrl gracefully handles missing envelope", "[vrl]") {
+    const auto file = std::vector< char >(400, '.');
+    long long off;
+    const auto err = dlis_find_vrl(file.data(), file.size() / 2, &off);
+    CHECK(err == DLIS_NOTFOUND);
+}
+
+TEST_CASE("find_vrl gracefully handles truncated envelope", "[vrl]") {
+    static const unsigned char file[] = {
+        /* truncated header */
+        /* 0x00, */ 0x08,
+        0xFF,
+        0x01,
+
+        /* segment header */
+        0x00, 0x04,
+        0x1F,
+        0x02,
+    };
+
+    long long off;
+    const auto* ptr = reinterpret_cast< const char* >(file);
+    const auto err = dlis_find_vrl(ptr, sizeof(file), &off);
+    CHECK(err == DLIS_INCONSISTENT);
+}
+
 TEST_CASE("simple logical record segment header", "[dlis_lrsh]") {
     static const unsigned char data [] = {
         0x00, 0x24,
