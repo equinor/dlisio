@@ -258,6 +258,70 @@ int dlis_sul( const char* xs,
     return DLIS_UNEXPECTED_VALUE;
 }
 
+int dlis_find_sul(const char* from,
+                  long long search_limit,
+                  long long* offset) {
+
+    static const auto needle = "RECORD";
+    const auto to = from + search_limit;
+    const auto itr = std::search(from, to, needle, needle + 6);
+
+    if (itr == to)
+        return DLIS_NOTFOUND;
+
+    /*
+     * Before the structure field of the SUL there should be 9 bytes, i.e.
+     * sequence-number and DLIS version.
+     */
+    const auto structure_offset = 9;
+    if (std::distance(from, itr) < structure_offset)
+        return DLIS_INCONSISTENT;
+
+    *offset = std::distance(from, itr - structure_offset);
+    return DLIS_OK;
+}
+
+int dlis_find_vrl(const char* from,
+                  long long search_limit,
+                  long long* offset) {
+    /*
+     * The first VRL does sometimes not immediately follow the SUL (or whatever
+     * came before it), but according to spec it should be a triple of
+     * (len,0xFF,0x01), where len is a UNORM. The second half shouldn't change,
+     * so look for the first occurence of that.
+     *
+     * If that too doesn't work then the file is likely too corrupted to read
+     * without manual intervention
+     */
+
+    /*
+     * reinterpret the bytes as usigned char*. This is compatible and fine.
+     *
+     * When operator == is ued on the elements, they'll otherwise be promoted
+     * to int, so all of a sudden (char)0xFF != (unsigned char)0xFF. Forcing
+     * the pointer to be unsigend char fixes this issue.
+     *
+     * unsigned char is used because the needle includes 0xFF which is an
+     * overflowing char literal
+     */
+    static const unsigned char needle[] = { 0xFF, 0x01 };
+    const auto first = reinterpret_cast< const unsigned char* >(from);
+    const auto last = first + search_limit;
+    const auto itr = std::search(first, last, needle, needle + sizeof(needle));
+
+    if (itr == last)
+        return DLIS_NOTFOUND;
+
+    /*
+     * Before the 0xFF 0x01 there should be room for at least an unorm
+     */
+    if (std::distance(first, itr) < DLIS_SIZEOF_UNORM)
+        return DLIS_INCONSISTENT;
+
+    *offset = std::distance(first, itr - DLIS_SIZEOF_UNORM);
+    return DLIS_OK;
+}
+
 /*
  * hexdump -vn 4 -s 80 dlis
  * 0000050 0020 01ff

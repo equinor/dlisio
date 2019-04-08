@@ -33,53 +33,32 @@ void map_source( mio::mmap_source& file, const std::string& path ) noexcept (fal
 }
 
 long long findsul( mio::mmap_source& file ) noexcept (false) {
-    /*
-     * search at most 200 bytes, looking for the SUL
-     *
-     * if it doesn't show up by then it's probably not there, or require other
-     * information
-     *
-     * Return the offset of the _first byte_ of the SUL. In a conforming file,
-     * this is 0.
-     */
-    static const auto needle = "RECORD";
-    static const std::size_t search_limit = 200;
+    long long offset;
+    const long long size = file.size();
+    const long long search_limit = (std::min)(200LL, size);
+    const auto err = dlis_find_sul(file.data(), search_limit, &offset);
 
-    const auto first = file.data();
-    const auto last = first + (std::min)( file.size(), search_limit );
-    auto itr = std::search( first, last, needle, needle + 6 );
+    switch (err) {
+        case DLIS_OK:
+            return offset;
 
-    if (itr == last) {
-        const auto msg = "searched {} bytes, but could not find storage label";
-        throw dl::not_found(fmt::format(msg, search_limit));
+        case DLIS_NOTFOUND: {
+            auto msg = "searched {} bytes, but could not find storage label";
+            throw dl::not_found(fmt::format(msg, search_limit));
+        }
+
+        case DLIS_INCONSISTENT: {
+            auto msg = "found something that could be parts of a SUL, "
+                       "file may be corrupted";
+            throw std::runtime_error(msg);
+        }
+
+        default:
+            throw std::runtime_error("dlis_find_sul: unknown error");
     }
-
-    /*
-     * Before the structure field of the SUL there should be 10 bytes, i.e.
-     * sequence-number and DLIS version.
-     */
-    const auto structure_offset = 9;
-
-    if (std::distance( first, itr ) < structure_offset) {
-        auto pos = std::distance( first, itr );
-        const auto msg = "found 'RECORD' at pos = {}, but expected pos >= 10";
-        throw std::runtime_error(fmt::format(msg, pos));
-    }
-
-    return std::distance( file.data(), itr - structure_offset );
 }
 
 long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
-    /*
-     * The first VRL does sometimes not immediately follow the SUL (or whatever
-     * came before it), but according to spec it should be a triple of
-     * (len,0xFF,0x01), where len is a UNORM. The second half shouldn't change,
-     * so look for the first occurence of that.
-     *
-     * If that too doesn't work then the file is likely too corrupted to read
-     * without manual intervention
-     */
-
     if (from < 0) {
         const auto msg = "expected from (which is {}) >= 0";
         throw std::out_of_range(fmt::format(msg, from));
@@ -92,41 +71,32 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
         throw std::out_of_range(fmt::format(msg, from, file.size()));
     }
 
-    static const unsigned char needle[] = { 0xFF, 0x01 };
-    static const auto search_limit = 200;
+    long long offset;
+    const long long size = file.size();
+    const long long search_limit = (std::min)(200LL, size - from);
+    const auto err = dlis_find_vrl(file.data() + from, search_limit, &offset);
 
-    const auto limit = std::min< long long >(file.size() - from, search_limit);
+    // TODO: error messages could maybe be pulled from core library
+    switch (err) {
+        case DLIS_OK:
+            return from + offset;
 
-    /*
-     * reinterpret the bytes as usigned char*. This is compatible and fine.
-     *
-     * When operator == is ued on the elements, they'll otherwise be promoted
-     * to int, so all of a sudden (char)0xFF != (unsigned char)0xFF. Forcing
-     * the pointer to be unsigend char fixes this issue.
-     */
-    const auto front = reinterpret_cast< const unsigned char* >(file.data());
-    const auto first = front + from;
-    const auto last = first + limit;
-    const auto itr = std::search(first, last, needle, needle + sizeof(needle));
+        case DLIS_NOTFOUND: {
+            const auto msg = "searched {} bytes, but could not find "
+                             "visbile record envelope pattern [0xFF 0x01]"
+            ;
+            throw dl::not_found(fmt::format(msg, search_limit));
+        }
 
-    if (itr == last) {
-        const auto msg = "searched {} bytes, but could not find a suitable"
-                         "visbile record envelope pattern (0xFF 0x01)"
-        ;
-        throw dl::not_found(fmt::format(msg, limit));
+        case DLIS_INCONSISTENT: {
+            const auto msg = "found [0xFF 0x01] but len field not intact, "
+                             "file may be corrupted";
+            throw std::runtime_error(msg);
+        }
+
+        default:
+            throw std::runtime_error("dlis_find_vrl: unknown error");
     }
-
-    /*
-     * Before the 0xFF 0x01 there should be room for at least an unorm
-     */
-    if (std::distance(first, itr) < DLIS_SIZEOF_UNORM) {
-        const auto pos = std::distance(first, itr) + from;
-        const auto expected = from + DLIS_SIZEOF_UNORM;
-        const auto msg = "found 0xFF 0x01 at pos = {}, but expected pos >= {}";
-        throw std::runtime_error(fmt::format(msg, pos, expected));
-    }
-
-    return std::distance(front, itr - DLIS_SIZEOF_UNORM);
 }
 
 stream_offsets findoffsets( mio::mmap_source& file, long long from )
