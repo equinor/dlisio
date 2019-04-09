@@ -25,8 +25,8 @@ class Frame(BasicObject):
 
     dlisio.Channel : Channel objects.
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "FRAME")
+    def __init__(self, obj = None, name = None):
+        super().__init__(obj, name = name, type = 'FRAME')
         self._description = None
         self.channel_refs = []
         self._channels    = []
@@ -40,9 +40,9 @@ class Frame(BasicObject):
         self._dtype       = None
 
     @staticmethod
-    def load(obj):
-        self = Frame(obj)
-        for label, value in obj.values().items():
+    def load(obj, name = None):
+        self = Frame(obj, name = name)
+        for label, value in obj.items():
             if value is None: continue
 
             if label == "DESCRIPTION": self._description = value[0]

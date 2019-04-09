@@ -23,8 +23,8 @@ class Tool(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "TOOL")
+    def __init__(self, obj = None, name = None):
+        super().__init__(obj, name = name, type = 'TOOL')
         self._description    = None
         self._trademark_name = None
         self._generic_name   = None
@@ -36,9 +36,9 @@ class Tool(BasicObject):
         self.parameters_refs = []
 
     @staticmethod
-    def load(obj):
-        self = Tool(obj)
-        for label, value in obj.values().items():
+    def load(obj, name = None):
+        self = Tool(obj, name = name)
+        for label, value in obj.items():
             if value is None: continue
 
             if label == "DESCRIPTION"    : self._description    = value[0]

@@ -412,28 +412,24 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
-    py::class_< dl::basic_object >( m, "basic_object" )
-        .def_readonly( "name", &dl::basic_object::object_name )
-        .def( "__len__",       &dl::basic_object::len )
-        .def( "__getitem__",   &dl::basic_object::at )
-        .def( "__eq__",        &dl::basic_object::operator == )
-        .def( "__ne__",        &dl::basic_object::operator != )
-        .def( "values", [](const dl::basic_object& o) {
-            py::dict attrs;
-            for (const auto& attr : o.attributes) {
-                auto label = py::str(dl::decay(attr.label));
-                // TODO: need units? So far they're not used
-                attrs[label] = dl::decay(attr.value);
-            }
-            return attrs;
-
-        });
-    ;
-
     py::class_< dl::object_set >( m, "object_set" )
         .def_readonly( "type",    &dl::object_set::type )
         .def_readonly( "name",    &dl::object_set::name )
-        .def_readonly( "objects", &dl::object_set::objects )
+        .def_property_readonly("objects",
+        [](const dl::object_set& object_set) {
+            py::dict objects;
+            for (const auto& object : object_set.objects) {
+                py::dict obj;
+                for (const auto& attr : object.attributes) {
+                    auto label = py::str(dl::decay(attr.label));
+                    // TODO: need units? So far they're not used
+                    obj[label] = dl::decay(attr.value);
+                }
+                const auto& name = dl::decay(object.object_name);
+                objects[py::cast(name)] = obj;
+            }
+            return objects;
+        })
     ;
 
     py::enum_< dl::representation_code >( m, "reprc" )

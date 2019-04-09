@@ -11,7 +11,7 @@ class BasicObject():
     specifying the object type. These two fields makes a unique indentifier for
     the object.
     """
-    def __init__(self, obj, type):
+    def __init__(self, obj, name = None, type = None):
         self._type      = type
         self.name       = None
         self.origin     = None
@@ -19,9 +19,9 @@ class BasicObject():
         self._attic     = obj
 
         try:
-            self.name       = obj.name.id
-            self.origin     = obj.name.origin
-            self.copynumber = obj.name.copynumber
+            self.name       = name.id
+            self.origin     = name.origin
+            self.copynumber = name.copynumber
         except AttributeError:
             pass
 

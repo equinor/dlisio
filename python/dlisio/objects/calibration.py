@@ -22,8 +22,8 @@ class Calibration(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "CALIBRATION")
+    def __init__(self, obj = None, name = None, type = None):
+        super().__init__(obj, name = name, type = 'CALIBRATION')
         self._method               = None
         self._calibrated_channel   = []
         self._uncalibrated_channel = []
@@ -35,9 +35,9 @@ class Calibration(BasicObject):
         self.uncalibrated_refs     = []
 
     @staticmethod
-    def load(obj):
-        self = Calibration(obj)
-        for label, value in obj.values().items():
+    def load(obj, name = None):
+        self = Calibration(obj, name = name)
+        for label, value in obj.items():
             if value is None: continue
 
             if label == "METHOD":

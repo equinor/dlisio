@@ -20,8 +20,8 @@ class Channel(BasicObject):
     described in detail in Chapter 5.5.1 - Static and Frame Data, CHANNEL
     objects.
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "CHANNEL")
+    def __init__(self, obj = None, name = None):
+        super().__init__(obj, name = name, type = 'CHANNEL')
         self._long_name     = None
         self._reprc         = None
         self._units         = None
@@ -34,9 +34,9 @@ class Channel(BasicObject):
         self.source_ref     = None
 
     @staticmethod
-    def load(obj):
-        self = Channel(obj)
-        for label, value in obj.values().items():
+    def load(obj, name = None):
+        self = Channel(obj, name = name)
+        for label, value in obj.items():
             if value is None: continue
 
             if label == "LONG-NAME"          : self._long_name     = value[0]

@@ -84,11 +84,11 @@ class dlis(object):
 
         for os in sets:
             # TODO: handle replacement sets
-            for o in os.objects:
+            for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type](o)
+                    obj = self.types[os.type](o, name = name)
                 except KeyError:
-                    obj = record.Unknown.load(o, type = os.type)
+                    obj = record.Unknown.load(o, name = name, type = os.type)
 
                 fingerprint = obj.fingerprint
                 if fingerprint in objects:
