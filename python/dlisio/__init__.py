@@ -117,7 +117,7 @@ class dlis(object):
         return self._objects.getobject(name, type)
 
     def curves(self, fingerprint):
-        frame = self.objects_sets['FRAME'][fingerprint]
+        frame = self.object_sets['FRAME'][fingerprint]
         fmt = frame.fmtstr()
         indices = self.fdata_index[fingerprint]
         a = np.empty(shape = len(indices), dtype = frame.dtype)
