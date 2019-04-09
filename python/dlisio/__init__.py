@@ -84,11 +84,11 @@ class dlis(object):
 
         for os in sets:
             # TODO: handle replacement sets
-            for o in os.objects:
+            for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type](o)
+                    obj = self.types[os.type](o, name = name)
                 except KeyError:
-                    obj = record.Unknown.load(o, type = os.type)
+                    obj = record.Unknown.load(o, name = name, type = os.type)
 
                 fingerprint = obj.fingerprint
                 if fingerprint in objects:
@@ -117,7 +117,7 @@ class dlis(object):
         return self._objects.getobject(name, type)
 
     def curves(self, fingerprint):
-        frame = self.objects_sets['FRAME'][fingerprint]
+        frame = self.object_sets['FRAME'][fingerprint]
         fmt = frame.fmtstr()
         indices = self.fdata_index[fingerprint]
         a = np.empty(shape = len(indices), dtype = frame.dtype)

@@ -412,41 +412,23 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
-    py::class_< dl::basic_object >( m, "basic_object" )
-        .def_readonly( "name", &dl::basic_object::object_name )
-        .def( "__len__",       &dl::basic_object::len )
-        .def( "__getitem__",   &dl::basic_object::at )
-        .def( "__eq__",        &dl::basic_object::operator == )
-        .def( "__ne__",        &dl::basic_object::operator != )
-        .def( "values", []( const dl::basic_object& o ) {
-            auto begin = o.attributes.begin();
-            auto end = o.attributes.end();
-            return py::make_iterator( begin, end );
-        }, py::keep_alive< 0, 1 >() )
-    ;
-
     py::class_< dl::object_set >( m, "object_set" )
         .def_readonly( "type",    &dl::object_set::type )
         .def_readonly( "name",    &dl::object_set::name )
-        .def_readonly( "objects", &dl::object_set::objects )
-    ;
-
-    py::class_< dl::object_attribute >( m, "object_attribute" )
-        .def_readonly( "label", &dl::object_attribute::label )
-        .def_readonly( "count", &dl::object_attribute::count )
-        .def_readonly( "reprc", &dl::object_attribute::reprc )
-        .def_readonly( "units", &dl::object_attribute::units )
-        .def_property_readonly( "value", []( const dl::object_attribute& attr ) {
-            return attr.value;
-        })
-        .def( "__repr__", []( const dl::object_attribute& attr ) {
-            return "{}: C={} R={} U={}, V={}"_s.format(
-                dl::decay( attr.label ),
-                dl::decay( attr.count ),
-                dl::decay( attr.reprc ),
-                dl::decay( attr.units ),
-                dl::decay( attr.value )
-            );
+        .def_property_readonly("objects",
+        [](const dl::object_set& object_set) {
+            py::dict objects;
+            for (const auto& object : object_set.objects) {
+                py::dict obj;
+                for (const auto& attr : object.attributes) {
+                    auto label = py::str(dl::decay(attr.label));
+                    // TODO: need units? So far they're not used
+                    obj[label] = dl::decay(attr.value);
+                }
+                const auto& name = dl::decay(object.object_name);
+                objects[py::cast(name)] = obj;
+            }
+            return objects;
         })
     ;
 

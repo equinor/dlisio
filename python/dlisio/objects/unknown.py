@@ -7,16 +7,16 @@ class Unknown(BasicObject):
     fall-back object if the object-type is not recognized by dlisio, e.g.
     vendor spesific object types
     """
-    def __init__(self, obj = None, type = None):
+    def __init__(self, obj = None, name = None, type = None):
         if type is None:
             type = 'UNKNOWN'
-        super().__init__(obj, type)
+        super().__init__(obj, name = name, type = type)
         self.attributes = None
 
     @staticmethod
-    def load(obj, type = None):
-        self = Unknown(obj, type = type)
-        self.attributes = {a.label.lower() : a.value for a in obj.values()}
+    def load(obj, name = None, type = None):
+        self = Unknown(obj, name = name, type = type)
+        self.attributes = obj
         self.stripspaces()
         return self
 

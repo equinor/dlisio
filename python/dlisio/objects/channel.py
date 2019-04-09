@@ -20,8 +20,8 @@ class Channel(BasicObject):
     described in detail in Chapter 5.5.1 - Static and Frame Data, CHANNEL
     objects.
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "CHANNEL")
+    def __init__(self, obj = None, name = None):
+        super().__init__(obj, name = name, type = 'CHANNEL')
         self._long_name     = None
         self._reprc         = None
         self._units         = None
@@ -34,18 +34,19 @@ class Channel(BasicObject):
         self.source_ref     = None
 
     @staticmethod
-    def load(obj):
-        self = Channel(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "LONG-NAME"          : self._long_name     = attr.value[0]
-            if attr.label == "REPRESENTATION-CODE": self._reprc         = attr.value[0]
-            if attr.label == "UNITS"              : self._units         = attr.value[0]
-            if attr.label == "PROPERTIES"         : self._properties    = attr.value
-            if attr.label == "DIMENSION"          : self._dimension     = attr.value
-            if attr.label == "AXIS"               : self._axis          = attr.value
-            if attr.label == "ELEMENT-LIMIT"      : self._element_limit = attr.value
-            if attr.label == "SOURCE"             : self.source_ref     = attr.value[0]
+    def load(obj, name = None):
+        self = Channel(obj, name = name)
+        for label, value in obj.items():
+            if value is None: continue
+
+            if label == "LONG-NAME"          : self._long_name     = value[0]
+            if label == "REPRESENTATION-CODE": self._reprc         = value[0]
+            if label == "UNITS"              : self._units         = value[0]
+            if label == "PROPERTIES"         : self._properties    = value
+            if label == "DIMENSION"          : self._dimension     = value
+            if label == "AXIS"               : self._axis          = value
+            if label == "ELEMENT-LIMIT"      : self._element_limit = value
+            if label == "SOURCE"             : self.source_ref     = value[0]
 
         self.stripspaces()
         return self

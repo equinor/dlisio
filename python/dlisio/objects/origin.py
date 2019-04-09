@@ -25,8 +25,8 @@ class Origin(BasicObject):
 
     dlisio.Fileheader : Fileheader
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "ORIGIN")
+    def __init__(self, obj = None, name = None):
+        super().__init__(obj, name = name, type = 'ORIGIN')
         self._file_id           = None
         self._file_set_name     = None
         self._file_set_nr       = None
@@ -49,51 +49,52 @@ class Origin(BasicObject):
         self._namespace_version = None
 
     @staticmethod
-    def load(obj):
-        self = Origin(obj)
+    def load(obj, name = None):
+        self = Origin(obj, name = name)
 
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "FILE-ID":
-                self._file_id = attr.value[0]
-            if attr.label == "FILE-SET-NAME":
-                self._file_set_name = attr.value[0]
-            if attr.label == "FILE-SET-NUMBER":
-                self._file_set_nr = attr.value[0]
-            if attr.label == "FILE-NUMBER":
-                self._file_nr = attr.value[0]
-            if attr.label == "FILE-TYPE":
-                self._file_type = attr.value[0]
-            if attr.label == "PRODUCT":
-                self._product = attr.value[0]
-            if attr.label == "VERSION":
-                self._version = attr.value[0]
-            if attr.label == "PROGRAMS":
-                self._programs = attr.value
-            if attr.label == "CREATION-TIME":
-                self._creation_time = attr.value[0]
-            if attr.label == "ORDER-NUMBER":
-                self._order_nr = attr.value[0]
-            if attr.label == "DESCENT-NUMBER":
-                self._descent_nr = attr.value
-            if attr.label == "RUN-NUMBER":
-                self._run_nr = attr.value
-            if attr.label == "WELL-ID":
-                self._well_id = attr.value[0]
-            if attr.label == "WELL-NAME":
-                self._well_name = attr.value[0]
-            if attr.label == "FIELD-NAME":
-                self._field_name = attr.value[0]
-            if attr.label == "PRODUCER-CODE":
-                self._producer_code = attr.value[0]
-            if attr.label == "PRODUCER-NAME":
-                self._producer_name = attr.value[0]
-            if attr.label == "COMPANY":
-                self._company = attr.value[0]
-            if attr.label == "NAME-SPACE-NAME":
-                self._namespace_name = attr.value[0]
-            if attr.label == "NAME-SPACE-VERSION":
-                self._namespace_version = attr.value[0]
+        for label, value in obj.items():
+            if value is None: continue
+
+            if label == "FILE-ID":
+                self._file_id = value[0]
+            if label == "FILE-SET-NAME":
+                self._file_set_name = value[0]
+            if label == "FILE-SET-NUMBER":
+                self._file_set_nr = value[0]
+            if label == "FILE-NUMBER":
+                self._file_nr = value[0]
+            if label == "FILE-TYPE":
+                self._file_type = value[0]
+            if label == "PRODUCT":
+                self._product = value[0]
+            if label == "VERSION":
+                self._version = value[0]
+            if label == "PROGRAMS":
+                self._programs = value
+            if label == "CREATION-TIME":
+                self._creation_time = value[0]
+            if label == "ORDER-NUMBER":
+                self._order_nr = value[0]
+            if label == "DESCENT-NUMBER":
+                self._descent_nr = value
+            if label == "RUN-NUMBER":
+                self._run_nr = value
+            if label == "WELL-ID":
+                self._well_id = value[0]
+            if label == "WELL-NAME":
+                self._well_name = value[0]
+            if label == "FIELD-NAME":
+                self._field_name = value[0]
+            if label == "PRODUCER-CODE":
+                self._producer_code = value[0]
+            if label == "PRODUCER-NAME":
+                self._producer_name = value[0]
+            if label == "COMPANY":
+                self._company = value[0]
+            if label == "NAME-SPACE-NAME":
+                self._namespace_name = value[0]
+            if label == "NAME-SPACE-VERSION":
+                self._namespace_version = value[0]
 
         self.stripspaces()
         return self

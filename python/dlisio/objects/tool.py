@@ -23,8 +23,8 @@ class Tool(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
-    def __init__(self, obj = None):
-        super().__init__(obj, "TOOL")
+    def __init__(self, obj = None, name = None):
+        super().__init__(obj, name = name, type = 'TOOL')
         self._description    = None
         self._trademark_name = None
         self._generic_name   = None
@@ -36,17 +36,18 @@ class Tool(BasicObject):
         self.parameters_refs = []
 
     @staticmethod
-    def load(obj):
-        self = Tool(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "DESCRIPTION"    : self._description    = attr.value[0]
-            if attr.label == "TRADEMARK-NAME" : self._trademark_name = attr.value[0]
-            if attr.label == "GENERIC-NAME"   : self._generic_name   = attr.value[0]
-            if attr.label == "STATUS"         : self._status         = attr.value[0]
-            if attr.label == "PARTS"          : self._parts          = attr.value
-            if attr.label == "CHANNELS"       : self.channels_refs   = attr.value
-            if attr.label == "PARAMETERS"     : self.parameters_refs = attr.value
+    def load(obj, name = None):
+        self = Tool(obj, name = name)
+        for label, value in obj.items():
+            if value is None: continue
+
+            if label == "DESCRIPTION"    : self._description    = value[0]
+            if label == "TRADEMARK-NAME" : self._trademark_name = value[0]
+            if label == "GENERIC-NAME"   : self._generic_name   = value[0]
+            if label == "STATUS"         : self._status         = value[0]
+            if label == "PARTS"          : self._parts          = value
+            if label == "CHANNELS"       : self.channels_refs   = value
+            if label == "PARAMETERS"     : self.parameters_refs = value
 
         self.stripspaces()
         return self
