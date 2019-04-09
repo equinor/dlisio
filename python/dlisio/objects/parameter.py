@@ -30,12 +30,13 @@ class Parameter(BasicObject):
     @staticmethod
     def load(obj):
         self = Parameter(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "LONG-NAME" : self._long_name = attr.value[0]
-            if attr.label == "DIMENSION" : self._dimension = attr.value
-            if attr.label == "AXIS"      : self._axis      = attr.value
-            if attr.label == "ZONES"     : self._zones     = attr.value
+        for label, value in obj.values().items():
+            if value is None: continue
+
+            if label == "LONG-NAME" : self._long_name = value[0]
+            if label == "DIMENSION" : self._dimension = value
+            if label == "AXIS"      : self._axis      = value
+            if label == "ZONES"     : self._zones     = value
 
         self.stripspaces()
         return self

@@ -53,10 +53,10 @@ class Fileheader(BasicObject):
     @staticmethod
     def load(obj):
         self = Fileheader(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "SEQUENCE-NUMBER": self._sequencenr = attr.value[0]
-            if attr.label == "ID"             : self._id         = attr.value[0]
+        for label, value in obj.values().items():
+            if value is None: continue
+            if label == "SEQUENCE-NUMBER": self._sequencenr = value[0]
+            if label == "ID"             : self._id         = value[0]
 
         self.stripspaces()
         return self

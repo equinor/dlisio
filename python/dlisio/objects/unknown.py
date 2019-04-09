@@ -16,7 +16,7 @@ class Unknown(BasicObject):
     @staticmethod
     def load(obj, type = None):
         self = Unknown(obj, type = type)
-        self.attributes = {a.label.lower() : a.value for a in obj.values()}
+        self.attributes = obj.values()
         self.stripspaces()
         return self
 

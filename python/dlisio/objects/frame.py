@@ -42,16 +42,17 @@ class Frame(BasicObject):
     @staticmethod
     def load(obj):
         self = Frame(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "DESCRIPTION": self._description = attr.value[0]
-            if attr.label == "CHANNELS"   : self.channel_refs = attr.value
-            if attr.label == "INDEX-TYPE" : self._index_type  = attr.value[0]
-            if attr.label == "DIRECTION"  : self._direction   = attr.value[0]
-            if attr.label == "SPACING"    : self._spacing     = attr.value[0]
-            if attr.label == "ENCRYPTED"  : self._encrypted   = True
-            if attr.label == "INDEX-MIN"  : self._index_min   = attr.value[0]
-            if attr.label == "INDEX-MAX"  : self._index_max   = attr.value[0]
+        for label, value in obj.values().items():
+            if value is None: continue
+
+            if label == "DESCRIPTION": self._description = value[0]
+            if label == "CHANNELS"   : self.channel_refs = value
+            if label == "INDEX-TYPE" : self._index_type  = value[0]
+            if label == "DIRECTION"  : self._direction   = value[0]
+            if label == "SPACING"    : self._spacing     = value[0]
+            if label == "ENCRYPTED"  : self._encrypted   = True
+            if label == "INDEX-MIN"  : self._index_min   = value[0]
+            if label == "INDEX-MAX"  : self._index_max   = value[0]
 
         self.stripspaces()
         return self

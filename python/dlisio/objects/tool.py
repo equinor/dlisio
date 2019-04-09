@@ -38,15 +38,16 @@ class Tool(BasicObject):
     @staticmethod
     def load(obj):
         self = Tool(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "DESCRIPTION"    : self._description    = attr.value[0]
-            if attr.label == "TRADEMARK-NAME" : self._trademark_name = attr.value[0]
-            if attr.label == "GENERIC-NAME"   : self._generic_name   = attr.value[0]
-            if attr.label == "STATUS"         : self._status         = attr.value[0]
-            if attr.label == "PARTS"          : self._parts          = attr.value
-            if attr.label == "CHANNELS"       : self.channels_refs   = attr.value
-            if attr.label == "PARAMETERS"     : self.parameters_refs = attr.value
+        for label, value in obj.values().items():
+            if value is None: continue
+
+            if label == "DESCRIPTION"    : self._description    = value[0]
+            if label == "TRADEMARK-NAME" : self._trademark_name = value[0]
+            if label == "GENERIC-NAME"   : self._generic_name   = value[0]
+            if label == "STATUS"         : self._status         = value[0]
+            if label == "PARTS"          : self._parts          = value
+            if label == "CHANNELS"       : self.channels_refs   = value
+            if label == "PARAMETERS"     : self.parameters_refs = value
 
         self.stripspaces()
         return self

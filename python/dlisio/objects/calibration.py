@@ -37,18 +37,19 @@ class Calibration(BasicObject):
     @staticmethod
     def load(obj):
         self = Calibration(obj)
-        for attr in obj.values():
-            if attr.value is None: continue
-            if attr.label == "METHOD":
-                self._method = attr.value[0]
-            if attr.label == "CALIBRATED-CHANNELS":
-                self.calibrated_refs = attr.value
-            if attr.label == "UNCALIBRATED-CHANNELS":
-                self.uncalibrated_refs = attr.value
-            if attr.label == "COEFFICIENTS":
-                self._coefficients = attr.value
-            if attr.label == "PARAMETERS":
-                self.parameters_refs = attr.value
+        for label, value in obj.values().items():
+            if value is None: continue
+
+            if label == "METHOD":
+                self._method = value[0]
+            if label == "CALIBRATED-CHANNELS":
+                self.calibrated_refs = value
+            if label == "UNCALIBRATED-CHANNELS":
+                self.uncalibrated_refs = value
+            if label == "COEFFICIENTS":
+                self._coefficients = value
+            if label == "PARAMETERS":
+                self.parameters_refs = value
 
         self.stripspaces()
         return self
