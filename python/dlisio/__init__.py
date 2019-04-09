@@ -1,7 +1,9 @@
-import collections
+from collections import defaultdict
+import logging
 import numpy as np
+
 from . import core
-from .objectpool import Objectpool
+from . import objects as record
 
 try:
     import pkg_resources
@@ -13,11 +15,24 @@ class dlis(object):
     def __init__(self, stream, explicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
-        self.object_sets = None
-        self._objects = Objectpool()
-        self._objects.load(self.objectsets())
+        self.attic = None
         self.sul_offset = sul_offset
         self.fdata_index = None
+
+        self.objects = {}
+        self.object_sets = defaultdict(dict)
+        self.problematic = []
+
+        self.types = {
+            'FILE-HEADER': record.Fileheader.load,
+            'ORIGIN'     : record.Origin.load,
+            'FRAME'      : record.Frame.load,
+            'CHANNEL'    : record.Channel.load,
+            'TOOL'       : record.Tool.load,
+            'PARAMETER'  : record.Parameter.load,
+            'CALIBRATION': record.Calibration.load,
+        }
+        self.load()
 
     def __enter__(self):
         return self
@@ -29,17 +44,80 @@ class dlis(object):
         blob = self.file.get(bytearray(80), self.sul_offset, 80)
         return core.storage_label(blob)
 
-    def objectsets(self, reload = False):
-        if self.object_sets is None:
-            self.object_sets = self.file.extract(self.explicit_indices)
+    def raw_objectsets(self, reload = False):
+        if self.attic is None:
+            self.attic = self.file.extract(self.explicit_indices)
 
-        return core.parse_objects(self.object_sets)
+        return core.parse_objects(self.attic)
+
+    def load(self, sets=None):
+        """ Load and enrich raw objects into the object pool
+
+        This method converts the raw object sets into first-class dlisio python
+        objects, and puts them in the the objects, object_sets and problematic
+        members.
+
+        Parameters
+        ----------
+        sets : iterable of object_set
+
+        Notes
+        -----
+        This is a part of the two-phase initialisation of the pool, and should
+        rarely be called as an end user. This is primarily a mechanism for
+        testing and prototyping for developers, and the occasional
+        live-patching of features so that dlisio is useful, even when something
+        in particular is not merged upstream.
+
+        """
+        problem = 'multiple distinct objects '
+        where = 'in set {} ({}). Duplicate fingerprint = {}'
+        action = 'continuing with the last object'
+        duplicate = 'duplicate fingerprint {}'
+
+        objects = {}
+        object_sets = defaultdict(dict)
+        problematic = []
+
+        if sets is None:
+            sets = self.raw_objectsets()
+
+        for os in sets:
+            # TODO: handle replacement sets
+            for o in os.objects:
+                try:
+                    obj = self.types[os.type](o)
+                except KeyError:
+                    obj = record.Unknown.load(o, type = os.type)
+
+                fingerprint = obj.fingerprint
+                if fingerprint in objects:
+                    original = objects[fingerprint]
+
+                    logging.info(duplicate.format(fingerprint))
+                    if original.attic != obj.attic:
+                        msg = problem + where
+                        msg = msg.format(os.type, os.name, fingerprint)
+                        logging.error(msg)
+                        logging.warning(action)
+                        problematic.append((original, obj))
+
+                objects[fingerprint] = obj
+                object_sets[obj.type][fingerprint] = obj
+
+        for obj in objects.values():
+            obj.link(objects, object_sets)
+
+        self.objects = objects
+        self.object_sets = object_sets
+        self.problematic = problematic
+        return self
 
     def getobject(self, name, type):
         return self._objects.getobject(name, type)
 
     def curves(self, fingerprint):
-        frame = self._objects.object_sets['FRAME'][fingerprint]
+        frame = self.objects_sets['FRAME'][fingerprint]
         fmt = frame.fmtstr()
         indices = self.fdata_index[fingerprint]
         a = np.empty(shape = len(indices), dtype = frame.dtype)
@@ -47,18 +125,15 @@ class dlis(object):
         return a
 
     @property
-    def objects(self):
-        return self._objects.allobjects
-
-    @property
     def fileheader(self):
         """ Read all Fileheader objects
 
         Returns
         -------
-        tools: generator of Fileheader objects
+        fileheader : dict_values
+
         """
-        return self._objects.fileheader
+        return self.object_sets['FILE-HEADER'].values()
 
     @property
     def origin(self):
@@ -66,17 +141,17 @@ class dlis(object):
 
         Returns
         -------
-        tools: generator of Origin objects
+        origin : dict_values
         """
-        return self._objects.origin
+        return self.object_sets['ORIGIN'].values()
 
     @property
     def channels(self):
-        """ Read all channel metadata objects
+        """ Read all channel objects
 
         Returns
         -------
-        channels: generator of Channel objects
+        channel : dict_values
 
         Examples
         --------
@@ -84,54 +159,38 @@ class dlis(object):
 
         >>> for channel in f.channels:
         ...     print(channel.name)
-
-        Filter channels on name.id
-        >>> x = [ch for ch in f.channels if ch.name.id == "name"]
-
         """
-        return self._objects.channels
+        return self.object_sets['CHANNEL'].values()
 
     @property
     def frames(self):
-        """ Read all Frame metadata objects
+        """ Read all Frame objects
 
         Returns
         -------
-        frames: generator of Frame objects
-
-        Examples
-        --------
-        Print all Frame names
-
-        >>> for frame in f.frames:
-        ...     print(frame.name)
-
-        Check if a channel, ch,  is a part of Frame:
-        >>> if frame.haschannel(ch):
-        ...     pass
-
+        frames: dict_values
         """
-        return self._objects.frames
+        return self.object_sets['FRAME'].values()
 
     @property
     def tools(self):
-        """ Read all Tool metadata objects
+        """ Read all Tool objects
 
         Returns
         -------
-        tools: generator of Tool objects
+        tools: dict_values
         """
-        return self._objects.tools
+        return self.object_sets['TOOL'].values()
 
     @property
     def parameters(self):
-        """ Read all Parameter metadata objects
+        """ Read all Parameter objects
 
         Returns
         -------
-        parameters: generator of Parameter objects
+        parameters: dict_values
         """
-        return self._objects.parameters
+        return self.object_sets['PARAMETER'].values()
 
     @property
     def calibrations(self):
@@ -139,13 +198,17 @@ class dlis(object):
 
         Returns
         -------
-        calibrations: generator of Calibration objects
+        calibrations : dict_values
         """
-        return self._objects.calibrations
+        return self.object_sets['CALIBRATION'].values()
 
     @property
     def unknowns(self):
-        return self._objects.unknowns
+        return (obj
+            for typename, object_set in self.object_sets.items()
+            for obj in object_set.values()
+            if typename not in self.types
+        )
 
 def open(path):
     """ Open a file
@@ -199,7 +262,7 @@ def load(path):
         candidates = [x for x in range(len(tells)) if x not in explicits]
 
         # TODO: formalise and improve the indexing of FDATA records
-        index = collections.defaultdict(list)
+        index = defaultdict(list)
         for key, val in core.findfdata(mmap, candidates, tells, residuals):
             index[key].append(val)
 
