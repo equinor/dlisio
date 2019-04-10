@@ -418,7 +418,7 @@ const char* cast( const char* xs, dl::attref& attref ) noexcept (false) {
                         dl::ushort{ copy_number },
                         dl::ident{ std::string{ obj, obj + obname_len } }
                     },
-                    dl::ident{ std::string{ id1, id1 + ident1_len } }
+                    dl::ident{ std::string{ id2, id2 + ident2_len } }
     };
 
     swap( attref, tmp );
