@@ -314,7 +314,6 @@ const char* parse_ident( const char* xs, T& out ) noexcept (false) {
     char str[ 256 ];
     std::int32_t len;
 
-    dlis_ident( xs, &len, nullptr );
     xs = dlis_ident( xs, &len, str );
 
     T tmp{ std::string{ str, str + len } };
