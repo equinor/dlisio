@@ -910,11 +910,25 @@ object_vector parse_objects( const object_template& tmpl,
                 attr.value = mpark::monostate{};
             } else if (!flags.value) {
                 /*
-                * Count is non-zero, but there's no value for this attribute.
-                * Expand what's already defaulted, and if it is monostate, set
-                * the default of that value
-                */
-                patch_missing_value(attr.value, count, attr.reprc);
+                 * Count is non-zero, but there's no value for this attribute.
+                 * Expand what's already defaulted, and if it is monostate, set
+                 * the default of that value
+                 *
+                 * For non-zero count we should check default values only when
+                 * representation code is not changed.
+                 *
+                 * TODO: in the future it's possible to allow promotion between
+                 * certain codes (ident -> ascii), but is no need for now
+                 */
+
+                if (flags.reprc) {
+                    const auto msg = "count ({}) and representation code "
+                            "({}) changed, but value is not explicitly set";
+                    const auto code = static_cast< int >(attr.reprc);
+                    throw std::runtime_error(fmt::format(msg, count, code));
+                }
+
+                patch_missing_value( attr.value, count, attr.reprc );
             }
 
             current.set(attr);
