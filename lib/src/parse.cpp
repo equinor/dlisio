@@ -747,13 +747,13 @@ struct shrink {
     std::size_t size;
     explicit shrink( std::size_t sz ) : size( sz ) {}
 
-    template < typename Vec >
-    std::size_t operator () ( const Vec& vec ) const {
-        return vec.size();
+    template < typename T >
+    void operator () ( std::vector< T >& vec ) const {
+        vec.resize(this->size);
     }
 
-    std::size_t operator () ( const mpark::monostate& ) const {
-        throw std::invalid_argument( "patch: len() called on monostate" );
+    void operator () ( const mpark::monostate& ) const  {
+        throw std::invalid_argument( "patch: shrink() called on monostate" );
     }
 };
 
@@ -772,7 +772,7 @@ noexcept (false)
         if (size == count) return;
 
         /* smaller, shrink and all is fine */
-        if (size < count) {
+        if (size > count) {
             mpark::visit( shrink( count ), value );
             return;
         }
@@ -782,8 +782,8 @@ noexcept (false)
          * exception and consider what to do when a file actually uses this
          * behaviour
          */
-        const auto msg = "object attribute without no value value, but count "
-                         "(which is {}) >= size (which is {})"
+        const auto msg = "object attribute without no explicit value, but "
+                         "count (which is {}) > size (which is {})"
         ;
         throw dl::not_implemented(fmt::format(msg, count, size));
     }
