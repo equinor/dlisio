@@ -109,6 +109,18 @@ handle dlis_caster< dl::fdoub2 >::cast( const dl::fdoub2& src, return_value_poli
     return py::make_tuple(src.V, src.A, src.B).inc_ref();
 }
 
+template <>
+handle dlis_caster< dl::csingl >::cast( const dl::csingl& src, return_value_policy, handle )
+{
+    return PyComplex_FromDoubles(src.real(), src.imag());
+}
+
+template <>
+handle dlis_caster< dl::cdoubl >::cast( const dl::cdoubl& src, return_value_policy, handle )
+{
+    return PyComplex_FromDoubles(src.real(), src.imag());
+}
+
 namespace {
 
 handle maybe_decode(const std::string& src) noexcept (false) {
@@ -188,6 +200,8 @@ template <> struct type_caster< dl::fsing1 > : dlis_caster< dl::fsing1 > {};
 template <> struct type_caster< dl::fsing2 > : dlis_caster< dl::fsing2 > {};
 template <> struct type_caster< dl::fdoub1 > : dlis_caster< dl::fdoub1 > {};
 template <> struct type_caster< dl::fdoub2 > : dlis_caster< dl::fdoub2 > {};
+template <> struct type_caster< dl::csingl > : dlis_caster< dl::csingl > {};
+template <> struct type_caster< dl::cdoubl > : dlis_caster< dl::cdoubl > {};
 template <> struct type_caster< dl::uvari  > : dlis_caster< dl::uvari  > {};
 template <> struct type_caster< dl::ident  > : dlis_caster< dl::ident  > {};
 template <> struct type_caster< dl::ascii  > : dlis_caster< dl::ascii  > {};
