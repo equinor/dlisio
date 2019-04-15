@@ -912,7 +912,22 @@ object_vector parse_objects( const object_template& tmpl,
                 * set the default of that value
                 */
                 if (!flags.value){
-                    patch_missing_value( attr.value, count, attr.reprc );
+                    /*
+                    * For non-zero count we should check default values only
+                    * when representation code is not changed.
+                    * Note: in future it's possible to allow promotion
+                    * between certain codes (ident -> ascii), but
+                    * there is no need for now
+                    */
+                    if(!flags.reprc)
+                    {
+                        patch_missing_value( attr.value, count, attr.reprc );
+                    }else{
+                        const auto msg = "count ({}) and representation code "
+                             "({}) changed, but value is not explicitly set";
+                        const auto code = static_cast< int >(attr.reprc);
+                        throw std::runtime_error(fmt::format(msg, count, code));
+                    }
                }
             }
 
