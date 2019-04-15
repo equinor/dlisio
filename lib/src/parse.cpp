@@ -108,7 +108,7 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
             const auto bits = std::bitset< 8 >(role).to_string();
             const auto was  = dlis_component_str(role);
             const auto msg  = "error parsing attribute descriptor: "
-                              "expected ATTRIB, INVATR, or OBJECT, was {} ({})"
+                              "expected ATTRIB, INVATR, ABSATR or OBJECT, was {} ({})"
                             ;
             throw std::invalid_argument(fmt::format(msg, was, bits));
         }
