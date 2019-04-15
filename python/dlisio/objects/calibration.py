@@ -25,8 +25,8 @@ class Calibration(BasicObject):
     def __init__(self, obj = None, name = None, type = None):
         super().__init__(obj, name = name, type = 'CALIBRATION')
         self._method               = None
-        self._calibrated_channel   = []
-        self._uncalibrated_channel = []
+        self._calibrated           = []
+        self._uncalibrated         = []
         self._coefficients         = []
         self._parameters           = []
 
@@ -69,7 +69,7 @@ class Calibration(BasicObject):
         return self._method
 
     @property
-    def calibrated_channel(self):
+    def calibrated(self):
         """Calibrated channel(s)
 
         List of channels that have been calibrated by the method and
@@ -80,10 +80,10 @@ class Calibration(BasicObject):
 
         calibrated_channel : list of dlisio.Channel
         """
-        return self._calibrated_channel
+        return self._calibrated
 
     @property
-    def uncalibrated_channel(self):
+    def uncalibrated(self):
         """Uncalibrated channel(s)
 
         List of uncalibrated channels that along with the method and
@@ -95,7 +95,7 @@ class Calibration(BasicObject):
 
         uncalibrated_channel : list of dlisio.Channel
         """
-        return self._uncalibrated_channel
+        return self._uncalibrated
 
     @property
     def coefficients(self):
@@ -158,6 +158,6 @@ class Calibration(BasicObject):
                 msg = 'missing parameter {} referenced from calibration {}'
                 logging.warning(msg.format(ref, self.name))
 
-        self._calibrated_channel = calibs
-        self._uncalibrated_channel = uncalibs
+        self._calibrated = calibs
+        self._uncalibrated = uncalibs
         self._parameters = params
