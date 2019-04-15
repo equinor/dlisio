@@ -361,6 +361,7 @@ def test_calibrations(DWL206):
     assert calibration.type              == "CALIBRATION"
     assert len(calibration.parameters)   == 0
     assert len(calibration.coefficients) == 2
+    assert len(calibration.measurements) == 0
     assert calibration.method is None
     assert len(list(calibration.calibrated))   == 1
     assert len(list(calibration.uncalibrated)) == 1
