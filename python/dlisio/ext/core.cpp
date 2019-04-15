@@ -85,6 +85,30 @@ handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy
                                        src.MS );
 }
 
+template <>
+handle dlis_caster< dl::fsing1 >::cast( const dl::fsing1& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::fsing2 >::cast( const dl::fsing2& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::fdoub1 >::cast( const dl::fdoub1& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::fdoub2 >::cast( const dl::fdoub2& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+}
+
 namespace {
 
 handle maybe_decode(const std::string& src) noexcept (false) {
