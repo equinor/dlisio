@@ -283,11 +283,12 @@ TEST_CASE_METHOD(check_packsize, "pack statistical", "[pack]") {
 TEST_CASE_METHOD(check_packsize, "pack doubles", "[pack]") {
     source = {
         0x3F, 0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,// 0.25 fdouble
-        0xC2, 0xF3, 0x78, 0x5F, 0x66, 0x30, 0x1C, 0x0A,// -342523480572352.625 fdouble
+        0xC2, 0xF3, 0x78, 0x5F, 0x66, 0x30, 0x1C, 0x0A,// -342523480572352.625
+        0x43, 0x09, 0x94, 0x5C, 0xA2, 0x62, 0x00, 0x04,// 900000000000000.5
     };
 
-    buffer.resize( 2 * sizeof(double) );
-    fmt = "FF";
+    buffer.resize( 3 * sizeof(double) );
+    fmt = "FFF";
     auto* dst = reinterpret_cast< double* >( buffer.data() );
 
     const auto err = dlis_packf( fmt, source.data(), dst );
@@ -295,6 +296,7 @@ TEST_CASE_METHOD(check_packsize, "pack doubles", "[pack]") {
 
     CHECK( dst[ 0 ] == 0.25 );
     CHECK( dst[ 1 ] == -342523480572352.625 );
+    CHECK( dst[ 2 ] == 900000000000000.5 );
 }
 
 TEST_CASE_METHOD(check_packsize, "pack complex", "[pack]") {
