@@ -873,6 +873,19 @@ object_vector parse_objects( const object_template& tmpl,
                 continue;
             }
 
+            if (flags.invariant) {
+                /*
+                 * 3.2.2.2 Component Usage
+                 *  Invariant Attribute Components, which may only appear in
+                 *  the Template [...]
+                 *
+                 * Assume this is a mistake, assume it was a regular
+                 * non-invariant attribute
+                 */
+                user_warning("ATTRIB:invariant in attribute, "
+                             "but should only be in template");
+            }
+
             if (flags.label) {
                 user_warning( "ATTRIB:label set, but must be null");
             }
