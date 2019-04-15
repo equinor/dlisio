@@ -62,6 +62,16 @@ Fileheader
     :member-order: groupwise
     :inherited-members:
 
+Measurement
+-----------
+.. autoclass:: dlisio.objects.Measurement()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Origin
 ------
 .. autoclass:: dlisio.objects.Origin()
