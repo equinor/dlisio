@@ -28,7 +28,7 @@ class Tool(BasicObject):
         'TRADEMARK-NAME' : ('trademark_name' , True),
         'GENERIC-NAME'   : ('generic_name'   , True),
         'STATUS'         : ('status'         , True),
-        'PARTS'          : ('parts'          , False),
+        'PARTS'          : ('parts_refs'     , False),
         'CHANNELS'       : ('channels_refs'  , False),
         'PARAMETERS'     : ('parameters_refs', False)
     }
@@ -63,6 +63,9 @@ class Tool(BasicObject):
         #: References to the parameters
         self.parameters_refs = []
 
+        #: Reference to the equipments
+        self.parts_refs      = []
+
     def link(self, objects, sets):
         channels = sets['CHANNEL']
         chans = []
@@ -84,5 +87,16 @@ class Tool(BasicObject):
                 msg = 'missing parameter {} referenced from tool {}'
                 logging.warning(msg.format(ref, self.name))
 
+        equipments = sets['EQUIPMENT']
+        equipts = []
+        for ref in self.parts_refs:
+            fp = ref.fingerprint('EQUIPMENT')
+            try:
+                equipts.append(equipments[fp])
+            except KeyError:
+                msg = 'missing parameter {} referenced from tool {}'
+                logging.warning(msg.format(ref, self.name))
+
         self.channels = chans
         self.parameters = params
+        self.parts  = equipts
