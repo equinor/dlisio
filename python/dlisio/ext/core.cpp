@@ -418,6 +418,9 @@ PYBIND11_MODULE(core, m) {
      * TODO: support constructor with kwargs
      * TODO: support comparison with tuple
      * TODO: fmtlib for strings
+     * TODO: remove obname/objref etc altogether. The obnoxious __eq__ is a
+     *       symptom of bad design
+     *
      */
     py::class_< dl::obname >( m, "obname" )
         .def_readonly( "origin",     &dl::obname::origin )
@@ -433,6 +436,16 @@ PYBIND11_MODULE(core, m) {
                              dl::decay(o.copy) )
                     ;
         })
+        .def( "__eq__", [](const dl::obname& lhs,
+                           const std::tuple< int, std::uint8_t, std::string >& rhs) {
+            auto r = dl::obname {
+                dl::origin{ std::get< 0 >(rhs) },
+                dl::ushort{ std::get< 1 >(rhs) },
+                dl::ident{  std::get< 2 >(rhs) },
+            };
+
+            return r == lhs;
+        })
     ;
 
     py::class_< dl::objref >( m, "objref" )
@@ -442,6 +455,23 @@ PYBIND11_MODULE(core, m) {
         .def( "__repr__", []( const dl::objref& o ) {
             return "dlisio.core.objref(fingerprint={})"_s
                     .format(o.fingerprint());
+        })
+        .def( "__eq__", [](const dl::objref& lhs,
+                           const std::tuple<
+                                std::string,
+                                std::tuple< int, std::uint8_t, std::string >
+                            >& rhs)
+        {
+            auto r = dl::objref {
+                dl::ident { std::get< 0 >(rhs) },
+                dl::obname {
+                    dl::origin{ std::get< 0 >(std::get< 1 >(rhs)) },
+                    dl::ushort{ std::get< 1 >(std::get< 1 >(rhs)) },
+                    dl::ident{  std::get< 2 >(std::get< 1 >(rhs)) },
+                },
+            };
+
+            return r == lhs;
         })
     ;
 
@@ -458,6 +488,25 @@ PYBIND11_MODULE(core, m) {
                              dl::decay(o.name.copy),
                              dl::decay(o.type) )
                     ;
+        })
+        .def( "__eq__", [](const dl::attref& lhs,
+                           const std::tuple<
+                                std::string,
+                                std::tuple< int, std::uint8_t, std::string >,
+                                std::string
+                            >& rhs)
+        {
+            auto r = dl::attref {
+                dl::ident { std::get< 0 >(rhs) },
+                dl::obname {
+                    dl::origin{ std::get< 0 >(std::get< 1 >(rhs)) },
+                    dl::ushort{ std::get< 1 >(std::get< 1 >(rhs)) },
+                    dl::ident{  std::get< 2 >(std::get< 1 >(rhs)) },
+                },
+                dl::ident { std::get< 2 >(rhs) },
+            };
+
+            return r == lhs;
         })
     ;
 
