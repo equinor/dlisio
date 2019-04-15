@@ -111,3 +111,18 @@ class BasicObject():
         themselves are aware on how to link to other objects
         """
         pass
+
+    @classmethod
+    def load(cls, obj, name = None):
+        self = cls(obj, name = name)
+
+        attrs = cls.attributes
+        for label, value in obj.items():
+            if value is None: continue
+
+            attr, collapse = attrs[label]
+            if collapse: value = value[0]
+            setattr(self, attr, value)
+
+        self.stripspaces()
+        return self

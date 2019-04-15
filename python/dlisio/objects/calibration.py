@@ -22,6 +22,14 @@ class Calibration(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
+    attributes = {
+        'METHOD'               : ('method'           , False),
+        'CALIBRATED-CHANNELS'  : ('calibrated_refs'  , False),
+        'UNCALIBRATED-CHANNELS': ('uncalibrated_refs', False),
+        'COEFFICIENTS'         : ('coefficients'     , False),
+        'PARAMETERS'           : ('parameters_refs'  , False)
+    }
+
     def __init__(self, obj = None, name = None, type = None):
         super().__init__(obj, name = name, type = 'CALIBRATION')
         #: Computational method used to calibrate the channel
@@ -49,26 +57,6 @@ class Calibration(BasicObject):
 
         #: References to the parameters
         self.parameters_refs   = []
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Calibration(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "METHOD":
-                self.method = value[0]
-            if label == "CALIBRATED-CHANNELS":
-                self.calibrated_refs = value
-            if label == "UNCALIBRATED-CHANNELS":
-                self.uncalibrated_refs = value
-            if label == "COEFFICIENTS":
-                self.coefficients = value
-            if label == "PARAMETERS":
-                self.parameters_refs = value
-
-        self.stripspaces()
-        return self
 
     def link(self, objects, sets):
         channels = sets['CHANNEL']

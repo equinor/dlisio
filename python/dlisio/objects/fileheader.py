@@ -45,6 +45,11 @@ class Fileheader(BasicObject):
     Types and described in Chapter 5.1 - Static and Frame Data, File Header
     Logical Record (FHLR).
     """
+    attributes = {
+        'SEQUENCE-NUMBER': ('sequencenr', True),
+        'ID'             : ('id'        , True)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'FILE-HEADER')
         #: Sequential position of the logical file in a storage set
@@ -52,15 +57,3 @@ class Fileheader(BasicObject):
 
         #:Descriptive identification of the logical file
         self.id         = None
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Fileheader(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
-            if label == "SEQUENCE-NUMBER": self.sequencenr = value[0]
-            if label == "ID"             : self.id         = value[0]
-
-        self.stripspaces()
-        return self
-

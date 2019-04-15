@@ -18,6 +18,14 @@ class Parameter(BasicObject):
     Types, described in detail in Chapter 5.8.2 - Static and Frame Data,
     PARAMETER objects.
     """
+    attributes = {
+        'LONG-NAME' : ('long_name', True),
+        'DIMENSION' : ('dimension', True),
+        'AXIS'      : ('axis'     , True),
+        'ZONES'     : ('zones'    , True),
+        'VALUES'    : ('values'   , True)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'PARAMETER')
         #: Descriptive name of the channel.
@@ -34,17 +42,3 @@ class Parameter(BasicObject):
 
         #: Parameter values
         self.values    = None
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Parameter(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "LONG-NAME" : self.long_name = value[0]
-            if label == "DIMENSION" : self.dimension = value
-            if label == "AXIS"      : self.axis      = value
-            if label == "ZONES"     : self.zones     = value
-
-        self.stripspaces()
-        return self

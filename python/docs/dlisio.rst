@@ -28,7 +28,7 @@ Calibration
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 
@@ -38,7 +38,7 @@ Channel
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 
@@ -48,7 +48,7 @@ Frame
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 
@@ -58,7 +58,7 @@ Fileheader
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 
@@ -68,7 +68,7 @@ Origin
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 
@@ -78,7 +78,7 @@ Parameter
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 
@@ -88,7 +88,7 @@ Tool
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
-    :exclude-members: stripspaces, contains
+    :exclude-members: stripspaces, contains, attributes
     :member-order: groupwise
     :inherited-members:
 

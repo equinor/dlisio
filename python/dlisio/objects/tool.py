@@ -23,6 +23,16 @@ class Tool(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
+    attributes = {
+        'DESCRIPTION'    : ('description'    , True),
+        'TRADEMARK-NAME' : ('trademark_name' , True),
+        'GENERIC-NAME'   : ('generic_name'   , True),
+        'STATUS'         : ('status'         , True),
+        'PARTS'          : ('parts'          , False),
+        'CHANNELS'       : ('channels_refs'  , False),
+        'PARAMETERS'     : ('parameters_refs', False)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'TOOL')
         #: Textual description of the tool
@@ -52,23 +62,6 @@ class Tool(BasicObject):
 
         #: References to the parameters
         self.parameters_refs = []
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Tool(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "DESCRIPTION"    : self.description    = value[0]
-            if label == "TRADEMARK-NAME" : self.trademark_name = value[0]
-            if label == "GENERIC-NAME"   : self.generic_name   = value[0]
-            if label == "STATUS"         : self.status         = value[0]
-            if label == "PARTS"          : self.parts          = value
-            if label == "CHANNELS"       : self.channels_refs   = value
-            if label == "PARAMETERS"     : self.parameters_refs = value
-
-        self.stripspaces()
-        return self
 
     def link(self, objects, sets):
         channels = sets['CHANNEL']

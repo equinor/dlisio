@@ -25,6 +25,17 @@ class Frame(BasicObject):
 
     dlisio.Channel : Channel objects.
     """
+    attributes = {
+        'DESCRIPTION': ('description' , True),
+        'CHANNELS'   : ('channel_refs', False),
+        'INDEX-TYPE' : ('index_type'  , True),
+        'DIRECTION'  : ('direction'   , True),
+        'SPACING'    : ('spacing'     , True),
+        'ENCRYPTED'  : ('encrypted'   , True),
+        'INDEX-MIN'  : ('index_min'   , True),
+        'INDEX-MAX'  : ('index_max'   , True)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'FRAME')
 
@@ -61,24 +72,6 @@ class Frame(BasicObject):
         #: The data-type of the structured array that contains all samples
         #: arrays from all channels.
         self._dtype      = None
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Frame(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "DESCRIPTION": self.description = value[0]
-            if label == "CHANNELS"   : self.channel_refs = value
-            if label == "INDEX-TYPE" : self.index_type  = value[0]
-            if label == "DIRECTION"  : self.direction   = value[0]
-            if label == "SPACING"    : self.spacing     = value[0]
-            if label == "ENCRYPTED"  : self.encrypted   = True
-            if label == "INDEX-MIN"  : self.index_min   = value[0]
-            if label == "INDEX-MAX"  : self.index_max   = value[0]
-
-        self.stripspaces()
-        return self
 
     @property
     def dtype(self):

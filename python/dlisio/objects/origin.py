@@ -25,6 +25,29 @@ class Origin(BasicObject):
 
     dlisio.Fileheader : Fileheader
     """
+    attributes = {
+        'FILE-ID'           : ('file_id'          , True),
+        'FILE-SET-NAME'     : ('file_set_name'    , True),
+        'FILE-SET-NUMBER'   : ('file_set_nr'      , True),
+        'FILE-NUMBER'       : ('file_nr'          , True),
+        'FILE-TYPE'         : ('file_type'        , True),
+        'PRODUCT'           : ('product'          , True),
+        'VERSION'           : ('version'          , True),
+        'PROGRAMS'          : ('programs'         , False),
+        'CREATION-TIME'     : ('creation_time'    , True),
+        'ORDER-NUMBER'      : ('order_nr'         , True),
+        'DESCENT-NUMBER'    : ('descent_nr'       , False),
+        'RUN-NUMBER'        : ('run_nr'           , False),
+        'WELL-ID'           : ('well_id'          , True),
+        'WELL-NAME'         : ('well_name'        , True),
+        'FIELD-NAME'        : ('field_name'       , True),
+        'PRODUCER-CODE'     : ('producer_code'    , True),
+        'PRODUCER-NAME'     : ('producer_name'    , True),
+        'COMPANY'           : ('company'          , True),
+        'NAME-SPACE-NAME'   : ('namespace_name'   , True),
+        'NAME-SPACE-VERSION': ('namespace_version', True)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'ORIGIN')
 
@@ -93,54 +116,3 @@ class Origin(BasicObject):
 
         #: The version of the namespace.
         self.namespace_version = None
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Origin(obj, name = name)
-
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "FILE-ID":
-                self.file_id = value[0]
-            if label == "FILE-SET-NAME":
-                self.file_set_name = value[0]
-            if label == "FILE-SET-NUMBER":
-                self.file_set_nr = value[0]
-            if label == "FILE-NUMBER":
-                self.file_nr = value[0]
-            if label == "FILE-TYPE":
-                self.file_type = value[0]
-            if label == "PRODUCT":
-                self.product = value[0]
-            if label == "VERSION":
-                self.version = value[0]
-            if label == "PROGRAMS":
-                self.programs = value
-            if label == "CREATION-TIME":
-                self.creation_time = value[0]
-            if label == "ORDER-NUMBER":
-                self.order_nr = value[0]
-            if label == "DESCENT-NUMBER":
-                self.descent_nr = value
-            if label == "RUN-NUMBER":
-                self.run_nr = value
-            if label == "WELL-ID":
-                self.well_id = value[0]
-            if label == "WELL-NAME":
-                self.well_name = value[0]
-            if label == "FIELD-NAME":
-                self.field_name = value[0]
-            if label == "PRODUCER-CODE":
-                self.producer_code = value[0]
-            if label == "PRODUCER-NAME":
-                self.producer_name = value[0]
-            if label == "COMPANY":
-                self.company = value[0]
-            if label == "NAME-SPACE-NAME":
-                self.namespace_name = value[0]
-            if label == "NAME-SPACE-VERSION":
-                self.namespace_version = value[0]
-
-        self.stripspaces()
-        return self
