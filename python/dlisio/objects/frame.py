@@ -27,17 +27,40 @@ class Frame(BasicObject):
     """
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'FRAME')
-        self._description = None
+
+        #: Textual description of the Frame.
+        self.description = None
+
+        #: References to the channels
         self.channel_refs = []
-        self._channels    = []
-        self._index_type  = None
-        self._direction   = None
-        self._spacing     = None
-        self._encrypted   = False
-        self._index_min   = None
-        self._index_max   = None
-        self._fmtstr      = ""
-        self._dtype       = None
+
+        #: Channels in the frame
+        self.channels    = []
+
+        #: The measurement of the index, e.g. borehole-depth
+        self.index_type  = None
+
+        #: Direction of the index (Increasing or decreasing)
+        self.direction   = None
+
+        #: Constant spacing in the index
+        self.spacing     = None
+
+        #: Encrypted frame
+        self.encrypted   = False
+
+        #: Minimum value of the index
+        self.index_min   = None
+
+        #: Maximum value of the index
+        self.index_max   = None
+
+        #: Format-string of the frame. Mainly indended for internal use
+        self._fmtstr     = ""
+
+        #: The data-type of the structured array that contains all samples
+        #: arrays from all channels.
+        self._dtype      = None
 
     @staticmethod
     def load(obj, name = None):
@@ -45,14 +68,14 @@ class Frame(BasicObject):
         for label, value in obj.items():
             if value is None: continue
 
-            if label == "DESCRIPTION": self._description = value[0]
+            if label == "DESCRIPTION": self.description = value[0]
             if label == "CHANNELS"   : self.channel_refs = value
-            if label == "INDEX-TYPE" : self._index_type  = value[0]
-            if label == "DIRECTION"  : self._direction   = value[0]
-            if label == "SPACING"    : self._spacing     = value[0]
-            if label == "ENCRYPTED"  : self._encrypted   = True
-            if label == "INDEX-MIN"  : self._index_min   = value[0]
-            if label == "INDEX-MAX"  : self._index_max   = value[0]
+            if label == "INDEX-TYPE" : self.index_type  = value[0]
+            if label == "DIRECTION"  : self.direction   = value[0]
+            if label == "SPACING"    : self.spacing     = value[0]
+            if label == "ENCRYPTED"  : self.encrypted   = True
+            if label == "INDEX-MIN"  : self.index_min   = value[0]
+            if label == "INDEX-MAX"  : self.index_max   = value[0]
 
         self.stripspaces()
         return self
@@ -80,131 +103,6 @@ class Frame(BasicObject):
         self._dtype = np.dtype([(ch.name, ch.dtype) for ch in self.channels])
         return self._dtype
 
-    @property
-    def description(self):
-        """Description
-
-        Textual description of the Frame.
-
-        Returns
-        -------
-
-        description : str
-        """
-        return self._description
-
-    @property
-    def channels(self):
-        """Channels
-
-        List of all channels in the frame.
-
-        Returns
-        -------
-
-        channels : list of Channel
-        """
-        return self._channels
-
-    @property
-    def index_type(self):
-        """Index type
-
-        The measurement of the index, e.g. borehole-depth, vertical depth,
-        etc..
-
-        Returns
-        -------
-
-        index_type : str
-        """
-        return self._index_type
-
-    @property
-    def direction(self):
-        """Direction
-
-        Specifies whether the index is increasing or decreasing.
-
-        Notes
-        -----
-
-        The direction is also implicitly given by the sign of *Frame.spacing*
-        (if present). If there is no index channel (*Frame.index_type* is None)
-        the spacing attribute is meaningless.
-
-        Returns
-        -------
-
-        direction : str
-        """
-        return self._direction
-
-    @property
-    def spacing(self):
-        """Spacing
-
-        Specifies a *constant* spacing of the index from one frame to the next.
-        The value is the signed difference of the later minus the former index.
-        If there is no index channel (*Frame.index_type* is None) the spacing
-        attribute is meaningless.
-
-        Notes
-        -----
-
-        The direction of the index is implicitly given by the sign of this
-        attribute.
-
-
-        Returns
-        -------
-
-        spacing : undefined
-        """
-        return self._spacing
-
-    @property
-    def encrypted(self):
-        """Encrypted
-
-        Specifies whether the data from this frame is encrypted or not.
-
-        Returns
-        -------
-
-        encrypted : bool
-        """
-        return self._encrypted
-
-    @property
-    def index_min(self):
-        """Index min
-
-        The minimum value of index. If there is no index channel
-        (*Frame.index_type* is None) the minimum index is set to 1.
-
-        Returns
-        -------
-
-        index_min : undefined
-        """
-        return self._index_min
-
-    @property
-    def index_max(self):
-        """Index max
-
-        The maximum value of the index. If there is no index channel
-        (*Frame.index_type* is None), the maximum index is set to number of
-        frames in this frame-type.
-
-        Returns
-        -------
-
-        index_max : undefined
-        """
-        return self._index_max
-
     def fmtstr(self):
         """Generate format-string for Frame
 
@@ -220,7 +118,7 @@ class Frame(BasicObject):
         fmtstr : str
         """
 
-        if self._fmtstr: return self._fmtstr
+        if self._fmtstr != "" : return self._fmtstr
 
         for ch in self.channels:
             samples = np.prod(np.array(ch.dimension))
@@ -230,7 +128,7 @@ class Frame(BasicObject):
         return self._fmtstr
 
     def link(self, objects, sets):
-        self._channels = [
+        self.channels = [
             sets['CHANNEL'][ref.fingerprint('CHANNEL')]
             for ref in self.channel_refs
         ]

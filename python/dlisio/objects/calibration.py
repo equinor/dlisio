@@ -24,15 +24,31 @@ class Calibration(BasicObject):
     """
     def __init__(self, obj = None, name = None, type = None):
         super().__init__(obj, name = name, type = 'CALIBRATION')
-        self._method               = None
-        self._calibrated           = []
-        self._uncalibrated         = []
-        self._coefficients         = []
-        self._parameters           = []
+        #: Computational method used to calibrate the channel
+        self.method            = None
 
-        self.parameters_refs       = []
-        self.calibrated_refs       = []
-        self.uncalibrated_refs     = []
+        #: Calibrated channels
+        self.calibrated        = []
+
+        #: Uncalibrated channels. I.e. the channels as the where before
+        #: calibration
+        self.uncalibrated      = []
+
+        #: Coefficients
+        self.coefficients      = []
+
+        #: Parameters containing numerical and textual information assosiated
+        #: with the calibration process.
+        self.parameters        = []
+
+        #: Reference to the calibrated channels
+        self.calibrated_refs   = []
+
+        #: Reference to the uncalibrated channels
+        self.uncalibrated_refs = []
+
+        #: References to the parameters
+        self.parameters_refs   = []
 
     @staticmethod
     def load(obj, name = None):
@@ -41,91 +57,18 @@ class Calibration(BasicObject):
             if value is None: continue
 
             if label == "METHOD":
-                self._method = value[0]
+                self.method = value[0]
             if label == "CALIBRATED-CHANNELS":
                 self.calibrated_refs = value
             if label == "UNCALIBRATED-CHANNELS":
                 self.uncalibrated_refs = value
             if label == "COEFFICIENTS":
-                self._coefficients = value
+                self.coefficients = value
             if label == "PARAMETERS":
                 self.parameters_refs = value
 
         self.stripspaces()
         return self
-
-    @property
-    def method(self):
-        """Method
-
-        The computational method used to calibrate the Channel object(s)
-        defined in *Calibration.calibrated_channel*.
-
-        Returns
-        -------
-
-        method : str
-        """
-        return self._method
-
-    @property
-    def calibrated(self):
-        """Calibrated channel(s)
-
-        List of channels that have been calibrated by the method and
-        coefficients described in this calibration object.
-
-        Returns
-        -------
-
-        calibrated_channel : list of dlisio.Channel
-        """
-        return self._calibrated
-
-    @property
-    def uncalibrated(self):
-        """Uncalibrated channel(s)
-
-        List of uncalibrated channels that along with the method and
-        coefficients makes up the calibrated channels. I.e. the channels as
-        they where before calibration.
-
-        Returns
-        -------
-
-        uncalibrated_channel : list of dlisio.Channel
-        """
-        return self._uncalibrated
-
-    @property
-    def coefficients(self):
-        """Coefficients
-
-        List of coefficient objects that contains coefficients, tolerances and
-        references that have been used in the calibration of the channels
-        listen in *Calibration.calibrated_channels*.
-
-        Returns
-        -------
-
-        coefficients : list of dlisio.core.obname
-            each element is a reference to an coefficient object
-        """
-        return self._coefficients
-
-    @property
-    def parameters(self):
-        """Parameters
-
-        List of parameter objects that contains both numerical and textual
-        information assosiated with the calibration process.
-
-        Returns
-        -------
-
-        parameters : list of dlisio.Parameter
-        """
-        return self._parameters
 
     def link(self, objects, sets):
         channels = sets['CHANNEL']
@@ -158,6 +101,6 @@ class Calibration(BasicObject):
                 msg = 'missing parameter {} referenced from calibration {}'
                 logging.warning(msg.format(ref, self.name))
 
-        self._calibrated = calibs
-        self._uncalibrated = uncalibs
-        self._parameters = params
+        self.calibrated = calibs
+        self.uncalibrated = uncalibs
+        self.parameters = params

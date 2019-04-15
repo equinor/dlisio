@@ -47,38 +47,20 @@ class Fileheader(BasicObject):
     """
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'FILE-HEADER')
-        self._sequencenr = None
-        self._id         = None
+        #: Sequential position of the logical file in a storage set
+        self.sequencenr = None
+
+        #:Descriptive identification of the logical file
+        self.id         = None
 
     @staticmethod
     def load(obj, name = None):
         self = Fileheader(obj, name = name)
         for label, value in obj.items():
             if value is None: continue
-            if label == "SEQUENCE-NUMBER": self._sequencenr = value[0]
-            if label == "ID"             : self._id         = value[0]
+            if label == "SEQUENCE-NUMBER": self.sequencenr = value[0]
+            if label == "ID"             : self.id         = value[0]
 
         self.stripspaces()
         return self
 
-    @property
-    def sequencenr(self):
-        """Sequential position of the logical file in a storage set
-
-        Returns
-        -------
-
-        sequencenr : str
-        """
-        return self._sequencenr
-
-    @property
-    def id(self):
-        """Descriptive identification of the logical file
-
-        Returns
-        -------
-
-        id : str
-        """
-        return self._id
