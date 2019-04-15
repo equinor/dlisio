@@ -30,6 +30,7 @@ class dlis(object):
             'CHANNEL'    : record.Channel.load,
             'TOOL'       : record.Tool.load,
             'PARAMETER'  : record.Parameter.load,
+            'EQUIPMENT'  : record.Equipment.load,
             'CALIBRATION': record.Calibration.load,
         }
         self.load()
@@ -191,6 +192,16 @@ class dlis(object):
         parameters: dict_values
         """
         return self.object_sets['PARAMETER'].values()
+
+    @property
+    def equipments(self):
+        """ Read all Equipment objects
+
+        Returns
+        -------
+        equipments : dict_values
+        """
+        return self.object_sets['EQUIPMENT'].values()
 
     @property
     def calibrations(self):

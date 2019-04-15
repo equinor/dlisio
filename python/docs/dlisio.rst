@@ -92,6 +92,16 @@ Tool
     :member-order: groupwise
     :inherited-members:
 
+Equipment
+---------
+.. autoclass:: dlisio.objects.Equipment()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Unknown
 -------
 .. autoclass:: dlisio.objects.Unknown()

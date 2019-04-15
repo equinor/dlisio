@@ -286,6 +286,33 @@ def test_tool(DWL206):
     tools = [o for o in DWL206.tools if o.name == "MSCT"]
     assert len(tools) == 1
 
+def test_equipment(DWL206):
+    key = dlisio.core.fingerprint('EQUIPMENT', 'MSCT/MCFU_1/EQUIPMENT', 2, 0)
+    e = DWL206.objects[key]
+
+    assert e.name            == "MSCT/MCFU_1/EQUIPMENT"
+    assert e.origin          == 2
+    assert e.copynumber      == 0
+    assert e.trademark_name  == "MCFU_1-AA"
+    assert e.status          == 1
+    assert e.serial_number   == "119."
+    assert e.length          == 125.0
+    assert e.diameter_min    == 5.25
+    assert e.volume          == 1.5700000524520874
+    assert e.weight          == 144.0
+    assert e.pressure        == 20000.0
+    assert e.temperature     == 350
+    assert e.generic_type    is None
+    assert e.location        is None
+    assert e.height          is None
+    assert e.diameter_max    is None
+    assert e.hole_size       is None
+    assert e.vertical_depth  is None
+    assert e.radial_drift    is None
+    assert e.angular_drift   is None
+
+    assert len(list(DWL206.equipments)) == 14
+
 def test_parameter(DWL206):
     key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
     param = DWL206.objects[key]
@@ -320,7 +347,7 @@ def test_Unknown(DWL206):
     # should have all unknown should have attributes as a field
     # so this shouldn't be AttributeError
     _ = unknown.attributes
-    assert len(list(DWL206.unknowns)) == 501
+    assert len(list(DWL206.unknowns)) == 487
 
 def test_fmtstring(DWL206):
     reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
