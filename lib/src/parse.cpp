@@ -906,16 +906,16 @@ object_vector parse_objects( const object_template& tmpl,
              *
              * This is functionally equivalent to the value being marked absent
              */
-            if (count == 0)
+            if (count == 0) {
                 attr.value = mpark::monostate{};
-
-            /*
-             * Count is non-zero, but there's no value for this attribute.
-             * Expand what's already defaulted, and if it is monostate, set the
-             * default of that value
-             */
-            if (!flags.value)
-                patch_missing_value( attr.value, count, attr.reprc );
+            } else if (!flags.value) {
+                /*
+                * Count is non-zero, but there's no value for this attribute.
+                * Expand what's already defaulted, and if it is monostate, set
+                * the default of that value
+                */
+                patch_missing_value(attr.value, count, attr.reprc);
+            }
 
             current.set(attr);
         }
