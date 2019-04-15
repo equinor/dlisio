@@ -422,6 +422,10 @@ PYBIND11_MODULE(core, m) {
                              dl::decay(o.copy) )
                     ;
         })
+        .def(py::init([](int origin, int copynumber, std::string id){
+            return new dl::obname{dl::origin(origin), dl::ushort(copynumber),
+                dl::ident(id)};
+        }))
     ;
 
     py::class_< dl::objref >( m, "objref" )
@@ -432,6 +436,11 @@ PYBIND11_MODULE(core, m) {
             return "dlisio.core.objref(fingerprint={})"_s
                     .format(o.fingerprint());
         })
+        .def(py::init([](std::string type, dl::obname name){
+            return new dl::objref{dl::ident(type), name};
+        }))
+        .def( "__eq__",              &dl::objref::operator == )
+        .def( "__ne__",              &dl::objref::operator != )
     ;
 
     py::class_< dl::attref >( m, "attref" )
@@ -441,13 +450,18 @@ PYBIND11_MODULE(core, m) {
         .def( "__eq__", &dl::attref::operator == )
         .def( "__ne__", &dl::attref::operator != )
         .def( "__repr__", []( const dl::attref& o ) {
-            return "dlisio.core.attref(id='{}', origin={}, copynum={}, type={})"_s
+            return "dlisio.core.attref(id='{}', origin={}, copynum={}, type={},"
+                        "label={})"_s
                     .format( dl::decay(o.name.id),
                              dl::decay(o.name.origin),
                              dl::decay(o.name.copy),
-                             dl::decay(o.type) )
-                    ;
+                             dl::decay(o.type),
+                             dl::decay(o.label)
+                           );
         })
+        .def(py::init([](std::string type, dl::obname name, std::string label){
+            return new dl::attref{dl::ident(type), name, dl::ident(label)};
+        }))
     ;
 
     py::class_< dl::object_set >( m, "object_set" )
