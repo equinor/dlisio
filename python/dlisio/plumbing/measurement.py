@@ -1,4 +1,5 @@
 from .basicobject import BasicObject
+from .valuetypes import scalar, vector
 
 
 class Measurement(BasicObject):
@@ -16,21 +17,21 @@ class Measurement(BasicObject):
     5.8.7.1 - Static and Frame Data, CALIBRATION-MEASUREMENT objects.
     """
     attributes = {
-          'PHASE'             : ('phase'          , True),
-          'MEASUREMENT-SOURCE': ('source_ref'     , True),
-          'TYPE'              : ('mtype'          , True),
-          'DIMENSION'         : ('dimension'      , False),
-          'AXIS'              : ('axis'           , False),
-          'MEASUREMENT'       : ('samples'        , False),
-          'SAMPLE-COUNT'      : ('samplecount'    , True),
-          'MAXIMUM-DEVIATION' : ('max_deviation'  , True),
-          'STANDARD-DEVIATION': ('std_deviation'  , True),
-          'BEGIN-TIME'        : ('begin_time'     , True),
-          'DURATION'          : ('duration'       , True),
-          'REFERENCE'         : ('reference'      , False),
-          'STANDARD'          : ('standard'       , False),
-          'PLUS-TOLERANCE'    : ('plus_tolerance' , False),
-          'MINUS-TOLERANCE'   : ('minus_tolerance', False)
+          'PHASE'             : scalar('phase'),
+          'MEASUREMENT-SOURCE': scalar('source_ref'),
+          'TYPE'              : scalar('mtype'),
+          'DIMENSION'         : vector('dimension'),
+          'AXIS'              : vector('axis'),
+          'MEASUREMENT'       : vector('samples'),
+          'SAMPLE-COUNT'      : scalar('samplecount'),
+          'MAXIMUM-DEVIATION' : scalar('max_deviation'),
+          'STANDARD-DEVIATION': scalar('std_deviation'),
+          'BEGIN-TIME'        : scalar('begin_time'),
+          'DURATION'          : scalar('duration'),
+          'REFERENCE'         : vector('reference'),
+          'STANDARD'          : vector('standard'),
+          'PLUS-TOLERANCE'    : vector('plus_tolerance'),
+          'MINUS-TOLERANCE'   : vector('minus_tolerance')
     }
 
     def __init__(self, obj = None, name = None):

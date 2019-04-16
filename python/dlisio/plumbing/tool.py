@@ -1,6 +1,7 @@
 import logging
 
 from .basicobject import BasicObject
+from .valuetypes import scalar, vector
 
 class Tool(BasicObject):
     """Tool
@@ -24,13 +25,13 @@ class Tool(BasicObject):
     dlisio.Parameter : Parameter objects.
     """
     attributes = {
-        'DESCRIPTION'    : ('description'    , True),
-        'TRADEMARK-NAME' : ('trademark_name' , True),
-        'GENERIC-NAME'   : ('generic_name'   , True),
-        'STATUS'         : ('status'         , True),
-        'PARTS'          : ('parts_refs'     , False),
-        'CHANNELS'       : ('channels_refs'  , False),
-        'PARAMETERS'     : ('parameters_refs', False)
+        'DESCRIPTION'    : scalar('description'),
+        'TRADEMARK-NAME' : scalar('trademark_name'),
+        'GENERIC-NAME'   : scalar('generic_name'),
+        'STATUS'         : scalar('status'),
+        'PARTS'          : vector('parts_refs'),
+        'CHANNELS'       : vector('channels_refs'),
+        'PARAMETERS'     : vector('parameters_refs')
     }
 
     def __init__(self, obj = None, name = None):

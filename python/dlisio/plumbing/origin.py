@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-
+from .valuetypes import scalar, vector
 
 class Origin(BasicObject):
     """ Describes the creation of the logical file.
@@ -26,26 +26,26 @@ class Origin(BasicObject):
     dlisio.Fileheader : Fileheader
     """
     attributes = {
-        'FILE-ID'           : ('file_id'          , True),
-        'FILE-SET-NAME'     : ('file_set_name'    , True),
-        'FILE-SET-NUMBER'   : ('file_set_nr'      , True),
-        'FILE-NUMBER'       : ('file_nr'          , True),
-        'FILE-TYPE'         : ('file_type'        , True),
-        'PRODUCT'           : ('product'          , True),
-        'VERSION'           : ('version'          , True),
-        'PROGRAMS'          : ('programs'         , False),
-        'CREATION-TIME'     : ('creation_time'    , True),
-        'ORDER-NUMBER'      : ('order_nr'         , True),
-        'DESCENT-NUMBER'    : ('descent_nr'       , False),
-        'RUN-NUMBER'        : ('run_nr'           , False),
-        'WELL-ID'           : ('well_id'          , True),
-        'WELL-NAME'         : ('well_name'        , True),
-        'FIELD-NAME'        : ('field_name'       , True),
-        'PRODUCER-CODE'     : ('producer_code'    , True),
-        'PRODUCER-NAME'     : ('producer_name'    , True),
-        'COMPANY'           : ('company'          , True),
-        'NAME-SPACE-NAME'   : ('namespace_name'   , True),
-        'NAME-SPACE-VERSION': ('namespace_version', True)
+        'FILE-ID'           : scalar('file_id'),
+        'FILE-SET-NAME'     : scalar('file_set_name'),
+        'FILE-SET-NUMBER'   : scalar('file_set_nr'),
+        'FILE-NUMBER'       : scalar('file_nr'),
+        'FILE-TYPE'         : scalar('file_type'),
+        'PRODUCT'           : scalar('product'),
+        'VERSION'           : scalar('version'),
+        'PROGRAMS'          : vector('programs'),
+        'CREATION-TIME'     : scalar('creation_time'),
+        'ORDER-NUMBER'      : scalar('order_nr'),
+        'DESCENT-NUMBER'    : vector('descent_nr'),
+        'RUN-NUMBER'        : vector('run_nr'),
+        'WELL-ID'           : scalar('well_id'),
+        'WELL-NAME'         : scalar('well_name'),
+        'FIELD-NAME'        : scalar('field_name'),
+        'PRODUCER-CODE'     : scalar('producer_code'),
+        'PRODUCER-NAME'     : scalar('producer_name'),
+        'COMPANY'           : scalar('company'),
+        'NAME-SPACE-NAME'   : scalar('namespace_name'),
+        'NAME-SPACE-VERSION': scalar('namespace_version')
     }
 
     def __init__(self, obj = None, name = None):

@@ -1,4 +1,5 @@
 from .. import core
+from .valuetypes import *
 
 class BasicObject():
     """Basic object
@@ -120,9 +121,16 @@ class BasicObject():
         for label, value in obj.items():
             if value is None: continue
 
-            attr, collapse = attrs[label]
-            if collapse: value = value[0]
-            setattr(self, attr, value)
+            attr, value_type = attrs[label]
+            if value_type == ValueTypeBoolean:
+                if value[0]: setattr(self, attr, True)
+                else:        setattr(self, attr, False)
+
+            elif value_type == ValueTypeScalar:
+                setattr(self, attr, value[0])
+
+            elif value_type == ValueTypeVector:
+                setattr(self, attr, value)
 
         self.stripspaces()
         return self

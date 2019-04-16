@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-
+from .valuetypes import scalar
 
 class Fileheader(BasicObject):
     """ Fileheader
@@ -46,8 +46,8 @@ class Fileheader(BasicObject):
     Logical Record (FHLR).
     """
     attributes = {
-        'SEQUENCE-NUMBER': ('sequencenr', True),
-        'ID'             : ('id'        , True)
+        'SEQUENCE-NUMBER': scalar('sequencenr'),
+        'ID'             : scalar('id')
     }
 
     def __init__(self, obj = None, name = None):
