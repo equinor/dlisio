@@ -42,6 +42,16 @@ Channel
     :member-order: groupwise
     :inherited-members:
 
+Coefficent
+----------
+.. autoclass:: dlisio.objects.Coefficient()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Frame
 -----
 .. autoclass:: dlisio.objects.Frame()

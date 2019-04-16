@@ -32,6 +32,7 @@ class dlis(object):
             'PARAMETER'              : record.Parameter.load,
             'EQUIPMENT'              : record.Equipment.load,
             'CALIBRATION-MEASUREMENT': record.Measurement.load,
+            'CALIBRATION-COEFFICIENT': record.Coefficient.load,
             'CALIBRATION'            : record.Calibration.load,
         }
         self.load()
@@ -213,6 +214,16 @@ class dlis(object):
         measurement : dict_values
         """
         return self.object_sets['CALIBRATION-MEASUREMENT'].values()
+
+    @property
+    def coefficients(self):
+        """ Read all Coefficient objects
+
+        Returns
+        -------
+        coefficient : dict_values
+        """
+        return self.object_sets['CALIBRATION-COEFFICIENT'].values()
 
     @property
     def calibrations(self):

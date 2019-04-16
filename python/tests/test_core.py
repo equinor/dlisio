@@ -352,6 +352,18 @@ def test_measurement(DWL206):
 
     assert len(list(DWL206.measurements)) == 6
 
+def test_coefficient(DWL206):
+    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT',
+                                  'GAIN-MSCT/HPPR/CALIBRATION', 2, 0)
+    c = DWL206.objects[key]
+    assert c.label           == 'GAIN'
+    assert c.coefficients    == [1.0]
+    assert c.references      == []
+    assert c.plus_tolerance  == []
+    assert c.minus_tolerance == []
+
+    assert len(list(DWL206.coefficients)) == 24
+
 def test_calibrations(DWL206):
     key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
     calibration = DWL206.objects[key]
@@ -372,7 +384,7 @@ def test_Unknown(DWL206):
     # should have all unknown should have attributes as a field
     # so this shouldn't be AttributeError
     _ = unknown.attributes
-    assert len(list(DWL206.unknowns)) == 481
+    assert len(list(DWL206.unknowns)) == 457
 
 def test_fmtstring(DWL206):
     reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
