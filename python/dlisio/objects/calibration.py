@@ -26,7 +26,8 @@ class Calibration(BasicObject):
         'METHOD'               : ('method'           , False),
         'CALIBRATED-CHANNELS'  : ('calibrated_refs'  , False),
         'UNCALIBRATED-CHANNELS': ('uncalibrated_refs', False),
-        'COEFFICIENTS'         : ('coefficients'     , False),
+        'COEFFICIENTS'         : ('coefficient_refs' , False),
+        'MEASUREMENTS'         : ('measurement_refs' , False),
         'PARAMETERS'           : ('parameters_refs'  , False)
     }
 
@@ -45,6 +46,9 @@ class Calibration(BasicObject):
         #: Coefficients
         self.coefficients      = []
 
+        #: Measurements
+        self.measurements      = []
+
         #: Parameters containing numerical and textual information assosiated
         #: with the calibration process.
         self.parameters        = []
@@ -54,6 +58,12 @@ class Calibration(BasicObject):
 
         #: Reference to the uncalibrated channels
         self.uncalibrated_refs = []
+
+        #: Reference to coefficients
+        self.coefficient_refs  = []
+
+        #: Reference to measurements
+        self.measurement_refs      = []
 
         #: References to the parameters
         self.parameters_refs   = []
@@ -79,6 +89,26 @@ class Calibration(BasicObject):
                 msg = 'missing channel {} referenced from calibration {}'
                 logging.warning(msg.format(ref, self.name))
 
+        coefficients = sets['CALIBRATION-COEFFICIENT']
+        coeffs = []
+        for ref in self.coefficient_refs:
+            fp = ref.fingerprint('CALIBRATION-COEFFICIENT')
+            try:
+                coeffs.append(coefficients[fp])
+            except KeyError:
+                msg = 'missing coefficient {} referenced from calibration {}'
+                logging.warning(msg.format(ref, self.name))
+
+        measurements = sets['CALIBRATION-MEASUREMENT']
+        measures = []
+        for ref in self.measurement_refs:
+            fp = ref.fingerprint('CALIBRATION-MEASUREMENT')
+            try:
+                measures.append(measurements[fp])
+            except KeyError:
+                msg = 'missing coefficient {} referenced from calibration {}'
+                logging.warning(msg.format(ref, self.name))
+
         parameters = sets['PARAMETER']
         params = []
         for ref in self.parameters_refs:
@@ -91,4 +121,6 @@ class Calibration(BasicObject):
 
         self.calibrated = calibs
         self.uncalibrated = uncalibs
+        self.coefficients = coeffs
+        self.measurements = measures
         self.parameters = params

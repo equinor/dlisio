@@ -42,6 +42,16 @@ Channel
     :member-order: groupwise
     :inherited-members:
 
+Coefficent
+----------
+.. autoclass:: dlisio.objects.Coefficient()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Frame
 -----
 .. autoclass:: dlisio.objects.Frame()
@@ -55,6 +65,16 @@ Frame
 Fileheader
 ----------
 .. autoclass:: dlisio.objects.Fileheader()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
+Measurement
+-----------
+.. autoclass:: dlisio.objects.Measurement()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -85,6 +105,16 @@ Parameter
 Tool
 ----
 .. autoclass:: dlisio.objects.Tool()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
+Equipment
+---------
+.. autoclass:: dlisio.objects.Equipment()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:

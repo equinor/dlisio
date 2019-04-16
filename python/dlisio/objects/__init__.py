@@ -6,4 +6,7 @@ from .channel import Channel
 from .tool import Tool
 from .parameter import Parameter
 from .calibration import Calibration
+from .equipment import Equipment
+from .measurement import Measurement
+from .coefficient import Coefficient
 from .unknown import Unknown

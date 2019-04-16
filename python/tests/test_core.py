@@ -286,6 +286,33 @@ def test_tool(DWL206):
     tools = [o for o in DWL206.tools if o.name == "MSCT"]
     assert len(tools) == 1
 
+def test_equipment(DWL206):
+    key = dlisio.core.fingerprint('EQUIPMENT', 'MSCT/MCFU_1/EQUIPMENT', 2, 0)
+    e = DWL206.objects[key]
+
+    assert e.name            == "MSCT/MCFU_1/EQUIPMENT"
+    assert e.origin          == 2
+    assert e.copynumber      == 0
+    assert e.trademark_name  == "MCFU_1-AA"
+    assert e.status          == 1
+    assert e.serial_number   == "119."
+    assert e.length          == 125.0
+    assert e.diameter_min    == 5.25
+    assert e.volume          == 1.5700000524520874
+    assert e.weight          == 144.0
+    assert e.pressure        == 20000.0
+    assert e.temperature     == 350
+    assert e.generic_type    is None
+    assert e.location        is None
+    assert e.height          is None
+    assert e.diameter_max    is None
+    assert e.hole_size       is None
+    assert e.vertical_depth  is None
+    assert e.radial_drift    is None
+    assert e.angular_drift   is None
+
+    assert len(list(DWL206.equipments)) == 14
+
 def test_parameter(DWL206):
     key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
     param = DWL206.objects[key]
@@ -301,6 +328,42 @@ def test_parameter(DWL206):
     param = [o for o in DWL206.parameters if o.name == "FLSHSTRM"]
     assert len(param) == 1
 
+
+def test_measurement(DWL206):
+    key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT',
+                                  'MSCT_SGTE/ZM_BEF/CALI_MEAS', 2, 0)
+    m = DWL206.objects[key]
+
+    assert m.phase           == 'BEFORE'
+    assert m.source          == None
+    assert m.mtype           == None
+    assert m.dimension       == []
+    assert m.axis            == []
+    assert m.samples         == [2.640824317932129]
+    assert m.samplecount     == 142
+    assert m.max_deviation   == 11.421565055847168
+    assert m.std_deviation   == 3.4623820781707764
+    assert m.begin_time      == datetime(2011, 8, 20, 18, 13, 38)
+    assert m.duration        == 30
+    assert m.reference       == [0.0]
+    assert m.standard        == []
+    assert m.plus_tolerance  == []
+    assert m.minus_tolerance == []
+
+    assert len(list(DWL206.measurements)) == 6
+
+def test_coefficient(DWL206):
+    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT',
+                                  'GAIN-MSCT/HPPR/CALIBRATION', 2, 0)
+    c = DWL206.objects[key]
+    assert c.label           == 'GAIN'
+    assert c.coefficients    == [1.0]
+    assert c.references      == []
+    assert c.plus_tolerance  == []
+    assert c.minus_tolerance == []
+
+    assert len(list(DWL206.coefficients)) == 24
+
 def test_calibrations(DWL206):
     key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
     calibration = DWL206.objects[key]
@@ -310,6 +373,7 @@ def test_calibrations(DWL206):
     assert calibration.type              == "CALIBRATION"
     assert len(calibration.parameters)   == 0
     assert len(calibration.coefficients) == 2
+    assert len(calibration.measurements) == 0
     assert calibration.method is None
     assert len(list(calibration.calibrated))   == 1
     assert len(list(calibration.uncalibrated)) == 1
@@ -320,7 +384,7 @@ def test_Unknown(DWL206):
     # should have all unknown should have attributes as a field
     # so this shouldn't be AttributeError
     _ = unknown.attributes
-    assert len(list(DWL206.unknowns)) == 501
+    assert len(list(DWL206.unknowns)) == 457
 
 def test_fmtstring(DWL206):
     reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"

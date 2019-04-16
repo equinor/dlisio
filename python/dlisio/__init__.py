@@ -24,13 +24,16 @@ class dlis(object):
         self.problematic = []
 
         self.types = {
-            'FILE-HEADER': record.Fileheader.load,
-            'ORIGIN'     : record.Origin.load,
-            'FRAME'      : record.Frame.load,
-            'CHANNEL'    : record.Channel.load,
-            'TOOL'       : record.Tool.load,
-            'PARAMETER'  : record.Parameter.load,
-            'CALIBRATION': record.Calibration.load,
+            'FILE-HEADER'            : record.Fileheader.load,
+            'ORIGIN'                 : record.Origin.load,
+            'FRAME'                  : record.Frame.load,
+            'CHANNEL'                : record.Channel.load,
+            'TOOL'                   : record.Tool.load,
+            'PARAMETER'              : record.Parameter.load,
+            'EQUIPMENT'              : record.Equipment.load,
+            'CALIBRATION-MEASUREMENT': record.Measurement.load,
+            'CALIBRATION-COEFFICIENT': record.Coefficient.load,
+            'CALIBRATION'            : record.Calibration.load,
         }
         self.load()
 
@@ -191,6 +194,36 @@ class dlis(object):
         parameters: dict_values
         """
         return self.object_sets['PARAMETER'].values()
+
+    @property
+    def equipments(self):
+        """ Read all Equipment objects
+
+        Returns
+        -------
+        equipments : dict_values
+        """
+        return self.object_sets['EQUIPMENT'].values()
+
+    @property
+    def measurements(self):
+        """ Read all Measurement objects
+
+        Returns
+        -------
+        measurement : dict_values
+        """
+        return self.object_sets['CALIBRATION-MEASUREMENT'].values()
+
+    @property
+    def coefficients(self):
+        """ Read all Coefficient objects
+
+        Returns
+        -------
+        coefficient : dict_values
+        """
+        return self.object_sets['CALIBRATION-COEFFICIENT'].values()
 
     @property
     def calibrations(self):
