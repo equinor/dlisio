@@ -25,355 +25,94 @@ class Origin(BasicObject):
 
     dlisio.Fileheader : Fileheader
     """
+    attributes = {
+        'FILE-ID'           : ('file_id'          , True),
+        'FILE-SET-NAME'     : ('file_set_name'    , True),
+        'FILE-SET-NUMBER'   : ('file_set_nr'      , True),
+        'FILE-NUMBER'       : ('file_nr'          , True),
+        'FILE-TYPE'         : ('file_type'        , True),
+        'PRODUCT'           : ('product'          , True),
+        'VERSION'           : ('version'          , True),
+        'PROGRAMS'          : ('programs'         , False),
+        'CREATION-TIME'     : ('creation_time'    , True),
+        'ORDER-NUMBER'      : ('order_nr'         , True),
+        'DESCENT-NUMBER'    : ('descent_nr'       , False),
+        'RUN-NUMBER'        : ('run_nr'           , False),
+        'WELL-ID'           : ('well_id'          , True),
+        'WELL-NAME'         : ('well_name'        , True),
+        'FIELD-NAME'        : ('field_name'       , True),
+        'PRODUCER-CODE'     : ('producer_code'    , True),
+        'PRODUCER-NAME'     : ('producer_name'    , True),
+        'COMPANY'           : ('company'          , True),
+        'NAME-SPACE-NAME'   : ('namespace_name'   , True),
+        'NAME-SPACE-VERSION': ('namespace_version', True)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'ORIGIN')
-        self._file_id           = None
-        self._file_set_name     = None
-        self._file_set_nr       = None
-        self._file_nr           = None
-        self._file_type         = None
-        self._product           = None
-        self._version           = None
-        self._programs          = []
-        self._creation_time     = None
-        self._order_nr          = None
-        self._descent_nr        = []
-        self._run_nr            = []
-        self._well_id           = None
-        self._well_name         = None
-        self._field_name        = None
-        self._producer_code     = None
-        self._producer_name     = None
-        self._company           = None
-        self._namespace_name    = None
-        self._namespace_version = None
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Origin(obj, name = name)
-
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "FILE-ID":
-                self._file_id = value[0]
-            if label == "FILE-SET-NAME":
-                self._file_set_name = value[0]
-            if label == "FILE-SET-NUMBER":
-                self._file_set_nr = value[0]
-            if label == "FILE-NUMBER":
-                self._file_nr = value[0]
-            if label == "FILE-TYPE":
-                self._file_type = value[0]
-            if label == "PRODUCT":
-                self._product = value[0]
-            if label == "VERSION":
-                self._version = value[0]
-            if label == "PROGRAMS":
-                self._programs = value
-            if label == "CREATION-TIME":
-                self._creation_time = value[0]
-            if label == "ORDER-NUMBER":
-                self._order_nr = value[0]
-            if label == "DESCENT-NUMBER":
-                self._descent_nr = value
-            if label == "RUN-NUMBER":
-                self._run_nr = value
-            if label == "WELL-ID":
-                self._well_id = value[0]
-            if label == "WELL-NAME":
-                self._well_name = value[0]
-            if label == "FIELD-NAME":
-                self._field_name = value[0]
-            if label == "PRODUCER-CODE":
-                self._producer_code = value[0]
-            if label == "PRODUCER-NAME":
-                self._producer_name = value[0]
-            if label == "COMPANY":
-                self._company = value[0]
-            if label == "NAME-SPACE-NAME":
-                self._namespace_name = value[0]
-            if label == "NAME-SPACE-VERSION":
-                self._namespace_version = value[0]
-
-        self.stripspaces()
-        return self
-
-    @property
-    def file_id(self):
-        """File-identifier
-
-        An exact copy of Fileheader.id
-
-        Returns
-        -------
-
-        file_id : str
-        """
-        return self._file_id
-
-    @property
-    def file_set_name(self):
-        """File set name
-
-        The name of the File Set that the Logical File is a part of, if
-        any. File Set Names are not required to be unique.
-
-        Returns
-        -------
-
-        file_set_name : str
-        """
-        return self._file_set_name
-
-    @property
-    def file_set_nr(self):
-        """File set number
 
-        The number of the File Set that the logical file is a part of, if any. The
-        file set number is often set to a psudo-random number to distinguish
-        different File Sets. However, it is not required to be unique.
+        #: An exact copy of Fileheader.id
+        self.file_id           = None
 
-        Returns
-        -------
+        #: The name of the File Set that the Logical File is a part of
+        self.file_set_name     = None
 
-        file_set_nr : int
-        """
-        return self._file_set_nr
+        #: The number of the File Set that the Logical File is a part of
+        self.file_set_nr       = None
 
-    @property
-    def file_nr(self):
-        """File number
+        #: The file number of the Logical File within a File Set
+        self.file_nr           = None
 
-        The file number of each Logical File. The number is relative to the
-        File Set that the Logical File belongs to in the sense that file
-        numbers increase in the order of which the Logical Files in the File
-        Set is created. It is not a requirement that the file number increase
-        sequentially.
+        #: A producer spesified File-Type that signifies the content of the
+        #: DLIS-file
+        self.file_type         = None
 
-        Note that there is no defined relationship between the file number of
-        Logical Files within a Storage Set.
+        #: Name of the software product that produced the DLIS-file
+        self.product           = None
 
-        Returns
-        -------
+        #: The version of the software product that created the DLIS-file
+        self.version           = None
 
-        file_nr : int
-        """
-        return self._file_nr
+        #: Other programs and services that was a part of the software that
+        #: created the DLIS-file
+        self.programs          = []
 
-    @property
-    def file_type(self):
-        """File type
+        #: Date and time at which the DLIS-File was created
+        self.creation_time     = None
 
-        A producer spesified File-Type that signifies the content of the
-        DLIS-file or the circumstances under which the DLIS-file was created.
+        #: An unique accounting number assosiated with the creation of the
+        #: DLIS-File
+        self.order_nr          = None
 
-        Returns
-        -------
+        #: The meaning of this number must be obtained directly from the
+        #: producer
+        self.descent_nr        = []
 
-        file_type : str
-        """
-        return self._file_type
+        #: The meaning of this number must be obtained directly from the
+        #: company
+        self.run_nr            = []
 
-    @property
-    def product(self):
-        """Product
+        #: Id of the well at which the measurements where acquired
+        self.well_id           = None
 
-        Name of the software product that produced the DLIS-file.
+        #: Name of the well at which the measurements where acquired
+        self.well_name         = None
 
-        Returns
-        -------
+        #: The field to which the well belongs
+        self.field_name        = None
 
-        product : str
-        """
-        return self._product
+        #: The producer's identifying code
+        self.producer_code     = None
 
-    @property
-    def version(self):
-        """Version
+        #: The producer's name
+        self.producer_name     = None
 
-        The version of the software product that created the DLIS-file.
+        #: The name of the client company which the log was produced for
+        self.company           = None
 
-        Returns
-        -------
+        #: A producer-defined namespace for which the object names for this
+        #: origin are defined under
+        self.namespace_name    = None
 
-        version : str
-        """
-        return self._version
-
-    @property
-    def programs(self):
-        """Programs
-
-        List of programs and services that was a part of the software that
-        created the DLIS-file.
-
-        Returns
-        -------
-
-        programs : list of str
-        """
-        return self._programs
-
-    @property
-    def creation_time(self):
-        """Creation time
-
-        The date and time at which the DLIS-File was created.
-
-        Returns
-        -------
-
-        creation_time : datetime.datetime
-        """
-        return self._creation_time
-
-    @property
-    def order_nr(self):
-        """Service order number
-
-        An unique accounting number assosiated with the creation of the
-        DLIS-File.
-
-        Returns
-        -------
-
-        order_nr : str
-        """
-        return self._order_nr
-
-    @property
-    def descent_nr(self):
-        """Descent number
-
-        A producer spesified number. The meaning of this number must be
-        obtained directly from the producer.
-
-        Returns
-        -------
-
-        descent_nr : unknown
-        """
-        return self._descent_nr
-
-    @property
-    def run_nr(self):
-        """Run number
-
-        A company spesified number. The meaning of this number must be obtained
-        directly from the company.
-
-        Returns
-        -------
-
-        descent_nr : unknown
-        """
-        return self._run_nr
-
-    @property
-    def well_id(self):
-        """Well id
-
-        Identifier for the well in which the measurments was taken. When
-        applicable, the API (American Petroleum Institute) Well number should
-        be used.
-
-        Returns
-        -------
-
-        well_id : str
-        """
-        return self._well_id
-
-    @property
-    def well_name(self):
-        """Well name
-
-        Name of the well in which the measurements was taken.
-
-        Returns
-        -------
-
-        well_name : str
-        """
-        return self._well_name
-
-    @property
-    def field_name(self):
-        """Field name
-
-        The name of the field where the well belongs. If there is no
-        field-name, it should default to WILDCAT.
-
-        Returns
-        -------
-
-        field : str
-        """
-        return self._field_name
-
-    @property
-    def producer_code(self):
-        """Producer code
-
-        The producer's identifying code.
-
-        Returns
-        -------
-
-        producer_code : int
-        """
-        return self._producer_code
-
-    @property
-    def producer_name(self):
-        """Producer name
-
-        The producer's name.
-
-        Returns
-        -------
-
-        producer_name : str
-        """
-        return self._producer_name
-
-    @property
-    def company(self):
-        """Company
-
-        The name of the client company which the log was produced for.
-
-        Returns
-        -------
-
-        company : str
-        """
-        return self._company
-
-    @property
-    def namespace_name(self):
-        """Namespace name
-
-        A producer-defined namespace for which the object names for this origin
-        are defined under.
-
-        Returns
-        -------
-
-        namespace_name : str
-        """
-        return self._namespace_name
-
-    @property
-    def namespace_version(self):
-        """Namespace version
-
-        The version of the namespace.
-
-        Returns
-        -------
-
-        namespace_version : str
-        """
-        return self._namespace_version
+        #: The version of the namespace.
+        self.namespace_version = None

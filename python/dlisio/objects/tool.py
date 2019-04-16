@@ -23,130 +23,45 @@ class Tool(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
+    attributes = {
+        'DESCRIPTION'    : ('description'    , True),
+        'TRADEMARK-NAME' : ('trademark_name' , True),
+        'GENERIC-NAME'   : ('generic_name'   , True),
+        'STATUS'         : ('status'         , True),
+        'PARTS'          : ('parts'          , False),
+        'CHANNELS'       : ('channels_refs'  , False),
+        'PARAMETERS'     : ('parameters_refs', False)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'TOOL')
-        self._description    = None
-        self._trademark_name = None
-        self._generic_name   = None
-        self._status         = None
-        self._parts          = []
-        self._channels       = []
+        #: Textual description of the tool
+        self.description     = None
+
+        #: The producer's name for the tool
+        self.trademark_name  = None
+
+        #: The name generally used by the industry to describe such a tool
+        self.generic_name    = None
+
+        #: If the tool is enabled to provide information to the acquisition
+        #: system
+        self.status          = None
+
+        #: The equipment that makes up the tool
+        self.parts           = []
+
+        #: Channels that are produced by this tool
+        self.channels        = []
+
+        #: Parameter that directly affect or reflect the operation of the tool
+        self.parameters      = []
+
+        #: References to the channels
         self.channels_refs   = []
-        self._parameters     = []
+
+        #: References to the parameters
         self.parameters_refs = []
-
-    @staticmethod
-    def load(obj, name = None):
-        self = Tool(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
-
-            if label == "DESCRIPTION"    : self._description    = value[0]
-            if label == "TRADEMARK-NAME" : self._trademark_name = value[0]
-            if label == "GENERIC-NAME"   : self._generic_name   = value[0]
-            if label == "STATUS"         : self._status         = value[0]
-            if label == "PARTS"          : self._parts          = value
-            if label == "CHANNELS"       : self.channels_refs   = value
-            if label == "PARAMETERS"     : self.parameters_refs = value
-
-        self.stripspaces()
-        return self
-
-    @property
-    def description(self):
-        """Description
-
-        Textual description of the Tool.
-
-        Returns
-        -------
-
-        description : str
-        """
-        return self._description
-
-    @property
-    def trademark_name(self):
-        """Trademark name
-
-        The producer's name for the tool.
-
-        Returns
-        -------
-
-        trademark_name : str
-        """
-        return self._trademark_name
-
-    @property
-    def generic_name(self):
-        """Generic name
-
-        The name generally used by the industry to describe such a tool.
-
-        Returns
-        -------
-
-        generic_name : str
-        """
-        return self._generic_name
-
-    @property
-    def status(self):
-        """Status
-
-        Specifies whether the tool is enabled to provide information to the
-        acquisition system or not.
-
-        Returns
-        -------
-
-        status : int
-            Returns 0 if tool is disabled, 1 if it is enabled. Other values
-            are undefined.
-        """
-        return self._status
-
-    @property
-    def parts(self):
-        """Parts
-
-        A list of Equiptment objects which represent the parts that the tool is
-        made up by.
-
-        Returns
-        -------
-
-        parts : list of dlisio.core.obname
-            each element is a reference to an equiptment object
-        """
-        return self._parts
-
-    @property
-    def channels(self):
-        """Channels
-
-        Channels that are produced by this tool.
-
-        Returns
-        -------
-
-        channels : list of dlisio.Channel
-        """
-        return self._channels
-
-    @property
-    def parameters(self):
-        """Parameters
-
-        Parameter that directly affect or reflect the operation of the tool.
-
-        Returns
-        -------
-
-        parameters : list of dlisio.Parameter
-        """
-        return self._parameters
 
     def link(self, objects, sets):
         channels = sets['CHANNEL']
@@ -169,5 +84,5 @@ class Tool(BasicObject):
                 msg = 'missing parameter {} referenced from tool {}'
                 logging.warning(msg.format(ref, self.name))
 
-        self._channels = chans
-        self._parameters = params
+        self.channels = chans
+        self.parameters = params

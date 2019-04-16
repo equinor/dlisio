@@ -22,110 +22,41 @@ class Calibration(BasicObject):
     dlisio.Channel : Channel objects.
     dlisio.Parameter : Parameter objects.
     """
+    attributes = {
+        'METHOD'               : ('method'           , False),
+        'CALIBRATED-CHANNELS'  : ('calibrated_refs'  , False),
+        'UNCALIBRATED-CHANNELS': ('uncalibrated_refs', False),
+        'COEFFICIENTS'         : ('coefficients'     , False),
+        'PARAMETERS'           : ('parameters_refs'  , False)
+    }
+
     def __init__(self, obj = None, name = None, type = None):
         super().__init__(obj, name = name, type = 'CALIBRATION')
-        self._method               = None
-        self._calibrated_channel   = []
-        self._uncalibrated_channel = []
-        self._coefficients         = []
-        self._parameters           = []
+        #: Computational method used to calibrate the channel
+        self.method            = None
 
-        self.parameters_refs       = []
-        self.calibrated_refs       = []
-        self.uncalibrated_refs     = []
+        #: Calibrated channels
+        self.calibrated        = []
 
-    @staticmethod
-    def load(obj, name = None):
-        self = Calibration(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
+        #: Uncalibrated channels. I.e. the channels as the where before
+        #: calibration
+        self.uncalibrated      = []
 
-            if label == "METHOD":
-                self._method = value[0]
-            if label == "CALIBRATED-CHANNELS":
-                self.calibrated_refs = value
-            if label == "UNCALIBRATED-CHANNELS":
-                self.uncalibrated_refs = value
-            if label == "COEFFICIENTS":
-                self._coefficients = value
-            if label == "PARAMETERS":
-                self.parameters_refs = value
+        #: Coefficients
+        self.coefficients      = []
 
-        self.stripspaces()
-        return self
+        #: Parameters containing numerical and textual information assosiated
+        #: with the calibration process.
+        self.parameters        = []
 
-    @property
-    def method(self):
-        """Method
+        #: Reference to the calibrated channels
+        self.calibrated_refs   = []
 
-        The computational method used to calibrate the Channel object(s)
-        defined in *Calibration.calibrated_channel*.
+        #: Reference to the uncalibrated channels
+        self.uncalibrated_refs = []
 
-        Returns
-        -------
-
-        method : str
-        """
-        return self._method
-
-    @property
-    def calibrated_channel(self):
-        """Calibrated channel(s)
-
-        List of channels that have been calibrated by the method and
-        coefficients described in this calibration object.
-
-        Returns
-        -------
-
-        calibrated_channel : list of dlisio.Channel
-        """
-        return self._calibrated_channel
-
-    @property
-    def uncalibrated_channel(self):
-        """Uncalibrated channel(s)
-
-        List of uncalibrated channels that along with the method and
-        coefficients makes up the calibrated channels. I.e. the channels as
-        they where before calibration.
-
-        Returns
-        -------
-
-        uncalibrated_channel : list of dlisio.Channel
-        """
-        return self._uncalibrated_channel
-
-    @property
-    def coefficients(self):
-        """Coefficients
-
-        List of coefficient objects that contains coefficients, tolerances and
-        references that have been used in the calibration of the channels
-        listen in *Calibration.calibrated_channels*.
-
-        Returns
-        -------
-
-        coefficients : list of dlisio.core.obname
-            each element is a reference to an coefficient object
-        """
-        return self._coefficients
-
-    @property
-    def parameters(self):
-        """Parameters
-
-        List of parameter objects that contains both numerical and textual
-        information assosiated with the calibration process.
-
-        Returns
-        -------
-
-        parameters : list of dlisio.Parameter
-        """
-        return self._parameters
+        #: References to the parameters
+        self.parameters_refs   = []
 
     def link(self, objects, sets):
         channels = sets['CHANNEL']
@@ -158,6 +89,6 @@ class Calibration(BasicObject):
                 msg = 'missing parameter {} referenced from calibration {}'
                 logging.warning(msg.format(ref, self.name))
 
-        self._calibrated_channel = calibs
-        self._uncalibrated_channel = uncalibs
-        self._parameters = params
+        self.calibrated = calibs
+        self.uncalibrated = uncalibs
+        self.parameters = params

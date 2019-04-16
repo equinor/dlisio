@@ -20,36 +20,49 @@ class Channel(BasicObject):
     described in detail in Chapter 5.5.1 - Static and Frame Data, CHANNEL
     objects.
     """
+    attributes = {
+        'LONG-NAME'          : ('long_name'    , True),
+        'REPRESENTATION-CODE': ('reprc'        , True),
+        'UNITS'              : ('units'        , True),
+        'PROPERTIES'         : ('properties'   , False),
+        'DIMENSION'          : ('dimension'    , False),
+        'AXIS'               : ('axis'         , False),
+        'ELEMENT-LIMIT'      : ('element_limit', False),
+        'SOURCE'             : ('source_ref'   , True)
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'CHANNEL')
-        self._long_name     = None
-        self._reprc         = None
-        self._units         = None
-        self._properties    = []
-        self._dimension     = []
-        self._axis          = []
-        self._element_limit = []
-        self._source        = None
-        self._dtype         = None
-        self.source_ref     = None
+        #: Descriptive name of the channel.
+        self.long_name     = None
 
-    @staticmethod
-    def load(obj, name = None):
-        self = Channel(obj, name = name)
-        for label, value in obj.items():
-            if value is None: continue
+        #: Representation code
+        self.reprc         = None
 
-            if label == "LONG-NAME"          : self._long_name     = value[0]
-            if label == "REPRESENTATION-CODE": self._reprc         = value[0]
-            if label == "UNITS"              : self._units         = value[0]
-            if label == "PROPERTIES"         : self._properties    = value
-            if label == "DIMENSION"          : self._dimension     = value
-            if label == "AXIS"               : self._axis          = value
-            if label == "ELEMENT-LIMIT"      : self._element_limit = value
-            if label == "SOURCE"             : self.source_ref     = value[0]
+        #: Physical units of each element in the channel's sample arrays
+        self.units         = None
 
-        self.stripspaces()
-        return self
+        #: Property indicators that summerizes the characteristics of the
+        #: channel and the processing that have produced it.
+        self.properties    = []
+
+        #: Dimensions of the samples
+        self.dimension     = []
+
+        #: Coordinate axes of the samples
+        self.axis          = []
+
+        #: The maximum size of the sample dimensions
+        self.element_limit = []
+
+        #: The source of the channel. Returns the source object, if any
+        self.source        = None
+
+        #: The numpy data type of the sample array
+        self._dtype        = None
+
+        #: The source of the channel. Returns the reference to a source object
+        self.source_ref    = None
 
     @property
     def dtype(self):
@@ -74,155 +87,13 @@ class Channel(BasicObject):
 
         return self._dtype
 
-    @property
-    def long_name(self):
-        """Long name
-
-        Long descriptive name of the channel.
-
-        A long_name can be either:
-        1. A unstructured desciptive string
-        2. An dlis.core.obname referencing a Longname object
-
-        Returns
-        -------
-
-        long_name : str or dlisio.core.obname
-        """
-        return self._long_name
-
-    @property
-    def reprc(self):
-        """Representation code
-
-        reprc specifies the Representation Code of each element of a sample
-        value, i.e. if the values are represented as float, double etc..
-
-        Returns
-        -------
-        reprc : int
-        """
-        return self._reprc
-
-    @property
-    def units(self):
-        """Units
-
-        Physical units of each element in the channel's sample arrays
-
-        Returns
-        -------
-
-        units : str
-        """
-        return self._units
-
-    @property
-    def properties(self):
-        """Properties
-
-        List of property indicators. Property indicators summerizes the
-        characteristics of the channel and the processing that have
-        produced it.
-
-        Notes
-        -----
-
-        Property indicators are described in rp66, Appendix C
-
-        Returns
-        -------
-
-        property: list of str
-        """
-        return self._properties
-
-    @property
-    def dimension(self):
-        """Dimensions
-
-        The array structure of each channel sample. Each element in *dimension*
-        specifies the number of elements along each dimension of the channel
-        sample array's. The dimensionality of the sample arrays is implicitly
-        given by len(dimension).  E.g: if **dimension = [10, 50, 20]** then
-        each channel sample array is a 3-dimensional array of size 10x50x20.
-
-        Notes
-        -----
-
-        The dimension attribute is defined in rp66, Chapter 4.4.3 - DIMENSION
-        Attribute
-
-        Returns
-        -------
-
-        dimension : list of int
-        """
-        return self._dimension
-
-    @property
-    def axis(self):
-        """Axis
-
-        Coordinate axes of the channel's sample arrays
-
-        While *Channel.dimension* spesifies the shape and size of the sample
-        arrays, the axis describes the coordinate axes of the sample arrays.
-        The axis is a list of references to a Axis objects.
-
-        Notes
-        -----
-
-        The axis attribute is defined in rp66, Chapter 4.4.4 - AXIS
-        Attribute
-
-        Returns
-        -------
-
-        axis : list of dlisio.core.obname
-            each element is a reference to an axis object
-        """
-        return self._axis
-
-    @property
-    def element_limit(self):
-        """Element limit
-
-        Maximum size of the channel's sample arrays. I.e. the maxiumum value of
-        the elements and lenght of *Channel.dimension*.
-
-        Notes
-        -----
-
-        Ref rp66
-
-        Returns
-        -------
-
-        element_limit : list of int
-
-        """
-        return self._element_limit
-
-    @property
-    def source(self):
-        """Source
-
-        The source of this channel, e.g. a Tool, Process or Calibration Object.
-
-        Returns
-        -------
-        source
-        """
-        return self._source
-
     def link(self, objects, sets):
         if self.source_ref is None:
             return
 
         ref = self.source_ref.fingerprint
         try:
-            self._source = objects[ref]
+            self.source = objects[ref]
         except KeyError:
             problem = 'channel source referenced, but not found. '
             ids = 'channel = {}, source = {}'.format(self.fingerprint, ref)
