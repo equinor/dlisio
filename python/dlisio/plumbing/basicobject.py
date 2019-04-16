@@ -115,6 +115,20 @@ class BasicObject():
 
     @classmethod
     def load(cls, obj, name = None):
+        """Populate the Python object with values from the native c++ object.
+
+        This is achieved by looping over the Python class' attribute list
+        (which maps the native c++ attribute names to the attribute names in the
+        Python class) and extracting the value(s). Essensially, this is whats
+        going on:
+
+        >>> for label, value in obj.items():
+        ...     if label == 'LONG-NAME': self.long_name = value
+        ...     if label == 'CHANNEL'  : self.channel   = value
+
+        By using a classmethod, this process is generalized for all object
+        types derived from basic_object.
+        """
         self = cls(obj, name = name)
 
         attrs = cls.attributes
