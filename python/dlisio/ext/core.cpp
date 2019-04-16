@@ -10,6 +10,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <limits>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
@@ -237,11 +238,21 @@ py::dict storage_label( py::buffer b ) {
 std::string fingerprint(const std::string& type,
                         const std::string& id,
                         std::int32_t origin,
-                        std::uint8_t copy) {
+                        std::int32_t copy) {
+
+    std::string msg = "Invalid argument, copy out of range";
+    if ( copy > (std::numeric_limits< std::uint8_t >::max)() )
+        throw std::invalid_argument( msg );
+
+    if ( copy < (std::numeric_limits< std::uint8_t >::min)() )
+        throw std::invalid_argument( msg );
+
+    const auto ucopy = std::uint8_t(copy);
+
     dl::objref ref;
     ref.type = dl::ident{ type };
     ref.name.origin = dl::origin{ origin };
-    ref.name.copy = dl::ushort{ copy };
+    ref.name.copy = dl::ushort{ ucopy };
     ref.name.id = dl::ident{ id };
     return ref.fingerprint();
 }

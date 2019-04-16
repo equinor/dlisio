@@ -902,26 +902,27 @@ int dlis_index_records( const char* begin,
     }
 }
 
-int dlis_object_fingerprint_len(std::int32_t type_len,
-                                const char*,
-                                std::int32_t id_len,
-                                const char*,
-                                std::int32_t origin,
-                                std::uint8_t copynum) {
+int dlis_object_fingerprint_size(std::int32_t type_len,
+                                 const char*,
+                                 std::int32_t id_len,
+                                 const char*,
+                                 std::int32_t origin,
+                                 std::uint8_t copynum,
+                                 int* size) {
 
-    if (origin < 0) return -1;
+    if (origin < 0)    return DLIS_INVALID_ARGS;
+    if (type_len <= 0) return DLIS_INVALID_ARGS;
+    if (id_len <= 0)   return DLIS_INVALID_ARGS;
 
     const auto orig_len = std::to_string(origin).length();
     const auto copy_len = std::to_string(copynum).length();
 
-    if (type_len <= 0) return -2;
-    if (id_len <= 0)   return -3;
-    if (origin < 0)  return -4;
 
     // each element, except the last one, add a constant 3 characters currently,
     // so return len*3 this might change in the future, and the contents of
     // type+id might matter, so keep the params around
-    return 11 + type_len + id_len + orig_len + copy_len;
+    *size =  11 + type_len + id_len + orig_len + copy_len;
+    return DLIS_OK;
 }
 
 int dlis_object_fingerprint(std::int32_t type_len,

@@ -180,6 +180,21 @@ def test_objects(DWL206):
     objects = DWL206.objects
     assert len(list(objects)) == 864
 
+def test_fingerprint():
+    reference = "T.FRAME-I.800T-O.2-C.46"
+    key = dlisio.core.fingerprint("FRAME", "800T", 2, 46)
+    assert key == reference
+
+def test_fingerprint_invalid_argument():
+    with pytest.raises(ValueError):
+        _ = dlisio.core.fingerprint("", "800T", 2, 46)
+    with pytest.raises(ValueError):
+        _ = dlisio.core.fingerprint("FRAME", "", 2, 46)
+    with pytest.raises(ValueError):
+        _ = dlisio.core.fingerprint("FRAME", "800T", -1, 46)
+    with pytest.raises(ValueError):
+        _ = dlisio.core.fingerprint("FRAME", "800T", 2, -1)
+
 def test_fileheader(DWL206):
     key = dlisio.core.fingerprint('FILE-HEADER', '5', 2, 0)
     fh = DWL206.objects[key]

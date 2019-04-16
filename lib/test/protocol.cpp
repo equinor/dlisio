@@ -467,18 +467,21 @@ TEST_CASE("fingerprint length matches bytes written") {
     auto origin = 0;
     auto copy = 0;
 
-    auto len = dlis_object_fingerprint_len(
+    int size;
+    auto err = dlis_object_fingerprint_size(
         type.size(),
         type.data(),
         id.size(),
         id.data(),
         origin,
-        copy);
+        copy,
+        &size);
 
-    CHECK(len > 0);
+    CHECK(!err);
+    CHECK(size > 0);
 
     std::vector< char > buffer(1024, 0);
-    auto err = dlis_object_fingerprint(
+    err = dlis_object_fingerprint(
         type.size(),
         type.data(),
         id.size(),
@@ -490,7 +493,47 @@ TEST_CASE("fingerprint length matches bytes written") {
     CHECK(!err);
 
     auto fingerprint = std::string(buffer.data());
-    CHECK(fingerprint.size() == len);
+    CHECK(fingerprint.size() == size);
+}
+
+TEST_CASE("fingerprint fails on empty string") {
+    SECTION("type is empty") {
+        std::string type = "";
+        std::string id = "IDENT";
+        auto origin = 0;
+        auto copy = 0;
+
+        std::vector< char > buffer(1024, 0);
+        auto err = dlis_object_fingerprint(
+            type.size(),
+            type.data(),
+            id.size(),
+            id.data(),
+            origin,
+            copy,
+            buffer.data());
+
+        CHECK( err == DLIS_INVALID_ARGS );
+    };
+
+    SECTION("id is empty") {
+        std::string type = "CHANNEL";
+        std::string id = "";
+        auto origin = 0;
+        auto copy = 0;
+
+        std::vector< char > buffer(1024, 0);
+        auto err = dlis_object_fingerprint(
+            type.size(),
+            type.data(),
+            id.size(),
+            id.data(),
+            origin,
+            copy,
+            buffer.data());
+
+        CHECK( err == DLIS_INVALID_ARGS );
+    };
 }
 
 namespace {

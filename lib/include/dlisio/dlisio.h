@@ -494,12 +494,13 @@ int dlis_index_records( const char* begin,
  * The len function returns the length of the fingerprint in bytes on success,
  * negative otherwise.
  */
-int dlis_object_fingerprint_len(int32_t type_len,
-                                const char* type,
-                                int32_t id_len,
-                                const char* id,
-                                int32_t origin,
-                                uint8_t copynum);
+int dlis_object_fingerprint_size(int32_t type_len,
+                                 const char* type,
+                                 int32_t id_len,
+                                 const char* id,
+                                 int32_t origin,
+                                 uint8_t copynum,
+                                 int* size);
 
 int dlis_object_fingerprint(int32_t type_len,
                             const char* type,
