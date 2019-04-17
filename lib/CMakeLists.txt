@@ -52,6 +52,13 @@ install(TARGETS dlisio-extension
 )
 install(DIRECTORY extension/ DESTINATION include)
 
+if (BUILD_SHARED_LIBS)
+    target_compile_definitions(dlisio
+        PRIVATE   DLISIO_EXPORT
+        INTERFACE DLISIO_SHARED
+    )
+endif ()
+
 if(NOT BUILD_TESTING)
     return()
 endif()
