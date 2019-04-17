@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,6 +16,7 @@ extern "C" {
  * Assure beforehand that xs contains at least DLIS_SUL_SIZE bytes
  */
 #define DLIS_SUL_SIZE 80
+DLISIO_API
 int dlis_sul( const char* xs,
               int* seqnum,
               int* major,
@@ -47,6 +50,7 @@ int dlis_sul( const char* xs,
  * check what is going on. Sometimes this can be recovered by searching past
  * this, looking for visible record envelopes.
  */
+DLISIO_API
 int dlis_find_sul(const char* from,
                   long long search_limit,
                   long long* offset);
@@ -56,17 +60,20 @@ int dlis_find_sul(const char* from,
  *
  * Behaves similarly to dlis_find_sul, but for the visible envelope.
  */
+DLISIO_API
 int dlis_find_vrl(const char* from,
                   long long search_limit,
                   long long* offset);
 
 #define DLIS_VRL_SIZE 4
+DLISIO_API
 int dlis_vrl( const char* xs,
               int* len,
               int* version );
 
 /* logical-record-segment-header */
 #define DLIS_LRSH_SIZE 4
+DLISIO_API
 int dlis_lrsh( const char* xs,
                int* length,
                uint8_t* attrs,
@@ -79,6 +86,7 @@ int dlis_lrsh( const char* xs,
  * useful when dlopen'd etc., or as a quick way of forwarding flags to a host
  * library
  */
+DLISIO_API
 int dlis_segment_attributes( uint8_t,
                              int* explicit_formatting,
                              int* has_predecessor,
@@ -94,6 +102,7 @@ int dlis_segment_attributes( uint8_t,
  * Returns the length *of the encryption packet*, so if there is none (it is
  * optional), len is set to zero.
  */
+DLISIO_API
 int dlis_encryption_packet_info( const char*,
                                  int* len,
                                  int* companycode );
@@ -137,17 +146,21 @@ int dlis_encryption_packet_info( const char*,
  */
 
 #define DLIS_DESCRIPTOR_SIZE 1
+DLISIO_API
 int dlis_component( uint8_t descriptor, int* role );
 
+DLISIO_API
 int dlis_component_set( uint8_t descriptor,
                         int role,
                         int* type,
                         int* name );
 
+DLISIO_API
 int dlis_component_object( uint8_t descriptor,
                            int role,
                            int* obname );
 
+DLISIO_API
 int dlis_component_attrib( uint8_t descriptor,
                            int role,
                            int* label,
@@ -156,6 +169,7 @@ int dlis_component_attrib( uint8_t descriptor,
                            int* units,
                            int* value );
 
+DLISIO_API
 const char* dlis_component_str( int );
 
 /*
@@ -204,6 +218,7 @@ const char* dlis_component_str( int );
  *           return report_other_error();
  * }
  */
+DLISIO_API
 int dlis_trim_record_segment(uint8_t attrs,
                              const char* begin,
                              const char* end,
@@ -274,6 +289,7 @@ int dlis_trim_record_segment(uint8_t attrs,
  * memcpy(C2,  bytes + 2,  sizeof(C2));
  * memcpy(&c3, bytes + 10, sizeof(C3));
  */
+DLISIO_API
 int dlis_packf( const char* fmt, const void* src, void* dst );
 
 /*
@@ -309,7 +325,11 @@ int dlis_packf( const char* fmt, const void* src, void* dst );
  * For both functions, both src and dst can be NULL, in which case no data will
  * be written.
  */
+
+DLISIO_API
 int dlis_pack_varsize(const char* fmt, int* src, int* dst);
+
+DLISIO_API
 int dlis_pack_size(const char* fmt, int* src, int* dst);
 
 /*
@@ -465,6 +485,7 @@ enum dlis_segment_attribute {
  *
  * [1] not segments
  */
+DLISIO_API
 int dlis_index_records( const char* begin,
                         const char* end,
                         size_t allocsize,
@@ -494,6 +515,7 @@ int dlis_index_records( const char* begin,
  * The len function returns the length of the fingerprint in bytes on success,
  * negative otherwise.
  */
+DLISIO_API
 int dlis_object_fingerprint_size(int32_t type_len,
                                  const char* type,
                                  int32_t id_len,
@@ -502,6 +524,7 @@ int dlis_object_fingerprint_size(int32_t type_len,
                                  uint8_t copynum,
                                  int* size);
 
+DLISIO_API
 int dlis_object_fingerprint(int32_t type_len,
                             const char* type,
                             int32_t id_len,

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,61 +19,66 @@ extern "C" {
  * enough buffer. Strings will NOT be null terminated
  */
 
-const char* dlis_sshort( const char*, int8_t* );
-const char* dlis_snorm(  const char*, int16_t* );
-const char* dlis_slong(  const char*, int32_t* );
+DLISIO_API const char* dlis_sshort(const char*, int8_t*);
+DLISIO_API const char* dlis_snorm( const char*, int16_t*);
+DLISIO_API const char* dlis_slong( const char*, int32_t*);
 
-const char* dlis_ushort( const char*, uint8_t* );
-const char* dlis_unorm(  const char*, uint16_t* );
-const char* dlis_ulong(  const char*, uint32_t* );
+DLISIO_API const char* dlis_ushort(const char*, uint8_t*);
+DLISIO_API const char* dlis_unorm( const char*, uint16_t*);
+DLISIO_API const char* dlis_ulong( const char*, uint32_t*);
 
-const char* dlis_fshort( const char*, float* );
-const char* dlis_fsingl( const char*, float* );
-const char* dlis_fdoubl( const char*, double* );
+DLISIO_API const char* dlis_fshort(const char*, float*);
+DLISIO_API const char* dlis_fsingl(const char*, float*);
+DLISIO_API const char* dlis_fdoubl(const char*, double*);
 
 /* IBM and VAX floats */
-const char* dlis_isingl( const char*, float* );
-const char* dlis_vsingl( const char*, float* );
+DLISIO_API const char* dlis_isingl(const char*, float*);
+DLISIO_API const char* dlis_vsingl(const char*, float*);
 
 /* complex or validated floats */
-const char* dlis_fsing1( const char*, float* V, float* A );
-const char* dlis_fsing2( const char*, float* V, float* A, float* B );
-const char* dlis_csingl( const char*, float* R, float* I );
+DLISIO_API const char* dlis_fsing1(const char*, float* V, float* A);
+DLISIO_API const char* dlis_fsing2(const char*, float* V, float* A, float* B);
+DLISIO_API const char* dlis_csingl(const char*, float* R, float* I);
 
-const char* dlis_fdoub1( const char*, double* V, double* A );
-const char* dlis_fdoub2( const char*, double* V, double* A, double* B );
-const char* dlis_cdoubl( const char*, double* R, double* I );
+DLISIO_API const char* dlis_fdoub1(const char*, double* V, double* A);
+DLISIO_API const char* dlis_fdoub2(const char*, double* V, double* A, double* B);
+DLISIO_API const char* dlis_cdoubl(const char*, double* R, double* I);
 
-const char* dlis_uvari( const char*, int32_t* out );
+DLISIO_API const char* dlis_uvari(const char*, int32_t* out);
 
-const char* dlis_ident( const char*, int32_t* len, char* out );
-const char* dlis_ascii( const char*, int32_t* len, char* out );
+DLISIO_API const char* dlis_ident(const char*, int32_t* len, char* out);
+DLISIO_API const char* dlis_ascii(const char*, int32_t* len, char* out);
 
 #define DLIS_TZ_LST 0 // local standard
 #define DLIS_TZ_DST 1 // local daylight savings
 #define DLIS_TZ_GMT 2 // greenwich mean time
 
 #define DLIS_YEAR_ZERO 1900
+DLISIO_API
 int dlis_year( int );
 
-const char* dlis_dtime( const char*, int* Y,
-                                     int* TZ,
-                                     int* M,
-                                     int* D,
-                                     int* H,
-                                     int* MN,
-                                     int* S,
-                                     int* MS );
+DLISIO_API
+const char* dlis_dtime(const char*, int* Y,
+                                    int* TZ,
+                                    int* M,
+                                    int* D,
+                                    int* H,
+                                    int* MN,
+                                    int* S,
+                                    int* MS);
 
+DLISIO_API
 const char* dlis_origin( const char*, int32_t* out );
 
 /* obname = { origin, ushort, ident } */
+DLISIO_API
 const char* dlis_obname( const char*, int32_t* origin,
                                       uint8_t* copy_number,
                                       int32_t* idlen,
                                       char* identifier );
 
 /* objref = { ident, obname } */
+DLISIO_API
 const char* dlis_objref( const char*, int32_t* ident_len,
                                       char* ident,
                                       int32_t* origin,
@@ -80,6 +87,7 @@ const char* dlis_objref( const char*, int32_t* ident_len,
                                       char* identifier );
 
 /* attref = { ident, obname, ident } */
+DLISIO_API
 const char* dlis_attref( const char*, int32_t* ident1_len,
                                       char* ident1,
                                       int32_t* origin,
@@ -90,8 +98,8 @@ const char* dlis_attref( const char*, int32_t* ident1_len,
                                       char* ident2 );
 
 /* status is a boolean */
-const char* dlis_status( const char*, uint8_t* );
-const char* dlis_units( const char*, int32_t*, char* );
+DLISIO_API const char* dlis_status(const char*, uint8_t*);
+DLISIO_API const char* dlis_units(const char*, int32_t*, char*);
 
 /*
  * A family of the reverse operation, i.e. transform a native data type to an
@@ -102,39 +110,41 @@ const char* dlis_units( const char*, int32_t*, char* );
  * Unlike the input functions, they work on fixed-size unsigned numbers as
  * buffers, to make return-values more ergonomic
  */
-void* dlis_sshorto( void*, int8_t );
-void* dlis_snormo(  void*, int16_t );
-void* dlis_slongo(  void*, int32_t );
+DLISIO_API void* dlis_sshorto(void*, int8_t);
+DLISIO_API void* dlis_snormo( void*, int16_t);
+DLISIO_API void* dlis_slongo( void*, int32_t);
 
-void* dlis_ushorto( void*, uint8_t );
-void* dlis_unormo(  void*, uint16_t );
-void* dlis_ulongo(  void*, uint32_t );
+DLISIO_API void* dlis_ushorto(void*, uint8_t);
+DLISIO_API void* dlis_unormo( void*, uint16_t);
+DLISIO_API void* dlis_ulongo( void*, uint32_t);
 
-void* dlis_fsinglo( void*, float );
-void* dlis_fdoublo( void*, double );
+DLISIO_API void* dlis_fsinglo(void*, float);
+DLISIO_API void* dlis_fdoublo(void*, double);
 
 /* IBM and VAX floats */
-void* dlis_isinglo( void*, float );
-void* dlis_vsinglo( void*, float );
+DLISIO_API void* dlis_isinglo(void*, float);
+DLISIO_API void* dlis_vsinglo(void*, float);
 
 /* complex or validated floats */
-void* dlis_fsing1o( void*, float, float );
-void* dlis_fsing2o( void*, float, float, float );
-void* dlis_csinglo( void*, float, float );
+DLISIO_API void* dlis_fsing1o(void*, float, float);
+DLISIO_API void* dlis_fsing2o(void*, float, float, float);
+DLISIO_API void* dlis_csinglo(void*, float, float);
 
-void* dlis_fdoub1o( void*, double, double );
-void* dlis_fdoub2o( void*, double, double, double );
-void* dlis_cdoublo( void*, double, double );
+DLISIO_API void* dlis_fdoub1o(void*, double, double);
+DLISIO_API void* dlis_fdoub2o(void*, double, double, double);
+DLISIO_API void* dlis_cdoublo(void*, double, double);
 
-void* dlis_uvario( void*, int32_t, int width );
+DLISIO_API void* dlis_uvario( void*, int32_t, int width );
 
-void* dlis_idento( void*, uint8_t len, const char* in );
-void* dlis_asciio( void*, int32_t len, const char* in, std::uint8_t l );
+DLISIO_API void* dlis_idento(void*, uint8_t len, const char* in);
+DLISIO_API void* dlis_asciio(void*, int32_t len, const char* in, std::uint8_t);
 
-void* dlis_origino( void*, int32_t );
-void* dlis_statuso( void*, uint8_t );
+DLISIO_API void* dlis_origino(void*, int32_t);
+DLISIO_API void* dlis_statuso(void*, uint8_t);
 
+DLISIO_API
 int dlis_yearo( int );
+DLISIO_API
 void* dlis_dtimeo( void*, int Y,
                           int TZ,
                           int M,
@@ -145,12 +155,14 @@ void* dlis_dtimeo( void*, int Y,
                           int MS );
 
 /* obname = { origin, ushort, ident } */
+DLISIO_API
 void* dlis_obnameo( void*, int32_t origin,
                            uint8_t copy_number,
                            uint8_t idlen,
                            const char* identifier );
 
 /* objref = { ident, obname } */
+DLISIO_API
 void* dlis_objrefo( void*, uint8_t ident_len,
                            const char* ident,
                            int32_t origin,
@@ -159,6 +171,7 @@ void* dlis_objrefo( void*, uint8_t ident_len,
                            const char* identifier );
 
 /* attref = { ident, obname, ident } */
+DLISIO_API
 void* dlis_attrefo( void*, uint8_t ident1_len,
                            const char* ident1,
                            int32_t origin,
@@ -168,6 +181,7 @@ void* dlis_attrefo( void*, uint8_t ident1_len,
                            uint8_t ident2_len,
                            const char* ident2 );
 
+DLISIO_API
 void* dlis_unitso( void*, uint8_t len, const char* in );
 
 /*
@@ -176,7 +190,7 @@ void* dlis_unitso( void*, uint8_t len, const char* in );
  *
  * Returns a negative value passed an invalid type code.
  */
-int dlis_sizeof_type( int );
+DLISIO_API int dlis_sizeof_type(int);
 
 #define DLIS_FSHORT 1  // Low precision floating point
 #define DLIS_FSINGL 2  // IEEE single precision floating point
