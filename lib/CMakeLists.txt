@@ -1,3 +1,5 @@
+set(DLISIO_LIB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
+
 add_library(dlisio src/dlisio.cpp
                    src/types.cpp
 )
