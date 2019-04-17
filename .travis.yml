@@ -26,7 +26,6 @@ addons:
         packages:
             - cmake
             - cmake-data
-            - libboost-dev
 
 matrix:
     fast_finish: true

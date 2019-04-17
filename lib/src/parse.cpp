@@ -108,7 +108,7 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
             const auto bits = std::bitset< 8 >(role).to_string();
             const auto was  = dlis_component_str(role);
             const auto msg  = "error parsing attribute descriptor: "
-                              "expected ATTRIB, INVATR, or OBJECT, was {} ({})"
+                              "expected ATTRIB, INVATR, ABSATR or OBJECT, was {} ({})"
                             ;
             throw std::invalid_argument(fmt::format(msg, was, bits));
         }
@@ -314,7 +314,6 @@ const char* parse_ident( const char* xs, T& out ) noexcept (false) {
     char str[ 256 ];
     std::int32_t len;
 
-    dlis_ident( xs, &len, nullptr );
     xs = dlis_ident( xs, &len, str );
 
     T tmp{ std::string{ str, str + len } };
@@ -418,7 +417,7 @@ const char* cast( const char* xs, dl::attref& attref ) noexcept (false) {
                         dl::ushort{ copy_number },
                         dl::ident{ std::string{ obj, obj + obname_len } }
                     },
-                    dl::ident{ std::string{ id1, id1 + ident1_len } }
+                    dl::ident{ std::string{ id2, id2 + ident2_len } }
     };
 
     swap( attref, tmp );
@@ -747,13 +746,13 @@ struct shrink {
     std::size_t size;
     explicit shrink( std::size_t sz ) : size( sz ) {}
 
-    template < typename Vec >
-    std::size_t operator () ( const Vec& vec ) const {
-        return vec.size();
+    template < typename T >
+    void operator () ( std::vector< T >& vec ) const {
+        vec.resize(this->size);
     }
 
-    std::size_t operator () ( const mpark::monostate& ) const {
-        throw std::invalid_argument( "patch: len() called on monostate" );
+    void operator () ( const mpark::monostate& ) const  {
+        throw std::invalid_argument( "patch: shrink() called on monostate" );
     }
 };
 
@@ -772,7 +771,7 @@ noexcept (false)
         if (size == count) return;
 
         /* smaller, shrink and all is fine */
-        if (size < count) {
+        if (size > count) {
             mpark::visit( shrink( count ), value );
             return;
         }
@@ -782,8 +781,8 @@ noexcept (false)
          * exception and consider what to do when a file actually uses this
          * behaviour
          */
-        const auto msg = "object attribute without no value value, but count "
-                         "(which is {}) >= size (which is {})"
+        const auto msg = "object attribute without no explicit value, but "
+                         "count (which is {}) > size (which is {})"
         ;
         throw dl::not_implemented(fmt::format(msg, count, size));
     }
@@ -873,6 +872,19 @@ object_vector parse_objects( const object_template& tmpl,
                 continue;
             }
 
+            if (flags.invariant) {
+                /*
+                 * 3.2.2.2 Component Usage
+                 *  Invariant Attribute Components, which may only appear in
+                 *  the Template [...]
+                 *
+                 * Assume this is a mistake, assume it was a regular
+                 * non-invariant attribute
+                 */
+                user_warning("ATTRIB:invariant in attribute, "
+                             "but should only be in template");
+            }
+
             if (flags.label) {
                 user_warning( "ATTRIB:label set, but must be null");
             }
@@ -893,16 +905,30 @@ object_vector parse_objects( const object_template& tmpl,
              *
              * This is functionally equivalent to the value being marked absent
              */
-            if (count == 0)
+            if (count == 0) {
                 attr.value = mpark::monostate{};
+            } else if (!flags.value) {
+                /*
+                 * Count is non-zero, but there's no value for this attribute.
+                 * Expand what's already defaulted, and if it is monostate, set
+                 * the default of that value
+                 *
+                 * For non-zero count we should check default values only when
+                 * representation code is not changed.
+                 *
+                 * TODO: in the future it's possible to allow promotion between
+                 * certain codes (ident -> ascii), but is no need for now
+                 */
 
-            /*
-             * Count is non-zero, but there's no value for this attribute.
-             * Expand what's already defaulted, and if it is monostate, set the
-             * default of that value
-             */
-            if (!flags.value)
+                if (flags.reprc) {
+                    const auto msg = "count ({}) and representation code "
+                            "({}) changed, but value is not explicitly set";
+                    const auto code = static_cast< int >(attr.reprc);
+                    throw std::runtime_error(fmt::format(msg, count, code));
+                }
+
                 patch_missing_value( attr.value, count, attr.reprc );
+            }
 
             current.set(attr);
         }

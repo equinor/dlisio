@@ -86,6 +86,42 @@ handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy
                                        src.MS );
 }
 
+template <>
+handle dlis_caster< dl::fsing1 >::cast( const dl::fsing1& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::fsing2 >::cast( const dl::fsing2& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::fdoub1 >::cast( const dl::fdoub1& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::fdoub2 >::cast( const dl::fdoub2& src, return_value_policy, handle )
+{
+    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+}
+
+template <>
+handle dlis_caster< dl::csingl >::cast( const dl::csingl& src, return_value_policy, handle )
+{
+    return PyComplex_FromDoubles(src.real(), src.imag());
+}
+
+template <>
+handle dlis_caster< dl::cdoubl >::cast( const dl::cdoubl& src, return_value_policy, handle )
+{
+    return PyComplex_FromDoubles(src.real(), src.imag());
+}
+
 namespace {
 
 handle maybe_decode(const std::string& src) noexcept (false) {
@@ -165,6 +201,8 @@ template <> struct type_caster< dl::fsing1 > : dlis_caster< dl::fsing1 > {};
 template <> struct type_caster< dl::fsing2 > : dlis_caster< dl::fsing2 > {};
 template <> struct type_caster< dl::fdoub1 > : dlis_caster< dl::fdoub1 > {};
 template <> struct type_caster< dl::fdoub2 > : dlis_caster< dl::fdoub2 > {};
+template <> struct type_caster< dl::csingl > : dlis_caster< dl::csingl > {};
+template <> struct type_caster< dl::cdoubl > : dlis_caster< dl::cdoubl > {};
 template <> struct type_caster< dl::uvari  > : dlis_caster< dl::uvari  > {};
 template <> struct type_caster< dl::ident  > : dlis_caster< dl::ident  > {};
 template <> struct type_caster< dl::ascii  > : dlis_caster< dl::ascii  > {};
@@ -380,6 +418,9 @@ PYBIND11_MODULE(core, m) {
      * TODO: support constructor with kwargs
      * TODO: support comparison with tuple
      * TODO: fmtlib for strings
+     * TODO: remove obname/objref etc altogether. The obnoxious __eq__ is a
+     *       symptom of bad design
+     *
      */
     py::class_< dl::obname >( m, "obname" )
         .def_readonly( "origin",     &dl::obname::origin )
@@ -395,6 +436,16 @@ PYBIND11_MODULE(core, m) {
                              dl::decay(o.copy) )
                     ;
         })
+        .def( "__eq__", [](const dl::obname& lhs,
+                           const std::tuple< int, std::uint8_t, std::string >& rhs) {
+            auto r = dl::obname {
+                dl::origin{ std::get< 0 >(rhs) },
+                dl::ushort{ std::get< 1 >(rhs) },
+                dl::ident{  std::get< 2 >(rhs) },
+            };
+
+            return r == lhs;
+        })
     ;
 
     py::class_< dl::objref >( m, "objref" )
@@ -404,6 +455,23 @@ PYBIND11_MODULE(core, m) {
         .def( "__repr__", []( const dl::objref& o ) {
             return "dlisio.core.objref(fingerprint={})"_s
                     .format(o.fingerprint());
+        })
+        .def( "__eq__", [](const dl::objref& lhs,
+                           const std::tuple<
+                                std::string,
+                                std::tuple< int, std::uint8_t, std::string >
+                            >& rhs)
+        {
+            auto r = dl::objref {
+                dl::ident { std::get< 0 >(rhs) },
+                dl::obname {
+                    dl::origin{ std::get< 0 >(std::get< 1 >(rhs)) },
+                    dl::ushort{ std::get< 1 >(std::get< 1 >(rhs)) },
+                    dl::ident{  std::get< 2 >(std::get< 1 >(rhs)) },
+                },
+            };
+
+            return r == lhs;
         })
     ;
 
@@ -420,6 +488,25 @@ PYBIND11_MODULE(core, m) {
                              dl::decay(o.name.copy),
                              dl::decay(o.type) )
                     ;
+        })
+        .def( "__eq__", [](const dl::attref& lhs,
+                           const std::tuple<
+                                std::string,
+                                std::tuple< int, std::uint8_t, std::string >,
+                                std::string
+                            >& rhs)
+        {
+            auto r = dl::attref {
+                dl::ident { std::get< 0 >(rhs) },
+                dl::obname {
+                    dl::origin{ std::get< 0 >(std::get< 1 >(rhs)) },
+                    dl::ushort{ std::get< 1 >(std::get< 1 >(rhs)) },
+                    dl::ident{  std::get< 2 >(std::get< 1 >(rhs)) },
+                },
+                dl::ident { std::get< 2 >(rhs) },
+            };
+
+            return r == lhs;
         })
     ;
 
