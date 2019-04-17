@@ -129,7 +129,7 @@ void* dlis_cdoublo( void*, double, double );
 void* dlis_uvario( void*, int32_t, int width );
 
 void* dlis_idento( void*, uint8_t len, const char* in );
-void* dlis_asciio( void*, int32_t len, const char* in, std::uint8_t l = 1 );
+void* dlis_asciio( void*, int32_t len, const char* in, std::uint8_t l );
 
 void* dlis_origino( void*, int32_t );
 void* dlis_statuso( void*, uint8_t );

@@ -1256,7 +1256,7 @@ TEST_CASE("ascii (var-length string)", "[type]") {
             }};
 
             std::array< char, 7 > x;
-            const void* end = dlis_asciio( &x, length, in.c_str() );
+            const void* end = dlis_asciio( &x, length, in.c_str(), 1 );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
             CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
         }
