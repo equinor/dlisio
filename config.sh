@@ -10,16 +10,13 @@ function pre_build {
 
     python -m pip install cmake pybind11
 
-    curl -sL https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz | tar xz
-
     mkdir build-centos5
     pushd build-centos5
 
     cmake --version
     cmake .. -DBUILD_PYTHON=OFF \
              -DCMAKE_BUILD_TYPE=Release \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBOOST_ROOT=boost_1_66_0
+             -DBUILD_SHARED_LIBS=ON
 
     if [ -n "$IS_OSX" ]; then
         sudo make install;
