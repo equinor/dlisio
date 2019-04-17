@@ -27,18 +27,20 @@ matrix:
 install:
     - IF DEFINED PYTHON (IF "%platform%" == "x64" SET PYTHON=%PYTHON%-x64)
     - IF DEFINED PYTHON SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
-    - IF DEFINED PYTHON pip install numpy
-                                    pytest
-                                    pytest-runner
-                                    setuptools
-                                    setuptools_scm
-                                    pybind11
-                                    hypothesis
-                                    twine
-                                    wheel
+    - IF DEFINED PYTHON pip install --upgrade
+        numpy
+        pytest
+        setuptools
+        setuptools_scm
+        pybind11
+        hypothesis
+        twine
+        wheel
+        git+https://github.com/jokva/scikit-build
 
 before_build:
-    - IF "%platform%" == "x64" set W64="-GVisual Studio 14 2015 Win64"
+    - set generator="Visual Studio 14 2015"
+    - IF "%platform%" == "x64" set generator="Visual Studio 14 2015 Win64"
     - git submodule update --init --recursive
     - git fetch --tags
 
@@ -47,16 +49,14 @@ build_script:
           mkdir build
           pushd build
     - cmake %APPVEYOR_BUILD_FOLDER%
-            %W64%
+            -G %generator%
             -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc"
-    - cmake --build .
-            --config %configuration%
-    - ctest --build-config %configuration%
-            --output-on-failure
+    - cmake --build .  --config %configuration%
+    - ctest --build-config %configuration% --output-on-failure
     - ps: popd
     - ps: pushd python
     - git describe
-    - IF DEFINED PYTHON python setup.py bdist_wheel
+    - IF DEFINED PYTHON python setup.py bdist_wheel -G %generator%
     - ps: popd
 
 before_deploy:

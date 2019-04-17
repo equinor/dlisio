@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
-
+import skbuild
+import setuptools
 
 class get_pybind_include(object):
     def __init__(self, user=False):
@@ -14,32 +13,9 @@ class get_pybind_include(object):
         import pybind11
         return pybind11.get_include(self.user)
 
-
-class BuildExt(build_ext):
-    """
-    A custom build extension for adding compiler-specific, taken from
-    https://github.com/pybind/python_example/blob/master/setup.py
-    """
-    c_opts = {
-        'msvc': ['/EHsc'],
-        'unix': ['-std=c++11'],
-    }
-
-    def build_extensions(self):
-        ct = self.compiler.compiler_type
-        opts = self.c_opts.get(ct, [])
-
-        distver = self.distribution.get_version()
-        if ct == 'unix':
-            opts.append('-DVERSION_INFO="{}"'.format(distver))
-            opts.append('-fvisibility=hidden')
-        elif ct == 'msvc':
-            opts.append('/DVERSION_INFO=\\"{}\\"'.format(distver))
-
-        for ext in self.extensions:
-            ext.extra_compile_args = opts
-        build_ext.build_extensions(self)
-
+def src(x):
+    root = os.path.dirname( __file__ )
+    return os.path.abspath(os.path.join(root, x))
 
 def getversion():
     pkgversion = { 'version': '0.0.0' }
@@ -48,8 +24,10 @@ def getversion():
     if not os.path.exists(versionfile):
         return {
             'use_scm_version': {
-                'relative_to' : os.path.dirname(os.path.abspath(__file__)),
-                'write_to'    : versionfile
+                # look for git in ../
+                'relative_to' : src(''),
+                # write to ./python
+                'write_to'    : os.path.join(src(''), versionfile),
             }
         }
 
@@ -64,37 +42,39 @@ def getversion():
 
     return pkgversion
 
+pybind_includes = [
+    str(get_pybind_include()),
+    str(get_pybind_include(user = True))
+]
 
-setup(
+skbuild.setup(
     name = 'dlisio',
     description = 'DLIS v1',
     long_description = 'DLIS v1',
     url = 'https://github.com/equinor/dlisio',
     packages = ['dlisio', 'dlisio.objects'],
     license = 'LGPL-3.0',
-    ext_modules = [
-        Extension('dlisio.core',
-            sources = [
-                'dlisio/ext/core.cpp',
-            ],
-            include_dirs = ['../lib/include',
-                            '../lib/extension',
-                            '../external/mpark',
-                            '../external/mio',
-                            get_pybind_include(),
-                            get_pybind_include(user=True),
-            ],
-            libraries = ['dlisio', 'dlisio-extension'],
-        )
-    ],
     platforms = 'any',
     install_requires = ['numpy'],
     setup_requires = ['setuptools >= 28',
-                      'pytest-runner',
                       'pybind11 >= 2.2',
                       'setuptools_scm',
+                      'pytest-runner',
     ],
     tests_require = ['pytest'],
-    cmdclass = { 'build_ext': BuildExt },
+    # we're building with the pybind11 fetched from pip. Since we don't rely on
+    # a cmake-installed pybind there's also no find_package(pybind11) -
+    # instead, the get include dirs from the package and give directly from
+    # here
+    cmake_args = [
+        '-DPYBIND11_INCLUDE_DIRS=' + ';'.join(pybind_includes),
+        # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
+        # everything not OS X. We depend on C++11, which makes our minimum
+        # supported OS X release 10.9
+        '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9',
+    ],
+    # skbuild's test imples develop, which is pretty obnoxious instead, use a
+    # manually integrated pytest.
+    cmdclass = { 'test': setuptools.command.test.test },
     **getversion()
 )

@@ -70,15 +70,17 @@ before_install:
     - before_install
 
 install:
-    - pip install bandit
-                  numpy
-                  setuptools
-                  setuptools_scm
-                  pytest
-                  pytest-runner
-                  pybind11
-                  hypothesis
-                  sphinx
+    - pip install --upgrade
+        bandit
+        numpy
+        setuptools
+        setuptools_scm
+        pytest
+        pytest-runner
+        pybind11
+        hypothesis
+        sphinx
+        scikit-build
     - bandit -c bandit.yml -r python/
 
 before_script:
@@ -92,19 +94,15 @@ before_script:
                   ..
     - popd
 
-# distutils/setuptools on macos ignores the --rpath argument, so set
-# DYLD_LIBRARY_PATH so that the freshly-built image is picked up on for the
-# tests.
-#
-# the build is configured with CMAKE_INSTALL_NAME_DIR so that in the wheel
-# build on OS X, the delocate tool can figure out what dylib to include.
 script:
     - pushd build
-    - export DYLD_LIBRARY_PATH=$PWD/lib
     - make
     - ctest --output-on-failure
     - sudo make install
     - popd
+    # install works, so remove the _skbuild because it having root permissions
+    # from make install breaks build_wheel
+    - sudo rm -rf python/_skbuild
     - build_wheel python $PLAT
     - install_run $PLAT
     - mv wheelhouse python/dist
