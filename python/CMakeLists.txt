@@ -1,3 +1,13 @@
+if (SKBUILD)
+    # invoked as a part of scikit-build, so this is just a proxy for the python
+    # extension cmake. this works around the fundamental limitation in cmake
+    # that it looks only for directories with a CMakeLists.txt in it, not for a
+    # named file
+    include(setup-CMakeLists.txt)
+    return ()
+endif ()
+
+cmake_minimum_required(VERSION 3.5.0)
 project(dlisio-python)
 
 if(NOT BUILD_PYTHON)
@@ -9,22 +19,21 @@ find_package(PythonInterp REQUIRED)
 if(NOT PYTHON_EXECUTABLE)
     message(WARNING "Could not find python - skipping python bindings")
     message(WARNING "Select specific python distribution with "
-                    "-DPYTHON_EXECUTABLE=bin/python"
-    )
+                    "-DPYTHON_EXECUTABLE=bin/python")
     return()
 endif()
 
 set(python ${PYTHON_EXECUTABLE})
 set(setup.py ${CMAKE_CURRENT_SOURCE_DIR}/setup.py)
 
-if (NOT WIN32)
-    # setuptools on microsoft compilers doesn't support the --library-dir or
-    # --build-dir flag and crashes, so only pass it on non-microsoft platforms
-    set(build_ext_args --library-dirs ${CMAKE_CURRENT_SOURCE_DIR}
-                       --rpath ${CMAKE_CURRENT_SOURCE_DIR}
+if (CMAKE_BUILD_TYPE)
+    # use the cmake_build_type of the source project, unless it has been
+    # specifically overriden
+    set(DLISIO_PYTHON_BUILD_TYPE
+        --build-type=${CMAKE_BUILD_TYPE}
+        CACHE STRING "override CMAKE_BUILD_TYPE in python extension"
     )
-endif()
-
+endif ()
 
 add_custom_target(
     dlisio-python ALL
@@ -34,41 +43,48 @@ add_custom_target(
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 
-    # setuptools on windows breaks spectacularly when the library isn't
-    # available in the same directory, and build_ext --library-dirs is not
-    # support on msvc is not supported, so we must copy out the libsegyio core
-    # object and put it here
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dlisio>
-                                     $<TARGET_FILE_NAME:dlisio>
-
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:dlisio>
-                                     $<TARGET_LINKER_FILE_NAME:dlisio>
-
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dlisio-extension>
-                                     $<TARGET_FILE_NAME:dlisio-extension>
-
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:dlisio-extension>
-                                     $<TARGET_LINKER_FILE_NAME:dlisio-extension>
-
-    COMMAND ${python} ${setup.py} build_ext ${build_ext_args} build
+    COMMAND ${python} ${setup.py}
+        # build the extension inplace (really, once its built, copy it to the
+        # source tree) so that post-build, the directory can be used to run
+        # tests against
+        build_ext --inplace
+        build # setup.py build args
+            --cmake-executable ${CMAKE_COMMAND}
+            --generator ${CMAKE_GENERATOR}
+            ${DLISIO_PYTHON_BUILD_TYPE}
+        -- # cmake to the extension
+            -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
+            # "install" to the python/dlisio dir with rpath, so there's no need
+            # to fiddle with environment in ctest to load the core library from
+            # the build tree
+            -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
+            -DCMAKE_INSTALL_RPATH=$<TARGET_FILE_DIR:dlisio>
+            -DCMAKE_INSTALL_NAME_DIR=$<TARGET_FILE_DIR:dlisio>
 )
 
 add_dependencies(dlisio-python dlisio dlisio-extension)
 
 install(CODE "
-if (DEFINED ENV{DESTDIR})
-    get_filename_component(abs-destdir \"\$ENV{DESTDIR}\" ABSOLUTE)
-    set(root_destdir --root=\${abs-destdir})
-endif()
+    if (DEFINED ENV{DESTDIR})
+        get_filename_component(abs-destdir \"\$ENV{DESTDIR}\" ABSOLUTE)
+        set(root_destdir --root \${abs-destdir})
+    endif()
 
-execute_process(COMMAND
-    ${python} ${setup.py}
-        install --prefix=${CMAKE_INSTALL_PREFIX}
-                --single-version-externally-managed
-                --record installed-files
+    execute_process(
+        COMMAND ${python} ${setup.py}
+            install
                 \${root_destdir}
+                --single-version-externally-managed
+                --record record.txt
+                --cmake-executable \"${CMAKE_COMMAND}\"
+                --generator \"${CMAKE_GENERATOR}\"
+                ${DLISIO_PYTHON_BUILD_TYPE}
+            --
+                -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
+                -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)")
+    )"
+)
 
 option(BUILD_PYDOC "Build python documentation" OFF)
 
@@ -107,10 +123,15 @@ if(BUILD_PYDOC AND sphinx)
         DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/dlisio
     )
 endif()
+
 # run tests with setup.py test
 # this is very slow compared to invoking pytest directly, but setuptools will
 # copy the built extension into the tree as it sees fit
+#
+# use --skip-cmake, otherwise running the tests would trigger a build with
+# different args to setup.py, rebuilding the python lib (and wrongly so as it
+# either won't find dlisio or picked up on a system installed one)
 add_test(NAME python.unit
-         COMMAND ${python} ${setup.py} test
-         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${python} ${setup.py} --skip-cmake test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )

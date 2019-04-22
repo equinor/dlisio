@@ -1,3 +1,5 @@
+set(DLISIO_LIB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
+
 add_library(dlisio src/dlisio.cpp
                    src/types.cpp
 )
@@ -21,7 +23,6 @@ install(TARGETS dlisio
 )
 install(DIRECTORY include/ DESTINATION include)
 install(EXPORT dlisio DESTINATION share/dlisio/cmake FILE dlisio-config.cmake)
-export(TARGETS dlisio FILE dlisio-config.cmake)
 
 add_library(dlisio-extension src/parse.cpp
                              src/io.cpp
@@ -51,6 +52,16 @@ install(TARGETS dlisio-extension
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(DIRECTORY extension/ DESTINATION include)
+export(
+    TARGETS
+        dlisio
+        dlisio-extension
+        mpark-variant
+        mio
+        fmt-header-only
+    FILE
+        dlisio-config.cmake
+)
 
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(dlisio
