@@ -3,6 +3,7 @@ from ..reprc import fmt
 from .valuetypes import scalar, vector, boolean
 
 import numpy as np
+import logging
 
 
 class Frame(BasicObject):
@@ -81,6 +82,15 @@ class Frame(BasicObject):
         data-type of each frame. I.e. the sum of channel.dtype of each channel
         in self.channels.
 
+        If all curve mnemonics are unique, then dtype.names == [ch.name for ch
+        in self.channels]. If there are more than one channel with the same
+        name for this frame, all duplicated mnemonics are enriched with origin
+        and copynumber.
+
+        Consider a frame with the channels mnemonics [('TIME', 0, 0), ('TDEP',
+        0, 0), ('TIME, 1, 0)]. The dtype names for this frame would be
+        ('TIME:0:0', 'TDEP', 'TIME:1:0').
+
         See also
         --------
 
@@ -94,7 +104,54 @@ class Frame(BasicObject):
         """
         if self._dtype: return self._dtype
 
-        self._dtype = np.dtype([(ch.name, ch.dtype) for ch in self.channels])
+        seen = {}
+        types = []
+
+        source = "duplicated mnemonic in frame '{}'"
+        problem = "but rich label for channel '{}' cannot be formatted"
+        msg = ', '.join((source, problem))
+        info = 'name = {}, origin = {}, copynumber = {}'.format
+
+        fmtlabel = '{:s}:{:d}:{:d}'.format
+        for i, ch in enumerate(self.channels):
+            # current has to be a list (or something mutable at least), because
+            # it have to be updated on multiple labes
+            current = (ch.name, ch.dtype)
+
+            # first time for this label, register it as "seen before"
+            if ch.name not in seen:
+                seen[ch.name] = (i, ch)
+                types.append(current)
+                continue
+
+            try:
+                label = fmtlabel(ch.name, ch.origin, ch.copynumber)
+            except (TypeError, ValueError):
+                logging.error(msg.format(self.name, ch.name))
+                logging.debug(info(ch.name, ch.origin, ch.copynumber))
+                raise
+
+            types.append((label, ch.dtype))
+
+            # the first-seen curve with this name has already been updated
+            if seen[ch.name] is None:
+                continue
+
+            prev_index, prev = seen[ch.name]
+
+            try:
+                label = fmtlabel(prev.name, prev.origin, prev.copynumber)
+            except (TypeError, ValueError):
+                logging.error(msg.format(self.name, ch.name))
+                logging.debug(info(prev.name, prev.origin, prev.copynumber))
+                raise
+
+            # update the previous label with this name, and mark (with None)
+            # for not needing update again
+            types[prev_index] = (label, prev.dtype)
+            seen[ch.name] = None
+
+        self._dtype = np.dtype(types)
         return self._dtype
 
     def fmtstr(self):
