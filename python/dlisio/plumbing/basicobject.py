@@ -21,8 +21,8 @@ class BasicObject():
 
         try:
             self.name       = name.id
-            self.origin     = name.origin
-            self.copynumber = name.copynumber
+            self.origin     = int(name.origin)
+            self.copynumber = int(name.copynumber)
         except AttributeError:
             pass
 
