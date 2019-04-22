@@ -1,4 +1,5 @@
 from .basicobject import BasicObject
+from .valuetypes import scalar
 
 
 class Parameter(BasicObject):
@@ -19,11 +20,11 @@ class Parameter(BasicObject):
     PARAMETER objects.
     """
     attributes = {
-        'LONG-NAME' : ('long_name', True),
-        'DIMENSION' : ('dimension', True),
-        'AXIS'      : ('axis'     , True),
-        'ZONES'     : ('zones'    , True),
-        'VALUES'    : ('values'   , True)
+        'LONG-NAME' : scalar('long_name'),
+        'DIMENSION' : scalar('dimension'),
+        'AXIS'      : scalar('axis'),
+        'ZONES'     : scalar('zones'),
+        'VALUES'    : scalar('values')
     }
 
     def __init__(self, obj = None, name = None):

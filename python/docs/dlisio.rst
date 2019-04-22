@@ -16,7 +16,7 @@ Objects
 
 Basic object
 ------------
-.. autoclass:: dlisio.objects.BasicObject()
+.. autoclass:: dlisio.plumbing.BasicObject()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -24,7 +24,7 @@ Basic object
 
 Calibration
 -----------
-.. autoclass:: dlisio.objects.Calibration()
+.. autoclass:: dlisio.plumbing.Calibration()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -34,7 +34,7 @@ Calibration
 
 Channel
 -------
-.. autoclass:: dlisio.objects.Channel()
+.. autoclass:: dlisio.plumbing.Channel()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -44,7 +44,7 @@ Channel
 
 Coefficent
 ----------
-.. autoclass:: dlisio.objects.Coefficient()
+.. autoclass:: dlisio.plumbing.Coefficient()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -54,7 +54,7 @@ Coefficent
 
 Frame
 -----
-.. autoclass:: dlisio.objects.Frame()
+.. autoclass:: dlisio.plumbing.Frame()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -64,7 +64,7 @@ Frame
 
 Fileheader
 ----------
-.. autoclass:: dlisio.objects.Fileheader()
+.. autoclass:: dlisio.plumbing.Fileheader()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -74,7 +74,7 @@ Fileheader
 
 Measurement
 -----------
-.. autoclass:: dlisio.objects.Measurement()
+.. autoclass:: dlisio.plumbing.Measurement()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -84,7 +84,7 @@ Measurement
 
 Origin
 ------
-.. autoclass:: dlisio.objects.Origin()
+.. autoclass:: dlisio.plumbing.Origin()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -94,7 +94,7 @@ Origin
 
 Parameter
 ---------
-.. autoclass:: dlisio.objects.Parameter()
+.. autoclass:: dlisio.plumbing.Parameter()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -104,7 +104,7 @@ Parameter
 
 Tool
 ----
-.. autoclass:: dlisio.objects.Tool()
+.. autoclass:: dlisio.plumbing.Tool()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -114,7 +114,7 @@ Tool
 
 Equipment
 ---------
-.. autoclass:: dlisio.objects.Equipment()
+.. autoclass:: dlisio.plumbing.Equipment()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -124,7 +124,7 @@ Equipment
 
 Unknown
 -------
-.. autoclass:: dlisio.objects.Unknown()
+.. autoclass:: dlisio.plumbing.Unknown()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:

@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
 from ..reprc import fmt
+from .valuetypes import scalar, vector, boolean
 
 import numpy as np
 
@@ -26,14 +27,14 @@ class Frame(BasicObject):
     dlisio.Channel : Channel objects.
     """
     attributes = {
-        'DESCRIPTION': ('description' , True),
-        'CHANNELS'   : ('channel_refs', False),
-        'INDEX-TYPE' : ('index_type'  , True),
-        'DIRECTION'  : ('direction'   , True),
-        'SPACING'    : ('spacing'     , True),
-        'ENCRYPTED'  : ('encrypted'   , True),
-        'INDEX-MIN'  : ('index_min'   , True),
-        'INDEX-MAX'  : ('index_max'   , True)
+        'DESCRIPTION': scalar('description'),
+        'CHANNELS'   : vector('channel_refs'),
+        'INDEX-TYPE' : scalar('index_type'),
+        'DIRECTION'  : scalar('direction'),
+        'SPACING'    : scalar('spacing'),
+        'ENCRYPTED'  : boolean('encrypted'),
+        'INDEX-MIN'  : scalar('index_min'),
+        'INDEX-MAX'  : scalar('index_max')
     }
 
     def __init__(self, obj = None, name = None):

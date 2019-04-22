@@ -1,4 +1,5 @@
 from .basicobject import BasicObject
+from .valuetypes import vector
 
 import logging
 
@@ -23,12 +24,12 @@ class Calibration(BasicObject):
     dlisio.Parameter : Parameter objects.
     """
     attributes = {
-        'METHOD'               : ('method'           , False),
-        'CALIBRATED-CHANNELS'  : ('calibrated_refs'  , False),
-        'UNCALIBRATED-CHANNELS': ('uncalibrated_refs', False),
-        'COEFFICIENTS'         : ('coefficient_refs' , False),
-        'MEASUREMENTS'         : ('measurement_refs' , False),
-        'PARAMETERS'           : ('parameters_refs'  , False)
+        'METHOD'               : vector('method'),
+        'CALIBRATED-CHANNELS'  : vector('calibrated_refs'),
+        'UNCALIBRATED-CHANNELS': vector('uncalibrated_refs'),
+        'COEFFICIENTS'         : vector('coefficient_refs'),
+        'MEASUREMENTS'         : vector('measurement_refs'),
+        'PARAMETERS'           : vector('parameters_refs')
     }
 
     def __init__(self, obj = None, name = None, type = None):

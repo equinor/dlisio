@@ -1,4 +1,5 @@
 from .basicobject import BasicObject
+from .valuetypes import scalar
 
 
 class Equipment(BasicObject):
@@ -17,23 +18,23 @@ class Equipment(BasicObject):
     objects.
     """
     attributes = {
-        'TRADEMARK-NAME'  : ('trademark_name', True),
-        'STATUS'          : ('status'        , True),
-        'TYPE'            : ('generic_type'  , True),
-        'SERIAL-NUMBER'   : ('serial_number' , True),
-        'LOCATION'        : ('location'      , True),
-        'HEIGHT'          : ('height'        , True),
-        'LENGTH'          : ('length'        , True),
-        'MINIMUM-DIAMETER': ('diameter_min'  , True),
-        'MAXIMUM-DIAMETER': ('diameter_max'  , True),
-        'VOLUME'          : ('volume'        , True),
-        'WEIGHT'          : ('weight'        , True),
-        'HOLE-SIZE'       : ('hole_size'     , True),
-        'PRESSURE'        : ('pressure'      , True),
-        'TEMPERATURE'     : ('temperature'   , True),
-        'VERTICAL-DEPTH'  : ('vertical_depth', True),
-        'RADIAL-DRIFT'    : ('radial_drift'  , True),
-        'AGULAR-DRIFT'    : ('angular_drift' , True)
+        'TRADEMARK-NAME'  : scalar('trademark_name'),
+        'STATUS'          : scalar('status'),
+        'TYPE'            : scalar('generic_type'),
+        'SERIAL-NUMBER'   : scalar('serial_number'),
+        'LOCATION'        : scalar('location'),
+        'HEIGHT'          : scalar('height'),
+        'LENGTH'          : scalar('length'),
+        'MINIMUM-DIAMETER': scalar('diameter_min'),
+        'MAXIMUM-DIAMETER': scalar('diameter_max'),
+        'VOLUME'          : scalar('volume'),
+        'WEIGHT'          : scalar('weight'),
+        'HOLE-SIZE'       : scalar('hole_size'),
+        'PRESSURE'        : scalar('pressure'),
+        'TEMPERATURE'     : scalar('temperature'),
+        'VERTICAL-DEPTH'  : scalar('vertical_depth'),
+        'RADIAL-DRIFT'    : scalar('radial_drift'),
+        'AGULAR-DRIFT'    : scalar('angular_drift')
     }
 
     def __init__(self, obj = None, name = None):

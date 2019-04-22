@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from . import core
-from . import objects as record
+from . import plumbing
 
 try:
     import pkg_resources
@@ -24,16 +24,16 @@ class dlis(object):
         self.problematic = []
 
         self.types = {
-            'FILE-HEADER'            : record.Fileheader.load,
-            'ORIGIN'                 : record.Origin.load,
-            'FRAME'                  : record.Frame.load,
-            'CHANNEL'                : record.Channel.load,
-            'TOOL'                   : record.Tool.load,
-            'PARAMETER'              : record.Parameter.load,
-            'EQUIPMENT'              : record.Equipment.load,
-            'CALIBRATION-MEASUREMENT': record.Measurement.load,
-            'CALIBRATION-COEFFICIENT': record.Coefficient.load,
-            'CALIBRATION'            : record.Calibration.load,
+            'FILE-HEADER'            : plumbing.Fileheader.load,
+            'ORIGIN'                 : plumbing.Origin.load,
+            'FRAME'                  : plumbing.Frame.load,
+            'CHANNEL'                : plumbing.Channel.load,
+            'TOOL'                   : plumbing.Tool.load,
+            'PARAMETER'              : plumbing.Parameter.load,
+            'EQUIPMENT'              : plumbing.Equipment.load,
+            'CALIBRATION-MEASUREMENT': plumbing.Measurement.load,
+            'CALIBRATION-COEFFICIENT': plumbing.Coefficient.load,
+            'CALIBRATION'            : plumbing.Calibration.load,
         }
         self.load()
 
@@ -91,7 +91,7 @@ class dlis(object):
                 try:
                     obj = self.types[os.type](o, name = name)
                 except KeyError:
-                    obj = record.Unknown.load(o, name = name, type = os.type)
+                    obj = plumbing.Unknown.load(o, name = name, type = os.type)
 
                 fingerprint = obj.fingerprint
                 if fingerprint in objects:

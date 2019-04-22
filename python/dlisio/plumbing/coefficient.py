@@ -1,4 +1,5 @@
 from .basicobject import BasicObject
+from .valuetypes import scalar, vector
 
 class Coefficient(BasicObject):
     """Coefficient
@@ -16,11 +17,11 @@ class Coefficient(BasicObject):
     objects.
     """
     attributes = {
-        "LABEL"           : ('label'           , True),
-        "COEFFICIENTS"    : ('coefficients'    , False),
-        "REFERENCES"      : ('references'      , False),
-        "PLUS-TOLERANCES" : ('plus_tolerance'  , False),
-        "MINUS-TOLERANCES": ('minus_tolerance' , False)
+        "LABEL"           : scalar('label'),
+        "COEFFICIENTS"    : vector('coefficients'),
+        "REFERENCES"      : vector('references'),
+        "PLUS-TOLERANCES" : vector('plus_tolerance'),
+        "MINUS-TOLERANCES": vector('minus_tolerance')
     }
 
     def __init__(self, obj = None, name = None):

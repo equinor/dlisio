@@ -1,4 +1,5 @@
 from .. import core
+from .valuetypes import *
 
 class BasicObject():
     """Basic object
@@ -114,15 +115,36 @@ class BasicObject():
 
     @classmethod
     def load(cls, obj, name = None):
+        """Populate the Python object with values from the native c++ object.
+
+        This is achieved by looping over the Python class' attribute list
+        (which maps the native c++ attribute names to the attribute names in the
+        Python class) and extracting the value(s). Essensially, this is whats
+        going on:
+
+        >>> for label, value in obj.items():
+        ...     if label == 'LONG-NAME': self.long_name = value
+        ...     if label == 'CHANNEL'  : self.channel   = value
+
+        By using a classmethod, this process is generalized for all object
+        types derived from basic_object.
+        """
         self = cls(obj, name = name)
 
         attrs = cls.attributes
         for label, value in obj.items():
             if value is None: continue
 
-            attr, collapse = attrs[label]
-            if collapse: value = value[0]
-            setattr(self, attr, value)
+            attr, value_type = attrs[label]
+            if value_type == ValueTypeBoolean:
+                if value[0]: setattr(self, attr, True)
+                else:        setattr(self, attr, False)
+
+            elif value_type == ValueTypeScalar:
+                setattr(self, attr, value[0])
+
+            elif value_type == ValueTypeVector:
+                setattr(self, attr, value)
 
         self.stripspaces()
         return self

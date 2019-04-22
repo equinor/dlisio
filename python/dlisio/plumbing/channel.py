@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
 from ..reprc import dtype
+from .valuetypes import scalar, vector
 
 import numpy as np
 
@@ -21,14 +22,14 @@ class Channel(BasicObject):
     objects.
     """
     attributes = {
-        'LONG-NAME'          : ('long_name'    , True),
-        'REPRESENTATION-CODE': ('reprc'        , True),
-        'UNITS'              : ('units'        , True),
-        'PROPERTIES'         : ('properties'   , False),
-        'DIMENSION'          : ('dimension'    , False),
-        'AXIS'               : ('axis'         , False),
-        'ELEMENT-LIMIT'      : ('element_limit', False),
-        'SOURCE'             : ('source_ref'   , True)
+        'LONG-NAME'          : scalar('long_name'),
+        'REPRESENTATION-CODE': scalar('reprc'),
+        'UNITS'              : scalar('units'),
+        'PROPERTIES'         : vector('properties'),
+        'DIMENSION'          : vector('dimension'),
+        'AXIS'               : vector('axis'),
+        'ELEMENT-LIMIT'      : vector('element_limit'),
+        'SOURCE'             : scalar('source_ref')
     }
 
     def __init__(self, obj = None, name = None):
