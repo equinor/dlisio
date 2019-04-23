@@ -11,6 +11,7 @@ from .parameter import Parameter
 from .calibration import Calibration
 from .equipment import Equipment
 from .measurement import Measurement
+from .computation import Computation
 from .coefficient import Coefficient
 from .unknown import Unknown
 

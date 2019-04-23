@@ -37,6 +37,7 @@ class dlis(object):
             'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
             'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
             'CALIBRATION'            : plumbing.Calibration.create,
+            'COMPUTATION'            : plumbing.Computation.create,
         }
         self.load()
 
@@ -237,6 +238,16 @@ class dlis(object):
         equipments : dict_values
         """
         return self.object_sets['EQUIPMENT'].values()
+
+    @property
+    def computations(self):
+        """ Read all computation objects
+
+        Returns
+        -------
+        computations : dict_values
+        """
+        return self.object_sets['COMPUTATION'].values()
 
     @property
     def measurements(self):

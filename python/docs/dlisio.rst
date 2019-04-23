@@ -62,6 +62,16 @@ Coefficent
     :member-order: groupwise
     :inherited-members:
 
+Computation
+-----------
+.. autoclass:: dlisio.plumbing.Computation()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Frame
 -----
 .. autoclass:: dlisio.plumbing.Frame()

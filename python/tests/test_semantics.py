@@ -19,6 +19,7 @@ def fpath(tmpdir_factory, merge_files):
         'data/semantic/parameter.dlis.part',
         'data/semantic/equipment.dlis.part',
         'data/semantic/tool.dlis.part',
+        'data/semantic/computation.dlis.part',
         'data/semantic/measurement.dlis.part',
         'data/semantic/coefficient.dlis.part',
         'data/semantic/coefficient-wrong.dlis.part',
@@ -334,6 +335,27 @@ def test_calibration(f):
     assert c.measurements == [meas1, meas2]
     assert c.parameters   == [param1, param2, param3]
     assert c.method       == "USELESS"
+
+def test_computation(f):
+    key = dlisio.core.fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
+    com = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS3', 10, 0)
+    axis3 = f.objects[key]
+
+    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone = f.objects[key]
+
+    assert com.long_name      == 'computation object 2'
+    assert com.properties     == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
+    assert com.dimension      == [2, 4]
+    assert com.axis           == [axis2, axis3]
+    assert com.zones          == [zone]
+    assert com.values         == [140, 99, 144, 172, 202, 52, 109, 120]
+    assert com.refs['source'] == [('PROCESS', (10, 0, 'PROC1'))]
 
 def test_unknown(f):
     key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
