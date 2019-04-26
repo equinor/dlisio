@@ -136,15 +136,21 @@ class BasicObject():
             if value is None: continue
 
             attr, value_type = attrs[label]
-            if value_type == ValueTypeBoolean:
-                if value[0]: setattr(self, attr, True)
-                else:        setattr(self, attr, False)
-
-            elif value_type == ValueTypeScalar:
+            if value_type == ValueTypeScalar:
                 setattr(self, attr, value[0])
 
             elif value_type == ValueTypeVector:
                 setattr(self, attr, value)
+
+            elif value_type == ValueTypeBoolean:
+                setattr(self, attr, bool(value[0]))
+
+            else:
+                problem = 'unknown value extraction descriptor {}'
+                solution = 'should be either scalar, vector, or boolean'
+                msg = ', '.join((problem.format(value_type), solution))
+                raise ValueError(msg)
+
 
         self.stripspaces()
         return self
