@@ -66,3 +66,34 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     # https://github.com/equinor/dlisio/pull/97
     frame = makeframe()
     _ = memoryview(np.zeros(1, dtype = frame.dtype))
+
+def test_instance_dtype_fmt():
+    frame = makeframe()
+    frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
+
+    # fmtstr is unchanged
+    assert 'fDDD' == frame.fmtstr()
+    assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+
+def test_instance_dtype_fmt():
+    frame = makeframe()
+    frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
+
+    # fmtstr is unchanged
+    assert 'fDDD' == frame.fmtstr()
+    assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+
+def test_class_dtype_fmt():
+    original = dlisio.plumbing.Frame.dtype_format
+
+    try:
+        # change dtype before the object itself is constructed, so it
+        dlisio.plumbing.Frame.dtype_format = 'x-{:s} {:d}~{:d}'
+        frame = makeframe()
+        assert 'fDDD' == frame.fmtstr()
+        assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+
+    finally:
+        # even if the test fails, make sure the format string is reset to its
+        # default, to not interfere with other tests
+        dlisio.plumbing.Frame.dtype_format = original

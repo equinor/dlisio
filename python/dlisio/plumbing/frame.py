@@ -14,6 +14,13 @@ class Frame(BasicObject):
     Frame, along with the type- and range of the index of the channels.
     Note that the index itself is also a channel object.
 
+    Attributes
+    ----------
+    dtype_format : str
+        The basic format string for duplicated mnemonics - this string is the
+        default formatting for creating unique labels from the
+        mnemonic-origin-copynumber triple in dtype.
+
     Notes
     -----
 
@@ -37,6 +44,8 @@ class Frame(BasicObject):
         'INDEX-MIN'  : scalar('index_min'),
         'INDEX-MAX'  : scalar('index_max')
     }
+
+    dtype_format = '{:s}.{:d}.{:d}'
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'FRAME')
@@ -75,6 +84,10 @@ class Frame(BasicObject):
         #: arrays from all channels.
         self._dtype      = None
 
+        #: Instance-specific dtype label formatter on duplicated mnemonics.
+        #: Defaults to Frame.dtype_format
+        self.dtype_fmt = self.dtype_format
+
     @property
     def dtype(self):
         """dtype
@@ -91,6 +104,15 @@ class Frame(BasicObject):
         0, 0), ('TIME, 1, 0)]. The dtype names for this frame would be
         ('TIME.0.0', 'TDEP', 'TIME.1.0').
 
+        Duplicated mnemonics are formatted by the dtype_fmt attribute. To use a
+        custom format for a specific frame instance, set dtype_fmt for the
+        Frame object. If you want to have some other formatting for *all*
+        dtypes, set the dtype_format class attribute. It has to be a 3-element
+        format-string taking a string and two ints. Custom formatting is
+        particularly useful for peculiar files where the full stop (.) appears
+        in the mnemonic itself, and a consistent way of parsing origin and
+        copynumber are needed.
+
         See also
         --------
 
@@ -101,7 +123,21 @@ class Frame(BasicObject):
         -------
 
         dtype : np.dtype
+
+        Examples
+        --------
+        A frame with two TIME channels:
+        >>> frame.dtype
+        dtype([('TIME.0.0', '<f4'), ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
+
+        Override instance-specific mnemonic formatting
+        >>> frame.dtype
+        dtype([('TIME.0.0', '<f4'), ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
+        >>> frame.dtype_fmt = '{:s}-{:d}-{:d}'
+        >>> frame.dtype
+        dtype([('TIME-0-0', '<f4'), ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
         """
+
         if self._dtype: return self._dtype
 
         seen = {}
@@ -112,7 +148,7 @@ class Frame(BasicObject):
         msg = ', '.join((source, problem))
         info = 'name = {}, origin = {}, copynumber = {}'.format
 
-        fmtlabel = '{:s}.{:d}.{:d}'.format
+        fmtlabel = self.dtype_fmt.format
         for i, ch in enumerate(self.channels):
             # current has to be a list (or something mutable at least), because
             # it have to be updated on multiple labes
