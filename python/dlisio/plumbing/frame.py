@@ -89,7 +89,7 @@ class Frame(BasicObject):
 
         Consider a frame with the channels mnemonics [('TIME', 0, 0), ('TDEP',
         0, 0), ('TIME, 1, 0)]. The dtype names for this frame would be
-        ('TIME:0:0', 'TDEP', 'TIME:1:0').
+        ('TIME.0.0', 'TDEP', 'TIME.1.0').
 
         See also
         --------
@@ -112,7 +112,7 @@ class Frame(BasicObject):
         msg = ', '.join((source, problem))
         info = 'name = {}, origin = {}, copynumber = {}'.format
 
-        fmtlabel = '{:s}:{:d}:{:d}'.format
+        fmtlabel = '{:s}.{:d}.{:d}'.format
         for i, ch in enumerate(self.channels):
             # current has to be a list (or something mutable at least), because
             # it have to be updated on multiple labes
