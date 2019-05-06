@@ -34,7 +34,7 @@ class Equipment(BasicObject):
         'TEMPERATURE'     : scalar('temperature'),
         'VERTICAL-DEPTH'  : scalar('vertical_depth'),
         'RADIAL-DRIFT'    : scalar('radial_drift'),
-        'AGULAR-DRIFT'    : scalar('angular_drift')
+        'ANGULAR-DRIFT'   : scalar('angular_drift')
     }
 
     def __init__(self, obj = None, name = None):
