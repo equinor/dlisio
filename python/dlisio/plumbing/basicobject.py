@@ -101,9 +101,9 @@ class BasicObject():
             if isinstance(value, str):
                 self.__dict__[key] = value.strip()
             if isinstance(value, list):
-                if not isinstance(value, str): continue
                 for inx, v in enumerate(value):
-                    self.__dict__[key][inx] = v.strip()
+                    if isinstance(v, str):
+                        self.__dict__[key][inx] = v.strip()
 
     def link(self, objects, sets):
         """ Link objects
