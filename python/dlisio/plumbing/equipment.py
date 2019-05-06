@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar
+from .valuetypes import scalar, boolean
 
 
 class Equipment(BasicObject):
@@ -19,7 +19,7 @@ class Equipment(BasicObject):
     """
     attributes = {
         'TRADEMARK-NAME'  : scalar('trademark_name'),
-        'STATUS'          : scalar('status'),
+        'STATUS'          : boolean('status'),
         'TYPE'            : scalar('generic_type'),
         'SERIAL-NUMBER'   : scalar('serial_number'),
         'LOCATION'        : scalar('location'),
