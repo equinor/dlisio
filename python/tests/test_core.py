@@ -453,6 +453,18 @@ def test_padbytes_as_large_as_record():
     finally:
         f.close()
 
+def test_padbytes_as_large_as_segment():
+    # 180-byte long explicit record with padding, and padbytes are set to 176
+    # record is expected to not be present
+    try:
+        f = dlisio.open('data/padbytes-large-as-segment-body.dlis')
+        f.reindex([0], [180])
+
+        rec = f.extract([0])[0]
+        assert len(memoryview(rec)) == 0
+    finally:
+        f.close()
+
 def test_load_small_file():
     # <4K files infinite loop bug check
     with dlisio.load('data/example-record.dlis'):
