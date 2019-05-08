@@ -16,6 +16,7 @@ function pre_build {
     cmake --version
     cmake .. -DBUILD_PYTHON=OFF \
              -DCMAKE_BUILD_TYPE=Release \
+             -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib \
              -DBUILD_SHARED_LIBS=ON
 
     if [ -n "$IS_OSX" ]; then
