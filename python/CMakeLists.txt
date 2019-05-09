@@ -80,7 +80,6 @@ install(CODE "
                 --generator \"${CMAKE_GENERATOR}\"
                 ${DLISIO_PYTHON_BUILD_TYPE}
             --
-                -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
                 -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )"
