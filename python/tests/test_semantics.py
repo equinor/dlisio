@@ -21,8 +21,10 @@ def f(tmpdir_factory, merge_files):
         'data/semantic/tool.dlis.part',
         'data/semantic/measurement.dlis.part',
         'data/semantic/coefficient.dlis.part',
+        'data/semantic/coefficient-wrong.dlis.part',
         'data/semantic/calibration.dlis.part',
         'data/semantic/frame.dlis.part',
+        'data/semantic/unknown.dlis.part',
     ]
     merge_files(path, content)
     with dlisio.load(path) as f:
@@ -256,3 +258,28 @@ def test_calibration(f):
     assert c.measurements == [meas1, meas2]
     assert c.parameters   == [param1, param2, param3]
     assert c.method       == "USELESS"
+
+def test_unknown(f):
+    key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+    unknown = f.objects[key]
+
+    assert unknown.stash["SOME_LIST"]   == ["LIST_V1", "LIST_V2"]
+    assert unknown.stash["SOME_VALUE"]  == ["VAL1"]
+    assert unknown.stash["SOME_STATUS"] == [1]
+
+def test_unexpected_attributes(f):
+    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+    c = f.objects[key]
+
+    assert c.label                           == "SMTH"
+    assert c.plus_tolerance                  == [] #count 0
+    assert c.minus_tolerance                 == [] #not specified
+
+    #'lnks' instead of 'references'
+    assert c.stash["LNKS"]                   == [18, 32]
+    #spaces are stripped for stash also
+    assert c.stash["MY_PARAM"]               == ["wrong", "W"]
+    assert c.stash["LINKS_TO_PARAMETERS"]    ==  [(10, 0, "PARAM2"),
+                                                  (10, 0, "PARAMU")]
+    assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
+                                                  (10, 0, "OBJ1"))]
