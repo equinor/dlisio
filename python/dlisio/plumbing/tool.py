@@ -1,7 +1,6 @@
-import logging
-
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector, boolean
+from .linkage import obname
 
 class Tool(BasicObject):
     """Tool
@@ -29,9 +28,15 @@ class Tool(BasicObject):
         'TRADEMARK-NAME' : scalar('trademark_name'),
         'GENERIC-NAME'   : scalar('generic_name'),
         'STATUS'         : boolean('status'),
-        'PARTS'          : vector('parts_refs'),
-        'CHANNELS'       : vector('channels_refs'),
-        'PARAMETERS'     : vector('parameters_refs')
+        'PARTS'          : vector('parts'),
+        'CHANNELS'       : vector('channels'),
+        'PARAMETERS'     : vector('parameters')
+    }
+
+    linkage = {
+        "parts"      : obname("EQUIPMENT"),
+        "channels"   : obname("CHANNEL"),
+        "parameters" : obname("PARAMETER"),
     }
 
     def __init__(self, obj = None, name = None):
@@ -57,47 +62,3 @@ class Tool(BasicObject):
 
         #: Parameter that directly affect or reflect the operation of the tool
         self.parameters      = []
-
-        #: References to the channels
-        self.channels_refs   = []
-
-        #: References to the parameters
-        self.parameters_refs = []
-
-        #: Reference to the equipments
-        self.parts_refs      = []
-
-    def link(self, objects, sets):
-        channels = sets['CHANNEL']
-        chans = []
-        for ref in self.channels_refs:
-            fp = ref.fingerprint('CHANNEL')
-            try:
-                chans.append(channels[fp])
-            except KeyError:
-                msg = 'missing channel {} referenced from tool {}'
-                logging.warning(msg.format(ref, self.name))
-
-        parameters = sets['PARAMETER']
-        params = []
-        for ref in self.parameters_refs:
-            fp = ref.fingerprint('PARAMETER')
-            try:
-                params.append(parameters[fp])
-            except KeyError:
-                msg = 'missing parameter {} referenced from tool {}'
-                logging.warning(msg.format(ref, self.name))
-
-        equipments = sets['EQUIPMENT']
-        equipts = []
-        for ref in self.parts_refs:
-            fp = ref.fingerprint('EQUIPMENT')
-            try:
-                equipts.append(equipments[fp])
-            except KeyError:
-                msg = 'missing parameter {} referenced from tool {}'
-                logging.warning(msg.format(ref, self.name))
-
-        self.channels = chans
-        self.parameters = params
-        self.parts  = equipts

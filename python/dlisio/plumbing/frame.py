@@ -1,6 +1,7 @@
 from .basicobject import BasicObject
 from ..reprc import fmt
 from .valuetypes import scalar, vector, boolean
+from .linkage import obname
 
 import numpy as np
 import logging
@@ -36,13 +37,17 @@ class Frame(BasicObject):
     """
     attributes = {
         'DESCRIPTION': scalar('description'),
-        'CHANNELS'   : vector('channel_refs'),
+        'CHANNELS'   : vector('channels'),
         'INDEX-TYPE' : scalar('index_type'),
         'DIRECTION'  : scalar('direction'),
         'SPACING'    : scalar('spacing'),
         'ENCRYPTED'  : boolean('encrypted'),
         'INDEX-MIN'  : scalar('index_min'),
         'INDEX-MAX'  : scalar('index_max')
+    }
+
+    linkage = {
+        'channels' : obname("CHANNEL")
     }
 
     dtype_format = '{:s}.{:d}.{:d}'
@@ -52,9 +57,6 @@ class Frame(BasicObject):
 
         #: Textual description of the Frame.
         self.description = None
-
-        #: References to the channels
-        self.channel_refs = []
 
         #: Channels in the frame
         self.channels    = []
@@ -213,9 +215,3 @@ class Frame(BasicObject):
             self._fmtstr += samples * reprc
 
         return self._fmtstr
-
-    def link(self, objects, sets):
-        self.channels = [
-            sets['CHANNEL'][ref.fingerprint('CHANNEL')]
-            for ref in self.channel_refs
-        ]

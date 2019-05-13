@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
+from .linkage import objref
 
 
 class Measurement(BasicObject):
@@ -18,7 +19,7 @@ class Measurement(BasicObject):
     """
     attributes = {
           'PHASE'             : scalar('phase'),
-          'MEASUREMENT-SOURCE': scalar('source_ref'),
+          'MEASUREMENT-SOURCE': scalar('source'),
           'TYPE'              : scalar('mtype'),
           'DIMENSION'         : vector('dimension'),
           'AXIS'              : vector('axis'),
@@ -32,6 +33,10 @@ class Measurement(BasicObject):
           'STANDARD'          : vector('standard'),
           'PLUS-TOLERANCE'    : vector('plus_tolerance'),
           'MINUS-TOLERANCE'   : vector('minus_tolerance')
+    }
+
+    linkage = {
+        'source' : objref
     }
 
     def __init__(self, obj = None, name = None):
@@ -85,22 +90,4 @@ class Measurement(BasicObject):
         #: be "within tolerance"
         self.minus_tolerance = []
 
-        #: Reference to the source
-        self.source_ref      = None
 
-    def link(self, objects, sets):
-        if self.source_ref is None:
-            return
-
-        ref = self.source_ref.fingerprint
-        try:
-            self.source = objects[ref]
-        except KeyError:
-            problem = 'measurement source referenced, but not found. '
-            ids = 'measurement = {}, source = {}'.format(self.fingerprint, ref)
-
-            info = 'not populating source attribute for {}'
-            info = info.format(self.fingerprint)
-
-            logging.warning(problem + ids)
-            logging.info(info)

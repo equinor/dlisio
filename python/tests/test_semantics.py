@@ -6,7 +6,7 @@ import dlisio
 from . import merge_files
 
 @pytest.fixture(scope="module")
-def f(tmpdir_factory, merge_files):
+def fpath(tmpdir_factory, merge_files):
     path = str(tmpdir_factory.mktemp('semantic').join('semantic.dlis'))
     content = [
         'data/semantic/envelope.dlis.part',
@@ -27,7 +27,11 @@ def f(tmpdir_factory, merge_files):
         'data/semantic/unknown.dlis.part',
     ]
     merge_files(path, content)
-    with dlisio.load(path) as f:
+    return path
+
+@pytest.fixture(scope="module")
+def f(tmpdir_factory, fpath):
+    with dlisio.load(fpath) as f:
         yield f
 
 def test_file_header(f):
@@ -82,12 +86,12 @@ def test_channel(f):
     key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel = f.objects[key]
 
-    assert channel.long_name         == (10, 0, "CHANN1-LONG-NAME")
+    assert channel.refs['long_name'] == (10, 0, "CHANN1-LONG-NAME")
     assert channel.properties        == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc             == 16
     assert channel.units             == "custom units"
     assert channel.dimension         == [2, 3, 2]
-    assert channel.axis              == [(10, 0, "AXIS1"),
+    assert channel.refs['axis']      == [(10, 0, "AXIS1"),
                                          (10, 0, "AXIS2"),
                                          (10, 0, "AXIS3")]
     assert channel.element_limit     == [10, 15, 10]
@@ -127,20 +131,20 @@ def test_frame(f):
 def test_parameter(f):
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param = f.objects[key]
-    assert param.long_name         == (10, 0, "PARAM1-LONG")
-    assert param.axis              == [(10, 0, "AXIS1")]
-    assert param.zones             == [(10, 0, "ZONE-A")]
+    assert param.refs['long_name'] == (10, 0, "PARAM1-LONG")
     assert param.dimension         == [2]
+    assert param.refs['axis']      == [(10, 0, "AXIS1")]
+    assert param.refs['zones']     == [(10, 0, "ZONE-A")]
     assert param.values            == [101, 120]
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param = f.objects[key]
-    assert param.long_name         == (10, 0, "PARAM2-LONG")
+    assert param.refs['long_name'] == (10, 0, "PARAM2-LONG")
     assert param.values            == [131, 69]
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM3', 10, 0)
     param = f.objects[key]
-    assert param.long_name         == (10, 0, "PARAM3-LONG")
+    assert param.refs['long_name'] == (10, 0, "PARAM3-LONG")
     assert param.values            == [152, 35]
 
 def test_equipment(f):
@@ -188,6 +192,7 @@ def test_tool(f):
     assert tool.status                  == True
     assert tool.channels                == [channel1, channel2]
     assert tool.parameters              == [param1, param2]
+    assert len(tool.refs["parameters"]) == 3
 
 def test_measurement(f):
     key = dlisio.core.fingerprint('TOOL', 'TOOL1', 10, 0)
@@ -196,11 +201,11 @@ def test_measurement(f):
     key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
     m = f.objects[key]
 
-    assert m.axis == [(10, 0, "AXIS1"), (10, 0, "AXIS2")]
     assert m.phase           == "MASTER"
     assert m.source          == tool
     assert m.mtype           == "Zero"
     assert m.dimension       == [2, 3]
+    assert m.refs['axis']    == [(10, 0, "AXIS1"), (10, 0, "AXIS2")]
     assert m.samples         == [240, 137, 228, 120, 240, 136]
     assert m.samplecount     == 4
     assert m.max_deviation   == 2.5
@@ -279,6 +284,7 @@ def test_unexpected_attributes(f):
     assert c.stash["LNKS"]                   == [18, 32]
     #spaces are stripped for stash also
     assert c.stash["MY_PARAM"]               == ["wrong", "W"]
+    # no linkage is performed for stash even for known objects
     assert c.stash["LINKS_TO_PARAMETERS"]    ==  [(10, 0, "PARAM2"),
                                                   (10, 0, "PARAMU")]
     assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",

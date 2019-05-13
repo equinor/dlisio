@@ -1,10 +1,9 @@
 from .basicobject import BasicObject
 from ..reprc import dtype
 from .valuetypes import scalar, vector
+from .linkage import objref
 
 import numpy as np
-
-import logging
 
 class Channel(BasicObject):
     """Channel
@@ -29,7 +28,11 @@ class Channel(BasicObject):
         'DIMENSION'          : vector('dimension'),
         'AXIS'               : vector('axis'),
         'ELEMENT-LIMIT'      : vector('element_limit'),
-        'SOURCE'             : scalar('source_ref')
+        'SOURCE'             : scalar('source')
+    }
+
+    linkage = {
+        'source' : objref
     }
 
     def __init__(self, obj = None, name = None):
@@ -62,9 +65,6 @@ class Channel(BasicObject):
         #: The numpy data type of the sample array
         self._dtype        = None
 
-        #: The source of the channel. Returns the reference to a source object
-        self.source_ref    = None
-
     @property
     def dtype(self):
         """dtype
@@ -87,20 +87,3 @@ class Channel(BasicObject):
         self._dtype = np.dtype((dtype[self.reprc], shape))
 
         return self._dtype
-
-    def link(self, objects, sets):
-        if self.source_ref is None:
-            return
-
-        ref = self.source_ref.fingerprint
-        try:
-            self.source = objects[ref]
-        except KeyError:
-            problem = 'channel source referenced, but not found. '
-            ids = 'channel = {}, source = {}'.format(self.fingerprint, ref)
-
-            info = 'not populating source attribute for {}'
-            info = info.format(self.fingerprint)
-
-            logging.warning(problem + ids)
-            logging.info(info)
