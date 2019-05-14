@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
 from .fileheader import Fileheader
+from .longname import Longname
 from .origin import Origin
 from .frame import Frame
 from .channel import Channel

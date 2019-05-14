@@ -26,6 +26,7 @@ class dlis(object):
         self.types = {
             'FILE-HEADER'            : plumbing.Fileheader.create,
             'ORIGIN'                 : plumbing.Origin.create,
+            'LONG-NAME'              : plumbing.Longname.create,
             'FRAME'                  : plumbing.Frame.create,
             'CHANNEL'                : plumbing.Channel.create,
             'TOOL'                   : plumbing.Tool.create,
@@ -147,6 +148,16 @@ class dlis(object):
         origin : dict_values
         """
         return self.object_sets['ORIGIN'].values()
+
+    @property
+    def longnames(self):
+        """ Read all Longname objects
+
+        Returns
+        -------
+        long-name : dict_values
+        """
+        return self.object_sets['LONG-NAME'].values()
 
     @property
     def channels(self):

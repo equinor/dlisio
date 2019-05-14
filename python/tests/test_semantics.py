@@ -79,14 +79,37 @@ def test_origin(f):
     assert random_origin.file_set_nr == 1042
     assert random_origin.file_nr     == 6
 
+def test_longname(f):
+    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    ln  = f.objects[key]
+
+    assert ln.modifier        == ['channel 1 long name']
+    assert ln.quantity        == 'color'
+    assert ln.quantity_mod    == ['nice']
+    assert ln.altered_form    == 'deviation'
+    assert ln.entity          == 'borehole'
+    assert ln.entity_mod      == ['bad']
+    assert ln.entity_nr       == '21'
+    assert ln.entity_part     == 'top part?'
+    assert ln.entity_part_nr  == '1'
+    assert ln.generic_source  == 'random words'
+    assert ln.source_part     == ['generator']
+    assert ln.source_part_nr  == ['8412']
+    assert ln.conditions      == ['at standard temperature']
+    assert ln.standard_symbol == 'SYM'
+    assert ln.private_symbol  == 'BOL'
+
 def test_channel(f):
     key = dlisio.core.fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
+    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    longname = f.objects[key]
+
     key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel = f.objects[key]
 
-    assert channel.refs['long_name'] == (10, 0, "CHANN1-LONG-NAME")
+    assert channel.long_name         == longname
     assert channel.properties        == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc             == 16
     assert channel.units             == "custom units"
@@ -131,7 +154,11 @@ def test_frame(f):
 def test_parameter(f):
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param = f.objects[key]
-    assert param.refs['long_name'] == (10, 0, "PARAM1-LONG")
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
+    longname = f.objects[key]
+
+    assert param.long_name         == longname
     assert param.dimension         == [2]
     assert param.refs['axis']      == [(10, 0, "AXIS1")]
     assert param.refs['zones']     == [(10, 0, "ZONE-A")]
@@ -139,12 +166,20 @@ def test_parameter(f):
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param = f.objects[key]
-    assert param.refs['long_name'] == (10, 0, "PARAM2-LONG")
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM2-LONG', 10, 0)
+    longname = f.objects[key]
+
+    assert param.long_name         == longname
     assert param.values            == [131, 69]
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM3', 10, 0)
     param = f.objects[key]
-    assert param.refs['long_name'] == (10, 0, "PARAM3-LONG")
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM3-LONG', 10, 0)
+    longname = f.objects[key]
+
+    assert param.long_name         == longname
     assert param.values            == [152, 35]
 
 def test_equipment(f):

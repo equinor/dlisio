@@ -72,6 +72,16 @@ Fileheader
     :member-order: groupwise
     :inherited-members:
 
+Longname
+--------
+.. autoclass:: dlisio.plumbing.Longname()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Measurement
 -----------
 .. autoclass:: dlisio.plumbing.Measurement()
