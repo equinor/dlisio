@@ -292,7 +292,7 @@ def test_tool(DWL206):
     assert tool.description     == "Mechanical Sidewall Coring Tool"
     assert tool.trademark_name  == "MSCT-AA"
     assert tool.generic_name    == "MSCT"
-    assert tool.status          == 1
+    assert tool.status          == True
     assert len(tool.parameters) == 22
     assert len(tool.channels)   == 74
     assert len(tool.parts)      == 9
@@ -309,7 +309,7 @@ def test_equipment(DWL206):
     assert e.origin          == 2
     assert e.copynumber      == 0
     assert e.trademark_name  == "MCFU_1-AA"
-    assert e.status          == 1
+    assert e.status          == True
     assert e.serial_number   == "119."
     assert e.length          == 125.0
     assert e.diameter_min    == 5.25
@@ -336,9 +336,9 @@ def test_parameter(DWL206):
     assert param.copynumber      == 0
     assert param.type            == "PARAMETER"
     assert param.long_name       == "Flush depth-delayed streams to output at end"
-    assert param.dimension is None
-    assert param.axis      is None
-    assert param.zones     is None
+    assert param.dimension       == []
+    assert param.axis            == []
+    assert param.zones           == []
     assert len(list(DWL206.parameters)) == 226
     param = [o for o in DWL206.parameters if o.name == "FLSHSTRM"]
     assert len(param) == 1
@@ -449,6 +449,18 @@ def test_padbytes_as_large_as_record():
 
         rec = f.extract([0])[0]
         assert rec.explicit
+        assert len(memoryview(rec)) == 0
+    finally:
+        f.close()
+
+def test_padbytes_as_large_as_segment():
+    # 180-byte long explicit record with padding, and padbytes are set to 176
+    # record is expected to not be present
+    try:
+        f = dlisio.open('data/padbytes-large-as-segment-body.dlis')
+        f.reindex([0], [180])
+
+        rec = f.extract([0])[0]
         assert len(memoryview(rec)) == 0
     finally:
         f.close()

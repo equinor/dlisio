@@ -24,16 +24,16 @@ class dlis(object):
         self.problematic = []
 
         self.types = {
-            'FILE-HEADER'            : plumbing.Fileheader.load,
-            'ORIGIN'                 : plumbing.Origin.load,
-            'FRAME'                  : plumbing.Frame.load,
-            'CHANNEL'                : plumbing.Channel.load,
-            'TOOL'                   : plumbing.Tool.load,
-            'PARAMETER'              : plumbing.Parameter.load,
-            'EQUIPMENT'              : plumbing.Equipment.load,
-            'CALIBRATION-MEASUREMENT': plumbing.Measurement.load,
-            'CALIBRATION-COEFFICIENT': plumbing.Coefficient.load,
-            'CALIBRATION'            : plumbing.Calibration.load,
+            'FILE-HEADER'            : plumbing.Fileheader.create,
+            'ORIGIN'                 : plumbing.Origin.create,
+            'FRAME'                  : plumbing.Frame.create,
+            'CHANNEL'                : plumbing.Channel.create,
+            'TOOL'                   : plumbing.Tool.create,
+            'PARAMETER'              : plumbing.Parameter.create,
+            'EQUIPMENT'              : plumbing.Equipment.create,
+            'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
+            'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
+            'CALIBRATION'            : plumbing.Calibration.create,
         }
         self.load()
 
@@ -91,7 +91,7 @@ class dlis(object):
                 try:
                     obj = self.types[os.type](o, name = name)
                 except KeyError:
-                    obj = plumbing.Unknown.load(o, name = name, type = os.type)
+                    obj = plumbing.Unknown.create(o, name = name, type = os.type)
 
                 fingerprint = obj.fingerprint
                 if fingerprint in objects:

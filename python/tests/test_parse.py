@@ -4,43 +4,13 @@ import os
 
 import dlisio
 from dlisio.core import reprc
-
+from . import merge_files
 
 @pytest.fixture
-def merge():
-    def merge(fpath, flist):
-        b = bytearray()
-        for file in flist:
-            with open(file, 'rb') as source:
-                b += bytearray(source.read())
-
-        with open(fpath, "wb") as dest:
-            update_envelope_VRL_and_LRSL(b)
-            dest.write(b)
-
+def merge(merge_files):
+    def merge(path, content):
+        merge_files(path, content, 104)
     return merge
-
-def update_envelope_VRL_and_LRSL(b):
-    lrsl = len(b) - 104
-    padbytes_count = max(0, 20 - lrsl)
-
-    if (len(b) + padbytes_count) % 2 :
-        padbytes_count += 1
-    else:
-        padbytes_count += 2
-
-    padbytes = bytearray([0x01] * (padbytes_count - 1))
-    padbytes.extend([padbytes_count])
-
-    b.extend(padbytes)
-
-    if(len(b) > 255 + 80):
-        msg = ("update the envelope method. "
-               "current implementation assumes VRL <= 255 bytes")
-        raise RuntimeError(msg)
-
-    b[81] = len(b) - 80   #change VR length
-    b[105] = len(b) - 104 #change LRS length
 
 @pytest.mark.future_test_attributes
 def test_invariant_attribute(tmpdir, merge):

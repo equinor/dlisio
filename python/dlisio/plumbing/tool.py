@@ -1,7 +1,7 @@
 import logging
 
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector
+from .valuetypes import scalar, vector, boolean
 
 class Tool(BasicObject):
     """Tool
@@ -28,7 +28,7 @@ class Tool(BasicObject):
         'DESCRIPTION'    : scalar('description'),
         'TRADEMARK-NAME' : scalar('trademark_name'),
         'GENERIC-NAME'   : scalar('generic_name'),
-        'STATUS'         : scalar('status'),
+        'STATUS'         : boolean('status'),
         'PARTS'          : vector('parts_refs'),
         'CHANNELS'       : vector('channels_refs'),
         'PARAMETERS'     : vector('parameters_refs')

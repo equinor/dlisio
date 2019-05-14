@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar
+from .valuetypes import scalar, vector
 
 
 class Parameter(BasicObject):
@@ -21,10 +21,10 @@ class Parameter(BasicObject):
     """
     attributes = {
         'LONG-NAME' : scalar('long_name'),
-        'DIMENSION' : scalar('dimension'),
-        'AXIS'      : scalar('axis'),
-        'ZONES'     : scalar('zones'),
-        'VALUES'    : scalar('values')
+        'DIMENSION' : vector('dimension'),
+        'AXIS'      : vector('axis'),
+        'ZONES'     : vector('zones'),
+        'VALUES'    : vector('values')
     }
 
     def __init__(self, obj = None, name = None):
@@ -33,13 +33,13 @@ class Parameter(BasicObject):
         self.long_name = None
 
         #: Dimensions of the parameter values
-        self.dimension = None
+        self.dimension = []
 
         #: Coordinate axes of the parameter values
-        self.axis      = None
+        self.axis      = []
 
         #: Mutually disjoint intervals where the parameter values is constant
-        self.zones     = None
+        self.zones     = []
 
         #: Parameter values
-        self.values    = None
+        self.values    = []

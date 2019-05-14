@@ -12,12 +12,20 @@ class BasicObject():
     specifying the object type. These two fields makes a unique indentifier for
     the object.
     """
+
+    attributes = {}
+
     def __init__(self, obj, name = None, type = None):
         self._type      = type
         self.name       = None
         self.origin     = None
         self.copynumber = None
         self._attic     = obj
+
+        #: Dictionary with all unexpected attributes.
+        #: While all expected attributes are presented as members of object
+        #: class, attributes not mentioned in specification are put into stash
+        self.stash = {}
 
         try:
             self.name       = name.id
@@ -91,19 +99,32 @@ class BasicObject():
         """
         return self._attic
 
+    def update_stash(self, label, value):
+        """ Stashes attributes
+
+        Adds provided label-value pair to stash dictionary.
+        If value already exists in the dictionary, it's updated
+        """
+        self.stash[label] = value
+
     def stripspaces(self):
         """Strip spaces
 
         Remove leading and trailing withspaces for object attributes as they
         may be padded with whitespaces.
         """
-        for key, value in self.__dict__.items():
-            if isinstance(value, str):
-                self.__dict__[key] = value.strip()
-            if isinstance(value, list):
-                if not isinstance(value, str): continue
-                for inx, v in enumerate(value):
-                    self.__dict__[key][inx] = v.strip()
+
+        def strip(d):
+            for key, value in d.items():
+                if isinstance(value, str):
+                    d[key] = value.strip()
+                elif isinstance(value, list):
+                    for inx, v in enumerate(value):
+                        if isinstance(v, str):
+                            d[key][inx] = v.strip()
+
+        strip(self.__dict__)
+        strip(self.stash)
 
     def link(self, objects, sets):
         """ Link objects
@@ -114,7 +135,22 @@ class BasicObject():
         pass
 
     @classmethod
-    def load(cls, obj, name = None):
+    def create(cls, obj, name = None, type = None):
+        """ Create Python object of provided class and load values
+        from native object
+
+        This process is generalized for all object types derived from
+        basic_object.
+        """
+        if type is None:
+            self = cls(obj, name = name)
+        else:
+            self = cls(obj, name = name, type = type)
+
+        self.load()
+        return self
+
+    def load(self):
         """Populate the Python object with values from the native c++ object.
 
         This is achieved by looping over the Python class' attribute list
@@ -126,16 +162,19 @@ class BasicObject():
         ...     if label == 'LONG-NAME': self.long_name = value
         ...     if label == 'CHANNEL'  : self.channel   = value
 
-        By using a classmethod, this process is generalized for all object
-        types derived from basic_object.
+        For labels which are not present in attribute list, instance stash
+        is updated
         """
-        self = cls(obj, name = name)
-
-        attrs = cls.attributes
-        for label, value in obj.items():
+        attrs = self.__class__.attributes
+        for label, value in self.attic.items():
             if value is None: continue
 
-            attr, value_type = attrs[label]
+            try:
+                attr, value_type = attrs[label]
+            except KeyError:
+                self.update_stash(label, value)
+                continue
+
             if value_type == ValueTypeScalar:
                 setattr(self, attr, value[0])
 
@@ -153,4 +192,3 @@ class BasicObject():
 
 
         self.stripspaces()
-        return self
