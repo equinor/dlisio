@@ -29,6 +29,7 @@ class dlis(object):
             'LONG-NAME'              : plumbing.Longname.create,
             'FRAME'                  : plumbing.Frame.create,
             'CHANNEL'                : plumbing.Channel.create,
+            'ZONE'                   : plumbing.Zone.create,
             'TOOL'                   : plumbing.Tool.create,
             'PARAMETER'              : plumbing.Parameter.create,
             'EQUIPMENT'              : plumbing.Equipment.create,
@@ -195,6 +196,16 @@ class dlis(object):
         tools: dict_values
         """
         return self.object_sets['TOOL'].values()
+
+    @property
+    def zones(self):
+        """ Read all Zone objects
+
+        Returns
+        -------
+        zones: dict_values
+        """
+        return self.object_sets['ZONE'].values()
 
     @property
     def parameters(self):

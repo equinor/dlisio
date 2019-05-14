@@ -28,7 +28,8 @@ class Parameter(BasicObject):
     }
 
     linkage = {
-        'long_name' : obname("LONG-NAME")
+        'long_name' : obname("LONG-NAME"),
+        'zones'     : obname("ZONE")
     }
 
     def __init__(self, obj = None, name = None):

@@ -151,6 +151,15 @@ def test_frame(f):
     assert frame2.index_min   == None
     assert frame2.index_max   == None
 
+def test_zone(f):
+    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone = f.objects[key]
+
+    assert zone.description == 'Some along zone'
+    assert zone.domain      == 'VERTICAL-DEPTH'
+    assert zone.maximum     == 13398
+    assert zone.minimum     == 8603
+
 def test_parameter(f):
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param = f.objects[key]
@@ -158,10 +167,13 @@ def test_parameter(f):
     key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
     longname = f.objects[key]
 
+    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone = f.objects[key]
+
     assert param.long_name         == longname
     assert param.dimension         == [2]
     assert param.refs['axis']      == [(10, 0, "AXIS1")]
-    assert param.refs['zones']     == [(10, 0, "ZONE-A")]
+    assert param.zones             == [zone]
     assert param.values            == [101, 120]
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)

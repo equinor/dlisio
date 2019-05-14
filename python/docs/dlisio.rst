@@ -132,6 +132,16 @@ Equipment
     :member-order: groupwise
     :inherited-members:
 
+Zone
+----
+.. autoclass:: dlisio.plumbing.Zone()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains
+    :member-order: groupwise
+    :inherited-members:
+
 Unknown
 -------
 .. autoclass:: dlisio.plumbing.Unknown()

@@ -5,6 +5,7 @@ from .origin import Origin
 from .frame import Frame
 from .channel import Channel
 from .tool import Tool
+from .zone import Zone
 from .parameter import Parameter
 from .calibration import Calibration
 from .equipment import Equipment
