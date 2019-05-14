@@ -289,3 +289,108 @@ def test_unexpected_attributes(f):
                                                   (10, 0, "PARAMU")]
     assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
                                                   (10, 0, "OBJ1"))]
+
+def test_dynamic_class(fpath):
+    with dlisio.load(fpath) as f:
+        class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
+            attributes = {
+                "SOME_LIST"   : dlisio.plumbing.valuetypes.vector('list'),
+                "SOME_VALUE"  : dlisio.plumbing.valuetypes.scalar('value'),
+                "SOME_STATUS" : dlisio.plumbing.valuetypes.boolean('status'),
+            }
+
+            def __init__(self, obj = None, name = None):
+                super().__init__(obj, name = name, type = "UNKNOWN_SET")
+                self.list = []
+                self.value = None
+                self.status = None
+
+        key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+        unknown = f.objects[key]
+        with pytest.raises(AttributeError):
+            assert unknown.value == "VAL1"
+
+        f.types['UNKNOWN_SET'] = ActuallyKnown.create
+        f.load()
+
+        key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+        unknown = f.objects[key]
+
+        assert unknown.list == ["LIST_V1", "LIST_V2"]
+        assert unknown.value == "VAL1"
+        assert unknown.status == True
+
+def test_dynamic_instance_attribute(fpath):
+    with dlisio.load(fpath) as f:
+        key = dlisio.core.fingerprint(
+                          'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+        c = f.objects[key]
+        # update attributes only for one object
+        c.attributes = dict(c.attributes)
+        c.attributes['MY_PARAM'] = dlisio.plumbing.valuetypes.vector('myparams')
+
+        c.load()
+        assert c.myparams == ["wrong", "W"]
+
+        # check that other object of the same type is not affected
+        key = dlisio.core.fingerprint(
+                          'CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+        c = f.objects[key]
+
+        with pytest.raises(KeyError):
+            c.attributes['myparams']
+
+def test_dynamic_class_attribute(fpath):
+    with dlisio.load(fpath) as f:
+        # update attribute for the class
+        dlisio.plumbing.coefficient.Coefficient.attributes['MY_PARAM'] = (
+                        dlisio.plumbing.valuetypes.vector('myparams'))
+
+        key = dlisio.core.fingerprint(
+                          'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+        c = f.objects[key]
+
+        assert c.attributes['MY_PARAM'] == (
+                           dlisio.plumbing.valuetypes.vector('myparams'))
+        c.load()
+        assert c.myparams == ["wrong", "W"]
+
+        # manual cleanup. "reload" doesn't work
+        del c.__class__.attributes['MY_PARAM']
+
+def test_dynamic_linkage(fpath):
+    with dlisio.load(fpath) as f:
+        key = dlisio.core.fingerprint(
+                          'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+        c = f.objects[key]
+
+        c.attributes = dict(c.attributes)
+        c.attributes['LINKS_TO_PARAMETERS'] = (
+                dlisio.plumbing.valuetypes.vector('paramlinks'))
+        c.attributes['LINK_TO_UNKNOWN_OBJECT'] = (
+                dlisio.plumbing.valuetypes.scalar('unknown_link'))
+
+        c.load()
+
+        c.linkage = dict(c.linkage)
+        c.linkage['label']        = dlisio.plumbing.linkage.obname("EQUIPMENT")
+        c.linkage['paramlinks']   = dlisio.plumbing.linkage.obname("PARAMETER")
+        c.linkage['unknown_link'] = dlisio.plumbing.linkage.objref
+        c.linkage['notlink']      = dlisio.plumbing.linkage.objref
+        c.linkage['wrongobname']  = "i am just wrong obname"
+        c.linkage['wrongobjref']  = "i am just wrong objref"
+
+        c.refs["notlink"]     = "i am no link"
+        c.refs["wrongobname"] = c.refs["paramlinks"]
+        c.refs["wrongobjref"] = c.refs["unknown_link"]
+
+        c.link(f.objects)
+
+        key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
+        param2 = f.objects[key]
+        key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+        u = f.objects[key]
+
+        assert c.label        == "SMTH"
+        assert c.paramlinks   == [param2]
+        assert c.unknown_link == u
