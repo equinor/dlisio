@@ -33,6 +33,7 @@ class Channel(BasicObject):
 
     linkage = {
         'long_name' : obname("LONG-NAME"),
+        'axis'      : obname("AXIS"),
         'source'    : objref
     }
 

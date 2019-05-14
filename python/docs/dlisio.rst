@@ -22,6 +22,16 @@ Basic object
     :undoc-members:
     :member-order: groupwise
 
+Axis
+----
+.. autoclass:: dlisio.plumbing.Axis()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Calibration
 -----------
 .. autoclass:: dlisio.plumbing.Calibration()

@@ -79,6 +79,14 @@ def test_origin(f):
     assert random_origin.file_set_nr == 1042
     assert random_origin.file_nr     == 6
 
+def test_axis(f):
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis = f.objects[key]
+
+    assert axis.axis_id     == 'AX2'
+    assert axis.coordinates == ['very near', 'not so far']
+    assert axis.spacing     == 'a bit'
+
 def test_longname(f):
     key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
     ln  = f.objects[key]
@@ -109,14 +117,21 @@ def test_channel(f):
     key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel = f.objects[key]
 
+    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    axis1 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS3', 10, 0)
+    axis3 = f.objects[key]
+
     assert channel.long_name         == longname
     assert channel.properties        == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc             == 16
     assert channel.units             == "custom units"
     assert channel.dimension         == [2, 3, 2]
-    assert channel.refs['axis']      == [(10, 0, "AXIS1"),
-                                         (10, 0, "AXIS2"),
-                                         (10, 0, "AXIS3")]
+    assert channel.axis              == [axis1, axis2, axis3]
     assert channel.element_limit     == [10, 15, 10]
     assert channel.source            == tool
 
@@ -170,9 +185,12 @@ def test_parameter(f):
     key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
+    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    axis = f.objects[key]
+
     assert param.long_name         == longname
     assert param.dimension         == [2]
-    assert param.refs['axis']      == [(10, 0, "AXIS1")]
+    assert param.axis              == [axis]
     assert param.zones             == [zone]
     assert param.values            == [101, 120]
 
@@ -248,11 +266,17 @@ def test_measurement(f):
     key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
     m = f.objects[key]
 
+    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    axis1 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+
     assert m.phase           == "MASTER"
     assert m.source          == tool
     assert m.mtype           == "Zero"
     assert m.dimension       == [2, 3]
-    assert m.refs['axis']    == [(10, 0, "AXIS1"), (10, 0, "AXIS2")]
+    assert m.axis            == [axis1, axis2]
     assert m.samples         == [240, 137, 228, 120, 240, 136]
     assert m.samplecount     == 4
     assert m.max_deviation   == 2.5

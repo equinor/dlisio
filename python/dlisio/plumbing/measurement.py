@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
-from .linkage import objref
+from .linkage import objref, obname
 
 
 class Measurement(BasicObject):
@@ -36,6 +36,7 @@ class Measurement(BasicObject):
     }
 
     linkage = {
+        'axis'   : obname("AXIS"),
         'source' : objref
     }
 

@@ -24,6 +24,7 @@ class dlis(object):
         self.problematic = []
 
         self.types = {
+            'AXIS'                   : plumbing.Axis.create,
             'FILE-HEADER'            : plumbing.Fileheader.create,
             'ORIGIN'                 : plumbing.Origin.create,
             'LONG-NAME'              : plumbing.Longname.create,
@@ -149,6 +150,16 @@ class dlis(object):
         origin : dict_values
         """
         return self.object_sets['ORIGIN'].values()
+
+    @property
+    def axes(self):
+        """ Read all Axis objects
+
+        Returns
+        -------
+        axes: dict_values
+        """
+        return self.object_sets['AXIS'].values()
 
     @property
     def longnames(self):

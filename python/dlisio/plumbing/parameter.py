@@ -29,6 +29,7 @@ class Parameter(BasicObject):
 
     linkage = {
         'long_name' : obname("LONG-NAME"),
+        'axis'      : obname("AXIS"),
         'zones'     : obname("ZONE")
     }
 
