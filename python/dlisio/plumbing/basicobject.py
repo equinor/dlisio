@@ -16,6 +16,23 @@ class BasicObject():
     """
 
     attributes = {}
+    """dict: Index of all the attributes this object is expected to have.
+    DLISIO will use this index on object parsing. If an attribute is not in
+    index, it will be ignored when parsing the file.
+    If attributes list is to be updated manually for the class:
+
+    >>> Coefficient.attributes['MY_PARAM'] = valuetypes.scalar('myparam')
+    ... dlisio.load(fpath)
+
+    All the Coefficient objects will map MY_PARAM from the source file
+    to myparam. It's also possible to update attributes for one object
+    only and reload afterwards:
+
+    >>> coeff = f.objects[key]
+    ... coeff.attributes['UNIQUE_PARAM'] = valuetypes.scalar('uniqueparam')
+    ... coeff.load()
+    """
+
     linkage    = {}
     """dict: Linkage defines the rules for how each attribute links to other
     objects.
@@ -230,7 +247,6 @@ class BasicObject():
         For labels which are not present in attribute list, instance stash
         is updated
         """
-        attrs = self.__class__.attributes
 
         def islink(val):
             # TODO: update to check repcode when repcode is back
@@ -238,6 +254,7 @@ class BasicObject():
                     isinstance (val, core.objref) or
                     isinstance (val, core.attref))
 
+        attrs = self.attributes
         for label, value in self.attic.items():
             if value is None: continue
 
