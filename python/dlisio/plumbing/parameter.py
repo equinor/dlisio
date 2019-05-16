@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
-
+from .linkage import obname
 
 class Parameter(BasicObject):
     """Parameter
@@ -25,6 +25,12 @@ class Parameter(BasicObject):
         'AXIS'      : vector('axis'),
         'ZONES'     : vector('zones'),
         'VALUES'    : vector('values')
+    }
+
+    linkage = {
+        'long_name' : obname("LONG-NAME"),
+        'axis'      : obname("AXIS"),
+        'zones'     : obname("ZONE")
     }
 
     def __init__(self, obj = None, name = None):

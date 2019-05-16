@@ -24,16 +24,20 @@ class dlis(object):
         self.problematic = []
 
         self.types = {
+            'AXIS'                   : plumbing.Axis.create,
             'FILE-HEADER'            : plumbing.Fileheader.create,
             'ORIGIN'                 : plumbing.Origin.create,
+            'LONG-NAME'              : plumbing.Longname.create,
             'FRAME'                  : plumbing.Frame.create,
             'CHANNEL'                : plumbing.Channel.create,
+            'ZONE'                   : plumbing.Zone.create,
             'TOOL'                   : plumbing.Tool.create,
             'PARAMETER'              : plumbing.Parameter.create,
             'EQUIPMENT'              : plumbing.Equipment.create,
             'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
             'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
             'CALIBRATION'            : plumbing.Calibration.create,
+            'COMPUTATION'            : plumbing.Computation.create,
         }
         self.load()
 
@@ -149,6 +153,26 @@ class dlis(object):
         return self.object_sets['ORIGIN'].values()
 
     @property
+    def axes(self):
+        """ Read all Axis objects
+
+        Returns
+        -------
+        axes: dict_values
+        """
+        return self.object_sets['AXIS'].values()
+
+    @property
+    def longnames(self):
+        """ Read all Longname objects
+
+        Returns
+        -------
+        long-name : dict_values
+        """
+        return self.object_sets['LONG-NAME'].values()
+
+    @property
     def channels(self):
         """ Read all channel objects
 
@@ -186,6 +210,16 @@ class dlis(object):
         return self.object_sets['TOOL'].values()
 
     @property
+    def zones(self):
+        """ Read all Zone objects
+
+        Returns
+        -------
+        zones: dict_values
+        """
+        return self.object_sets['ZONE'].values()
+
+    @property
     def parameters(self):
         """ Read all Parameter objects
 
@@ -204,6 +238,16 @@ class dlis(object):
         equipments : dict_values
         """
         return self.object_sets['EQUIPMENT'].values()
+
+    @property
+    def computations(self):
+        """ Read all computation objects
+
+        Returns
+        -------
+        computations : dict_values
+        """
+        return self.object_sets['COMPUTATION'].values()
 
     @property
     def measurements(self):

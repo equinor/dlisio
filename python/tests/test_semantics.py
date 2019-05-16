@@ -19,6 +19,7 @@ def fpath(tmpdir_factory, merge_files):
         'data/semantic/parameter.dlis.part',
         'data/semantic/equipment.dlis.part',
         'data/semantic/tool.dlis.part',
+        'data/semantic/computation.dlis.part',
         'data/semantic/measurement.dlis.part',
         'data/semantic/coefficient.dlis.part',
         'data/semantic/coefficient-wrong.dlis.part',
@@ -79,21 +80,59 @@ def test_origin(f):
     assert random_origin.file_set_nr == 1042
     assert random_origin.file_nr     == 6
 
+def test_axis(f):
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis = f.objects[key]
+
+    assert axis.axis_id     == 'AX2'
+    assert axis.coordinates == ['very near', 'not so far']
+    assert axis.spacing     == 'a bit'
+
+def test_longname(f):
+    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    ln  = f.objects[key]
+
+    assert ln.modifier        == ['channel 1 long name']
+    assert ln.quantity        == 'color'
+    assert ln.quantity_mod    == ['nice']
+    assert ln.altered_form    == 'deviation'
+    assert ln.entity          == 'borehole'
+    assert ln.entity_mod      == ['bad']
+    assert ln.entity_nr       == '21'
+    assert ln.entity_part     == 'top part?'
+    assert ln.entity_part_nr  == '1'
+    assert ln.generic_source  == 'random words'
+    assert ln.source_part     == ['generator']
+    assert ln.source_part_nr  == ['8412']
+    assert ln.conditions      == ['at standard temperature']
+    assert ln.standard_symbol == 'SYM'
+    assert ln.private_symbol  == 'BOL'
+
 def test_channel(f):
     key = dlisio.core.fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
+    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    longname = f.objects[key]
+
     key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel = f.objects[key]
 
-    assert channel.refs['long_name'] == (10, 0, "CHANN1-LONG-NAME")
+    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    axis1 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS3', 10, 0)
+    axis3 = f.objects[key]
+
+    assert channel.long_name         == longname
     assert channel.properties        == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc             == 16
     assert channel.units             == "custom units"
     assert channel.dimension         == [2, 3, 2]
-    assert channel.refs['axis']      == [(10, 0, "AXIS1"),
-                                         (10, 0, "AXIS2"),
-                                         (10, 0, "AXIS3")]
+    assert channel.axis              == [axis1, axis2, axis3]
     assert channel.element_limit     == [10, 15, 10]
     assert channel.source            == tool
 
@@ -128,23 +167,50 @@ def test_frame(f):
     assert frame2.index_min   == None
     assert frame2.index_max   == None
 
+def test_zone(f):
+    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone = f.objects[key]
+
+    assert zone.description == 'Some along zone'
+    assert zone.domain      == 'VERTICAL-DEPTH'
+    assert zone.maximum     == 13398
+    assert zone.minimum     == 8603
+
 def test_parameter(f):
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param = f.objects[key]
-    assert param.refs['long_name'] == (10, 0, "PARAM1-LONG")
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
+    longname = f.objects[key]
+
+    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    axis = f.objects[key]
+
+    assert param.long_name         == longname
     assert param.dimension         == [2]
-    assert param.refs['axis']      == [(10, 0, "AXIS1")]
-    assert param.refs['zones']     == [(10, 0, "ZONE-A")]
+    assert param.axis              == [axis]
+    assert param.zones             == [zone]
     assert param.values            == [101, 120]
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param = f.objects[key]
-    assert param.refs['long_name'] == (10, 0, "PARAM2-LONG")
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM2-LONG', 10, 0)
+    longname = f.objects[key]
+
+    assert param.long_name         == longname
     assert param.values            == [131, 69]
 
     key = dlisio.core.fingerprint('PARAMETER', 'PARAM3', 10, 0)
     param = f.objects[key]
-    assert param.refs['long_name'] == (10, 0, "PARAM3-LONG")
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM3-LONG', 10, 0)
+    longname = f.objects[key]
+
+    assert param.long_name         == longname
     assert param.values            == [152, 35]
 
 def test_equipment(f):
@@ -201,11 +267,17 @@ def test_measurement(f):
     key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
     m = f.objects[key]
 
+    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    axis1 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+
     assert m.phase           == "MASTER"
     assert m.source          == tool
     assert m.mtype           == "Zero"
     assert m.dimension       == [2, 3]
-    assert m.refs['axis']    == [(10, 0, "AXIS1"), (10, 0, "AXIS2")]
+    assert m.axis            == [axis1, axis2]
     assert m.samples         == [240, 137, 228, 120, 240, 136]
     assert m.samplecount     == 4
     assert m.max_deviation   == 2.5
@@ -263,6 +335,27 @@ def test_calibration(f):
     assert c.measurements == [meas1, meas2]
     assert c.parameters   == [param1, param2, param3]
     assert c.method       == "USELESS"
+
+def test_computation(f):
+    key = dlisio.core.fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
+    com = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+
+    key = dlisio.core.fingerprint('AXIS', 'AXIS3', 10, 0)
+    axis3 = f.objects[key]
+
+    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone = f.objects[key]
+
+    assert com.long_name      == 'computation object 2'
+    assert com.properties     == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
+    assert com.dimension      == [2, 4]
+    assert com.axis           == [axis2, axis3]
+    assert com.zones          == [zone]
+    assert com.values         == [140, 99, 144, 172, 202, 52, 109, 120]
+    assert com.refs['source'] == [('PROCESS', (10, 0, 'PROC1'))]
 
 def test_unknown(f):
     key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)

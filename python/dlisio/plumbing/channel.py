@@ -1,7 +1,7 @@
 from .basicobject import BasicObject
 from ..reprc import dtype
 from .valuetypes import scalar, vector
-from .linkage import objref
+from .linkage import obname, objref
 
 import numpy as np
 
@@ -32,7 +32,9 @@ class Channel(BasicObject):
     }
 
     linkage = {
-        'source' : objref
+        'long_name' : obname("LONG-NAME"),
+        'axis'      : obname("AXIS"),
+        'source'    : objref
     }
 
     def __init__(self, obj = None, name = None):

@@ -22,6 +22,16 @@ Basic object
     :undoc-members:
     :member-order: groupwise
 
+Axis
+----
+.. autoclass:: dlisio.plumbing.Axis()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Calibration
 -----------
 .. autoclass:: dlisio.plumbing.Calibration()
@@ -52,6 +62,16 @@ Coefficent
     :member-order: groupwise
     :inherited-members:
 
+Computation
+-----------
+.. autoclass:: dlisio.plumbing.Computation()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
 Frame
 -----
 .. autoclass:: dlisio.plumbing.Frame()
@@ -65,6 +85,16 @@ Frame
 Fileheader
 ----------
 .. autoclass:: dlisio.plumbing.Fileheader()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
+Longname
+--------
+.. autoclass:: dlisio.plumbing.Longname()
     :special-members: __repr__, __str__
     :members:
     :undoc-members:
@@ -119,6 +149,16 @@ Equipment
     :members:
     :undoc-members:
     :exclude-members: stripspaces, contains, attributes
+    :member-order: groupwise
+    :inherited-members:
+
+Zone
+----
+.. autoclass:: dlisio.plumbing.Zone()
+    :special-members: __repr__, __str__
+    :members:
+    :undoc-members:
+    :exclude-members: stripspaces, contains
     :member-order: groupwise
     :inherited-members:
 
