@@ -109,7 +109,7 @@ class dlis(object):
                 object_sets[obj.type][fingerprint] = obj
 
         for obj in objects.values():
-            obj.link(objects, object_sets)
+            obj.link(objects)
 
         self.objects = objects
         self.object_sets = object_sets

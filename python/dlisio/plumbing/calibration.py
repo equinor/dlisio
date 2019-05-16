@@ -1,7 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import vector, scalar
-
-import logging
+from .linkage import obname
 
 class Calibration(BasicObject):
     """Calibration
@@ -25,11 +24,19 @@ class Calibration(BasicObject):
     """
     attributes = {
         'METHOD'               : scalar('method'),
-        'CALIBRATED-CHANNELS'  : vector('calibrated_refs'),
-        'UNCALIBRATED-CHANNELS': vector('uncalibrated_refs'),
-        'COEFFICIENTS'         : vector('coefficient_refs'),
-        'MEASUREMENTS'         : vector('measurement_refs'),
-        'PARAMETERS'           : vector('parameters_refs')
+        'CALIBRATED-CHANNELS'  : vector('calibrated'),
+        'UNCALIBRATED-CHANNELS': vector('uncalibrated'),
+        'COEFFICIENTS'         : vector('coefficients'),
+        'MEASUREMENTS'         : vector('measurements'),
+        'PARAMETERS'           : vector('parameters')
+    }
+
+    linkage = {
+        'calibrated'   : obname("CHANNEL"),
+        'uncalibrated' : obname("CHANNEL"),
+        'coefficients' : obname("CALIBRATION-COEFFICIENT"),
+        'measurements' : obname("CALIBRATION-MEASUREMENT"),
+        'parameters'   : obname("PARAMETER")
     }
 
     def __init__(self, obj = None, name = None, type = None):
@@ -53,75 +60,3 @@ class Calibration(BasicObject):
         #: Parameters containing numerical and textual information assosiated
         #: with the calibration process.
         self.parameters        = []
-
-        #: Reference to the calibrated channels
-        self.calibrated_refs   = []
-
-        #: Reference to the uncalibrated channels
-        self.uncalibrated_refs = []
-
-        #: Reference to coefficients
-        self.coefficient_refs  = []
-
-        #: Reference to measurements
-        self.measurement_refs      = []
-
-        #: References to the parameters
-        self.parameters_refs   = []
-
-    def link(self, objects, sets):
-        channels = sets['CHANNEL']
-
-        calibs = []
-        for ref in self.calibrated_refs:
-            fp = ref.fingerprint('CHANNEL')
-            try:
-                calibs.append(channels[fp])
-            except KeyError:
-                msg = 'missing channel {} referenced from calibration {}'
-                logging.warning(msg.format(ref, self.name))
-
-        uncalibs = []
-        for ref in self.uncalibrated_refs:
-            fp = ref.fingerprint('CHANNEL')
-            try:
-                uncalibs.append(channels[fp])
-            except KeyError:
-                msg = 'missing channel {} referenced from calibration {}'
-                logging.warning(msg.format(ref, self.name))
-
-        coefficients = sets['CALIBRATION-COEFFICIENT']
-        coeffs = []
-        for ref in self.coefficient_refs:
-            fp = ref.fingerprint('CALIBRATION-COEFFICIENT')
-            try:
-                coeffs.append(coefficients[fp])
-            except KeyError:
-                msg = 'missing coefficient {} referenced from calibration {}'
-                logging.warning(msg.format(ref, self.name))
-
-        measurements = sets['CALIBRATION-MEASUREMENT']
-        measures = []
-        for ref in self.measurement_refs:
-            fp = ref.fingerprint('CALIBRATION-MEASUREMENT')
-            try:
-                measures.append(measurements[fp])
-            except KeyError:
-                msg = 'missing coefficient {} referenced from calibration {}'
-                logging.warning(msg.format(ref, self.name))
-
-        parameters = sets['PARAMETER']
-        params = []
-        for ref in self.parameters_refs:
-            fp = ref.fingerprint('PARAMETER')
-            try:
-                params.append(parameters[fp])
-            except KeyError:
-                msg = 'missing parameter {} referenced from calibration {}'
-                logging.warning(msg.format(ref, self.name))
-
-        self.calibrated = calibs
-        self.uncalibrated = uncalibs
-        self.coefficients = coeffs
-        self.measurements = measures
-        self.parameters = params

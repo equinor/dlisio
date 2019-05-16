@@ -1,6 +1,8 @@
 from .. import core
 from .valuetypes import *
 
+import logging
+
 class BasicObject():
     """Basic object
     Python representation of the set of logical record types (listed in
@@ -14,6 +16,39 @@ class BasicObject():
     """
 
     attributes = {}
+    """dict: Index of all the attributes this object is expected to have.
+    DLISIO will use this index on object parsing. If an attribute is not in
+    index, it will be ignored when parsing the file.
+    If attributes list is to be updated manually for the class:
+
+    >>> Coefficient.attributes['MY_PARAM'] = valuetypes.scalar('myparam')
+    ... dlisio.load(fpath)
+
+    All the Coefficient objects will map MY_PARAM from the source file
+    to myparam. It's also possible to update attributes for one object
+    only and reload afterwards:
+
+    >>> coeff = f.objects[key]
+    ... coeff.attributes['UNIQUE_PARAM'] = valuetypes.scalar('uniqueparam')
+    ... coeff.load()
+    """
+
+    linkage    = {}
+    """dict: Linkage defines the rules for how each attribute links to other
+    objects.
+    During load stage all the objects of obname, objref and attref types
+    are put into refs. During link stage they are linked to actually
+    loaded objects based on information provided in linkage.
+    If linkage is to be updated manually for the class:
+
+    >>> Coefficient.linkage['myparam'] = linkage.obname("PARAMETER")
+    ... dlisio.load(fpath)
+
+    The values must be either *linkage.obname("TYPE")* or *linkage.objref*.
+    To relink just one object (when refs or linkage is updated):
+
+    >>> coeff.link(f.objects)
+    """
 
     def __init__(self, obj, name = None, type = None):
         self._type      = type
@@ -25,7 +60,12 @@ class BasicObject():
         #: Dictionary with all unexpected attributes.
         #: While all expected attributes are presented as members of object
         #: class, attributes not mentioned in specification are put into stash
-        self.stash = {}
+        self.stash      = {}
+
+        #: References to linked objects.
+        #: Keeps originally stored value references to objects (obname, objref,
+        #: attref) in the form of dictionary (expected attribute name : value)
+        self.refs       = {}
 
         try:
             self.name       = name.id
@@ -126,13 +166,55 @@ class BasicObject():
         strip(self.__dict__)
         strip(self.stash)
 
-    def link(self, objects, sets):
+    def link(self, objects):
         """ Link objects
 
-        The default implementation is a no-op - individual object types
-        themselves are aware on how to link to other objects
+        Iterate through values in refs and link objects based on
+        provided linkage
         """
-        pass
+
+        linkage = self.linkage
+
+        for attr, link in linkage.items():
+            try:
+                ref = self.refs[attr]
+            except KeyError:
+                continue
+
+            if ref is None: continue
+
+            def get_link(v):
+                try:
+                    fp = link(v)
+                except (AttributeError, TypeError):
+                    msg = ('wrong linkage for attribute \'{}\' of object {} of '
+                           'class {}: can\'t  link object \'{}\' with expected '
+                           'linkage type \'{}\'. Make sure linkage contains '
+                           'references only to linkable objects and object is a'
+                           ' link of expected type')
+                    logging.warning(msg.format(attr, self.name,
+                                               self.__class__, v, link))
+                    return None
+
+                try:
+                    return objects[fp]
+                except KeyError:
+                    msg = ('missing attribute \'{}\' {} referenced from object '
+                           '{} of class {}')
+                    logging.warning(msg.format(attr, v, self.name,
+                                               self.__class__))
+                    return None
+
+            if isinstance(ref, list):
+                links = []
+                for v in ref:
+                    lnk = get_link(v)
+                    if lnk:
+                        links.append(lnk)
+                setattr(self, attr, links)
+            else:
+                lnk = get_link(ref)
+                setattr(self, attr, lnk)
 
     @classmethod
     def create(cls, obj, name = None, type = None):
@@ -165,7 +247,14 @@ class BasicObject():
         For labels which are not present in attribute list, instance stash
         is updated
         """
-        attrs = self.__class__.attributes
+
+        def islink(val):
+            # TODO: update to check repcode when repcode is back
+            return (isinstance (val, core.obname) or
+                    isinstance (val, core.objref) or
+                    isinstance (val, core.attref))
+
+        attrs = self.attributes
         for label, value in self.attic.items():
             if value is None: continue
 
@@ -175,20 +264,11 @@ class BasicObject():
                 self.update_stash(label, value)
                 continue
 
-            if value_type == ValueTypeScalar:
-                setattr(self, attr, value[0])
+            val = vtvalue(value_type, value)
 
-            elif value_type == ValueTypeVector:
-                setattr(self, attr, value)
-
-            elif value_type == ValueTypeBoolean:
-                setattr(self, attr, bool(value[0]))
-
+            if islink(value[0]):
+                self.refs[attr] = val
             else:
-                problem = 'unknown value extraction descriptor {}'
-                solution = 'should be either scalar, vector, or boolean'
-                msg = ', '.join((problem.format(value_type), solution))
-                raise ValueError(msg)
-
+                setattr(self, attr, val)
 
         self.stripspaces()
