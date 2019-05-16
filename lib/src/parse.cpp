@@ -920,9 +920,9 @@ object_vector parse_objects( const object_template& tmpl,
                  * certain codes (ident -> ascii), but is no need for now
                  */
 
-                if (flags.reprc) {
-                    const auto msg = "count ({}) and representation code "
-                            "({}) changed, but value is not explicitly set";
+                if (flags.reprc && attr.reprc != template_attr.reprc) {
+                    const auto msg = "count ({}) isn't 0 and representation "
+                        "code ({}) changed, but value is not explicitly set";
                     const auto code = static_cast< int >(attr.reprc);
                     throw std::runtime_error(fmt::format(msg, count, code));
                 }

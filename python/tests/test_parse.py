@@ -275,6 +275,23 @@ def test_different_repcode_no_value(tmpdir, merge):
     assert "value is not explicitly set" in str(excinfo.value)
 
 
+def test_same_as_default_no_value(tmpdir, merge):
+    path = os.path.join(str(tmpdir), 'same-as-default-but-no-value.dlis')
+    content = [
+        'data/parse/start.dlis.part',
+        'data/parse/template/default.dlis.part',
+        'data/parse/object/object.dlis.part',
+        'data/parse/objattr/repeat-default-novalue.dlis.part'
+    ]
+    merge(path, content)
+
+    with dlisio.load(path) as f:
+        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        obj = f.objects[key]
+        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        assert attr == [-0.75, 10.0]
+
+
 @pytest.mark.future_test_attributes
 def test_novalue_less_count(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'novalue-less-count.dlis')
