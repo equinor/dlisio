@@ -124,9 +124,6 @@ class dlis(object):
         self.problematic = problematic
         return self
 
-    def getobject(self, name, type):
-        return self._objects.getobject(name, type)
-
     def curves(self, fingerprint):
         frame = self.indexedobjects['FRAME'][fingerprint]
         fmt = frame.fmtstr()
