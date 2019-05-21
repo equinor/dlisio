@@ -40,7 +40,7 @@ def fpath(tmpdir_factory, merge_files):
 
 @pytest.fixture(scope="module")
 def f(tmpdir_factory, fpath):
-    with dlisio.load(fpath) as f:
+    with dlisio.load(fpath) as (f, *tail):
         yield f
 
 def test_file_header(f):
@@ -392,7 +392,7 @@ def test_unexpected_attributes(f):
                                                   (10, 0, "OBJ1"))]
 
 def test_dynamic_class(fpath):
-    with dlisio.load(fpath) as f:
+    with dlisio.load(fpath) as (f, _):
         class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
             attributes = {
                 "SOME_LIST"   : dlisio.plumbing.valuetypes.vector('list'),
@@ -422,7 +422,7 @@ def test_dynamic_class(fpath):
         assert unknown.status == True
 
 def test_dynamic_instance_attribute(fpath):
-    with dlisio.load(fpath) as f:
+    with dlisio.load(fpath) as (f, _):
         key = dlisio.core.fingerprint(
                           'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c = f.objects[key]
@@ -442,7 +442,7 @@ def test_dynamic_instance_attribute(fpath):
             c.attributes['myparams']
 
 def test_dynamic_class_attribute(fpath):
-    with dlisio.load(fpath) as f:
+    with dlisio.load(fpath) as (f, _):
         # update attribute for the class
         dlisio.plumbing.coefficient.Coefficient.attributes['MY_PARAM'] = (
                         dlisio.plumbing.valuetypes.vector('myparams'))
@@ -460,7 +460,7 @@ def test_dynamic_class_attribute(fpath):
         del c.__class__.attributes['MY_PARAM']
 
 def test_dynamic_linkage(fpath):
-    with dlisio.load(fpath) as f:
+    with dlisio.load(fpath) as (f, _):
         key = dlisio.core.fingerprint(
                           'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c = f.objects[key]

@@ -22,7 +22,7 @@ def test_invariant_attribute(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['INVARIANT_ATTRIBUTE']
@@ -43,7 +43,7 @@ def test_invariant_attribute_in_object(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -61,7 +61,7 @@ def test_default_attribute(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -81,7 +81,7 @@ def test_default_attribute_cut(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert obj.attic['INVARIANT_ATTRIBUTE']
@@ -99,7 +99,7 @@ def test_attribute_absent(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert obj.attic['INVARIANT_ATTRIBUTE']
@@ -118,7 +118,7 @@ def test_absent_attribute_in_template(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert obj.attic['DEFAULT_ATTRIBUTE']
@@ -135,7 +135,7 @@ def test_global_default_attribute(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
@@ -156,7 +156,7 @@ def test_all_attribute_bits(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -177,7 +177,7 @@ def test_label_bit_set_in_attribute(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert obj.attic['DEFAULT_ATTRIBUTE']
@@ -194,7 +194,7 @@ def test_label_bit_not_set_in_template(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['NEW_ATTRIBUTE']
@@ -213,7 +213,7 @@ def test_count0_novalue(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -232,7 +232,7 @@ def test_count0_value_bit(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -251,7 +251,7 @@ def test_count0_different_repcode(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -285,7 +285,7 @@ def test_same_as_default_no_value(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -303,7 +303,7 @@ def test_novalue_less_count(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic['DEFAULT_ATTRIBUTE']
@@ -374,7 +374,7 @@ def test_repcode(tmpdir, merge, filename_p, attr_n, attr_reprc, attr_v):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         attr = obj.attic[attr_n]
@@ -422,7 +422,7 @@ def test_set_type_not_set(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert obj.attic['DEFAULT_ATTRIBUTE']
@@ -438,7 +438,7 @@ def test_no_object_name_bit(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f, *tail):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert obj.attic['DEFAULT_ATTRIBUTE']
@@ -466,7 +466,7 @@ def test_no_template(tmpdir, merge):
     ]
     merge(path, content)
 
-    with dlisio.load(path) as f:
+    with dlisio.load(path) as (f,):
         key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         obj = f.objects[key]
         assert len(obj.attic) == 0

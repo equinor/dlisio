@@ -12,12 +12,12 @@ except pkg_resources.DistributionNotFound:
     pass
 
 class dlis(object):
-    def __init__(self, stream, explicits, sul_offset = 80):
+    def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
-        self.attic = None
+        self.attic = attic
         self.sul_offset = sul_offset
-        self.fdata_index = None
+        self.fdata_index = implicits
 
         self.objects = {}
         self.object_sets = defaultdict(dict)
@@ -45,6 +45,10 @@ class dlis(object):
         return self
 
     def __exit__(self, type, value, traceback):
+        print("dlis: closed {}".format(self))
+        self.close()
+
+    def close(self):
         self.file.close()
 
     def storage_label(self):
@@ -308,15 +312,63 @@ def open(path):
     return core.stream(str(path))
 
 def load(path):
-    """ Load a file
+    """ Loads a file and returns one filehandle pr logical file.
+
+    The dlis standard have a concept of logical files. A logical file is a
+    group of related logical records, i.e. curves and metadata and is
+    independent from any other logical file. Each physical file (.dlis) can
+    contain 1 to n logical files. Layouts of physical- and logical files:
+
+    Physical file::
+
+         --------------------------------------------------------
+        | Logical File 1 | Logical File 2 | ... | Logical File n |
+         --------------------------------------------------------
+
+    Logical File::
+
+         ---------------------------------------------------------
+        | Fileheader |  Origin  |  Frame  |  Channel  | curvedata |
+         ---------------------------------------------------------
+
+    This means that dlisio.load() will return 1 to n logical files.
 
     Parameters
     ----------
+
     path : str_like
+
+    Examples
+    --------
+
+    Read the fileheader of each logical file
+
+    >>> with dlisio.load(filename) as files:
+    ...     for f in files:
+    ...         header = f.fileheader
+
+    Automatically unpack the first logical file and store the remaining logical
+    files in tail
+
+    >>> with dlisio.load(filename) as (f, *tail):
+    ...     header = f.fileheader
+    ...     for g in tail:
+    ...         header = g.fileheader
+
+    Notes
+    -----
+
+    1) That the parentezies are needed when unpacking directly in the with
+    statment
+
+    2) The asterisk allows an arbitrary number of extra logical files to be
+    stored in tail. Use len(tail) to check how many extra logical files there
+    is
 
     Returns
     -------
-    dlis : dlisio.dlis
+
+    dlis : tuple(dlisio.dlis)
     """
     path = str(path)
 
@@ -327,25 +379,120 @@ def load(path):
     vrlpos = core.findvrl(mmap, sulpos + 80)
 
     tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
-    explicits = [i for i, explicit in enumerate(explicits) if explicit != 0]
-
-    stream = open(path)
+    exi = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     try:
+        stream = open(path)
         stream.reindex(tells, residuals)
-        f = dlis(stream, explicits, sul_offset = sulpos)
 
-        explicits = set(explicits)
-        candidates = [x for x in range(len(tells)) if x not in explicits]
-
-        # TODO: formalise and improve the indexing of FDATA records
-        index = defaultdict(list)
-        for key, val in core.findfdata(mmap, candidates, tells, residuals):
-            index[key].append(val)
-
-        f.fdata_index = index
+        records = stream.extract(exi)
+        stream.close()
     except:
         stream.close()
         raise
 
-    return f
+    split_at = find_fileheaders(records, exi)
+
+    batch = []
+    for part in partition(records, explicits, tells, residuals, split_at):
+        try:
+            stream = open(path)
+            stream.reindex(part['tells'], part['residuals'])
+
+            implicits = defaultdict(list)
+            for key, val in core.findfdata(mmap,
+                    part['implicits'], part['tells'], part['residuals']):
+                implicits[key].append(val)
+
+            f = dlis(stream, part['explicits'],
+                    part['records'], implicits, sul_offset=sulpos)
+            batch.append(f)
+        except:
+            stream.close()
+            for stream in batch:
+                stream.close()
+            raise
+
+    return Batch(batch)
+
+class Batch(tuple):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+    def close(self):
+        for f in self:
+            f.close()
+
+def find_fileheaders(records, exi):
+    # Logical files start whenever a FILE-HEADER is encountered. When a logical
+    # file spans multiple physical files, the FILE-HEADER is not repeated.
+    # This means that the first record may not be a FILE-HEADER. In that case
+    # dlisio still creates a logical file, but warns that this logical file
+    # might be segmented, hence missing data.
+    msg =  'First logical file does not contain a fileheader. '
+    msg += 'The logical file might be segmented into multiple physical files '
+    msg += 'and data can be missing.'
+
+    pivots = []
+
+    # There is only indirectly formated logical records in the physical file.
+    # The logical file might be segmented.
+    if not records:
+        pivots.append(0)
+
+    for i, rec in enumerate(records):
+        # The first metadata record is not a file-header. The logical file
+        # might be segmented.
+        #TODO: This logic will change when support for multiple physical files
+        # in a storage set is added
+        if i == 0 and rec.type != 0:
+            logging.warning(msg)
+            pivots.append(exi[i])
+
+        if rec.type == 0:
+            pivots.append(exi[i])
+
+    return pivots
+
+def partition(records, explicits, tells, residuals, pivots):
+    """
+    Splits records, explicits, implicits, tells and residuals into
+    partitions (Logical Files) based on the pivots
+
+    Returns
+    -------
+
+    partitions : list(dict)
+    """
+
+    def split_at(lst, pivot):
+        head = lst[:pivot]
+        tail = lst[pivot:]
+        return head, tail
+
+    partitions = []
+
+    for pivot in reversed(pivots):
+        tells    , part_tells = split_at(tells, pivot)
+        residuals, part_res   = split_at(residuals, pivot)
+        explicits, part_ex    = split_at(explicits, pivot)
+
+        part_ex   = [i for i, x in enumerate(part_ex) if x != 0]
+        implicits = [x for x in range(len(part_tells)) if x not in part_ex]
+
+        records, part_recs = split_at(records, -len(part_ex))
+
+        part = {
+            'records'   : part_recs,
+            'explicits' : part_ex,
+            'tells'     : part_tells,
+            'residuals' : part_res,
+            'implicits' : implicits
+        }
+        partitions.append(part)
+
+    for par in reversed(partitions):
+        yield par

@@ -427,17 +427,17 @@ def test_dtype(DWL206):
                                ('DEPT_SL', np.float32)])
 
 def test_load_pre_sul_garbage(only_channels):
-    with dlisio.load('data/pre-sul-garbage.dlis') as f:
+    with dlisio.load('data/pre-sul-garbage.dlis') as (f,):
         assert f.storage_label() == f.storage_label()
         assert f.sul_offset == 12
 
 def test_load_pre_vrl_garbage(only_channels):
-    with dlisio.load('data/pre-sul-pre-vrl-garbage.dlis') as f:
+    with dlisio.load('data/pre-sul-pre-vrl-garbage.dlis') as (f,):
         assert f.storage_label() == f.storage_label()
         assert f.sul_offset == 12
 
 def test_load_file_with_broken_utf8():
-    with dlisio.load('data/broken-degree-symbol.dlis') as f:
+    with dlisio.load('data/broken-degree-symbol.dlis') as (f, *tail):
         pass
 
 def test_padbytes_as_large_as_record():
