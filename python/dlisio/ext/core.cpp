@@ -451,6 +451,8 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::objref >( m, "objref" )
         .def_readonly( "type", &dl::objref::type )
         .def_readonly( "name", &dl::objref::name )
+        .def( "__eq__",        &dl::objref::operator == )
+        .def( "__ne__",        &dl::objref::operator != )
         .def_property_readonly("fingerprint", &dl::objref::fingerprint)
         .def( "__repr__", []( const dl::objref& o ) {
             return "dlisio.core.objref(fingerprint={})"_s
