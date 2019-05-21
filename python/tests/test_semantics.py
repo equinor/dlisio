@@ -142,7 +142,7 @@ def test_channel(f):
     assert channel.long_name         == longname
     assert channel.properties        == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc             == 16
-    assert channel.units             == "custom units"
+    assert channel.units             == "custom unit°"
     assert channel.dimension         == [2, 3, 2]
     assert channel.axis              == [axis1, axis2, axis3]
     assert channel.element_limit     == [10, 15, 10]
