@@ -12,6 +12,71 @@ except pkg_resources.DistributionNotFound:
     pass
 
 class dlis(object):
+    types = {
+        'AXIS'                   : plumbing.Axis.create,
+        'FILE-HEADER'            : plumbing.Fileheader.create,
+        'ORIGIN'                 : plumbing.Origin.create,
+        'LONG-NAME'              : plumbing.Longname.create,
+        'FRAME'                  : plumbing.Frame.create,
+        'CHANNEL'                : plumbing.Channel.create,
+        'ZONE'                   : plumbing.Zone.create,
+        'TOOL'                   : plumbing.Tool.create,
+        'PARAMETER'              : plumbing.Parameter.create,
+        'EQUIPMENT'              : plumbing.Equipment.create,
+        'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
+        'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
+        'CALIBRATION'            : plumbing.Calibration.create,
+        'COMPUTATION'            : plumbing.Computation.create,
+    }
+    """dict: Parsing guide for native dlis object-types. Maps the native dlis
+    object-type to python object-constructors. E.g. all dlis objects with type
+    AXIS will be constructed into Axis objects. It is possible to both remove
+    and add new object-types before loading or reloading a file. New objects
+    will behave the same way as the defaulted object-types.
+
+    If an object-type is not in types, it will be default parsed as an unknown
+    object and accessible through the dlis.unknowns property.
+
+    Examples
+    --------
+
+    Create a new object-type
+
+    >>> from dlisio.plumbing.basicobject import BasicObject
+    >>> from dlisio.plumbing.valuetypes import scalar, vector
+    >>> from dlisio.plumbing.linkage import obname
+    >>> class Channel440(BasicObject):
+    ... attributes = {
+    ...     'LONG-NAME' : scalar('longname'),
+    ...     'SAMPLES'   : vector('samples')
+    ... }
+    ... linkage= { 'longname' : obname('LONG-NAME') }
+    ... def __init__(self, obj = None, name = None):
+    ...     super().__init_(obj, name = name, type = '440-CHANNEL')
+    ...     self.longname = None
+    ...     self.samples  = []
+
+    Add the new object-type and load the file
+
+    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440.create
+    >>> f = dlisio.load('filename')
+
+    Access all objects off type 440-CHANNEL
+
+    >>> channels440 = f.types['440-CHANNEL']
+
+    Remove object-type CHANNEL. CHANNEL objects will no longer
+    have a specialized parsing routine and will be parsed as Unknown objects
+
+    >>> del dlisio.dlis.types['CHANNEL']
+    >>> f = dlisio.load('filename')
+
+    See also
+    --------
+
+    plumbing.BasicObject.attributes : attributes
+    plumbing.BasicObject.linkage    : linkage
+    """
     def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
@@ -23,22 +88,6 @@ class dlis(object):
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
 
-        self.types = {
-            'AXIS'                   : plumbing.Axis.create,
-            'FILE-HEADER'            : plumbing.Fileheader.create,
-            'ORIGIN'                 : plumbing.Origin.create,
-            'LONG-NAME'              : plumbing.Longname.create,
-            'FRAME'                  : plumbing.Frame.create,
-            'CHANNEL'                : plumbing.Channel.create,
-            'ZONE'                   : plumbing.Zone.create,
-            'TOOL'                   : plumbing.Tool.create,
-            'PARAMETER'              : plumbing.Parameter.create,
-            'EQUIPMENT'              : plumbing.Equipment.create,
-            'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
-            'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
-            'CALIBRATION'            : plumbing.Calibration.create,
-            'COMPUTATION'            : plumbing.Computation.create,
-        }
         self.load()
 
     def __enter__(self):
