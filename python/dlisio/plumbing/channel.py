@@ -93,3 +93,14 @@ class Channel(BasicObject):
         self._dtype = np.dtype((dtype[self.reprc], shape))
 
         return self._dtype
+
+    def load(self):
+        super().load()
+        # Order of elements is reversed due to RP66 column-first data
+        # storage approach
+        self.dimension        = self.dimension[::-1]
+        try:
+            self.refs['axis'] = self.refs['axis'][::-1]
+        except KeyError:
+            pass
+        self.element_limit    = self.element_limit [::-1]
