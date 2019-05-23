@@ -349,7 +349,7 @@ def test_tool(f):
     assert tool.parts                   == [e]
     assert tool.status                  == True
     assert tool.channels                == [channel1, channel2]
-    assert tool.parameters              == [param1, param2]
+    assert tool.parameters              == [param1, None, param2]
     assert len(tool.refs["parameters"]) == 3
 
 def test_measurement(f):
@@ -632,7 +632,7 @@ def test_dynamic_linkage(fpath):
         u = f.objects[key]
 
         assert c.label        == "SMTH"
-        assert c.paramlinks   == [param2]
+        assert c.paramlinks   == [param2, None]
         assert c.unknown_link == u
 
 def test_dynamic_change_through_instance(fpath):
@@ -653,7 +653,7 @@ def test_dynamic_change_through_instance(fpath):
             c.link(f.objects)
 
             assert c.myparams     == ["wrong", "W"]
-            assert c.paramlinks   == [param2]
+            assert c.paramlinks   == [param2, None]
 
         finally:
             del c.attributes['MY_PARAM']

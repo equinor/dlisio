@@ -209,8 +209,7 @@ class BasicObject():
                 links = []
                 for v in ref:
                     lnk = get_link(v)
-                    if lnk:
-                        links.append(lnk)
+                    links.append(lnk)
                 setattr(self, attr, links)
             else:
                 lnk = get_link(ref)
