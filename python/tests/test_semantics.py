@@ -26,6 +26,14 @@ def fpath(tmpdir_factory, merge_files):
         'data/semantic/calibration.dlis.part',
         'data/semantic/frame.dlis.part',
         'data/semantic/unknown.dlis.part',
+        'data/semantic/channel-reprcode.dlis.part',
+        'data/semantic/frame-reprcode.dlis.part',
+        'data/semantic/fdata-reprcode.dlis.part',
+        'data/semantic/file-header2.dlis.part',
+        'data/semantic/origin2.dlis.part',
+        'data/semantic/channel-dimension.dlis.part',
+        'data/semantic/frame-dimension.dlis.part',
+        'data/semantic/fdata-dimension.dlis.part',
     ]
     merge_files(path, content)
     return path
