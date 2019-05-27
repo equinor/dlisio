@@ -8,7 +8,9 @@ function run_tests {
 function pre_build {
     if [ -d build-centos5 ]; then return; fi
 
-    python -m pip install cmake pybind11 scikit-build
+    python -m pip install scikit-build
+    python -m pip install cmake==3.13.3
+    python -m pip install pybind11
 
     mkdir build-centos5
     pushd build-centos5
