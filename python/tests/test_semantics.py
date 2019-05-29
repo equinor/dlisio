@@ -555,3 +555,55 @@ def test_dynamic_linkage(fpath):
         assert c.label        == "SMTH"
         assert c.paramlinks   == [param2]
         assert c.unknown_link == u
+
+def test_match(f):
+    refs = []
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN4', 10, 0)
+    refs.append( f.objects[key] )
+
+    channels = f.match('CHAN.*')
+
+    assert len(list(channels)) == 4
+    for ch in channels:
+        assert ch in refs
+
+def test_match_type(f):
+    refs = []
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('CHANNEL', 'CHANN4', 10, 0)
+    refs.append( f.objects[key] )
+
+    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    refs.append( f.objects[key] )
+
+    objs = f.match('CHAN.*', type='CHANNEL|LONG-NAME')
+
+    assert len(list(objs)) == len(refs)
+    for obj in objs:
+        assert obj in refs
+
+def test_match_invalid_regex(f):
+    with pytest.raises(ValueError):
+        _ = next(f.match('*'))
+
+    with pytest.raises(ValueError):
+        _ = next(f.match('AIBK', type='*'))
