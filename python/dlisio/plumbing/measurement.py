@@ -29,8 +29,8 @@ class Measurement(BasicObject):
           'AXIS'              : vector('axis'),
           'MEASUREMENT'       : vector('samples'),
           'SAMPLE-COUNT'      : scalar('samplecount'),
-          'MAXIMUM-DEVIATION' : scalar('max_deviation'),
-          'STANDARD-DEVIATION': scalar('std_deviation'),
+          'MAXIMUM-DEVIATION' : vector('max_deviation'),
+          'STANDARD-DEVIATION': vector('std_deviation'),
           'BEGIN-TIME'        : scalar('begin_time'),
           'DURATION'          : scalar('duration'),
           'REFERENCE'         : vector('reference'),
@@ -69,10 +69,10 @@ class Measurement(BasicObject):
         self.samplecount     = None
 
         #: Maximum deviation in the sample array
-        self.max_deviation   = None
+        self.max_deviation   = []
 
         #: Standard deviation in the sample array
-        self.std_deviation   = None
+        self.std_deviation   = []
 
         #: Time of the sample acquisition
         self.begin_time      = None

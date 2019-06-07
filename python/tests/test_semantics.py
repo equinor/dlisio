@@ -372,8 +372,8 @@ def test_measurement(f):
     assert m.axis            == [axis1, axis2]
     assert m.samples         == [240, 137, 228, 120, 240, 136]
     assert m.samplecount     == 4
-    assert m.max_deviation   == 2.5
-    assert m.std_deviation   == -14.25
+    assert m.max_deviation   == [2.5, 2.5, 2.5, 2.75, 2.5, 2.5]
+    assert m.std_deviation   == [-14.25, -14.25, -14.25, -14.25, -14, -14.25]
     assert m.begin_time      == 13447
     assert m.duration        == 21
     assert m.reference       == [240, 135, 240, 135, 240, 135]

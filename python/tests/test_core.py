@@ -358,8 +358,8 @@ def test_measurement(DWL206):
     assert m.axis            == []
     assert m.samples         == [2.640824317932129]
     assert m.samplecount     == 142
-    assert m.max_deviation   == 11.421565055847168
-    assert m.std_deviation   == 3.4623820781707764
+    assert m.max_deviation   == [11.421565055847168]
+    assert m.std_deviation   == [3.4623820781707764]
     assert m.begin_time      == datetime(2011, 8, 20, 18, 13, 38)
     assert m.duration        == 30
     assert m.reference       == [0.0]
