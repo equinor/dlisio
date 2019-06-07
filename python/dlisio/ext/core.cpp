@@ -311,7 +311,7 @@ framesize frame_size(const char* fmt) {
     }
 
     if (variable) {
-        throw dl::not_implemented(fmt_msg + fmt_str);
+        throw dl::not_implemented(fmt_msg);
     }
 
     int src = 0;

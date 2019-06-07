@@ -75,14 +75,6 @@ def test_instance_dtype_fmt():
     assert 'fDDD' == frame.fmtstr()
     assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
 
-def test_instance_dtype_fmt():
-    frame = makeframe()
-    frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
-
-    # fmtstr is unchanged
-    assert 'fDDD' == frame.fmtstr()
-    assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
-
 def test_class_dtype_fmt():
     original = dlisio.plumbing.Frame.dtype_format
 

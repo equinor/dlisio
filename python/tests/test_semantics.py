@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime
+import numpy as np
 
 from dlisio.core import fingerprint
 from dlisio.plumbing import valuetypes, linkage
@@ -188,6 +189,52 @@ def test_frame(f):
     #assert frame2.encrypted   == True #attribute present
     assert frame2.index_min   == None
     assert frame2.index_max   == None
+
+def test_fdata_reprcode(f):
+    key = fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
+    curves = f.curves(key)
+
+    assert list(curves[0][0])     == [153, -1]
+    assert list(curves[0][1])     == [17.25, -13.75]
+    assert list(curves[0][2][0])  == [-2, 3.5]
+    assert list(curves[0][2][1])  == [56.125, -0.0625]
+    assert list(curves[0][3][0])  == [7, -0.50390625, 0.5]
+    assert list(curves[0][3][1])  == [3524454, 10, 20]
+    assert list(curves[0][4])     == [-12, 65536.5]
+    assert list(curves[0][5])     == [-26.5, 0.125]
+    assert list(curves[0][6])     == [153, -153]
+    assert list(curves[0][7])     == [5673345, 14]
+    assert list(curves[0][8])     == [95637722454, 20, 5]
+    assert curves[0][9]           == np.complex(67, -37)
+    assert curves[0][10]          == np.complex(67, -37)
+    assert list(curves[0][11])    == [89, -89]
+    assert list(curves[0][12])    == [153, -153]
+    assert list(curves[0][13])    == [153, -153]
+    assert list(curves[0][14][0]) == [217, 1, 118]
+    assert list(curves[0][14][1]) == [66, 251, 75]
+    assert list(curves[0][15])    == [32921, 256]
+    assert list(curves[0][16])    == [153, 4294967143]
+    assert list(curves[0][17])    == [False, True]
+
+def test_fdata_dimension(fpath):
+    with dlisio.load(fpath) as (_, g):
+        key = fingerprint('FRAME', 'FRAME-DIMENSION', 11, 0)
+        curves = g.curves(key)
+
+        assert list(curves[0][0][0])    == [1, 2, 3]
+        assert list(curves[0][0][1])    == [4, 5, 6]
+        assert list(curves[0][1][0])    == [1, 2]
+        assert list(curves[0][1][1])    == [3, 4]
+        assert list(curves[0][1][2])    == [5, 6]
+        assert list(curves[0][2][0][0]) == [1, 2]
+        assert list(curves[0][2][1][1]) == [9, 10]
+        assert list(curves[0][2][2][1]) == [15, 16]
+        assert list(curves[0][2][3][2]) == [23, 24]
+        assert list(curves[0][3][0])    == [1, 2]
+        assert list(curves[0][4][0])    == [1]
+        assert list(curves[0][4][1])    == [2]
+        assert list(curves[0][5][0])    == [1]
+        assert list(curves[0][6])       == [1, 2, 3, 4]
 
 def test_zone(f):
     key = fingerprint('ZONE', 'ZONE-A', 10, 0)
