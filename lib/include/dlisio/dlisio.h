@@ -186,6 +186,10 @@ const char* dlis_component_str( int );
  *
  * Returns DLIS_OK on success.
  *
+ * For encrypted records trim size is always 0 and code is DLIS_OK. Padbytes
+ * are encrypted, hence can't be trimmed before record is decrypted. To
+ * preserve consistency trailing length and checksum are not trimmed either.
+ *
  * Quite often, from a very peculiar interpretation of RP66, the padding
  * reported by pad bytes is the size of the segment *including the header*, in
  * which case (sizeof_body-trim < 0). When size > distance(begin, end), this

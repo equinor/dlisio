@@ -682,3 +682,21 @@ TEST_CASE_METHOD(
     CHECK(err == DLIS_BAD_SIZE);
     CHECK(size == expected);
 }
+
+TEST_CASE_METHOD(
+    basic_segment,
+    "padding larger than segment with trailing len for encrypted rec") {
+    const auto pad_len = segment.size() + 8;
+    const auto expected = 0;
+    segment[segment.size() - 3] = pad_len;
+
+    int size = 0;
+    const std::uint8_t attrs = DLIS_SEGATTR_PADDING
+                             | DLIS_SEGATTR_TRAILEN
+                             | DLIS_SEGATTR_ENCRYPT
+                             ;
+    const auto err = dlis_trim_record_segment(attrs, begin, end, &size);
+
+    CHECK(!err);
+    CHECK(size == expected);
+}
