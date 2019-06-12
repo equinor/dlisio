@@ -51,11 +51,11 @@ class BasicObject():
     """
 
     def __init__(self, obj, name = None, type = None):
-        self._type      = type
+        self.type       = type
         self.name       = None
         self.origin     = None
         self.copynumber = None
-        self._attic     = obj
+        self.attic      = obj
 
         #: Dictionary with all unexpected attributes.
         #: While all expected attributes are presented as members of object
@@ -104,40 +104,6 @@ class BasicObject():
                                 self.name,
                                 self.origin,
                                 self.copynumber)
-
-    @property
-    def type(self):
-        """ Type
-
-        The type of the object. Together, the type- and name-attribute form a
-        unique object-identifier across all objects in the Logical File
-
-        Returns
-        -------
-
-        type : str
-        """
-        return self._type
-
-    @property
-    def attic(self):
-        """ The original object as represented on disk
-
-        Attic refers the underlying basic_object, which is a
-        dict-representation of the data on disk. The attic can be None if this
-        particular instance was not loaded from disk.
-
-        Notes
-        -----
-
-        This attribute is mainly intended for debugging purpuses
-
-        Returns
-        -------
-
-        attic : dl:basic_object
-        """
-        return self._attic
 
     def update_stash(self, label, value):
         """ Stashes attributes
