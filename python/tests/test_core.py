@@ -485,8 +485,7 @@ def test_record_attributes():
     recs = stream.extract(explicits)
     buffer = bytearray(1)
 
-    # last record ignored as encrypted
-    assert len(recs) == 2
+    assert len(recs) == 3
 
     assert recs[0].type == 1
     assert not recs[0].explicit
@@ -505,6 +504,7 @@ def test_record_attributes():
     stream.get(buffer, tells[1] + 5, 1)
     assert np.array(recs[1])[1] == buffer[0]
 
+    # last record ignored as encrypted
     rec3 = stream[2]
     assert rec3.type == 3
     assert not rec3.explicit

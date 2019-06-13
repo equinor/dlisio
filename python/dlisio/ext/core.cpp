@@ -605,7 +605,6 @@ PYBIND11_MODULE(core, m) {
             recs.reserve( indices.size() );
             for (auto i : indices) {
                 auto rec = s.at( i );
-                if (rec.isencrypted()) continue;
                 recs.push_back( std::move( rec ) );
             }
             return recs;
