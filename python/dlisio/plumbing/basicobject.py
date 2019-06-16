@@ -13,6 +13,32 @@ class BasicObject():
     adding the object-name field which is present in every object, as well as
     specifying the object type. These two fields makes a unique indentifier for
     the object.
+
+    Attributes
+    ----------
+
+    type : str
+        Type of the object, e.g. rp66 object-types as CHANNEL or FRAME
+
+    name : str
+        Mnemonic / name
+
+    origin : int
+        Defines which origin the object belongs to
+
+    copynumber : int
+        There may exist several copies of the same object, the
+        copynumber is used to distinguish them
+
+    attic : dict_like
+        Attic refers the underlying basic_object, which
+        is a dict-representation of the data on disk. The attic can be
+        None if this particular instance was not loaded from disk.
+
+    stash : dict_like
+        Dictionary with all attributes not specified in
+        :py:attr:`~attributes`.
+
     """
 
     attributes = {}

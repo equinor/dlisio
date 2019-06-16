@@ -9,6 +9,11 @@ class Axis(BasicObject):
     array of channels. One axis object describes only one coordinate axis. I.e
     a three dimensional array is described by three Axis objects.
 
+    See also
+    --------
+
+    BasicObject : The basic object that Axis is derived from
+
     Notes
     -----
 

@@ -3,11 +3,15 @@ from .valuetypes import scalar, boolean
 
 
 class Equipment(BasicObject):
-    """Equipment
-
+    """
     Equipment objects contains information about individual pieces of surface
     and downhole equipment used in the acquistion of the data. Typically, tools
     (specified by the Tool object) is a composition of equipment.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Equipment is derived from
 
     Notes
     -----

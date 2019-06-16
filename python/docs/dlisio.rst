@@ -6,168 +6,138 @@ Open and Load
 File Handle
 ===========
 .. autoclass:: dlisio.dlis()
-    :special-members: __enter__, __exit__
     :members:
-    :member-order: groupwise
+    :member-order: bysource
     :undoc-members:
 
-Objects
-=======
+.. currentmodule:: dlisio.plumbing
 
-Basic object
-------------
-.. autoclass:: dlisio.plumbing.BasicObject()
-    :special-members: __repr__, __str__
+Basic Object
+============
+.. autoclass:: BasicObject()
     :members:
     :undoc-members:
-    :member-order: groupwise
+    :member-order: bysource
+
+RP66 objects (native dlis)
+==========================
 
 Axis
 ----
-.. autoclass:: dlisio.plumbing.Axis()
-    :special-members: __repr__, __str__
+.. autoclass:: Axis(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Calibration
 -----------
-.. autoclass:: dlisio.plumbing.Calibration()
-    :special-members: __repr__, __str__
+.. autoclass:: Calibration(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Channel
 -------
-.. autoclass:: dlisio.plumbing.Channel()
-    :special-members: __repr__, __str__
+.. autoclass:: Channel()
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Coefficent
 ----------
-.. autoclass:: dlisio.plumbing.Coefficient()
-    :special-members: __repr__, __str__
+.. autoclass:: Coefficient(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Computation
 -----------
-.. autoclass:: dlisio.plumbing.Computation()
-    :special-members: __repr__, __str__
+.. autoclass:: Computation(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Frame
 -----
-.. autoclass:: dlisio.plumbing.Frame()
-    :special-members: __repr__, __str__
+.. autoclass:: Frame(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Fileheader
 ----------
-.. autoclass:: dlisio.plumbing.Fileheader()
-    :special-members: __repr__, __str__
+.. autoclass:: Fileheader(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Longname
 --------
-.. autoclass:: dlisio.plumbing.Longname()
-    :special-members: __repr__, __str__
+.. autoclass:: Longname(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Measurement
 -----------
-.. autoclass:: dlisio.plumbing.Measurement()
-    :special-members: __repr__, __str__
+.. autoclass:: Measurement(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Origin
 ------
-.. autoclass:: dlisio.plumbing.Origin()
-    :special-members: __repr__, __str__
+.. autoclass:: Origin(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Parameter
 ---------
-.. autoclass:: dlisio.plumbing.Parameter()
-    :special-members: __repr__, __str__
+.. autoclass:: Parameter(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
     :inherited-members:
+    :exclude-members: stripspaces, update_stash
 
 Tool
 ----
-.. autoclass:: dlisio.plumbing.Tool()
-    :special-members: __repr__, __str__
+.. autoclass:: Tool(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Equipment
 ---------
-.. autoclass:: dlisio.plumbing.Equipment()
-    :special-members: __repr__, __str__
+.. autoclass:: Equipment(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains, attributes
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Zone
 ----
-.. autoclass:: dlisio.plumbing.Zone()
-    :special-members: __repr__, __str__
+.. autoclass:: Zone(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:
 
 Unknown
 -------
-.. autoclass:: dlisio.plumbing.Unknown()
-    :special-members: __repr__, __str__
+.. autoclass:: Unknown(BasicObject)
     :members:
-    :undoc-members:
-    :exclude-members: stripspaces, contains
-    :member-order: groupwise
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
     :inherited-members:

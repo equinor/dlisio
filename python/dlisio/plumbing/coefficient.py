@@ -2,10 +2,14 @@ from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 
 class Coefficient(BasicObject):
-    """Coefficient
-
+    """
     Records of measurements, references, and tolerances used in the calibration
     of channels.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Coefficient is derived from
 
     Notes
     -----

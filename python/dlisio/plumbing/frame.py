@@ -22,6 +22,12 @@ class Frame(BasicObject):
         default formatting for creating unique labels from the
         mnemonic-origin-copynumber triple in dtype.
 
+    See also
+    --------
+
+    BasicObject : The basic object that Frame is derived from
+    Channel     : Channel objects
+
     Notes
     -----
 
@@ -29,11 +35,6 @@ class Frame(BasicObject):
     FRAME objects are listed in Appendix A.2 - Logical Record Types, and
     described in detail in Chapter 5.7.1 - Static and Frame Data, FRAME
     objects.
-
-    See also
-    --------
-
-    dlisio.Channel : Channel objects.
     """
     attributes = {
         'DESCRIPTION': scalar('description'),
@@ -115,12 +116,6 @@ class Frame(BasicObject):
         in the mnemonic itself, and a consistent way of parsing origin and
         copynumber are needed.
 
-        See also
-        --------
-
-        dlisio.Channel.dtype : dtype of each sample in the channel's sample
-        array.
-
         Returns
         -------
 
@@ -128,11 +123,14 @@ class Frame(BasicObject):
 
         Examples
         --------
+
         A frame with two TIME channels:
+
         >>> frame.dtype
         dtype([('TIME.0.0', '<f4'), ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
 
         Override instance-specific mnemonic formatting
+
         >>> frame.dtype
         dtype([('TIME.0.0', '<f4'), ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
         >>> frame.dtype_fmt = '{:s}-{:d}-{:d}'

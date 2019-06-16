@@ -11,6 +11,11 @@ class Parameter(BasicObject):
     attribute. The zone attribute specifies which zone(s) the parameter is
     defined. If there are no zone(s) the parameter is defined everywhere.
 
+    See also
+    --------
+
+    BasicObject : The basic object that Parameter is derived from
+
     Notes
     -----
 

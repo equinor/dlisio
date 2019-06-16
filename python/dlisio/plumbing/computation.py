@@ -3,10 +3,14 @@ from .valuetypes import scalar, vector
 from .linkage import obname, objref
 
 class Computation(BasicObject):
-    """Computation
-
+    """
     Results of computations that are more appropriately expressed as static
     information rather than as channels.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Computation is derived from
 
     Notes
     -----
