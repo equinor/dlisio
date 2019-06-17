@@ -5,6 +5,8 @@
 #include <limits>
 #include <type_traits>
 
+#include <endianness/endianness.h>
+
 #include <dlisio/types.h>
 
 namespace {
@@ -31,9 +33,7 @@ typename std::enable_if< sizeof(T) == 2, T >::type
 hton( T value ) noexcept {
     std::uint16_t v;
     std::memcpy( &v, &value, sizeof( T ) );
-    v = ((v & 0x00FF) << 8)
-      | ((v & 0xFF00) >> 8)
-      ;
+    v = bswap16( v );
     std::memcpy( &value, &v, sizeof( T ) );
     return value;
 }
@@ -43,11 +43,7 @@ typename std::enable_if< sizeof(T) == 4, T >::type
 hton( T value ) noexcept {
     std::uint32_t v;
     std::memcpy( &v, &value, sizeof( T ) );
-    v = ((v & 0x000000FF) << 24)
-      | ((v & 0x0000FF00) <<  8)
-      | ((v & 0x00FF0000) >>  8)
-      | ((v & 0xFF000000) >> 24)
-      ;
+    v = bswap32( v );
     std::memcpy( &value, &v, sizeof( T ) );
     return value;
 }
@@ -57,15 +53,7 @@ typename std::enable_if< sizeof(T) == 8, T >::type
 hton( T value ) noexcept {
     std::uint64_t v;
     std::memcpy( &v, &value, sizeof( T ) );
-    v = ((v & 0xFF00000000000000ull) >> 56)
-      | ((v & 0x00FF000000000000ull) >> 40)
-      | ((v & 0x0000FF0000000000ull) >> 24)
-      | ((v & 0x000000FF00000000ull) >>  8)
-      | ((v & 0x00000000FF000000ull) <<  8)
-      | ((v & 0x0000000000FF0000ull) << 24)
-      | ((v & 0x000000000000FF00ull) << 40)
-      | ((v & 0x00000000000000FFull) << 56)
-      ;
+    v = bswap64( v );
     std::memcpy( &value, &v, sizeof( T ) );
     return value;
 }

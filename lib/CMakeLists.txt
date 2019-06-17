@@ -6,13 +6,22 @@ add_library(dlisio src/dlisio.cpp
 target_include_directories(dlisio
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:include>
+    PRIVATE
+        # Work-around as described in [1]. Even privately linked interface
+        # libraries must be exported, because cmake does not check if anything
+        # other than include-paths are set. The build-local export file is
+        # given to the python build script, so endianness must also be
+        # exported.
+        #
+        # in time, this hack should go away, either by promotoing endianness to
+        # a library in its own right, or hard-code the include path
+        # (effectively what is done now)
+        # [1] https://gitlab.kitware.com/cmake/cmake/issues/18049
+        $<TARGET_PROPERTY:endianness::endianness,INTERFACE_INCLUDE_DIRECTORIES>
 )
 target_compile_options(dlisio
     BEFORE
     PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
-)
-target_compile_definitions(dlisio
-    PRIVATE $<${BIG_ENDIAN}:HOST_BIG_ENDIAN>
 )
 
 install(TARGETS dlisio
@@ -39,6 +48,7 @@ target_link_libraries(dlisio-extension
     PUBLIC dlisio
            mpark-variant
            mio
+           endianness
 
     PRIVATE fmt-header-only
 )
@@ -59,6 +69,7 @@ export(
         mpark-variant
         mio
         fmt-header-only
+        endianness
     FILE
         dlisio-config.cmake
 )
