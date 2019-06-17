@@ -3,9 +3,12 @@ from .valuetypes import scalar, vector
 
 
 class Longname(BasicObject):
-    """Longname
+    """ Structured names of other objects.
 
-    Structured names of other objects.
+    See also
+    --------
+
+    BasicObject : The basic object that Longname is derived from
 
     Notes
     -----

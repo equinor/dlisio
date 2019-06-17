@@ -2,8 +2,7 @@ from .basicobject import BasicObject
 from .valuetypes import scalar
 
 class Fileheader(BasicObject):
-    """ Fileheader
-
+    """
     The Fileheader is an identifier for the Logical File. Below follows a description of the
     relationship between a DLIS-file, Logical File, File Set, and Storeage Set:
 
@@ -36,6 +35,11 @@ class Fileheader(BasicObject):
          ---------------------------------
         | DLIS-file 1 | ... | DLIS-File n |
          ---------------------------------
+
+    See also
+    --------
+
+    BasicObject : The basic object that Fileheader is derived from
 
     Notes
     -----

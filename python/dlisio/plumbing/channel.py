@@ -6,11 +6,15 @@ from .linkage import obname, objref
 import numpy as np
 
 class Channel(BasicObject):
-    """Channel
-
+    """
     A channel is a sequence of measured or computed samples that are index
     against e.g. depth or time. Each sample can be a scalar or a n-dimentional
     array.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Channel is derived from
 
     Notes
     -----

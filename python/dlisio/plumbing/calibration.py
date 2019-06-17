@@ -3,10 +3,14 @@ from .valuetypes import vector, scalar
 from .linkage import obname
 
 class Calibration(BasicObject):
-    """Calibration
-
+    """
     Calibration objects are a collection of measurements and coefficients that
     defines the calibration process of channel objects.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Calibration is derived from
 
     Notes
     -----
@@ -15,12 +19,6 @@ class Calibration(BasicObject):
     rp66. CALIBRATION records are listen in Appendix A.2 - Logical Record
     Types and described detail in Chapter 5.8.7.3 - Static and Frame Data,
     CALIBRATION objects.
-
-    See also
-    --------
-
-    dlisio.Channel : Channel objects.
-    dlisio.Parameter : Parameter objects.
     """
     attributes = {
         'METHOD'               : scalar('method'),

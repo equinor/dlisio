@@ -13,6 +13,11 @@ class Origin(BasicObject):
     object is the Defining object. No two logical files should have identical
     Defining Origins.
 
+    See also
+    --------
+
+    BasicObject : The basic object that Origin is derived from
+
     Notes
     -----
 
@@ -23,7 +28,7 @@ class Origin(BasicObject):
     See also
     --------
 
-    dlisio.Fileheader : Fileheader
+    Fileheader : Fileheader
     """
     attributes = {
         'FILE-ID'           : scalar('file_id'),

@@ -3,11 +3,15 @@ from .valuetypes import scalar
 
 
 class Zone(BasicObject):
-    """Zone
-
+    """
     A Zone objects specifies a single interval in depth or time. Other objects
     use zones to define spesific regions in wells or time intervals where the
     object data is valid.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Zone is derived from
 
     Notes
     -----

@@ -3,12 +3,16 @@ from .valuetypes import scalar, vector, boolean
 from .linkage import obname
 
 class Tool(BasicObject):
-    """Tool
-
+    """
     A tool is an ensembly of equiptment that as a whole provide measurements or
     services. The list of equiptment that makes up the tool can be found in
     *tool.parts*. Tools objects also keep a list of all channels that where produced by
     the tool in *tool.channels*.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Tool is derived from
 
     Notes
     -----
@@ -16,12 +20,6 @@ class Tool(BasicObject):
     The tool object reflects the logical record type TOOL defined in rp66. TOOL
     objects are listed in Appendix A.2 - Logical Record Types, described in
     detail in Chapter 5.8.4 - Static and Frame Data, TOOL objects.
-
-    See also
-    --------
-
-    dlisio.Channel : Channel objects.
-    dlisio.Parameter : Parameter objects.
     """
     attributes = {
         'DESCRIPTION'    : scalar('description'),

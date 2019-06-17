@@ -4,10 +4,14 @@ from .linkage import objref, obname
 
 
 class Measurement(BasicObject):
-    """Measurement
-
+    """
     Records of measurements, references, and tolerances used to compute
     calibration coefficients.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Measurement derived from
 
     Notes
     -----

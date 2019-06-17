@@ -5,6 +5,12 @@ class Unknown(BasicObject):
     """
     The unknown object is intended as a fall-back object if the
     object-type is not recognized by dlisio, e.g. vendor spesific object types
+
+    See also
+    --------
+
+    BasicObject : The basic object that Unknown is derived from
+
     """
     def __init__(self, obj = None, name = None, type = None):
         if type is None:
