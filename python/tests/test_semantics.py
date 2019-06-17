@@ -421,6 +421,66 @@ def test_dynamic_class(fpath):
         assert unknown.value == "VAL1"
         assert unknown.status == True
 
+def test_change_object_type(f):
+    try:
+        # Parse all parameters as if they where Channels
+        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Channel.create
+        f.load()
+
+        key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
+        longname = f.objects[key]
+
+        key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+        axis = f.objects[key]
+
+        key = dlisio.core.fingerprint('CHANNEL', 'PARAM1', 10, 0)
+        obj = f.objects[key]
+
+        # obj should have been parsed as a Channel
+        assert isinstance(obj, dlisio.plumbing.Channel)
+
+        # Parameter attributes that's also Channel attributes should be
+        # parsed normally
+        assert obj.long_name         == longname
+        assert obj.dimension         == [2]
+        assert obj.axis              == [axis]
+
+        # Parameter attributes that's not in Channel should end up in stash
+        assert obj.stash['VALUES']   == [101, 120]
+        assert obj.stash['ZONES']    == [(10, 0, 'ZONE-A')]
+
+    finally:
+        # even if the test fails, make sure that types is reset to its default,
+        # to not interfere with other tests
+        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Parameter.create
+
+def test_remove_object_type(f):
+    try:
+        # Deleting object-type CHANNEL and reload
+        del dlisio.dlis.types['CHANNEL']
+        f.load()
+
+        key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+        obj = f.objects[key]
+
+        # Channel should be parsed as Unknown, but the type should still
+        # reflects what's on file
+        assert isinstance(obj, dlisio.plumbing.Unknown)
+        assert obj in f.unknowns
+        assert obj.type == 'CHANNEL'
+
+    finally:
+        # even if the test fails, make sure that types is reset to its default,
+        # to not interfere with other tests
+        f.types['CHANNEL'] = dlisio.plumbing.Channel.create
+
+    f.load()
+    obj = f.objects[key]
+
+    # Channels should now be parsed as Channel.allobjects
+    assert isinstance(obj, dlisio.plumbing.Channel)
+    assert obj not in f.unknowns
+
 def test_dynamic_instance_attribute(fpath):
     with dlisio.load(fpath) as (f, _):
         key = dlisio.core.fingerprint(

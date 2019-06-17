@@ -12,6 +12,71 @@ except pkg_resources.DistributionNotFound:
     pass
 
 class dlis(object):
+    types = {
+        'AXIS'                   : plumbing.Axis.create,
+        'FILE-HEADER'            : plumbing.Fileheader.create,
+        'ORIGIN'                 : plumbing.Origin.create,
+        'LONG-NAME'              : plumbing.Longname.create,
+        'FRAME'                  : plumbing.Frame.create,
+        'CHANNEL'                : plumbing.Channel.create,
+        'ZONE'                   : plumbing.Zone.create,
+        'TOOL'                   : plumbing.Tool.create,
+        'PARAMETER'              : plumbing.Parameter.create,
+        'EQUIPMENT'              : plumbing.Equipment.create,
+        'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
+        'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
+        'CALIBRATION'            : plumbing.Calibration.create,
+        'COMPUTATION'            : plumbing.Computation.create,
+    }
+    """dict: Parsing guide for native dlis object-types. Maps the native dlis
+    object-type to python object-constructors. E.g. all dlis objects with type
+    AXIS will be constructed into Axis objects. It is possible to both remove
+    and add new object-types before loading or reloading a file. New objects
+    will behave the same way as the defaulted object-types.
+
+    If an object-type is not in types, it will be default parsed as an unknown
+    object and accessible through the dlis.unknowns property.
+
+    Examples
+    --------
+
+    Create a new object-type
+
+    >>> from dlisio.plumbing.basicobject import BasicObject
+    >>> from dlisio.plumbing.valuetypes import scalar, vector
+    >>> from dlisio.plumbing.linkage import obname
+    >>> class Channel440(BasicObject):
+    ... attributes = {
+    ...     'LONG-NAME' : scalar('longname'),
+    ...     'SAMPLES'   : vector('samples')
+    ... }
+    ... linkage= { 'longname' : obname('LONG-NAME') }
+    ... def __init__(self, obj = None, name = None):
+    ...     super().__init_(obj, name = name, type = '440-CHANNEL')
+    ...     self.longname = None
+    ...     self.samples  = []
+
+    Add the new object-type and load the file
+
+    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440.create
+    >>> f = dlisio.load('filename')
+
+    Access all objects off type 440-CHANNEL
+
+    >>> channels440 = f.types['440-CHANNEL']
+
+    Remove object-type CHANNEL. CHANNEL objects will no longer
+    have a specialized parsing routine and will be parsed as Unknown objects
+
+    >>> del dlisio.dlis.types['CHANNEL']
+    >>> f = dlisio.load('filename')
+
+    See also
+    --------
+
+    plumbing.BasicObject.attributes : attributes
+    plumbing.BasicObject.linkage    : linkage
+    """
     def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
@@ -20,25 +85,9 @@ class dlis(object):
         self.fdata_index = implicits
 
         self.objects = {}
-        self.object_sets = defaultdict(dict)
+        self.indexedobjects = defaultdict(dict)
         self.problematic = []
 
-        self.types = {
-            'AXIS'                   : plumbing.Axis.create,
-            'FILE-HEADER'            : plumbing.Fileheader.create,
-            'ORIGIN'                 : plumbing.Origin.create,
-            'LONG-NAME'              : plumbing.Longname.create,
-            'FRAME'                  : plumbing.Frame.create,
-            'CHANNEL'                : plumbing.Channel.create,
-            'ZONE'                   : plumbing.Zone.create,
-            'TOOL'                   : plumbing.Tool.create,
-            'PARAMETER'              : plumbing.Parameter.create,
-            'EQUIPMENT'              : plumbing.Equipment.create,
-            'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
-            'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
-            'CALIBRATION'            : plumbing.Calibration.create,
-            'COMPUTATION'            : plumbing.Computation.create,
-        }
         self.load()
 
     def __enter__(self):
@@ -65,7 +114,7 @@ class dlis(object):
         """ Load and enrich raw objects into the object pool
 
         This method converts the raw object sets into first-class dlisio python
-        objects, and puts them in the the objects, object_sets and problematic
+        objects, and puts them in the the objects, indexedobjects and problematic
         members.
 
         Parameters
@@ -87,7 +136,7 @@ class dlis(object):
         duplicate = 'duplicate fingerprint {}'
 
         objects = {}
-        object_sets = defaultdict(dict)
+        indexedobjects = defaultdict(dict)
         problematic = []
 
         if sets is None:
@@ -114,21 +163,18 @@ class dlis(object):
                         problematic.append((original, obj))
 
                 objects[fingerprint] = obj
-                object_sets[obj.type][fingerprint] = obj
+                indexedobjects[obj.type][fingerprint] = obj
 
         for obj in objects.values():
             obj.link(objects)
 
         self.objects = objects
-        self.object_sets = object_sets
+        self.indexedobjects = indexedobjects
         self.problematic = problematic
         return self
 
-    def getobject(self, name, type):
-        return self._objects.getobject(name, type)
-
     def curves(self, fingerprint):
-        frame = self.object_sets['FRAME'][fingerprint]
+        frame = self.indexedobjects['FRAME'][fingerprint]
         fmt = frame.fmtstr()
         indices = self.fdata_index[fingerprint]
         a = np.empty(shape = len(indices), dtype = frame.dtype)
@@ -144,7 +190,7 @@ class dlis(object):
         fileheader : dict_values
 
         """
-        return self.object_sets['FILE-HEADER'].values()
+        return self.indexedobjects['FILE-HEADER'].values()
 
     @property
     def origin(self):
@@ -154,7 +200,7 @@ class dlis(object):
         -------
         origin : dict_values
         """
-        return self.object_sets['ORIGIN'].values()
+        return self.indexedobjects['ORIGIN'].values()
 
     @property
     def axes(self):
@@ -164,7 +210,7 @@ class dlis(object):
         -------
         axes: dict_values
         """
-        return self.object_sets['AXIS'].values()
+        return self.indexedobjects['AXIS'].values()
 
     @property
     def longnames(self):
@@ -174,7 +220,7 @@ class dlis(object):
         -------
         long-name : dict_values
         """
-        return self.object_sets['LONG-NAME'].values()
+        return self.indexedobjects['LONG-NAME'].values()
 
     @property
     def channels(self):
@@ -191,7 +237,7 @@ class dlis(object):
         >>> for channel in f.channels:
         ...     print(channel.name)
         """
-        return self.object_sets['CHANNEL'].values()
+        return self.indexedobjects['CHANNEL'].values()
 
     @property
     def frames(self):
@@ -201,7 +247,7 @@ class dlis(object):
         -------
         frames: dict_values
         """
-        return self.object_sets['FRAME'].values()
+        return self.indexedobjects['FRAME'].values()
 
     @property
     def tools(self):
@@ -211,7 +257,7 @@ class dlis(object):
         -------
         tools: dict_values
         """
-        return self.object_sets['TOOL'].values()
+        return self.indexedobjects['TOOL'].values()
 
     @property
     def zones(self):
@@ -221,7 +267,7 @@ class dlis(object):
         -------
         zones: dict_values
         """
-        return self.object_sets['ZONE'].values()
+        return self.indexedobjects['ZONE'].values()
 
     @property
     def parameters(self):
@@ -231,7 +277,7 @@ class dlis(object):
         -------
         parameters: dict_values
         """
-        return self.object_sets['PARAMETER'].values()
+        return self.indexedobjects['PARAMETER'].values()
 
     @property
     def equipments(self):
@@ -241,7 +287,7 @@ class dlis(object):
         -------
         equipments : dict_values
         """
-        return self.object_sets['EQUIPMENT'].values()
+        return self.indexedobjects['EQUIPMENT'].values()
 
     @property
     def computations(self):
@@ -251,7 +297,7 @@ class dlis(object):
         -------
         computations : dict_values
         """
-        return self.object_sets['COMPUTATION'].values()
+        return self.indexedobjects['COMPUTATION'].values()
 
     @property
     def measurements(self):
@@ -261,7 +307,7 @@ class dlis(object):
         -------
         measurement : dict_values
         """
-        return self.object_sets['CALIBRATION-MEASUREMENT'].values()
+        return self.indexedobjects['CALIBRATION-MEASUREMENT'].values()
 
     @property
     def coefficients(self):
@@ -271,7 +317,7 @@ class dlis(object):
         -------
         coefficient : dict_values
         """
-        return self.object_sets['CALIBRATION-COEFFICIENT'].values()
+        return self.indexedobjects['CALIBRATION-COEFFICIENT'].values()
 
     @property
     def calibrations(self):
@@ -281,12 +327,12 @@ class dlis(object):
         -------
         calibrations : dict_values
         """
-        return self.object_sets['CALIBRATION'].values()
+        return self.indexedobjects['CALIBRATION'].values()
 
     @property
     def unknowns(self):
         return (obj
-            for typename, object_set in self.object_sets.items()
+            for typename, object_set in self.indexedobjects.items()
             for obj in object_set.values()
             if typename not in self.types
         )
