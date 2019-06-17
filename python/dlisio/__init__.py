@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 import numpy as np
+import re
 
 from . import core
 from . import plumbing
@@ -109,6 +110,86 @@ class dlis(object):
             self.attic = self.file.extract(self.explicit_indices)
 
         return core.parse_objects(self.attic)
+
+    def match(self, pattern, type=None):
+        """ Filter channels by mnemonics
+
+        Returns all channel with mnemonics matching a regex [1]. By default the
+        targeted object-set only includes native rp66 CHANNEL objects. This
+        target set can be extended with the type parameter
+
+        [1] https://docs.python.org/3.7/library/re.html
+
+
+        Parameters
+        ----------
+
+        pattern : str
+            Regex to match channel mnemonics against
+
+        type : str
+            Extend the targeted object-set to include all objects that have a
+            type matching the inputed regex. Must be a valid regex
+
+        Returns
+        -------
+
+        channels : generator of channels/objects
+
+        Notes
+        -----
+
+        Some common regex characters:
+
+        ====== =======================
+        Regex  Description
+        ====== =======================
+        '.'    Any character
+        '^'    Starts with
+        '$'    Ends with
+        '*'    Zero or more occurances
+        '+'    One or more occurances
+        '|'    Either or
+        '[]'   Set of characters
+        ====== =======================
+
+        Examples
+        -------
+
+        Return all channels which have mnemonics matching 'AIBK':
+
+        >>> channels = f.match('AIBK')
+
+        Return all objects which have mnemonics matching the regex
+        'AIBK', targeting all object-types starting with 'CHANNEL':
+
+        >>> channels = f.match('AIBK', type='^CHANNEL')
+
+        Return all CHANNEL objects where the mnemonic matches 'AI':
+
+        >>> channels = f.match('AI.*')
+
+        """
+        def compileregex(pattern):
+            try:
+                return re.compile(pattern)
+            except:
+                msg = 'Invalid regex: {}'.format(pattern)
+                raise ValueError(msg)
+
+        objs = {}
+        if type is None:
+            objs = self.indexedobjects['CHANNEL']
+        else:
+            ctype = compileregex(type)
+            for key, value in self.indexedobjects.items():
+                if not re.match(ctype, key): continue
+                objs.update(value)
+
+        cpattern = compileregex(pattern)
+        for obj in objs.values():
+            if not re.match(cpattern, obj.name): continue
+            yield obj
 
     def load(self, sets=None):
         """ Load and enrich raw objects into the object pool
