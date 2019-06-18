@@ -1,6 +1,10 @@
 import pytest
 from datetime import datetime
 
+from dlisio.core import fingerprint
+from dlisio.plumbing import valuetypes, linkage
+from dlisio.plumbing.coefficient import Coefficient
+
 import dlisio
 
 from . import merge_files
@@ -44,7 +48,7 @@ def f(tmpdir_factory, fpath):
         yield f
 
 def test_file_header(f):
-    key = dlisio.core.fingerprint('FILE-HEADER', 'N', 10, 0)
+    key = fingerprint('FILE-HEADER', 'N', 10, 0)
     fh = f.objects[key]
     assert fh.type       == "FILE-HEADER"
     assert fh.name       == "N"
@@ -55,7 +59,7 @@ def test_file_header(f):
     assert fh.id         == "some logical file"
 
 def test_origin(f):
-    key = dlisio.core.fingerprint('ORIGIN', 'DEFINING_ORIGIN', 10, 0)
+    key = fingerprint('ORIGIN', 'DEFINING_ORIGIN', 10, 0)
     def_origin = f.objects[key]
     assert def_origin.type              == "ORIGIN"
     assert def_origin.origin            == 10
@@ -81,7 +85,7 @@ def test_origin(f):
     assert def_origin.namespace_name    == "DIC1"
     assert def_origin.namespace_version == 6
 
-    key = dlisio.core.fingerprint('ORIGIN', 'RANDOM', 127, 0)
+    key = fingerprint('ORIGIN', 'RANDOM', 127, 0)
     random_origin = f.objects[key]
     assert random_origin.origin      == 127
     assert random_origin.file_id     == "some other logical file"
@@ -89,7 +93,7 @@ def test_origin(f):
     assert random_origin.file_nr     == 6
 
 def test_axis(f):
-    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
     axis = f.objects[key]
 
     assert axis.axis_id     == 'AX2'
@@ -97,7 +101,7 @@ def test_axis(f):
     assert axis.spacing     == 'a bit'
 
 def test_longname(f):
-    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    key = fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
     ln  = f.objects[key]
 
     assert ln.modifier        == ['channel 1 long name']
@@ -117,22 +121,22 @@ def test_longname(f):
     assert ln.private_symbol  == 'BOL'
 
 def test_channel(f):
-    key = dlisio.core.fingerprint('TOOL', 'TOOL1', 10, 0)
+    key = fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
-    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    key = fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
     longname = f.objects[key]
 
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    key = fingerprint('AXIS', 'AXIS1', 10, 0)
     axis1 = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
     axis2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS3', 10, 0)
+    key = fingerprint('AXIS', 'AXIS3', 10, 0)
     axis3 = f.objects[key]
 
     assert channel.long_name         == longname
@@ -145,12 +149,12 @@ def test_channel(f):
     assert channel.source            == tool
 
 def test_frame(f):
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel1 = f.objects[key]
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
     channel2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('FRAME', 'FRAME1', 10, 0)
+    key = fingerprint('FRAME', 'FRAME1', 10, 0)
     frame1 = f.objects[key]
 
     assert frame1.description == "Main frame"
@@ -162,7 +166,7 @@ def test_frame(f):
     assert frame1.index_min   == 1
     assert frame1.index_max   == 100
 
-    key = dlisio.core.fingerprint('FRAME', 'FRAME2', 10, 0)
+    key = fingerprint('FRAME', 'FRAME2', 10, 0)
     frame2 = f.objects[key]
 
     #for second frame many attributes are absent
@@ -176,7 +180,7 @@ def test_frame(f):
     assert frame2.index_max   == None
 
 def test_zone(f):
-    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
     assert zone.description == 'Some along zone'
@@ -185,16 +189,16 @@ def test_zone(f):
     assert zone.minimum     == 8603
 
 def test_parameter(f):
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param = f.objects[key]
 
-    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
+    key = fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
     longname = f.objects[key]
 
-    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    key = fingerprint('AXIS', 'AXIS1', 10, 0)
     axis = f.objects[key]
 
     assert param.long_name         == longname
@@ -203,26 +207,26 @@ def test_parameter(f):
     assert param.zones             == [zone]
     assert param.values            == [101, 120]
 
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param = f.objects[key]
 
-    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM2-LONG', 10, 0)
+    key = fingerprint('LONG-NAME', 'PARAM2-LONG', 10, 0)
     longname = f.objects[key]
 
     assert param.long_name         == longname
     assert param.values            == [131, 69]
 
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM3', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
     param = f.objects[key]
 
-    key = dlisio.core.fingerprint('LONG-NAME', 'PARAM3-LONG', 10, 0)
+    key = fingerprint('LONG-NAME', 'PARAM3-LONG', 10, 0)
     longname = f.objects[key]
 
     assert param.long_name         == longname
     assert param.values            == [152, 35]
 
 def test_equipment(f):
-    key = dlisio.core.fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
+    key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
     e = f.objects[key]
     assert e.trademark_name == "some equipment"
     assert e.status         == True
@@ -243,20 +247,20 @@ def test_equipment(f):
     assert e.angular_drift  == 41
 
 def test_tool(f):
-    key = dlisio.core.fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
+    key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
     e = f.objects[key]
 
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param1 = f.objects[key]
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel1 = f.objects[key]
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
     channel2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('TOOL', 'TOOL1', 10, 0)
+    key = fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
     assert tool.description             == "description of tool 1"
@@ -269,16 +273,16 @@ def test_tool(f):
     assert len(tool.refs["parameters"]) == 3
 
 def test_measurement(f):
-    key = dlisio.core.fingerprint('TOOL', 'TOOL1', 10, 0)
+    key = fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
-    key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
+    key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
     m = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
+    key = fingerprint('AXIS', 'AXIS1', 10, 0)
     axis1 = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
     axis2 = f.objects[key]
 
     assert m.phase           == "MASTER"
@@ -298,7 +302,7 @@ def test_measurement(f):
     assert m.minus_tolerance == [1, 1, 1, 1, 1, 1]
 
 def test_coefficient(f):
-    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
     c = f.objects[key]
 
     assert c.label           == "GAIN"
@@ -308,33 +312,33 @@ def test_coefficient(f):
     assert c.minus_tolerance == [2, 1]
 
 def test_calibration(f):
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param1 = f.objects[key]
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param2 = f.objects[key]
-    key = dlisio.core.fingerprint('PARAMETER', 'PARAM3', 10, 0)
+    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
     param3 = f.objects[key]
 
-    key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
+    key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
     meas1 = f.objects[key]
-    key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT', 'MEAS2', 10, 0)
+    key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS2', 10, 0)
     meas2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
     coeff1 = f.objects[key]
-    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT', 'COEFF2', 10, 0)
+    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF2', 10, 0)
     coeff2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
     channel1 = f.objects[key]
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
     channel2 = f.objects[key]
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
     channel3 = f.objects[key]
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN4', 10, 0)
+    key = fingerprint('CHANNEL', 'CHANN4', 10, 0)
     channel4 = f.objects[key]
 
-    key = dlisio.core.fingerprint('CALIBRATION', 'CALIBR1', 10, 0)
+    key = fingerprint('CALIBRATION', 'CALIBR1', 10, 0)
     c = f.objects[key]
 
     assert c.calibrated   == [channel1, channel2]
@@ -345,16 +349,16 @@ def test_calibration(f):
     assert c.method       == "USELESS"
 
 def test_computation(f):
-    key = dlisio.core.fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
+    key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
     com = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS2', 10, 0)
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
     axis2 = f.objects[key]
 
-    key = dlisio.core.fingerprint('AXIS', 'AXIS3', 10, 0)
+    key = fingerprint('AXIS', 'AXIS3', 10, 0)
     axis3 = f.objects[key]
 
-    key = dlisio.core.fingerprint('ZONE', 'ZONE-A', 10, 0)
+    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
     assert com.long_name      == 'computation object 2'
@@ -366,7 +370,7 @@ def test_computation(f):
     assert com.refs['source'] == [('PROCESS', (10, 0, 'PROC1'))]
 
 def test_unknown(f):
-    key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+    key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]
 
     assert unknown.stash["SOME_LIST"]   == ["LIST_V1", "LIST_V2"]
@@ -374,7 +378,7 @@ def test_unknown(f):
     assert unknown.stash["SOME_STATUS"] == [1]
 
 def test_unexpected_attributes(f):
-    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
     c = f.objects[key]
 
     assert c.label                           == "SMTH"
@@ -395,9 +399,9 @@ def test_dynamic_class(fpath):
     with dlisio.load(fpath) as (f, _):
         class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
             attributes = {
-                "SOME_LIST"   : dlisio.plumbing.valuetypes.vector('list'),
-                "SOME_VALUE"  : dlisio.plumbing.valuetypes.scalar('value'),
-                "SOME_STATUS" : dlisio.plumbing.valuetypes.boolean('status'),
+                "SOME_LIST"   : valuetypes.vector('list'),
+                "SOME_VALUE"  : valuetypes.scalar('value'),
+                "SOME_STATUS" : valuetypes.boolean('status'),
             }
 
             def __init__(self, obj = None, name = None):
@@ -406,7 +410,7 @@ def test_dynamic_class(fpath):
                 self.value = None
                 self.status = None
 
-        key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+        key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
         unknown = f.objects[key]
         with pytest.raises(AttributeError):
             assert unknown.value == "VAL1"
@@ -414,7 +418,7 @@ def test_dynamic_class(fpath):
         f.types['UNKNOWN_SET'] = ActuallyKnown.create
         f.load()
 
-        key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+        key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
         unknown = f.objects[key]
 
         assert unknown.list == ["LIST_V1", "LIST_V2"]
@@ -483,19 +487,17 @@ def test_remove_object_type(f):
 
 def test_dynamic_instance_attribute(fpath):
     with dlisio.load(fpath) as (f, _):
-        key = dlisio.core.fingerprint(
-                          'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+        key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c = f.objects[key]
         # update attributes only for one object
         c.attributes = dict(c.attributes)
-        c.attributes['MY_PARAM'] = dlisio.plumbing.valuetypes.vector('myparams')
+        c.attributes['MY_PARAM'] = valuetypes.vector('myparams')
 
         c.load()
         assert c.myparams == ["wrong", "W"]
 
         # check that other object of the same type is not affected
-        key = dlisio.core.fingerprint(
-                          'CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+        key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
         c = f.objects[key]
 
         with pytest.raises(KeyError):
@@ -503,41 +505,38 @@ def test_dynamic_instance_attribute(fpath):
 
 def test_dynamic_class_attribute(fpath):
     with dlisio.load(fpath) as (f, _):
-        # update attribute for the class
-        dlisio.plumbing.coefficient.Coefficient.attributes['MY_PARAM'] = (
-                        dlisio.plumbing.valuetypes.vector('myparams'))
+        try:
+            # update attribute for the class
+            Coefficient.attributes['MY_PARAM'] = valuetypes.vector('myparams')
 
-        key = dlisio.core.fingerprint(
-                          'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-        c = f.objects[key]
+            key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+            c = f.objects[key]
 
-        assert c.attributes['MY_PARAM'] == (
-                           dlisio.plumbing.valuetypes.vector('myparams'))
-        c.load()
-        assert c.myparams == ["wrong", "W"]
+            assert c.attributes['MY_PARAM'] == valuetypes.vector('myparams')
+            c.load()
+            assert c.myparams == ["wrong", "W"]
 
-        # manual cleanup. "reload" doesn't work
-        del c.__class__.attributes['MY_PARAM']
+        finally:
+            # manual cleanup. "reload" doesn't work
+            del c.__class__.attributes['MY_PARAM']
 
 def test_dynamic_linkage(fpath):
     with dlisio.load(fpath) as (f, _):
-        key = dlisio.core.fingerprint(
-                          'CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+        key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c = f.objects[key]
 
         c.attributes = dict(c.attributes)
-        c.attributes['LINKS_TO_PARAMETERS'] = (
-                dlisio.plumbing.valuetypes.vector('paramlinks'))
+        c.attributes['LINKS_TO_PARAMETERS'] = valuetypes.vector('paramlinks')
         c.attributes['LINK_TO_UNKNOWN_OBJECT'] = (
-                dlisio.plumbing.valuetypes.scalar('unknown_link'))
+                    valuetypes.scalar('unknown_link'))
 
         c.load()
 
         c.linkage = dict(c.linkage)
-        c.linkage['label']        = dlisio.plumbing.linkage.obname("EQUIPMENT")
-        c.linkage['paramlinks']   = dlisio.plumbing.linkage.obname("PARAMETER")
-        c.linkage['unknown_link'] = dlisio.plumbing.linkage.objref
-        c.linkage['notlink']      = dlisio.plumbing.linkage.objref
+        c.linkage['label']        = linkage.obname("EQUIPMENT")
+        c.linkage['paramlinks']   = linkage.obname("PARAMETER")
+        c.linkage['unknown_link'] = linkage.objref
+        c.linkage['notlink']      = linkage.objref
         c.linkage['wrongobname']  = "i am just wrong obname"
         c.linkage['wrongobjref']  = "i am just wrong objref"
 
@@ -547,14 +546,39 @@ def test_dynamic_linkage(fpath):
 
         c.link(f.objects)
 
-        key = dlisio.core.fingerprint('PARAMETER', 'PARAM2', 10, 0)
+        key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
         param2 = f.objects[key]
-        key = dlisio.core.fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
+        key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
         u = f.objects[key]
 
         assert c.label        == "SMTH"
         assert c.paramlinks   == [param2]
         assert c.unknown_link == u
+
+def test_dynamic_change_through_instance(fpath):
+    with dlisio.load(fpath) as (f, _):
+        try:
+            key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+            c = f.objects[key]
+            c.attributes['MY_PARAM']            = valuetypes.vector('myparams')
+            c.attributes['LINKS_TO_PARAMETERS'] = (
+                        valuetypes.vector('paramlinks'))
+            c.linkage['paramlinks']             = linkage.obname("PARAMETER")
+
+            key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
+            param2 = f.objects[key]
+            key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+            c = f.objects[key]
+            c.load()
+            c.link(f.objects)
+
+            assert c.myparams     == ["wrong", "W"]
+            assert c.paramlinks   == [param2]
+
+        finally:
+            del c.attributes['MY_PARAM']
+            del c.attributes['LINKS_TO_PARAMETERS']
+            del c.linkage['paramlinks']
 
 def test_match(f):
     refs = []
