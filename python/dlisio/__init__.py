@@ -248,6 +248,10 @@ class dlis(object):
 
         for obj in objects.values():
             obj.link(objects)
+            try:
+                obj.reshape(True)
+            except AttributeError:
+                pass
 
         self.objects = objects
         self.indexedobjects = indexedobjects

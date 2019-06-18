@@ -1,16 +1,19 @@
-from .basicobject import BasicObject
+from .dataobject import *
 from .valuetypes import scalar, vector
 from .linkage import obname, objref
 
-class Computation(BasicObject):
-    """
+import numpy as np
+
+class Computation(DataObject):
+    """Computation
+
     Results of computations that are more appropriately expressed as static
     information rather than as channels.
 
     See also
     --------
 
-    BasicObject : The basic object that Computation is derived from
+    DataObject : The data object that Computation is derived from
 
     Notes
     -----
@@ -38,6 +41,8 @@ class Computation(BasicObject):
         'source'    : objref
     }
 
+    datamap = {'values' : zoned}
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'COMPUTATION')
         #: Descriptive name of the computation
@@ -58,7 +63,7 @@ class Computation(BasicObject):
         self.zones       = []
 
         #: Computational values
-        self.values      = []
+        self.values      = np.empty(0)
 
         #: The immediate source of the Computation
         self.source = []

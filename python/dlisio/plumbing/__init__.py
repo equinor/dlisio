@@ -1,4 +1,5 @@
 from .basicobject import BasicObject
+from .dataobject import DataObject
 from .axis import Axis
 from .fileheader import Fileheader
 from .longname import Longname

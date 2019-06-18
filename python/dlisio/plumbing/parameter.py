@@ -1,8 +1,12 @@
-from .basicobject import BasicObject
+from .dataobject import *
 from .valuetypes import scalar, vector
 from .linkage import obname
 
-class Parameter(BasicObject):
+import logging
+
+import numpy as np
+
+class Parameter(DataObject):
     """Parameter
 
     A parameter object describes a parameter used in the acquisition and
@@ -14,7 +18,7 @@ class Parameter(BasicObject):
     See also
     --------
 
-    BasicObject : The basic object that Parameter is derived from
+    DataObject : The data object that Computation is derived from
 
     Notes
     -----
@@ -38,6 +42,8 @@ class Parameter(BasicObject):
         'zones'     : obname("ZONE")
     }
 
+    datamap = {'values' : zoned}
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'PARAMETER')
         #: Descriptive name of the channel.
@@ -53,4 +59,4 @@ class Parameter(BasicObject):
         self.zones     = []
 
         #: Parameter values
-        self.values    = []
+        self.values    = np.empty(0)

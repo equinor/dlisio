@@ -1,5 +1,6 @@
 from .. import core
 from .valuetypes import *
+from .linkage import link_attribute
 
 import logging
 
@@ -108,6 +109,8 @@ class BasicObject():
         #: Keeps originally stored value references to objects (obname, objref,
         #: attref) in the form of dictionary (expected attribute name : value)
         self.refs       = {}
+
+        self._attribute_features = [link_attribute]
 
         try:
             self.name       = name.id
@@ -243,11 +246,7 @@ class BasicObject():
         is updated
         """
 
-        def islink(val):
-            # TODO: update to check repcode when repcode is back
-            return (isinstance (val, core.obname) or
-                    isinstance (val, core.objref) or
-                    isinstance (val, core.attref))
+        if self.attic is None: return
 
         attrs = self.attributes
         for label, value in self.attic.items():
@@ -261,8 +260,8 @@ class BasicObject():
 
             val = vtvalue(value_type, value)
 
-            if islink(value[0]):
-                self.refs[attr] = val
+            for feature in self._attribute_features:
+                if feature(self, attr, val): break
             else:
                 setattr(self, attr, val)
 

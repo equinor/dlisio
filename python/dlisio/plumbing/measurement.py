@@ -1,17 +1,19 @@
-from .basicobject import BasicObject
+from .dataobject import *
 from .valuetypes import scalar, vector
 from .linkage import objref, obname
 
+import numpy as np
 
-class Measurement(BasicObject):
-    """
+class Measurement(DataObject):
+    """Measurement
+
     Records of measurements, references, and tolerances used to compute
     calibration coefficients.
 
     See also
     --------
 
-    BasicObject : The basic object that Measurement derived from
+    DataObject : The data object that Computation is derived from
 
     Notes
     -----
@@ -44,6 +46,15 @@ class Measurement(BasicObject):
         'source' : objref
     }
 
+    datamap = {
+        'samples'         : sampled,
+        'max_deviation'   : simple,
+        'std_deviation'   : simple,
+        'reference'       : simple,
+        'plus_tolerance'  : simple,
+        'minus_tolerance' : simple,
+    }
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = "CALIBRATION-MEASUREMENT")
         #: In what phase of the overall job sequence the
@@ -63,16 +74,16 @@ class Measurement(BasicObject):
         self.axis            = []
 
         #: Measurement samples
-        self.samples         = []
+        self.samples         = np.empty(0)
 
         #: Number of samples used to compute the max/std_deviation
         self.samplecount     = None
 
         #: Maximum deviation in the sample array
-        self.max_deviation   = []
+        self.max_deviation   = np.empty(0)
 
         #: Standard deviation in the sample array
-        self.std_deviation   = []
+        self.std_deviation   = np.empty(0)
 
         #: Time of the sample acquisition
         self.begin_time      = None
@@ -81,7 +92,7 @@ class Measurement(BasicObject):
         self.duration        = None
 
         #: Expected nominal value of a single sample
-        self.reference       = []
+        self.reference       = np.empty(0)
 
         #: Measurable quantity of the calibration standard used to produce the
         #: sample
@@ -89,10 +100,8 @@ class Measurement(BasicObject):
 
         #: Maximum value that a sample can exceed the reference and still be
         #: "within tolerance"
-        self.plus_tolerance  = []
+        self.plus_tolerance  = np.empty(0)
 
         #: Maximum value that a sample can fall below the reference and still
         #: be "within tolerance"
-        self.minus_tolerance = []
-
-
+        self.minus_tolerance = np.empty(0)

@@ -3,9 +3,10 @@ from ..reprc import fmt
 from ..dlisutils import curves
 from .valuetypes import scalar, vector, boolean
 from .linkage import obname
+from .dataobjectutils import combined_dtype
 
-import numpy as np
 import logging
+import numpy as np
 
 
 class Frame(BasicObject):
@@ -146,57 +147,10 @@ class Frame(BasicObject):
         >>> frame.dtype
         dtype([('TIME-0-0', '<f4'), ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
         """
-
-        if self._dtype: return self._dtype
-
-        seen = {}
-        types = []
-
-        source = "duplicated mnemonic in frame '{}'"
-        problem = "but rich label for channel '{}' cannot be formatted"
-        msg = ', '.join((source, problem))
-        info = 'name = {}, origin = {}, copynumber = {}'.format
-
-        fmtlabel = self.dtype_fmt.format
-        for i, ch in enumerate(self.channels):
-            # current has to be a list (or something mutable at least), because
-            # it have to be updated on multiple labes
-            current = (ch.name, ch.dtype)
-
-            # first time for this label, register it as "seen before"
-            if ch.name not in seen:
-                seen[ch.name] = (i, ch)
-                types.append(current)
-                continue
-
-            try:
-                label = fmtlabel(ch.name, ch.origin, ch.copynumber)
-            except (TypeError, ValueError):
-                logging.error(msg.format(self.name, ch.name))
-                logging.debug(info(ch.name, ch.origin, ch.copynumber))
-                raise
-
-            types.append((label, ch.dtype))
-
-            # the first-seen curve with this name has already been updated
-            if seen[ch.name] is None:
-                continue
-
-            prev_index, prev = seen[ch.name]
-
-            try:
-                label = fmtlabel(prev.name, prev.origin, prev.copynumber)
-            except (TypeError, ValueError):
-                logging.error(msg.format(self.name, ch.name))
-                logging.debug(info(prev.name, prev.origin, prev.copynumber))
-                raise
-
-            # update the previous label with this name, and mark (with None)
-            # for not needing update again
-            types[prev_index] = (label, prev.dtype)
-            seen[ch.name] = None
-
-        self._dtype = np.dtype(types)
+        if self._dtype:
+            return self._dtype
+        parts = [(ch, ch.dtype) for ch in self.channels]
+        self._dtype = combined_dtype(parts, self.dtype_fmt.format)
         return self._dtype
 
     def fmtstr(self):

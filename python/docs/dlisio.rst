@@ -19,6 +19,13 @@ Basic Object
     :undoc-members:
     :member-order: bysource
 
+Data Object
+============
+.. autoclass:: DataObject(BasicObject)
+    :members:
+    :undoc-members:
+    :member-order: bysource
+
 RP66 objects (native dlis)
 ==========================
 
@@ -56,7 +63,7 @@ Coefficent
 
 Computation
 -----------
-.. autoclass:: Computation(BasicObject)
+.. autoclass:: Computation(DataObject)
     :members:
     :member-order: bysource
     :exclude-members: stripspaces
@@ -88,7 +95,7 @@ Longname
 
 Measurement
 -----------
-.. autoclass:: Measurement(BasicObject)
+.. autoclass:: Measurement(DataObject)
     :members:
     :member-order: bysource
     :exclude-members: stripspaces
@@ -104,7 +111,7 @@ Origin
 
 Parameter
 ---------
-.. autoclass:: Parameter(BasicObject)
+.. autoclass:: Parameter(DataObject)
     :members:
     :member-order: bysource
     :inherited-members:
