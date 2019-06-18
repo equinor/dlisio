@@ -51,10 +51,16 @@ class BasicObject():
     ... dlisio.load(fpath)
 
     All the Coefficient objects will map MY_PARAM from the source file
-    to myparam. It's also possible to update attributes for one object
-    only and reload afterwards:
+    to myparam. Updating object instance attributes will actually update
+    attributes for the whole class
 
     >>> coeff = f.objects[key]
+    ... coeff['MY_PARAM'] = valuetypes.scalar('myparam')
+
+    In order to update attributes only for one particular object, redefine
+    the attributes dictionary for the object and reload
+
+    >>> coeff.attributes = dict(coeff.attributes)
     ... coeff.attributes['UNIQUE_PARAM'] = valuetypes.scalar('uniqueparam')
     ... coeff.load()
     """
@@ -70,8 +76,18 @@ class BasicObject():
     >>> Coefficient.linkage['myparam'] = linkage.obname("PARAMETER")
     ... dlisio.load(fpath)
 
+    or
+
+    >>> coeff = f.objects[key]
+    ... ceoff.linkage['myparam'] = linkage.obname("PARAMETER")
+
     The values must be either *linkage.obname("TYPE")* or *linkage.objref*.
-    To relink just one object (when refs or linkage is updated):
+    To update linkage for one object only redefine linkage:
+
+    >>> coeff.linkage = dict(coeff.linkage)
+    ... ceoff.linkage['myparam'] = linkage.obname("PARAMETER")
+
+    To relink (when refs or linkage is updated):
 
     >>> coeff.link(f.objects)
     """
@@ -130,14 +146,6 @@ class BasicObject():
                                 self.name,
                                 self.origin,
                                 self.copynumber)
-
-    def update_stash(self, label, value):
-        """ Stashes attributes
-
-        Adds provided label-value pair to stash dictionary.
-        If value already exists in the dictionary, it's updated
-        """
-        self.stash[label] = value
 
     def stripspaces(self):
         """Strip spaces
@@ -253,7 +261,7 @@ class BasicObject():
             try:
                 attr, value_type = attrs[label]
             except KeyError:
-                self.update_stash(label, value)
+                self.stash[label] = value
                 continue
 
             val = vtvalue(value_type, value)

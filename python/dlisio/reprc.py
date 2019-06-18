@@ -38,7 +38,7 @@ Conversion from dlis' representation codes to type-strings that can be
 interpreted by numpy.dtype. int's and uint's are normalized to 4-byte.
 
 Note: dtype's for reprc with variable lenghts are not yet supported by dlisio
-(reprc 19-20, 23-25, 27).
+(reprc 18-20, 22-25, 27). Datetime (21) isn't supported due to numpy issue
 """
 dtype = {
     1      : 'f4',                   #Low precision floating point
@@ -59,13 +59,13 @@ dtype = {
     16     : 'u2',                   #Normal unsigned integer
     17     : 'u4',                   #Long unsigned integer
     18     : 'u4',                   #Variable-length unsigned integer
-    19     : 'i1,U',                 #Variable-length identifier
-    20     : 'i4,U',                 #Variable-length ASCII character string
+    19     : 'u1,U',                 #Variable-length identifier
+    20     : 'u4,U',                 #Variable-length ASCII character string
     21     : 'M',                    #Date and time
-    22     : 'i4',                   #Origin reference
-    23     : 'i4,i1,i1,U',           #Object name
-    24     : 'i1,U,i4,i1,i1,U',      #Object reference
-    25     : 'i1,U,i4,i1,i1,U,i1,U', #Attribute reference
-    26     : 'i1',                   #Boolean status
-    27     : 'i1,U',                 #Units expression
+    22     : 'u4',                   #Origin reference
+    23     : 'u4,u1,u1,U',           #Object name
+    24     : 'u1,U,u4,u1,u1,U',      #Object reference
+    25     : 'u1,U,u4,u1,u1,U,u1,U', #Attribute reference
+    26     : '?',                    #Boolean status
+    27     : 'u1,U',                 #Units expression
 }

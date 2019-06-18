@@ -339,6 +339,12 @@ record& stream::at( int i, record& rec ) noexcept (false) {
             const auto* fst = rec.data.data() + prevsize;
             trim_segment(attrs, fst, len, rec.data);
 
+            /*if the whole segment is getting trimmed, it's unclear if
+              successor attribute should be erased or not.
+              For now ignoring. Suspecting issue will never occur as
+              whole "too many padbytes" problem might be caused by encryption
+            */
+
             const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
             if (has_successor) continue;
 
