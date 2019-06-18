@@ -134,6 +134,14 @@ Zone
     :exclude-members: stripspaces
     :inherited-members:
 
+Splice
+------
+.. autoclass:: Splice(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces, update_stash
+    :inherited-members:
+
 Unknown
 -------
 .. autoclass:: Unknown(BasicObject)

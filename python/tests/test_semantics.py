@@ -464,6 +464,39 @@ def test_computation(f):
     assert np.array_equal(com.values[zone.name], values)
 
 
+def test_splice(f):
+    for key in f.indexedobjects['SPLICE'].values():
+        print('name: {}'.format(key.name))
+        print('origin: {}'.format(key.origin))
+        print('copy: {}'.format(key.copynumber))
+        print(key.attic)
+
+    key = fingerprint('SPLICE', 'SPLICE1', 10, 0)
+    splice = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN4', 10, 0)
+    in1 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    in2 = f.objects[key]
+
+    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone1 = f.objects[key]
+
+    # Output channel does not exist, but should be accessible through refs
+    assert splice.output_channel == None
+    assert splice.refs['output_channel'].id         == 'CHANN-NEW'
+    assert splice.refs['output_channel'].origin     == 10
+    assert splice.refs['output_channel'].copynumber ==  0
+
+    assert splice.input_channels == [in1, in2]
+
+    # Second zone does not exist, but should be accessible through refs
+    assert splice.zones          == [zone1]
+    assert splice.refs['zones'][1].id         == 'ZONE-B'
+    assert splice.refs['zones'][1].origin     == 10
+    assert splice.refs['zones'][1].copynumber == 0
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]

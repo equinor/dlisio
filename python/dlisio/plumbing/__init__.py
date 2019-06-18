@@ -13,6 +13,7 @@ from .equipment import Equipment
 from .measurement import Measurement
 from .computation import Computation
 from .coefficient import Coefficient
+from .splice import Splice
 from .unknown import Unknown
 
 from .valuetypes import *
