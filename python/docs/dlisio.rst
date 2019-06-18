@@ -27,7 +27,7 @@ Axis
 .. autoclass:: Axis(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Calibration
@@ -35,7 +35,7 @@ Calibration
 .. autoclass:: Calibration(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Channel
@@ -43,7 +43,7 @@ Channel
 .. autoclass:: Channel()
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Coefficent
@@ -51,7 +51,7 @@ Coefficent
 .. autoclass:: Coefficient(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Computation
@@ -59,7 +59,7 @@ Computation
 .. autoclass:: Computation(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Frame
@@ -67,7 +67,7 @@ Frame
 .. autoclass:: Frame(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Fileheader
@@ -75,7 +75,7 @@ Fileheader
 .. autoclass:: Fileheader(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Longname
@@ -83,7 +83,7 @@ Longname
 .. autoclass:: Longname(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Measurement
@@ -91,7 +91,7 @@ Measurement
 .. autoclass:: Measurement(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Origin
@@ -99,7 +99,7 @@ Origin
 .. autoclass:: Origin(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Parameter
@@ -108,14 +108,14 @@ Parameter
     :members:
     :member-order: bysource
     :inherited-members:
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
 
 Tool
 ----
 .. autoclass:: Tool(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Equipment
@@ -123,7 +123,7 @@ Equipment
 .. autoclass:: Equipment(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Zone
@@ -131,7 +131,7 @@ Zone
 .. autoclass:: Zone(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:
 
 Unknown
@@ -139,5 +139,5 @@ Unknown
 .. autoclass:: Unknown(BasicObject)
     :members:
     :member-order: bysource
-    :exclude-members: stripspaces, update_stash
+    :exclude-members: stripspaces
     :inherited-members:

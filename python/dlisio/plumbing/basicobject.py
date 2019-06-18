@@ -131,14 +131,6 @@ class BasicObject():
                                 self.origin,
                                 self.copynumber)
 
-    def update_stash(self, label, value):
-        """ Stashes attributes
-
-        Adds provided label-value pair to stash dictionary.
-        If value already exists in the dictionary, it's updated
-        """
-        self.stash[label] = value
-
     def stripspaces(self):
         """Strip spaces
 
@@ -253,7 +245,7 @@ class BasicObject():
             try:
                 attr, value_type = attrs[label]
             except KeyError:
-                self.update_stash(label, value)
+                self.stash[label] = value
                 continue
 
             val = vtvalue(value_type, value)
