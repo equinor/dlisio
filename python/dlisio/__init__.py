@@ -28,6 +28,7 @@ class dlis(object):
         'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
         'CALIBRATION'            : plumbing.Calibration.create,
         'COMPUTATION'            : plumbing.Computation.create,
+        'SPLICE'                 : plumbing.Splice.create,
     }
     """dict: Parsing guide for native dlis object-types. Maps the native dlis
     object-type to python object-constructors. E.g. all dlis objects with type
