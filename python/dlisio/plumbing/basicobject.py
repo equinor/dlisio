@@ -252,6 +252,7 @@ class BasicObject():
         attrs = self.attributes
         for label, value in self.attic.items():
             if value is None: continue
+            if len(value) == 0: continue
 
             try:
                 attr, value_type = attrs[label]

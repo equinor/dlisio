@@ -1,6 +1,7 @@
 ValueTypeBoolean = 0
 ValueTypeScalar = 1
 ValueTypeVector = 2
+ValueTypeReverse = 3
 
 def boolean(name):
     return (name, ValueTypeBoolean)
@@ -11,6 +12,9 @@ def scalar(name):
 def vector(name):
     return (name, ValueTypeVector)
 
+def reverse(name):
+    return (name, ValueTypeReverse)
+
 def vtvalue(value_type, value):
     """
     Returns actual value of value vector based on value_type
@@ -20,6 +24,9 @@ def vtvalue(value_type, value):
 
     elif value_type == ValueTypeVector:
         return value
+
+    elif value_type == ValueTypeReverse:
+        return value[::-1]
 
     elif value_type == ValueTypeBoolean:
         return bool(value[0])

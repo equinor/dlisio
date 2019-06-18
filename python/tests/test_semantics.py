@@ -269,41 +269,43 @@ def test_zone(f):
     assert zone.minimum     == 8603
 
 def test_parameter(f):
-    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
-    param = f.objects[key]
-
-    key = fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
-    longname = f.objects[key]
-
-    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
-    zone = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS1', 10, 0)
-    axis = f.objects[key]
-
-    assert param.long_name         == longname
-    assert param.dimension         == [2]
-    assert param.axis              == [axis]
-    assert param.zones             == [zone]
-    assert param.values            == [101, 120]
-
-    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
-    param = f.objects[key]
-
-    key = fingerprint('LONG-NAME', 'PARAM2-LONG', 10, 0)
-    longname = f.objects[key]
-
-    assert param.long_name         == longname
-    assert param.values            == [131, 69]
-
     key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
-    param = f.objects[key]
+    p = f.objects[key]
 
     key = fingerprint('LONG-NAME', 'PARAM3-LONG', 10, 0)
     longname = f.objects[key]
+    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zoneA = f.objects[key]
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
+    axis2 = f.objects[key]
+    key = fingerprint('AXIS', 'AXIS3', 10, 0)
+    axis3 = f.objects[key]
 
-    assert param.long_name         == longname
-    assert param.values            == [152, 35]
+    assert p.long_name           == longname
+    assert p.dimension           == [2, 3]
+    assert p.attic["DIMENSION"]  == [3, 2]
+    assert p.axis                == [axis3, axis2]
+    assert len(p.attic["AXIS"])  == 2
+    assert p.zones               == [zoneA, None, None, None]
+    assert len(p.attic["ZONES"]) == 4
+
+    sample = np.reshape(np.array([1, 2, 3, 4, 5, 6]), (2,3))
+
+    assert np.array_equal(p.values['ZONE-A'], sample)
+    assert np.array_equal(p.values['DLISIO-UNDEF-1'][1], np.array([10, 11, 12]))
+
+    assert p.values['DLISIO-UNDEF-2'][0][1] == 14
+    assert p.values['DLISIO-UNDEF-3'][1][2] == 24
+
+    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
+    p = f.objects[key]
+    key = fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
+    longname = f.objects[key]
+
+    assert p.long_name == longname
+
+    value = p.values['ZONE-A']
+    assert np.array_equal(value, np.array([101, 120]))
 
 def test_equipment(f):
     key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
@@ -365,21 +367,30 @@ def test_measurement(f):
     key = fingerprint('AXIS', 'AXIS2', 10, 0)
     axis2 = f.objects[key]
 
-    assert m.phase           == "MASTER"
-    assert m.source          == tool
-    assert m.mtype           == "Zero"
-    assert m.dimension       == [2, 3]
-    assert m.axis            == [axis1, axis2]
-    assert m.samples         == [240, 137, 228, 120, 240, 136]
-    assert m.samplecount     == 4
-    assert m.max_deviation   == [2.5, 2.5, 2.5, 2.75, 2.5, 2.5]
-    assert m.std_deviation   == [-14.25, -14.25, -14.25, -14.25, -14, -14.25]
-    assert m.begin_time      == 13447
-    assert m.duration        == 21
-    assert m.reference       == [240, 135, 240, 135, 240, 135]
-    assert m.standard        == [1]
-    assert m.plus_tolerance  == [5, 10, 5, 10, 5, 10]
-    assert m.minus_tolerance == [1, 1, 1, 1, 1, 1]
+    assert m.phase              == "MASTER"
+    assert m.source             == tool
+    assert m.mtype              == "Zero"
+    assert m.dimension          == [3, 2]
+    assert m.attic["DIMENSION"] == [2, 3]
+    assert m.axis               == [axis2, axis1]
+    assert m.samplecount        == 4
+    assert m.begin_time         == 13447
+    assert m.duration           == 21
+    assert m.standard           == [1]
+
+    samples = np.array([[240, 137], [228, 120], [240, 136]])
+    maxdev  = np.array([[2.5, 2.5], [2.5, 2.75], [2.5, 2.5]])
+    stddev  = np.array([[-14.25, -14.25], [-14.25, -14.25], [-14, -14.25]])
+    ref     = np.array([[240, 135], [240, 135], [240, 135]])
+    plus    = np.array([[5, 10], [5, 10], [5, 10]])
+    minus   = np.array([[1, 1], [1, 1], [1, 1]])
+
+    assert np.array_equal(m.samples[0]         , samples)
+    assert np.array_equal(m.max_deviation[0]   , maxdev)
+    assert np.array_equal(m.std_deviation[0]   , stddev)
+    assert np.array_equal(m.reference[0]       , ref)
+    assert np.array_equal(m.plus_tolerance[0]  , plus)
+    assert np.array_equal(m.minus_tolerance[0] , minus)
 
 def test_coefficient(f):
     key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
@@ -441,13 +452,17 @@ def test_computation(f):
     key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
-    assert com.long_name      == 'computation object 2'
-    assert com.properties     == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
-    assert com.dimension      == [2, 4]
-    assert com.axis           == [axis2, axis3]
-    assert com.zones          == [zone]
-    assert com.values         == [140, 99, 144, 172, 202, 52, 109, 120]
-    assert com.refs['source'] == [('PROCESS', (10, 0, 'PROC1'))]
+    assert com.long_name          == 'computation object 2'
+    assert com.properties         == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
+    assert com.dimension          == [4, 2]
+    assert com.attic["DIMENSION"] == [2, 4]
+    assert com.axis               == [axis3, axis2]
+    assert com.zones              == [zone]
+    assert com.refs['source']     == [('PROCESS', (10, 0, 'PROC1'))]
+
+    values  = np.array([[140, 99], [144, 172], [202, 52], [109, 120]])
+    assert np.array_equal(com.values[zone.name], values)
+
 
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)

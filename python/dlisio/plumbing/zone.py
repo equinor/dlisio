@@ -27,6 +27,8 @@ class Zone(BasicObject):
         'MINIMUM'    : scalar('minimum')
     }
 
+    labelfmt = '{:s}.{:d}.{:d}'
+
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'ZONE')
         #: Description of the zone
@@ -37,6 +39,9 @@ class Zone(BasicObject):
 
         #: Latest time or deepest point, not inclusive
         self.maximum     = None
-
         #: Earliest time or shallowest point, inclusive
         self.minimum     = None
+
+        #: Instance-specific label for duplicated mnemonics.
+        #: Defaults to Zone.labelfmt
+        self.labelfmt = self.labelfmt
