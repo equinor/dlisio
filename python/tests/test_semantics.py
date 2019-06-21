@@ -192,7 +192,8 @@ def test_frame(f):
 
 def test_fdata_reprcode(f):
     key = fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
-    curves = f.curves(key)
+    frame = f.objects[key]
+    curves = frame.curves()
 
     assert list(curves[0][0])     == [153, -1]
     assert list(curves[0][1])     == [17.25, -13.75]
@@ -219,7 +220,8 @@ def test_fdata_reprcode(f):
 def test_fdata_dimension(fpath):
     with dlisio.load(fpath) as (_, g):
         key = fingerprint('FRAME', 'FRAME-DIMENSION', 11, 0)
-        curves = g.curves(key)
+        frame = g.objects[key]
+        curves = frame.curves()
 
         assert list(curves[0][0][0])    == [1, 2, 3]
         assert list(curves[0][0][1])    == [4, 5, 6]

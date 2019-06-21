@@ -17,3 +17,8 @@ class Unknown(BasicObject):
             type = 'UNKNOWN'
         super().__init__(obj, name = name, type = type)
 
+    @classmethod
+    def create(cls, obj, name = None, type = None, file = None):
+        self = Unknown(obj, name = name, type = type)
+        self.load()
+        return self

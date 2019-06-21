@@ -53,8 +53,10 @@ class Frame(BasicObject):
 
     dtype_format = '{:s}.{:d}.{:d}'
 
-    def __init__(self, obj = None, name = None):
+    def __init__(self, obj = None, name = None, file = None):
         super().__init__(obj, name = name, type = 'FRAME')
+
+        self.file        = file
 
         #: Textual description of the Frame.
         self.description = None
@@ -90,6 +92,12 @@ class Frame(BasicObject):
         #: Instance-specific dtype label formatter on duplicated mnemonics.
         #: Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format
+
+    @classmethod
+    def create(cls, obj, name = None, type = None, file = None):
+        self = Frame(obj, name = name, file = file)
+        self.load()
+        return self
 
     @property
     def dtype(self):
@@ -213,3 +221,39 @@ class Frame(BasicObject):
             self._fmtstr += samples * reprc
 
         return self._fmtstr
+
+    def curves(self):
+        """
+        Reads curves for the frame.
+
+        Examples
+        --------
+        Read curves from the frame and show curves from CHANN1 and CHANN2
+
+        >>> curves = frame.curves()
+        >>> curves["CHANN1"]
+        array([1.1, 2.2, 3.3])
+        >>> curves["CHANN2"]
+        array([6.6, 7.7, 8.8])
+
+        Read curves from the frame, show curves from MULTI_D_CHANNEL
+
+        >>> curves = frame.curves()
+        >>> curves["MULTI_D_CHANNEL"]
+        array([[[  1,  2,  3],
+                [  4,  5,  6]],
+               [[  7,  8,  9],
+                [ 10, 11,  12]]])
+
+        Show only second sample
+
+        >>> curves["MULTI_D_CHANNEL"][1]
+        array([[  7,  8,  9],
+               [ 10, 11, 12]])
+
+        Returns
+        -------
+        curves : np.array
+
+        """
+        return self.file.curves(self, self.dtype, self.fmtstr())
