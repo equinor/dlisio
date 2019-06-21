@@ -58,6 +58,15 @@ Coefficent
     :exclude-members: stripspaces
     :inherited-members:
 
+Comment
+-------
+.. autoclass:: Comment(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
+
 Computation
 -----------
 .. autoclass:: Computation(BasicObject)

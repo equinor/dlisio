@@ -681,6 +681,15 @@ def test_path(f):
 
     _ = p2.describe(indent='   ', width=70, exclude='e')
 
+def test_comment(f):
+    key = fingerprint('COMMENT', 'COMMENT1', 10, 0)
+    com = f.objects[key]
+
+    assert com.text == ['Trust me, this is a very nice comment',
+                        "What, you don't believe me?", ':-(']
+
+    _ = com.describe(indent='   ', width=70, exclude='e')
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]
