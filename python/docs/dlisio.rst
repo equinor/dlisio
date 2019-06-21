@@ -106,6 +106,14 @@ Measurement
     :exclude-members: stripspaces
     :inherited-members:
 
+Message
+-------
+.. autoclass:: Message(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
 Origin
 ------
 .. autoclass:: Origin(BasicObject)
