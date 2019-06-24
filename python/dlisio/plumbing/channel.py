@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
-from ..reprc import dtype
+from ..reprc import dtype, fmt
+from ..dlisutils import curves
 from .valuetypes import scalar, vector
 from .linkage import obname, objref
 
@@ -71,6 +72,12 @@ class Channel(BasicObject):
         #: The numpy data type of the sample array
         self._dtype        = None
 
+        #: Format-string of the channel. Mainly indended for internal use
+        self._fmtstr       = None
+
+        #: Frame to which channel belongs to
+        self.frame        = None
+
     @property
     def dtype(self):
         """dtype
@@ -96,6 +103,7 @@ class Channel(BasicObject):
 
     def load(self):
         super().load()
+        self.frame = None
         # Order of elements is reversed due to RP66 column-first data
         # storage approach
         self.dimension        = self.dimension[::-1]
@@ -104,3 +112,58 @@ class Channel(BasicObject):
         except KeyError:
             pass
         self.element_limit    = self.element_limit [::-1]
+
+    def fmtstr(self):
+        """Generate format-string for Channel
+
+        The format-string is mainly intended for internal use.
+
+        Returns
+        -------
+
+        fmtstr : str
+        """
+        if self._fmtstr: return self._fmtstr
+
+        samples = np.prod(np.array(self.dimension))
+        reprc = fmt[self.reprc]
+        self._fmtstr = samples * reprc
+
+        return self._fmtstr
+
+    def curves(self):
+        """
+        Reads curves for the channel.
+
+        Examples
+        --------
+        Read curves for the channel and access 3rd sample
+
+        >>> curves = channel.curves()
+        >>> curves
+        array([1.1, 2.2, 3.3])
+        >>> curves[2]
+        3.3
+
+        Read curves for multidimensional channel
+
+        >>> curves = multichannel.curves()
+        >>> curves
+        array([[[  1,  2,  3],
+                [  4,  5,  6]],
+               [[  7,  8,  9],
+                [ 10, 11,  12]]])
+
+        Access 2nd sample, 1st row
+
+        >>> curves[1][0]
+        array([7, 8, 9])
+
+        Returns
+        -------
+        curves : np.array
+
+        """
+        frame = self.frame
+        pre_fmt, fmt, post_fmt = frame.fmtstrchannel(self)
+        return curves(frame.file, frame, self.dtype, pre_fmt, fmt, post_fmt)

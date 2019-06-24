@@ -22,6 +22,9 @@ def fpath(tmpdir_factory, merge_files):
         'data/semantic/long-name-record.dlis.part',
         'data/semantic/channel.dlis.part',
         'data/semantic/frame.dlis.part',
+        'data/semantic/fdata-frame1-1.dlis.part',
+        'data/semantic/fdata-frame1-2.dlis.part',
+        'data/semantic/fdata-frame1-3.dlis.part',
         'data/semantic/path.dlis.part',
         'data/semantic/zone.dlis.part',
         'data/semantic/parameter.dlis.part',
@@ -158,6 +161,21 @@ def test_channel(f):
     assert channel.element_limit          == [11, 15, 10]
     assert channel.attic["ELEMENT-LIMIT"] == [10, 15, 11]
     assert channel.source                 == tool
+
+def test_channel_fdata(f):
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    channel = f.objects[key]
+    curves = channel.curves()
+
+    assert list(curves[0][0][0]) == [1, 2]
+    assert list(curves[1][1][1]) == [521, 522]
+    assert list(curves[2][2][2]) == [1041, 1042]
+
+    key = fingerprint('FRAME', 'FRAME1', 10, 0)
+    frame = f.objects[key]
+    ch1_curves = frame.curves()["CHANN1"]
+
+    assert np.array_equal(curves, ch1_curves)
 
 def test_frame(f):
     key = fingerprint('CHANNEL', 'CHANN1', 10, 0)

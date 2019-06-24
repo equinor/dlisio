@@ -254,13 +254,6 @@ class dlis(object):
         self.problematic = problematic
         return self
 
-    def curves(self, frame, dtype, fmt):
-        indices = self.fdata_index[frame.fingerprint]
-        #note: shape is wrong for multiple data in one frame
-        a = np.empty(shape = len(indices), dtype = dtype)
-        core.read_all_fdata(fmt, self.file, indices, a)
-        return a
-
     @property
     def fileheader(self):
         """ Read all Fileheader objects

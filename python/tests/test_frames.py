@@ -90,3 +90,33 @@ def test_class_dtype_fmt():
         # even if the test fails, make sure the format string is reset to its
         # default, to not interfere with other tests
         dlisio.plumbing.Frame.dtype_format = original
+
+def test_channel_curves():
+    ch1 = dlisio.plumbing.Channel()
+    ch1.dimension = [5]
+    ch1.reprc = 11
+
+    ch2 = dlisio.plumbing.Channel()
+    ch2.dimension = [2, 2]
+    ch2.reprc = 3
+
+    ch3 = dlisio.plumbing.Channel()
+    ch3.dimension = [4, 2]
+    ch3.reprc = 26
+
+    ch4 = dlisio.plumbing.Channel()
+    ch4.dimension = [1]
+    ch4.reprc = 17
+
+    ch5 = dlisio.plumbing.Channel()
+    ch5.dimension = [2, 3, 1]
+    ch5.reprc = 12
+
+    frame = dlisio.plumbing.Frame()
+    frame.channels = [ch1, ch2, ch3, ch4, ch5]
+
+    pre_fmt, ch_fmt, post_fmt = frame.fmtstrchannel(ch3)
+    assert pre_fmt  == "CCCCCbbbb"
+    assert ch_fmt   == "qqqqqqqq"
+    assert post_fmt == "Ldddddd"
+
