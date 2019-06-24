@@ -1,8 +1,9 @@
 import numpy as np
+import pytest
 
 import dlisio
 
-from . import DWL206
+from . import DWL206, assert_log
 
 def test_frame_getitem(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
@@ -68,6 +69,13 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     frame = makeframe()
     _ = memoryview(np.zeros(1, dtype = frame.dtype))
 
+def test_duplicated_channels(assert_log):
+    frame = makeframe()
+    frame.channels = [frame.channels[0], frame.channels[0]]
+    with pytest.raises(ValueError):
+        frame.dtype.names
+    assert_log("duplicated mnemonics")
+
 def test_instance_dtype_fmt():
     frame = makeframe()
     frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
@@ -75,6 +83,18 @@ def test_instance_dtype_fmt():
     # fmtstr is unchanged
     assert 'fDDD' == frame.fmtstr()
     assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+
+@pytest.mark.parametrize('fmt', [
+    ("x-{:d}.{:s}.{:d}"),
+    ("x-{:s}.{:d}.{:d}.{:d}"),
+])
+def test_instance_dtype_wrong_fmt(fmt, assert_log):
+    frame = makeframe()
+
+    frame.dtype_fmt = fmt
+    with pytest.raises(Exception):
+        frame.dtype.names
+    assert_log("rich label")
 
 def test_class_dtype_fmt():
     original = dlisio.plumbing.Frame.dtype_format
