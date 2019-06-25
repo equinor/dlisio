@@ -15,6 +15,10 @@ void user_warning( const std::string& ) noexcept (true) {
     // TODO:
 }
 
+void debug_warning( const std::string& ) noexcept (true) {
+    // TODO:
+}
+
 struct set_descriptor {
     int role;
     bool type;
@@ -447,13 +451,11 @@ const char* cast( const char* xs,
     xs = cast( xs, x );
 
     if (x < DLIS_FSHORT || x > DLIS_UNITS) {
-        const auto msg = "invalid representation code {}, "
-                         "expected 1 <= reprc <= 27"
-                       ;
-        throw std::invalid_argument(fmt::format(msg, x));
+        debug_warning("Read incorrect representation code");
+        reprc = dl::representation_code::undef;
+    }else{
+        reprc = static_cast< dl::representation_code >( x );
     }
-
-    reprc = static_cast< dl::representation_code >( x );
     return xs;
 }
 
