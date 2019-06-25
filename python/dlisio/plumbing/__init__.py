@@ -14,6 +14,7 @@ from .measurement import Measurement
 from .computation import Computation
 from .coefficient import Coefficient
 from .splice import Splice
+from .wellref import Wellref
 from .unknown import Unknown
 
 from .valuetypes import *

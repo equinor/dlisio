@@ -491,6 +491,22 @@ def test_splice(f):
     assert splice.refs['zones'][1].origin     == 10
     assert splice.refs['zones'][1].copynumber == 0
 
+
+def test_wellref(f):
+    key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
+    wellref = f.objects[key]
+
+    assert wellref.permanent_datum           == 'Ground Level'
+    assert wellref.vertical_zero             == 'Kelly Bushing'
+    assert wellref.permanent_datum_elevation == -89
+    assert wellref.above_permanent_datum     == -5
+    assert wellref.magnetic_declination      == -22
+
+    assert wellref.coordinates['longitude']  == -11.25
+    assert wellref.coordinates['latitude']   == 60.75
+    assert wellref.coordinates['elevation']  == 0.25
+
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]

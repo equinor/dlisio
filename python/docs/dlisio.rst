@@ -142,6 +142,14 @@ Splice
     :exclude-members: stripspaces
     :inherited-members:
 
+Wellref
+-------
+.. autoclass:: Wellref(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
 Unknown
 -------
 .. autoclass:: Unknown(BasicObject)
