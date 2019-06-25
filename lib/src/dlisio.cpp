@@ -915,7 +915,7 @@ int dlis_object_fingerprint_size(std::int32_t type_len,
 
     if (origin < 0)    return DLIS_INVALID_ARGS;
     if (type_len <= 0) return DLIS_INVALID_ARGS;
-    if (id_len <= 0)   return DLIS_INVALID_ARGS;
+    if (id_len < 0)    return DLIS_INVALID_ARGS;
 
     const auto orig_len = std::to_string(origin).length();
     const auto copy_len = std::to_string(copynum).length();
@@ -937,7 +937,7 @@ int dlis_object_fingerprint(std::int32_t type_len,
                             char* fingerprint) {
 
     if (type_len <= 0) return DLIS_INVALID_ARGS;
-    if (id_len <= 0)   return DLIS_INVALID_ARGS;
+    if (id_len < 0)    return DLIS_INVALID_ARGS;
 
     fingerprint = std::copy_n("T.", 2,        fingerprint);
     fingerprint = std::copy_n(type, type_len, fingerprint);

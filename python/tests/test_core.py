@@ -185,11 +185,13 @@ def test_fingerprint():
     key = dlisio.core.fingerprint("FRAME", "800T", 2, 46)
     assert key == reference
 
+    reference = "T.FRAME-I.-O.2-C.46"
+    key = dlisio.core.fingerprint("FRAME", "", 2, 46)
+    assert key == reference
+
 def test_fingerprint_invalid_argument():
     with pytest.raises(ValueError):
         _ = dlisio.core.fingerprint("", "800T", 2, 46)
-    with pytest.raises(ValueError):
-        _ = dlisio.core.fingerprint("FRAME", "", 2, 46)
     with pytest.raises(ValueError):
         _ = dlisio.core.fingerprint("FRAME", "800T", -1, 46)
     with pytest.raises(ValueError):
