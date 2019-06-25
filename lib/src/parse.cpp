@@ -679,7 +679,7 @@ const char* parse_template( const char* cur,
 
     while (true) {
         if (cur >= end)
-            throw std::out_of_range( "unexpected end-of-record" );
+            throw std::out_of_range( "unexpected end-of-record in template" );
 
         const auto flags = parse_attribute_descriptor( cur );
         if (flags.object) {
@@ -719,6 +719,12 @@ const char* parse_template( const char* cur,
         attr.invariant = flags.invariant;
 
         tmp.push_back( std::move( attr ) );
+
+        if (cur == end){
+            debug_warning("Set contains no objects");
+            swap( tmp, out );
+            return cur;
+        }
     }
 }
 
@@ -968,8 +974,11 @@ object_set parse_objects( const char* cur, const char* end ) {
 
     cur = parse_template( cur, end, set.tmpl );
 
-    if (std::distance( cur, end ) <= 0)
-        throw std::out_of_range( "unexpected end-of-record after template" );
+    /*
+    Return if set has no objects
+    */
+    if (std::distance( cur, end ) == 0)
+         return set;
 
     set.objects = parse_objects( set.tmpl, cur, end );
     return set;

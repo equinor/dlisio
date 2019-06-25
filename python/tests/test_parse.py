@@ -554,9 +554,8 @@ def test_cut_before_object(tmpdir, merge):
         'data/parse/template/default.dlis.part',
     ]
     merge(path, content)
-    with pytest.raises(IndexError) as excinfo:
-        dlisio.load(path)
-    assert "unexpected end-of-record" in str(excinfo.value)
+    with dlisio.load(path) as (f,):
+        assert len(f.objects) == 0
 
 
 @pytest.mark.skip(reason="result inconsistent")
