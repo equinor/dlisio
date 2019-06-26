@@ -1,5 +1,6 @@
 from .basicobject import BasicObject
 from ..reprc import fmt
+from ..dlisutils import curves
 from .valuetypes import scalar, vector, boolean
 from .linkage import obname
 
@@ -53,8 +54,10 @@ class Frame(BasicObject):
 
     dtype_format = '{:s}.{:d}.{:d}'
 
-    def __init__(self, obj = None, name = None):
+    def __init__(self, obj = None, name = None, file = None):
         super().__init__(obj, name = name, type = 'FRAME')
+
+        self.file        = file
 
         #: Textual description of the Frame.
         self.description = None
@@ -90,6 +93,12 @@ class Frame(BasicObject):
         #: Instance-specific dtype label formatter on duplicated mnemonics.
         #: Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format
+
+    @classmethod
+    def create(cls, obj, name = None, type = None, file = None):
+        self = Frame(obj, name = name, file = file)
+        self.load()
+        return self
 
     @property
     def dtype(self):
@@ -208,8 +217,83 @@ class Frame(BasicObject):
         if self._fmtstr != "" : return self._fmtstr
 
         for ch in self.channels:
-            samples = np.prod(np.array(ch.dimension))
-            reprc = fmt[ch.reprc]
-            self._fmtstr += samples * reprc
+            self._fmtstr += ch.fmtstr()
 
         return self._fmtstr
+
+    def curves(self):
+        """
+        Reads curves for the frame.
+
+        Examples
+        --------
+        Read curves from the frame and show curves from CHANN1 and CHANN2
+
+        >>> curves = frame.curves()
+        >>> curves["CHANN1"]
+        array([1.1, 2.2, 3.3])
+        >>> curves["CHANN2"]
+        array([6.6, 7.7, 8.8])
+
+        Read curves from the frame, show curves from MULTI_D_CHANNEL
+
+        >>> curves = frame.curves()
+        >>> curves["MULTI_D_CHANNEL"]
+        array([[[  1,  2,  3],
+                [  4,  5,  6]],
+               [[  7,  8,  9],
+                [ 10, 11,  12]]])
+
+        Show only second sample
+
+        >>> curves["MULTI_D_CHANNEL"][1]
+        array([[  7,  8,  9],
+               [ 10, 11, 12]])
+
+        Returns
+        -------
+        curves : np.array
+
+        """
+        return curves(self.file, self, self.dtype, "", self.fmtstr(), "")
+
+    def fmtstrchannel(self, channel):
+        """Generate format-strings for one Frame channel
+
+        To access the data of one channel only we still need to know its
+        position in the frame. Method will generate format strings for
+        data preceding channel data, for channel data and remaining data.
+
+        The format-strings are mainly intended for internal use.
+
+        Returns
+        -------
+        pre_fmt, ch_fmt, post_fmt : str, str, str
+        """
+        fmt = ""
+        for ch in self.channels:
+            fmtstr = ch.fmtstr()
+            if ch == channel:
+                pre_fmt = fmt
+                ch_fmt = fmtstr
+                fmt = ""
+            else:
+                fmt += fmtstr
+        post_fmt = fmt
+
+        return pre_fmt, ch_fmt, post_fmt
+
+    def link(self, objects):
+        super().link(objects)
+        for ch in self.channels:
+            try:
+                if ch.frame:
+                    msg = ("Frame {} contract is broken. "
+                           "Channel {} already belongs to frame {}. "
+                           "Assigning a new one")
+                    logging.warn(msg.format(self.fingerprint,
+                                 ch.fingerprint, ch.frame.fingerprint))
+                ch.frame = self
+            except AttributeError:
+                #happens if ch has been parsed as other type
+                pass

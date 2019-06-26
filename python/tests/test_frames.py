@@ -6,7 +6,8 @@ from . import DWL206
 
 def test_frame_getitem(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    curves = DWL206.curves(key)
+    frame = DWL206.objects[key]
+    curves = frame.curves()
 
     expected = [16677259.0, 852606.0, 2233.0, 852606.0]
 
@@ -75,14 +76,6 @@ def test_instance_dtype_fmt():
     assert 'fDDD' == frame.fmtstr()
     assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
 
-def test_instance_dtype_fmt():
-    frame = makeframe()
-    frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
-
-    # fmtstr is unchanged
-    assert 'fDDD' == frame.fmtstr()
-    assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
-
 def test_class_dtype_fmt():
     original = dlisio.plumbing.Frame.dtype_format
 
@@ -97,3 +90,33 @@ def test_class_dtype_fmt():
         # even if the test fails, make sure the format string is reset to its
         # default, to not interfere with other tests
         dlisio.plumbing.Frame.dtype_format = original
+
+def test_channel_curves():
+    ch1 = dlisio.plumbing.Channel()
+    ch1.dimension = [5]
+    ch1.reprc = 11
+
+    ch2 = dlisio.plumbing.Channel()
+    ch2.dimension = [2, 2]
+    ch2.reprc = 3
+
+    ch3 = dlisio.plumbing.Channel()
+    ch3.dimension = [4, 2]
+    ch3.reprc = 26
+
+    ch4 = dlisio.plumbing.Channel()
+    ch4.dimension = [1]
+    ch4.reprc = 17
+
+    ch5 = dlisio.plumbing.Channel()
+    ch5.dimension = [2, 3, 1]
+    ch5.reprc = 12
+
+    frame = dlisio.plumbing.Frame()
+    frame.channels = [ch1, ch2, ch3, ch4, ch5]
+
+    pre_fmt, ch_fmt, post_fmt = frame.fmtstrchannel(ch3)
+    assert pre_fmt  == "CCCCCbbbb"
+    assert ch_fmt   == "qqqqqqqq"
+    assert post_fmt == "Ldddddd"
+

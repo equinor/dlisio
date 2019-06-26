@@ -217,18 +217,14 @@ class BasicObject():
                 setattr(self, attr, lnk)
 
     @classmethod
-    def create(cls, obj, name = None, type = None):
+    def create(cls, obj, name = None, type = None, file = None):
         """ Create Python object of provided class and load values
         from native object
 
-        This process is generalized for all object types derived from
+        This process is generalized for most of the types derived from
         basic_object.
         """
-        if type is None:
-            self = cls(obj, name = name)
-        else:
-            self = cls(obj, name = name, type = type)
-
+        self = cls(obj, name = name)
         self.load()
         return self
 

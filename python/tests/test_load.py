@@ -142,7 +142,8 @@ def test_link(fpath):
 def test_curves(fpath):
     with dlisio.load(fpath) as (_, f2, _):
         key = dlisio.core.fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
-        curves = f2.curves(key)
+        frame = f2.objects[key]
+        curves = frame.curves()
 
         # Read the first value of the first frame of channel CH01
         assert curves['CH01'][0][0] == 153.0

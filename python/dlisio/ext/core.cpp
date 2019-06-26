@@ -295,12 +295,12 @@ std::string fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
-struct framesize {
+struct fdatasize {
     int src;
     int dst;
 };
 
-framesize frame_size(const char* fmt) {
+fdatasize fdata_size(const char* fmt) {
     const auto fmt_str = std::string(fmt);
     const auto fmt_msg = "invalid format specifier in " + fmt_str;
 
@@ -311,7 +311,7 @@ framesize frame_size(const char* fmt) {
     }
 
     if (variable) {
-        throw dl::not_implemented(fmt_msg + fmt_str);
+        throw dl::not_implemented(fmt_msg);
     }
 
     int src = 0;
@@ -321,13 +321,15 @@ framesize frame_size(const char* fmt) {
         throw std::invalid_argument(fmt_msg);
     }
 
-    return framesize { src, dst };
+    return fdatasize { src, dst };
 }
 
-void read_all_fdata(const char* fmt,
-                    dl::stream& file,
-                    const std::vector< int >& indices,
-                    py::buffer dstb)
+void read_fdata(const char* pre_fmt,
+                const char* fmt,
+                const char* post_fmt,
+                dl::stream& file,
+                const std::vector< int >& indices,
+                py::buffer dstb)
 noexcept (false) {
     // TODO: reverse fingerprint to skip bytes ahead-of-time
     /*
@@ -337,8 +339,9 @@ noexcept (false) {
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
 
-
-    auto size = frame_size(fmt);
+    auto pre_size  = fdata_size(pre_fmt);
+    auto data_size = fdata_size(fmt);
+    auto post_size = fdata_size(post_fmt);
 
     dl::record record;
     int expected_frameno = 1;
@@ -369,20 +372,25 @@ noexcept (false) {
             }
 
             const auto tail = std::distance(ptr, end);
-            if (tail < size.src) {
+            auto size_src = pre_size.src + data_size.src + post_size.src;
+            if (tail < size_src) {
                 const auto msg = "unaligned record: tail (which is "
                                + std::to_string(tail)
                                + ") < fmt_size (which is "
-                               + std::to_string(size.src)
+                               + std::to_string(size_src)
                                + ")"
                                ;
                 throw std::runtime_error(msg);
             }
 
+            ptr += pre_size.src;
+
             dlis_packf(fmt, ptr, dst);
-            dst += size.dst;
-            ptr += size.src;
+            dst += data_size.dst;
+            ptr += data_size.src;
             expected_frameno = frameno + 1;
+
+            ptr += post_size.src;
 
             if (ptr != end) {
                 // TODO: lift this restriction (realloc buffers)
@@ -412,7 +420,7 @@ PYBIND11_MODULE(core, m) {
 
     m.def( "storage_label", storage_label );
     m.def("fingerprint", fingerprint);
-    m.def("read_all_fdata", read_all_fdata);
+    m.def("read_fdata", read_fdata);
 
     /*
      * TODO: support constructor with kwargs

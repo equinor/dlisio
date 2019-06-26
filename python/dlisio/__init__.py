@@ -227,7 +227,7 @@ class dlis(object):
             # TODO: handle replacement sets
             for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type](o, name = name)
+                    obj = self.types[os.type](o, name = name, file = self)
                 except KeyError:
                     obj = plumbing.Unknown.create(o, name = name, type = os.type)
 
@@ -253,14 +253,6 @@ class dlis(object):
         self.indexedobjects = indexedobjects
         self.problematic = problematic
         return self
-
-    def curves(self, fingerprint):
-        frame = self.indexedobjects['FRAME'][fingerprint]
-        fmt = frame.fmtstr()
-        indices = self.fdata_index[fingerprint]
-        a = np.empty(shape = len(indices), dtype = frame.dtype)
-        core.read_all_fdata(fmt, self.file, indices, a)
-        return a
 
     @property
     def fileheader(self):
