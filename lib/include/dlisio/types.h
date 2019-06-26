@@ -219,6 +219,7 @@ DLISIO_API int dlis_sizeof_type(int);
 #define DLIS_ATTREF 25 // Attribute reference
 #define DLIS_STATUS 26 // Boolean status
 #define DLIS_UNITS  27 // Units expression
+#define DLIS_UNDEF  66 // Undefined value
 
 #define DLIS_VARIABLE_LENGTH 0
 

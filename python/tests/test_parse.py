@@ -382,18 +382,51 @@ def test_repcode(tmpdir, merge, filename_p, attr_n, attr_reprc, attr_v):
         assert attr == [attr_v]
 
 
-def test_invalid_repcode(tmpdir, merge):
+def test_invalid_repcode_in_template_value(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'invalid-repcode.dlis')
     content = [
         'data/parse/start.dlis.part',
-        'data/parse/template/invalid-repcode.dlis.part',
+        'data/parse/template/invalid-repcode-value.dlis.part',
         'data/parse/object/object.dlis.part',
+        'data/parse/objattr/all-set.dlis.part',
     ]
     merge(path, content)
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(RuntimeError) as excinfo:
         dlisio.load(path)
-    assert "invalid representation code" in str(excinfo.value)
+    assert "unknown representation code" in str(excinfo.value)
+
+
+def test_invalid_repcode_in_template_no_value(tmpdir, merge):
+    path = os.path.join(str(tmpdir), 'invalid-repcode-template.dlis')
+    content = [
+        'data/parse/start.dlis.part',
+        'data/parse/template/invalid-repcode-no-value.dlis.part',
+        'data/parse/object/object.dlis.part',
+        'data/parse/objattr/all-set.dlis.part',
+    ]
+    merge(path, content)
+
+    with dlisio.load(path) as (f, *_):
+        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        obj = f.objects[key]
+        attr = obj.attic['INVALID']
+        assert attr == [1, 2, 3, 4]
+
+
+def test_invalid_repcode_in_objects(tmpdir, merge):
+    path = os.path.join(str(tmpdir), 'invalid-repcode-object.dlis')
+    content = [
+        'data/parse/start.dlis.part',
+        'data/parse/template/default.dlis.part',
+        'data/parse/object/object.dlis.part',
+        'data/parse/objattr/reprcode-invalid.dlis.part',
+    ]
+    merge(path, content)
+
+    with pytest.raises(RuntimeError) as excinfo:
+        dlisio.load(path)
+    assert "unknown representation code" in str(excinfo.value)
 
 
 def test_inccorect_set_header(tmpdir, merge):
@@ -521,9 +554,8 @@ def test_cut_before_object(tmpdir, merge):
         'data/parse/template/default.dlis.part',
     ]
     merge(path, content)
-    with pytest.raises(IndexError) as excinfo:
-        dlisio.load(path)
-    assert "unexpected end-of-record" in str(excinfo.value)
+    with dlisio.load(path) as (f,):
+        assert len(f.objects) == 0
 
 
 @pytest.mark.skip(reason="result inconsistent")

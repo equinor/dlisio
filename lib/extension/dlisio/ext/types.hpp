@@ -65,6 +65,7 @@ enum class representation_code : std::uint8_t {
     attref = DLIS_ATTREF,
     status = DLIS_STATUS,
     units  = DLIS_UNITS,
+    undef  = DLIS_UNDEF,
 };
 
 /*
