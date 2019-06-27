@@ -282,32 +282,28 @@ def test_parameter(f):
     key = fingerprint('AXIS', 'AXIS3', 10, 0)
     axis3 = f.objects[key]
 
-    assert param.long_name           == longname
-    assert param.dimension           == [2, 3]
-    assert param.attic["DIMENSION"]  == [3, 2]
-    assert param.axis                == [axis3, axis2]
-    assert len(param.attic["AXIS"])  == 2
-    assert param.zones               == [zoneA, None, None, None]
-    assert len(param.attic["ZONES"]) == 4
-
-    assert list(param.values["ZONE-A"][0])          == [1, 2, 3]
-    assert list(param.values["ZONE-A"][1])          == [4, 5, 6]
-    assert list(param.values["DLISIO-CUSTOM-1"][0]) == [7, 8, 9]
-    assert list(param.values["DLISIO-CUSTOM-3"][1]) == [22, 23, 24]
+    assert param.long_name                 == longname
+    assert param.dimension                 == [2, 3]
+    assert param.attic["DIMENSION"]        == [3, 2]
+    assert param.axis                      == [axis3, axis2]
+    assert len(param.attic["AXIS"])        == 2
+    assert param.zones                     == [zoneA, None, None, None]
+    assert len(param.attic["ZONES"])       == 4
+    assert len(param.datapoints["values"]) == 24
 
     key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
     param = f.objects[key]
     key = fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
     longname = f.objects[key]
-    assert param.long_name                == longname
-    assert list(param.values[zoneA.name]) == [101, 120]
+    assert param.long_name                 == longname
+    assert param.datapoints["values"][0:2] == [101, 120]
 
     key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
     param = f.objects[key]
     key = fingerprint('LONG-NAME', 'PARAM2-LONG', 10, 0)
     longname = f.objects[key]
-    assert param.long_name                == longname
-    assert list(param.values[zoneA.name]) == [131, 69]
+    assert param.long_name                 == longname
+    assert param.datapoints["values"][0:2] == [131, 69]
 
 def test_equipment(f):
     key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
@@ -379,18 +375,13 @@ def test_measurement(f):
     assert m.begin_time         == 13447
     assert m.duration           == 21
     assert m.standard           == [1]
-    assert np.array_equal(m.samples[0],
-                          [[240, 137], [228, 120], [240, 136]])
-    assert np.array_equal(m.max_deviation,
-                          [[2.5, 2.5], [2.5, 2.75], [2.5, 2.5]])
-    assert np.array_equal(m.std_deviation,
-                          [[-14.25, -14.25], [-14.25, -14.25], [-14, -14.25]])
-    assert np.array_equal(m.reference,
-                          [[240, 135], [240, 135], [240, 135]])
-    assert np.array_equal(m.plus_tolerance,
-                          [[5, 10], [5, 10], [5, 10]])
-    assert np.array_equal(m.minus_tolerance,
-                          [[1, 1], [1, 1], [1, 1]])
+    assert m.datapoints["samples"][0:6]    == [240, 137, 228, 120, 240, 136]
+    assert m.datapoints["max_deviation"]   == [2.5, 2.5, 2.5, 2.75, 2.5, 2.5]
+    assert m.datapoints["std_deviation"]   == [-14.25, -14.25, -14.25,
+                                               -14.25, -14, -14.25]
+    assert m.datapoints["reference"]       == [240, 135, 240, 135, 240, 135]
+    assert m.datapoints["plus_tolerance"]  == [5, 10, 5, 10, 5, 10]
+    assert m.datapoints["minus_tolerance"] == [1, 1, 1, 1, 1, 1]
 
 def test_coefficient(f):
     key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
@@ -452,15 +443,14 @@ def test_computation(f):
     key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
-    assert com.long_name          == 'computation object 2'
-    assert com.properties         == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
-    assert com.dimension          == [4, 2]
-    assert com.attic["DIMENSION"] == [2, 4]
-    assert com.axis               == [axis3, axis2]
-    assert com.zones              == [zone]
-    assert com.refs['source']     == [('PROCESS', (10, 0, 'PROC1'))]
-    assert np.array_equal(com.values['ZONE-A'],
-                         [[140, 99], [144, 172], [202, 52], [109, 120]])
+    assert com.long_name            == 'computation object 2'
+    assert com.properties           == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
+    assert com.dimension            == [4, 2]
+    assert com.attic["DIMENSION"]   == [2, 4]
+    assert com.axis                 == [axis3, axis2]
+    assert com.zones                == [zone]
+    assert com.refs['source']       == [('PROCESS', (10, 0, 'PROC1'))]
+    assert com.datapoints["values"] == [140, 99, 144, 172, 202, 52, 109, 120]
 
 
 def test_unknown(f):
@@ -656,6 +646,7 @@ def test_dynamic_datamap(fpath):
         with dlisio.load(fpath) as (f, _):
             key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
             m = f.objects[key]
+            m.shapedata()
 
             assert np.array_equal(m.plus_tolerance, [[5, 10], [5, 10], [5, 10]])
             assert m.minus_tolerance == [1, 1, 1, 1, 1, 1]

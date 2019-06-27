@@ -22,27 +22,6 @@ def data_attribute(obj, attr, val):
     setattr(obj, attr, np.empty(0))
     return True
 
-def reverse_dimension(obj):
-    """
-    Reverses dimension attribute, which is expected to be a list.
-    Useful to switch between row- and column- major views
-    """
-    try:
-        obj.dimension = obj.dimension[::-1]
-    except AttributeError:
-        msg = "'dimension' attribute missing. can't reverse dimension {} {}"
-        logging.warning(msg.format(obj.name, obj.__class__))
-
-def reverse_axis(obj):
-    """
-    Reverses axis attribute.
-    """
-    try:
-        obj.axis = obj.axis[::-1]
-    except (AttributeError):
-        msg = "'axis' attribute missing. can't reverse axis {} {}"
-        logging.warning(msg.format(obj.name, obj.__class__))
-
 def combined_dtype(parts, fmtlabel):
     """
     dtype combined of different parts.
@@ -233,20 +212,11 @@ def supply_dimension(obj):
         else:
             raise RuntimeError("Unexpected value in checked if")
 
-def reshape_datapoints(obj, loaded=False):
+def reshape_datapoints(obj):
     """
     Creates numpy array of corresponding dimensions out of identified
     datapoints.
     Before that will try to supply dimension attribute if not provided.
-
-    Parameters
-    ----------
-    obj: dataobject
-    loaded
-        True if object has been loaded from file. This would cause reversal of
-        dimension and axis attributes from
-        Fortran (column-major) to C (row-major) type.
-        False if data has been supplied by user, hence is row-major already.
     """
     def reshape(obj, data, array_type):
         if len(data) == 0:
@@ -270,9 +240,6 @@ def reshape_datapoints(obj, loaded=False):
             raise RuntimeError("Unexpected array type passed: "+array_type)
 
     assure_dimensionality(obj)
-    if loaded:
-        reverse_dimension(obj)
-        reverse_axis(obj)
 
     for label, data in obj.datapoints.items():
         setattr(obj, label, reshape(obj, data, obj.datamap[label]()))

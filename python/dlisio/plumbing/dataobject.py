@@ -17,7 +17,7 @@ class DataObject(BasicObject):
     See also
     --------
 
-    BasicObject : The basic object that Computation is derived from
+    BasicObject : The basic object that DataObject is derived from
 
     """
 
@@ -67,21 +67,23 @@ class DataObject(BasicObject):
         #: Coordinate axes of the values
         self.axis        = []
 
-        #all the attributes with existing data
+        #: all the attributes with existing data
+        #: Before actual data is populated, values could be found here
         self.datapoints  = {}
 
         self._attribute_features.extend([data_attribute])
 
-    def reshape(self, loaded=False):
+    def shapedata(self):
         """
         Will reshape current data into array corresponding to dimension attribute.
         Datapoints will be reshaped to empty in case of mismatch between data.
-
-        Parameters
-        ----------
-        loaded: boolean
-            True if object has been loaded from file. This would cause reversal of dimension
-            and axis attributes from Fortran (column-major) to C (row-major) type.
-            False if dimension has been supplied by user, hence is row-major already.
         """
-        reshape_datapoints(self, loaded)
+        reshape_datapoints(self)
+
+    def load(self):
+        super().load()
+        self.dimension        = self.dimension[::-1]
+        try:
+            self.refs['axis'] = self.refs['axis'][::-1]
+        except KeyError:
+            pass

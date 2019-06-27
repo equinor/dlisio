@@ -13,7 +13,7 @@ class Measurement(DataObject):
     See also
     --------
 
-    DataObject : The data object that Computation is derived from
+    DataObject : The data object that Measuremenet is derived from
 
     Notes
     -----

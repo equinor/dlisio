@@ -338,10 +338,10 @@ def test_parameter(DWL206):
     assert param.copynumber        == 0
     assert param.type              == "PARAMETER"
     assert param.long_name         == "Flush depth-delayed streams to output at end"
-    assert param.dimension         == [1]
-    assert param.axis              == [None]
+    assert param.dimension         == []
+    assert param.axis              == []
     assert param.zones             == []
-    assert param.values["unzoned"] == ["DOWNLOG_ONLY"]
+    assert np.array_equal(param.values, np.empty(0))
     assert len(list(DWL206.parameters)) == 226
     param = [o for o in DWL206.parameters if o.name == "FLSHSTRM"]
     assert len(param) == 1
@@ -355,16 +355,16 @@ def test_measurement(DWL206):
     assert m.phase           == 'BEFORE'
     assert m.source          == None
     assert m.mtype           == None
-    assert m.dimension       == [1]
-    assert m.axis            == [None]
-    assert m.samples         == [2.640824317932129]
+    assert m.dimension       == []
+    assert m.axis            == []
     assert m.samplecount     == 142
-    assert m.max_deviation   == [11.421565055847168]
-    assert m.std_deviation   == [3.4623820781707764]
     assert m.begin_time      == datetime(2011, 8, 20, 18, 13, 38)
     assert m.duration        == 30
-    assert m.reference       == [0.0]
     assert m.standard        == []
+    assert np.array_equal(m.samples, np.empty(0))
+    assert np.array_equal(m.max_deviation, np.empty(0))
+    assert np.array_equal(m.std_deviation, np.empty(0))
+    assert np.array_equal(m.reference, np.empty(0))
     assert np.array_equal(m.plus_tolerance, np.empty(0))
     assert np.array_equal(m.minus_tolerance, np.empty(0))
 

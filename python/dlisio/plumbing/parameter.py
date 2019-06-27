@@ -18,7 +18,7 @@ class Parameter(DataObject):
     See also
     --------
 
-    DataObject : The data object that Computation is derived from
+    DataObject : The data object that Parameter is derived from
 
     Notes
     -----

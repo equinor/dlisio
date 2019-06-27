@@ -8,7 +8,7 @@ def test_parameter_empty():
     param.attic = {'VALUES' : [], 'DIMENSION' : [], 'AXIS' : [], 'ZONES' : []}
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert param.values.size == 0
     assert param.dimension   == []
     assert param.axis        == []
@@ -19,7 +19,7 @@ def test_parameter_dimension():
     param.attic = {'VALUES' : [], 'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert param.values.size == 0
     assert param.dimension   == [1]
     assert param.axis        == [None]
@@ -31,7 +31,7 @@ def test_parameter_values():
                    'DIMENSION' : [], 'AXIS' : [], 'ZONES' : []}
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert list(param.values["unzoned"]) == [1, 2]
     assert param.dimension               == [2]
     assert param.axis                    == [None]
@@ -49,7 +49,7 @@ def test_parameter_zones_values():
 
     param.load()
     param.zones = [zone_a, zone_b]
-    param.reshape(True)
+    param.shapedata()
 
     assert list(param.values["ZONE-A"]) == [1, 2]
     assert list(param.values["ZONE-B"]) == [3, 4]
@@ -80,7 +80,7 @@ def test_parameter_copied_zones_values():
     zone_a_other.copynumber = 0
 
     param.zones = [zone_a, zone_a2, zone_a_other]
-    param.reshape(True)
+    param.shapedata()
 
     assert list(param.values["ZONE-A.10.0"]) == [1]
     assert list(param.values["ZONE-A.10.1"]) == [2]
@@ -98,7 +98,7 @@ def test_parameter_wrong_zones_values():
 
     param.load()
     param.zones = [zone_a, zone_b]
-    param.reshape(True)
+    param.shapedata()
 
     assert np.array_equal(param.values, np.empty(0))
     assert param.dimension == []
@@ -116,7 +116,7 @@ def test_parameter_wrong_zones_one_value():
 
     param.load()
     param.zones = [zone_a, zone_b]
-    param.reshape(True)
+    param.shapedata()
 
     assert np.array_equal(param.values, np.empty(0))
     assert param.dimension == []
@@ -129,7 +129,7 @@ def test_parameter_dimension1_value1():
                    'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert np.array_equal(param.values["unzoned"], [14])
     assert param.dimension == [1]
     assert param.axis      == [None]
@@ -141,7 +141,7 @@ def test_parameter_dimension_values():
                    'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert np.array_equal(param.values["unzoned"], [1, 2])
     assert param.dimension == [2]
     assert param.axis      == [None]
@@ -153,7 +153,7 @@ def test_parameter_wrong_dimension_values():
                    'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert np.array_equal(param.values, np.empty(0))
     assert param.dimension == [2]
     assert param.axis      == [None]
@@ -171,7 +171,7 @@ def test_parameter_wrong_dimension_wrong_zones_values():
 
     param.load()
     param.zones = [zone_a, zone_b]
-    param.reshape(True)
+    param.shapedata()
 
     assert np.array_equal(param.values, np.empty(0))
     assert param.dimension == [1]
@@ -189,7 +189,7 @@ def test_parameter_dimension_zones_values():
 
     param.load()
     param.zones = [zone_a, zone_b]
-    param.reshape(True)
+    param.shapedata()
 
     assert list(param.values["ZONE-A"][1]) == [3, 4]
     assert list(param.values["ZONE-B"][2]) == [11, 12]
@@ -208,14 +208,14 @@ def test_parameter_combine():
                     'DIMENSION' : [2, 3], 'AXIS' : [], 'ZONES' : []}
     param1.load()
     param1.zones = [zone_a, zone_b]
-    param1.reshape(True)
+    param1.shapedata()
 
     param2= dlisio.plumbing.Parameter()
     param2.attic = {'VALUES' : [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
                     'DIMENSION' : [2, 3], 'AXIS' : [], 'ZONES' : []}
     param2.load()
     param2.zones = [zone_a, zone_b]
-    param2.reshape(True)
+    param2.shapedata()
 
     params = np.array([param1.values, param2.values])
     assert np.array_equal(params["ZONE-A"][0],
@@ -223,7 +223,7 @@ def test_parameter_combine():
     assert np.array_equal(params["ZONE-B"][1],
                           np.array([[6, 5], [4, 3], [2, 1]]))
 
-def test_parameter_no_load_double_reshape():
+def test_parameter_no_load_double_shapedata():
     zone_a = dlisio.plumbing.Zone()
     zone_a.name = 'ZONE-A'
 
@@ -234,17 +234,17 @@ def test_parameter_no_load_double_reshape():
 
     arr = np.array([[1, 2, 3], [4, 5, 6]])
 
-    param.reshape(False)
+    param.shapedata()
     assert param.dimension == [2, 3]
     assert param.axis      == [None, None]
     assert np.array_equal(param.values['ZONE-A'], arr)
 
-    param.reshape(False)
+    param.shapedata()
     assert param.dimension == [2, 3]
     assert param.axis      == [None, None]
     assert np.array_equal(param.values['ZONE-A'], arr)
 
-def test_parameter_reshape():
+def test_parameter_shapedata():
     param = dlisio.plumbing.Parameter()
     param.attic = {'VALUES' : [1, 2, 3, 4, 5, 6],
                    'DIMENSION' : [3, 2], 'AXIS' : [], 'ZONES' : []}
@@ -252,7 +252,7 @@ def test_parameter_reshape():
     arr = np.array([[1, 2, 3], [4, 5, 6]])
 
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert param.dimension == [2, 3]
     assert param.axis      == [None, None]
     assert np.array_equal(param.values['unzoned'], arr)
@@ -261,7 +261,7 @@ def test_parameter_reshape():
 
     arr = np.array([[1, 2, 3, 4, 5, 6]])
 
-    param.reshape(False)
+    param.shapedata()
     assert param.dimension == [1, 6]
     assert np.array_equal(param.values['unzoned'], arr)
 
@@ -280,13 +280,35 @@ def test_computation_dimension_zones_values():
     comput.load()
     comput.zones = [zone_a, zone_b, zone_c]
 
-    comput.reshape(True)
+    comput.shapedata()
     assert list(comput.values["ZONE-A"][0]) == [1, 2, 3, 4]
     assert list(comput.values["ZONE-B"][0]) == [5, 6, 7, 8]
     assert list(comput.values["ZONE-C"][0]) == [9, 10, 11, 12]
     assert comput.dimension                 == [1, 4]
     assert comput.axis                      == [None, None]
     assert comput.zones                     == [zone_a, zone_b, zone_c]
+
+def test_computation_unlinked_zones_values():
+    zone_a = dlisio.plumbing.Zone()
+    zone_a.name = 'ZONE-A'
+    zone_c = dlisio.plumbing.Zone()
+    zone_c.name = 'ZONE-C'
+
+    comput = dlisio.plumbing.Computation()
+    comput.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    'DIMENSION' : [], 'AXIS' : [], 'ZONES' : []}
+
+    comput.load()
+    comput.zones = [zone_a, None, zone_c]
+
+    comput.shapedata()
+    assert list(comput.values["ZONE-A"]) == [1, 2, 3, 4]
+    assert list(comput.values["DLISIO-CUSTOM-1"]) == [5, 6, 7, 8]
+    assert list(comput.values["ZONE-C"]) == [9, 10, 11, 12]
+    assert comput.dimension                 == [4]
+    assert comput.axis                      == [None]
+    assert comput.zones                     == [zone_a, None, zone_c]
+
 
 @pytest.mark.parametrize("value", [
     (7),
@@ -304,7 +326,7 @@ def test_parameter_computation_repcode(value):
 
     param.attic['VALUES'] = [value]
     param.load()
-    param.reshape(True)
+    param.shapedata()
     assert np.array_equal(np.array([value]), param.values["unzoned"])
 
     comput = dlisio.plumbing.Computation()
@@ -314,7 +336,7 @@ def test_parameter_computation_repcode(value):
     zone_a = dlisio.plumbing.Zone()
     zone_a.name = 'ZONE-A'
     comput.zones = [zone_a]
-    comput.reshape(True)
+    comput.shapedata()
     assert np.array_equal(np.array([value]), comput.values["ZONE-A"])
 
 def test_measurement_empty():
@@ -323,7 +345,7 @@ def test_measurement_empty():
                'DIMENSION' : [], 'AXIS' : []}
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert m.samples.size       == 0
     assert m.reference.size     == 0
     assert m.std_deviation.size == 0
@@ -335,7 +357,7 @@ def test_measurement_dimension():
     m.attic = {'MEASUREMENT' : [], 'DIMENSION' : [3, 5], 'AXIS' : []}
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert m.samples.size   == 0
     assert m.reference.size == 0
     assert m.dimension      == [5, 3]
@@ -346,7 +368,7 @@ def test_measurement_wrong_dimension_samples():
     m.attic = {'MEASUREMENT' : [1, 2, 3], 'DIMENSION' : [3, 5], 'AXIS' : []}
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert m.samples.size   == 0
     assert m.reference.size == 0
     assert m.dimension      == [5, 3]
@@ -363,7 +385,7 @@ def test_measurement_many_samples():
                'AXIS'              : []}
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
 
     assert list(m.samples[0])      == [1, 2, 3, 4]
     assert list(m.samples[1])      == [5, 6, 7, 8]
@@ -386,20 +408,20 @@ def test_measurement_non_corresponding_values():
                'AXIS'              : []}
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
 
     assert list(m.samples)   == []
     assert list(m.reference) == []
     assert m.dimension       == []
     assert m.axis            == []
 
-def test_measurement_reshape():
+def test_measurement_shapedata():
     m = dlisio.plumbing.Measurement()
     m.attic = {'MEASUREMENT' : [1, 2, 3, 4],
                'DIMENSION' : [], 'AXIS' : []}
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
 
     assert m.dimension        == [1]
     assert m.axis             == [None]
@@ -411,7 +433,7 @@ def test_measurement_reshape():
     m.attic['REFERENCE'] = [5]
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert m.dimension == [1]
     assert m.axis      == [None]
     assert m.reference == [5]
@@ -419,19 +441,19 @@ def test_measurement_reshape():
     m.attic['REFERENCE'] = [5, 6, 7, 8]
 
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert m.dimension == [4]
     assert np.array_equal(m.samples[0], [1, 2, 3, 4])
     assert np.array_equal(m.reference, [5, 6, 7, 8])
 
     m.attic['DIMENSION'] = [2, 2]
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert list(m.samples[0][0]) == [1, 2]
     assert list(m.samples[0][1]) == [3, 4]
 
     m.dimension = [1, 4]
-    m.reshape(False)
+    m.shapedata()
     assert list(m.samples[0][0]) == [1, 2, 3, 4]
 
     del m.attic['REFERENCE']
@@ -440,7 +462,7 @@ def test_measurement_reshape():
 
     m.load()
     m.dimension = [2] #owerwriting existing
-    m.reshape(False)
+    m.shapedata()
     assert list(m.samples[0]) == [1, 2]
     assert list(m.samples[1]) == [3, 4]
 
@@ -463,7 +485,7 @@ def test_measurement_repcode(reference, samples):
     m.attic['MEASUREMENT'] = samples
     m.attic['REFERENCE'] = reference
     m.load()
-    m.reshape(True)
+    m.shapedata()
     assert np.array_equal(np.array(reference), m.reference)
     sampled = [samples[0:2], samples[2:4]]
     assert np.array_equal(np.array(sampled), m.samples)
