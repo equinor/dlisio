@@ -94,7 +94,7 @@ class BasicObject():
 
     def __init__(self, obj, name = None, type = None):
         self.type       = type
-        self.name       = None
+        self.name       = name
         self.origin     = None
         self.copynumber = None
         self.attic      = obj
