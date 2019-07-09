@@ -16,3 +16,4 @@ from .coefficient import Coefficient
 from .unknown import Unknown
 
 from .valuetypes import *
+from .utils import *

@@ -333,17 +333,17 @@ def test_equipment(DWL206):
 def test_parameter(DWL206):
     key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
     param = DWL206.objects[key]
-    assert param.name            == "FLSHSTRM"
-    assert param.origin          == 2
-    assert param.copynumber      == 0
-    assert param.type            == "PARAMETER"
-    assert param.long_name       == "Flush depth-delayed streams to output at end"
-    assert param.dimension       == []
-    assert param.axis            == []
-    assert param.zones           == []
+    assert param.name       == "FLSHSTRM"
+    assert param.origin     == 2
+    assert param.copynumber == 0
+    assert param.type       == "PARAMETER"
+    assert param.long_name  == "Flush depth-delayed streams to output at end"
+    assert param.dimension  == []
+    assert param.axis       == []
+    assert param.zones      == []
+
+    assert list(param.values['RAW'])    == ['DOWNLOG_ONLY']
     assert len(list(DWL206.parameters)) == 226
-    param = [o for o in DWL206.parameters if o.name == "FLSHSTRM"]
-    assert len(param) == 1
 
 
 def test_measurement(DWL206):
@@ -356,16 +356,16 @@ def test_measurement(DWL206):
     assert m.mtype           == None
     assert m.dimension       == []
     assert m.axis            == []
-    assert m.samples         == [2.640824317932129]
     assert m.samplecount     == 142
-    assert m.max_deviation   == 11.421565055847168
-    assert m.std_deviation   == 3.4623820781707764
     assert m.begin_time      == datetime(2011, 8, 20, 18, 13, 38)
     assert m.duration        == 30
-    assert m.reference       == [0.0]
     assert m.standard        == []
-    assert m.plus_tolerance  == []
-    assert m.minus_tolerance == []
+    assert list(m.samples)         == [2.640824317932129]
+    assert list(m.max_deviation)   == [11.421565055847168]
+    assert list(m.std_deviation)   == [3.4623820781707764]
+    assert list(m.reference)       == [0.0]
+    assert list(m.plus_tolerance)  == []
+    assert list(m.minus_tolerance) == []
 
     assert len(list(DWL206.measurements)) == 6
 

@@ -1,6 +1,9 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector
+from .valuetypes import scalar, vector, reverse
 from .linkage import objref, obname
+from .utils import sampling
+
+import numpy as np
 
 
 class Measurement(BasicObject):
@@ -25,18 +28,12 @@ class Measurement(BasicObject):
           'PHASE'             : scalar('phase'),
           'MEASUREMENT-SOURCE': scalar('source'),
           'TYPE'              : scalar('mtype'),
-          'DIMENSION'         : vector('dimension'),
-          'AXIS'              : vector('axis'),
-          'MEASUREMENT'       : vector('samples'),
+          'DIMENSION'         : reverse('dimension'),
+          'AXIS'              : reverse('axis'),
           'SAMPLE-COUNT'      : scalar('samplecount'),
-          'MAXIMUM-DEVIATION' : scalar('max_deviation'),
-          'STANDARD-DEVIATION': scalar('std_deviation'),
           'BEGIN-TIME'        : scalar('begin_time'),
           'DURATION'          : scalar('duration'),
-          'REFERENCE'         : vector('reference'),
           'STANDARD'          : vector('standard'),
-          'PLUS-TOLERANCE'    : vector('plus_tolerance'),
-          'MINUS-TOLERANCE'   : vector('minus_tolerance')
     }
 
     linkage = {
@@ -62,17 +59,8 @@ class Measurement(BasicObject):
         #: Coordinate axis of the sample array
         self.axis            = []
 
-        #: Measurement samples
-        self.samples         = []
-
         #: Number of samples used to compute the max/std_deviation
         self.samplecount     = None
-
-        #: Maximum deviation in the sample array
-        self.max_deviation   = None
-
-        #: Standard deviation in the sample array
-        self.std_deviation   = None
 
         #: Time of the sample acquisition
         self.begin_time      = None
@@ -80,19 +68,122 @@ class Measurement(BasicObject):
         #: Time duration of the sample acquisition
         self.duration        = None
 
-        #: Expected nominal value of a single sample
-        self.reference       = []
-
         #: Measurable quantity of the calibration standard used to produce the
         #: sample
         self.standard        = []
 
-        #: Maximum value that a sample can exceed the reference and still be
-        #: "within tolerance"
-        self.plus_tolerance  = []
+    @property
+    def samples(self):
+        """ Measurment samples
 
-        #: Maximum value that a sample can fall below the reference and still
-        #: be "within tolerance"
-        self.minus_tolerance = []
+        The type of measurment is described by the type attribute. Each sample
+        may be either a scalar or ndarray
+        """
+        try:
+            data = self.attic['MEASUREMENT']
+        except KeyError:
+            return np.empty(0)
 
+        try:
+            return sampling(data, self.dimension)
+        except ValueError:
+            return np.array(data)
 
+    @property
+    def max_deviation(self):
+        """Maximum deviation
+
+        Only applicable when the sample attribute contains mean values. In that
+        case, this is maximum deviation from the mean of any value used to
+        compute the mean.
+
+        Each sample may be a scalar of ndarray, but should have the same
+        structure as the samples in the sample attribute.
+        """
+        try:
+            data = self.attic['MAXIMUM-DEVIATION']
+        except KeyError:
+            return np.empty(0)
+
+        try:
+            return sampling(data, self.dimension)
+        except ValueError:
+            return np.array(data)
+
+    @property
+    def std_deviation(self):
+        """Standard deviation
+
+        Only applicable when the sample attribute contains mean values. In that
+        case, this is the standard deviation of the samples used to compute the
+        mean.
+
+        Each sample may be a scalar of ndarray, but should have the same
+        structure as the samples in the sample attribute.
+        """
+        try:
+            data = self.attic['STANDARD-DEVIATION']
+        except KeyError:
+            return np.empty(0)
+
+        try:
+            return sampling(data, self.dimension)
+        except ValueError:
+            return np.array(data)
+
+    @property
+    def reference(self):
+        """The nominal value of each sample in the samples attribute
+
+        Each sample may be a scalar of ndarray, but should have the same
+        structure as the samples in the sample attribute.
+        """
+        try:
+            data = self.attic['REFERENCE']
+        except KeyError:
+            return np.empty(0)
+
+        try:
+            return sampling(data, self.dimension)
+        except ValueError:
+            return np.array(data)
+
+    @property
+    def plus_tolerance(self):
+        """The maximum value that any sample (in samples) can exceed the
+        reference and still be 'within tolerance'. Should be all non-negative
+        numbers. If this attribute is empty, the plus tolerance is implicity
+        infinite.
+
+        Each sample may be a scalar of ndarray, but should have the same
+        structure as the samples in the sample attribute.
+        """
+        try:
+            data = self.attic['PLUS-TOLERANCE']
+        except KeyError:
+            return np.empty(0)
+
+        try:
+            return sampling(data, self.dimension)
+        except ValueError:
+            return np.array(data)
+
+    @property
+    def minus_tolerance(self):
+        """The maximum value that any sample (in samples) can fall below the
+        reference and still be 'within tolerance'. Should be all non-negative
+        numbers. If this attribute is empty, the minus tolerance is implicity
+        infinite.
+
+        Each sample may be a scalar of ndarray, but should have the same
+        structure as the samples in the sample attribute.
+        """
+        try:
+            data = self.attic['MINUS-TOLERANCE']
+        except KeyError:
+            return np.empty(0)
+
+        try:
+            return sampling(data, self.dimension)
+        except ValueError:
+            return np.array(data)

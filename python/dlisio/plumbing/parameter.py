@@ -1,6 +1,9 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector
+from .valuetypes import scalar, vector, reverse
 from .linkage import obname
+from .utils import sampling, zonify
+
+import numpy as np
 
 class Parameter(BasicObject):
     """Parameter
@@ -26,10 +29,9 @@ class Parameter(BasicObject):
     """
     attributes = {
         'LONG-NAME' : scalar('long_name'),
-        'DIMENSION' : vector('dimension'),
-        'AXIS'      : vector('axis'),
+        'DIMENSION' : reverse('dimension'),
+        'AXIS'      : reverse('axis'),
         'ZONES'     : vector('zones'),
-        'VALUES'    : vector('values')
     }
 
     linkage = {
@@ -52,5 +54,55 @@ class Parameter(BasicObject):
         #: Mutually disjoint intervals where the parameter values is constant
         self.zones     = []
 
-        #: Parameter values
-        self.values    = []
+    @property
+    def values(self):
+        """ Parameter values uses a dict interface
+
+        Parameter value(s) may be scalar or array's. The size/dimensionallity
+        of each value is defined in the dimensions attribute. The values are
+        only defined in certain zones. If no zones are defined, the value is
+        said to be unzoned, i.e. it is defined everywere.
+
+        Returns
+        -------
+
+        values : dict
+            indexed by Zone
+
+        Notes
+        -----
+
+        If there is no values or DLISIO is unable to structure the samples due
+        to insufficient or contradictory information in the object, the
+        unstructured array is return as is and can be accessed under the label
+        *RAW*. Note that in this case the standard deem the meaning of the
+        values to be undefined.
+
+        If Zones are missing, DLISIO uses defaulted zonelabels.
+
+        Examples
+        --------
+
+        Values from a spesific zone:
+
+        >>> parameter.values['ZONE-C']
+        [10, 20, 30]
+
+        Values from each zone:
+
+        >>>  zone, value in parameter.values.items():
+        ...     print(zone, value)
+        'ZONE-A' [120, 130, 140]
+        'ZONE-B' [160, 170, 180]
+        """
+        try:
+            data = self.attic['VALUES']
+        except KeyError:
+            return {'RAW' : np.empty(0)}
+
+        try:
+            sampled = sampling(data, self.dimension, count=len(self.zones))
+        except ValueError:
+            return {'RAW' : np.array(data)}
+
+        return zonify(self.zones, sampled)

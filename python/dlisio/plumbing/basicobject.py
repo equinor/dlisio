@@ -94,7 +94,7 @@ class BasicObject():
 
     def __init__(self, obj, name = None, type = None):
         self.type       = type
-        self.name       = None
+        self.name       = name
         self.origin     = None
         self.copynumber = None
         self.attic      = obj
@@ -209,8 +209,7 @@ class BasicObject():
                 links = []
                 for v in ref:
                     lnk = get_link(v)
-                    if lnk:
-                        links.append(lnk)
+                    links.append(lnk)
                 setattr(self, attr, links)
             else:
                 lnk = get_link(ref)
@@ -253,6 +252,7 @@ class BasicObject():
         attrs = self.attributes
         for label, value in self.attic.items():
             if value is None: continue
+            if len(value) == 0: continue
 
             try:
                 attr, value_type = attrs[label]
