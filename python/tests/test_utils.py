@@ -3,7 +3,8 @@ import pytest
 from datetime import datetime
 
 import dlisio
-from dlisio.plumbing import sampling
+from dlisio.plumbing import *
+from . import assert_log
 
 def test_sampling_scalar_dims():
     raw = [1, 2, 3, 4, 5, 6]
@@ -38,304 +39,200 @@ def test_sampling_array_dims():
     assert np.array_equal(samples[0][1], np.array(raw[2:4]))
     assert np.array_equal(samples[0][2], np.array(raw[4:6]))
 
-def test_sampling_no_dims():
+def test_sampling_single(assert_log):
+    raw = [1, 2]
+    dimensions = [2]
+
+    sample = sampling(raw, dimensions, single=True)
+    assert np.array_equal(sample, np.array([1, 2]))
+
+    dimensions = [1]
+
+    sample = sampling(raw, dimensions, single=True)
+    assert sample == 1
+    assert_log('found 2 samples, should be 1')
+
+def test_validshape_no_dims():
     dimensions = []
 
     # posible to infer dimensions
     raw = [3.14]
-    samples = sampling(raw, dimensions)
-    assert samples[0] == 3.14
+    shape = validshape(raw, dimensions)
+    assert shape  == [1]
 
     # not posible to infer dimensions
     raw = [3.14, 2]
     with pytest.raises(ValueError):
-        _ = sampling(raw, dimensions)
+        _ = validshape(raw, dimensions)
 
     # possible if count is correctly specified
-    samples = sampling(raw, dimensions, count=2)
-    assert samples[0] == 3.14
-    assert samples[1] == 2
-    assert len(samples) == 2
+    shape = validshape(raw, dimensions, samplecount=2)
+    assert shape == [1]
 
     with pytest.raises(ValueError):
-        _ = sampling(raw, dimensions, count=3)
+        _ = validshape(raw, dimensions, samplecount=3)
 
-def test_sampling_inconsistent_dims():
+def test_validshape_inconsistent_dims():
     # In data has too few elements
-    raw        = [1]
-    dimensions = [2]
+    raw        = [1, 2]
+    dimensions = [3]
 
     with pytest.raises(ValueError):
-        _ = sampling(raw, dimensions)
+        _ = validshape(raw, dimensions)
 
     # In data has too many elements
     raw        = [1, 2, 3]
     dimensions = [2]
 
     with pytest.raises(ValueError):
-        _ = sampling(raw, dimensions)
+        _ = validshape(raw, dimensions)
 
-def test_zonelabels():
-    from dlisio.plumbing import zonelabels
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_empty(obj):
+    obj.attic = {'VALUES' : [], 'DIMENSION' : [], 'ZONES' : []}
 
-    zone_a = dlisio.plumbing.Zone(name='ZONE-A')
-    zone_a.copynumber = 10
-    zone_a.origin = 0
+    obj.load()
+    assert np.array_equal(obj.values, np.empty(0))
+    assert obj.dimension == []
+    assert obj.axis      == []
+    assert obj.zones     == []
 
-    zone_a1 = dlisio.plumbing.Zone(name='ZONE-A')
-    zone_a1.copynumber = 10
-    zone_a1.origin = 1
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_dimension(obj):
+    obj.attic = {'VALUES' : [], 'DIMENSION' : [1], 'ZONES' : []}
 
-    zone_b = dlisio.plumbing.Zone(name='ZONE-B')
+    obj.load()
+    assert np.array_equal(obj.values, np.empty(0))
+    assert obj.dimension == [1]
+    assert obj.axis      == []
+    assert obj.zones     == []
 
-    zones = [zone_a, zone_b]
-    labels = zonelabels(zones, 'DEFAULT')
-    assert list(labels) == ['ZONE-A', 'ZONE-B']
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_simple(obj):
+    obj.attic = {'VALUES' : [14], 'DIMENSION' : [1], 'ZONES' : []}
 
-    zones = [zone_a, None, zone_b]
-    labels = zonelabels(zones, 'DEFAULT')
-    assert list(labels)  == ['ZONE-A', 'DEFAULT1', 'ZONE-B']
+    obj.load()
+    assert obj.values[0] == 14
 
-    zones = [zone_a, None, zone_b, None]
-    labels = zonelabels(zones, 'DEFAULT')
-    assert list(labels) == ['ZONE-A', 'DEFAULT1', 'ZONE-B', 'DEFAULT3']
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_infer_simple(obj):
+    obj.attic = {'VALUES' : [14], 'DIMENSION' : [], 'ZONES' : []}
 
-    zones = [zone_a, zone_a1, zone_b]
-    labels = zonelabels(zones, 'DEFAULT')
-    assert list(labels) == ['ZONE-A.0.10', 'ZONE-A.1.10', 'ZONE-B']
+    obj.load()
+    assert obj.values[0] == 14
 
-    zones = [zone_a, zone_a, zone_b]
-    labels = zonelabels(zones, 'DEFAULT')
-    assert list(labels) == ['ZONE-A.0.10', 'ZONE-A.0.10', 'ZONE-B']
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_one_sample(obj):
+    obj.attic = {'VALUES' : [1, 2], 'DIMENSION' : [2], 'ZONES' : []}
 
-    zones = [zone_a, zone_a, zone_a]
-    labels = zonelabels(zones, 'DEFAULT')
-    assert list(labels) == ['ZONE-A.0.10', 'ZONE-A.0.10', 'ZONE-A.0.10']
+    obj.load()
+    assert list(obj.values[0]) == [1, 2]
 
-def test_parameter_empty():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [], 'DIMENSION' : [], 'AXIS' : [], 'ZONES' : []}
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_wrong_dimensions(obj):
+    obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [2], 'ZONES' : []}
 
-    param.load()
-    assert list(param.values['RAW']) == []
-    assert param.dimension == []
-    assert param.axis      == []
-    assert param.zones     == []
+    obj.load()
+    msg  = 'cannot reshape array of size 5 into shape [2]'
+    with pytest.raises(ValueError) as error:
+        _ = obj.values
+    assert str(error.value) == msg
+    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
 
-def test_parameter_dimension():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [], 'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_wrong_dimensions_wrong_zones(obj):
+    obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [2], 'ZONES' : []}
 
-    param.load()
-    assert list(param.values['RAW']) == []
-    assert param.dimension == [1]
-    assert param.axis      == []
-    assert param.zones     == []
+    obj.load()
+    obj.zones = [None for _ in range(4)]
 
-def test_parameter_values():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2],
-                   'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
+    msg  = 'cannot reshape array of size 5 into shape [2]'
+    with pytest.raises(ValueError) as error:
+        _ = obj.values
+    assert str(error.value) == msg
+    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
 
-    param.load()
-    assert list(param.values['DLISIO-UNZONED']) == [1, 2]
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_infer_dimensions_from_zones(obj):
+    obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [], 'ZONES' : []}
 
-def test_parameter_zones_values():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_b = dlisio.plumbing.Zone()
-    zone_b.name = 'ZONE-B'
+    obj.load()
 
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2, 3, 4],
-                   'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
+    # Should be able to infer correct dimension from zones
+    obj.zones = [None for _ in range(5)]
+    assert np.array_equal(obj.values, np.array([1, 2, 3, 4, 5]))
+    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
 
-    param.load()
-    param.zones = [zone_a, zone_b]
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_no_dimensions_wrong_zones(obj):
+    obj.attic = {'VALUES' : [1], 'DIMENSION' : [], 'ZONES' : []}
 
-    assert list(param.values['ZONE-A']) == [1, 2]
-    assert list(param.values['ZONE-B']) == [3, 4]
+    obj.load()
 
-def test_parameter_copied_zones_values():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2, 3],
-                   'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
+    # Should use dimension over zones
+    obj.zones = [None for _ in range(2)]
+    assert np.array_equal(obj.values, np.array([1]))
+    assert np.array_equal(obj.attic['VALUES'], np.array([1]))
 
-    param.load()
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_right_dimensions_wrong_zones(obj):
+    obj.attic = {'VALUES' : [1, 2, 3, 4], 'DIMENSION' : [2], 'ZONES' : []}
 
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name       = 'ZONE-A'
-    zone_a.origin     = 10
-    zone_a.copynumber = 0
+    obj.load()
 
-    zone_a2 = dlisio.plumbing.Zone()
-    zone_a2.name       = 'ZONE-A'
-    zone_a2.origin     = 10
-    zone_a2.copynumber = 1
+    # Should use dimension over zones
+    obj.zones = [None for _ in range(5)]
+    assert np.array_equal(obj.values, np.array([[1, 2 ], [3, 4]]))
+    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
 
-    zone_a_other = dlisio.plumbing.Zone()
-    zone_a_other.name       = 'ZONE-A'
-    zone_a_other.origin     = 34
-    zone_a_other.copynumber = 0
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_right_dimensions_right_zones(obj):
+    obj.attic = {'VALUES' : [1, 2, 3, 4], 'DIMENSION' : [2], 'ZONES' : []}
 
-    param.zones = [zone_a, zone_a2, zone_a_other]
-    assert param.values['ZONE-A.10.0'] == 1
-    assert param.values['ZONE-A.10.1'] == 2
-    assert param.values['ZONE-A.34.0'] == 3
+    obj.load()
+    obj.zones = [None for _ in range(2)]
 
-def test_parameter_wrong_zones_values():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_b = dlisio.plumbing.Zone()
-    zone_b.name = 'ZONE-B'
+    assert np.array_equal(obj.values, np.array([[1, 2 ], [3, 4]]))
+    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
 
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2, 3, 4, 5],
-                   'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
+@pytest.mark.parametrize('obj', [Parameter(), Computation()])
+def test_values_multidim_values(obj):
+    obj.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                   'DIMENSION' : [2, 3], 'ZONES' : []}
 
-    param.load()
-    param.zones = [zone_a, zone_b]
+    obj.load()
 
-    assert list(param.values['RAW']) == [1, 2, 3, 4, 5]
-
-def test_parameter_wrong_zones_one_value():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_b = dlisio.plumbing.Zone()
-    zone_b.name = 'ZONE-B'
-
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [2], 'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
-
-    param.load()
-    param.zones = [zone_a, zone_b]
-
-    assert param.values['DLISIO-UNDEF-0'] == 2
-
-def test_parameter_dimension1_value1():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [14],
-                   'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
-
-    param.load()
-    assert param.values['DLISIO-UNZONED'] == 14
-
-def test_parameter_dimension_values():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2],
-                   'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
-
-    param.load()
-    assert np.array_equal(param.values['DLISIO-UNZONED'], [1, 2])
-
-def test_parameter_wrong_dimension_values():
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [3],
-                   'DIMENSION' : [2], 'AXIS' : [], 'ZONES' : []}
-
-    param.load()
-    assert list(param.values['RAW']) == [3]
-
-def test_parameter_wrong_dimension_wrong_zones_values():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_b = dlisio.plumbing.Zone()
-    zone_b.name = 'ZONE-B'
-
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2, 3],
-                   'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
-
-    param.load()
-    param.zones = [zone_a, zone_b]
-
-    assert param.values['DLISIO-UNDEF-0'] == 1
-    assert param.values['DLISIO-UNDEF-1'] == 2
-    assert param.values['DLISIO-UNDEF-2'] == 3
-
-def test_parameter_dimension_zones_values():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_b = dlisio.plumbing.Zone()
-    zone_b.name = 'ZONE-B'
-
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                   'DIMENSION' : [2, 3], 'AXIS' : [], 'ZONES' : []}
-
-    param.load()
-    param.zones = [zone_a, zone_b]
-
-    assert list(param.values['ZONE-A'][1]) == [3, 4]
-    assert list(param.values['ZONE-B'][2]) == [11, 12]
-    assert param.dimension                 == [3, 2]
-
-def test_computation_dimension_zones_values():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_b = dlisio.plumbing.Zone()
-    zone_b.name = 'ZONE-B'
-    zone_c = dlisio.plumbing.Zone()
-    zone_c.name = 'ZONE-C'
-
-    comput = dlisio.plumbing.Computation()
-    comput.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                    'DIMENSION' : [4, 1], 'AXIS' : [], 'ZONES' : []}
-
-    comput.load()
-    comput.zones = [zone_a, zone_b, zone_c]
-    print(comput.values)
-    assert list(comput.values['ZONE-A'][0]) == [1, 2, 3, 4]
-    assert list(comput.values['ZONE-B'][0]) == [5, 6, 7, 8]
-    assert list(comput.values['ZONE-C'][0]) == [9, 10, 11, 12]
-    assert comput.dimension              == [1, 4]
-
-def test_computation_unlinked_zones_values():
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    zone_c = dlisio.plumbing.Zone()
-    zone_c.name = 'ZONE-C'
-
-    comput = dlisio.plumbing.Computation()
-    comput.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                    'DIMENSION' : [4], 'AXIS' : [], 'ZONES' : []}
-
-    comput.load()
-    comput.zones = [zone_a, None, zone_c]
-
-    assert list(comput.values['ZONE-A']) == [1, 2, 3, 4]
-    assert list(comput.values['DLISIO-UNDEF-1']) == [5, 6, 7, 8]
-    assert list(comput.values['ZONE-C']) == [9, 10, 11, 12]
+    assert list(obj.values[0][1]) == [3, 4]
+    assert list(obj.values[1][2]) == [11, 12]
+    assert obj.dimension          == [3, 2]
 
 @pytest.mark.parametrize('value', [
     (7),
     (1.3),
     (False),
     ('val1'),
+    ((3.2, 6.2)),
     (complex(22.6, 2.1)),
     (datetime(2003, 12, 3, 14, 15, 57))
 ])
 def test_parameter_computation_repcode(value):
-    param = dlisio.plumbing.Parameter()
-    param.attic = {'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
+    param = Parameter()
+    param.attic = {'DIMENSION' : [], 'ZONES' : []}
 
     param.attic['VALUES'] = [value]
     param.load()
-    assert param.values['DLISIO-UNZONED'] == value
 
-    comput = dlisio.plumbing.Computation()
-    comput.attic = {'DIMENSION' : [1], 'AXIS' : [], 'ZONES' : []}
+    assert np.array_equal(param.values[0], value)
+
+    comput = Computation()
+    comput.attic = {'DIMENSION' : [], 'ZONES' : []}
     comput.attic['VALUES'] = [value]
     comput.load()
-    zone_a = dlisio.plumbing.Zone()
-    zone_a.name = 'ZONE-A'
-    comput.zones = [zone_a]
-    assert comput.values[zone_a.name] == value
+    assert np.array_equal(comput.values[0], value)
 
 def test_measurement_empty():
-    m = dlisio.plumbing.Measurement()
-    m.attic = {'MEASUREMENT' : [], 'REFERENCE' : [],
-               'DIMENSION' : [], 'AXIS' : []}
+    m = Measurement()
+    m.attic = {'MEASUREMENT' : [], 'REFERENCE' : [], 'DIMENSION' : []}
 
     m.load()
     assert m.samples.size       == 0
@@ -345,8 +242,8 @@ def test_measurement_empty():
     assert m.axis               == []
 
 def test_measurement_dimension():
-    m = dlisio.plumbing.Measurement()
-    m.attic = {'MEASUREMENT' : [], 'DIMENSION' : [3, 5], 'AXIS' : []}
+    m = Measurement()
+    m.attic = {'MEASUREMENT' : [], 'DIMENSION' : [3, 5]}
 
     m.load()
     assert m.samples.size   == 0
@@ -355,39 +252,49 @@ def test_measurement_dimension():
     assert m.axis           == []
 
 def test_measurement_wrong_dimension_samples():
-    m = dlisio.plumbing.Measurement()
-    m.attic = {'MEASUREMENT' : [1, 2, 3], 'DIMENSION' : [3, 5], 'AXIS' : []}
+    m = Measurement()
+    m.attic = {'MEASUREMENT' : [1, 2, 3], 'DIMENSION' : [3, 5]}
 
     m.load()
-    assert list(m.samples) == [1, 2, 3]
-    assert m.dimension     == [5, 3]
+
+    msg = 'cannot reshape array of size 3 into shape [5, 3]'
+    with pytest.raises(ValueError) as error:
+        _ = m.samples
+
+    assert str(error.value) == msg
+    assert m.attic['MEASUREMENT'] == [1, 2, 3]
+    assert m.dimension == [5, 3]
 
 def test_measurement_many_samples():
-    m = dlisio.plumbing.Measurement()
-    m.attic = {'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-               'MAXIMUM-DEVIATION' : [2, 3, 2, 1],
-               'REFERENCE'         : [3, 6, 9, 12],
-               'PLUS-TOLERANCE'    : [0.4, 0.2, 0.1, 0.3],
-               'MINUS-TOLERANCE'   : [0.5, 0.1, 0, 1],
-               'DIMENSION'         : [4],
-               'AXIS'              : []}
+    m = Measurement()
+    m.attic = {
+        'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        'MAXIMUM-DEVIATION' : [2, 3, 2, 1],
+        'STANDARD-DEVIATION': [3, 2, 5, 6],
+        'REFERENCE'         : [3, 6, 9, 12],
+        'PLUS-TOLERANCE'    : [0.4, 0.2, 0.1, 0.3],
+        'MINUS-TOLERANCE'   : [0.5, 0.1, 0, 1],
+        'DIMENSION'         : [4]
+    }
 
     m.load()
 
-    assert list(m.samples[0])        == [1, 2, 3, 4]
-    assert list(m.samples[1])        == [5, 6, 7, 8]
-    assert list(m.samples[2])        == [9, 10, 11, 12]
+    assert np.array_equal(m.samples[0], np.array([1, 2, 3, 4]))
+    assert np.array_equal(m.samples[1], np.array([5, 6, 7, 8]))
+    assert np.array_equal(m.samples[2], np.array([9, 10, 11, 12]))
 
-    assert list(m.max_deviation[0])   == [2, 3, 2, 1]
-    assert list(m.reference[0])       == [3, 6, 9, 12]
-    assert list(m.plus_tolerance[0])  == [0.4, 0.2, 0.1, 0.3]
-    assert list(m.minus_tolerance[0]) == [0.5, 0.1, 0, 1]
+    assert np.array_equal(m.max_deviation  , np.array([2, 3, 2, 1]))
+    assert np.array_equal(m.std_deviation  , np.array([3, 2, 5, 6]))
+    assert np.array_equal(m.reference      , np.array([3, 6, 9, 12]))
+    assert np.array_equal(m.plus_tolerance , np.array([0.4, 0.2, 0.1, 0.3]))
+    assert np.array_equal(m.minus_tolerance, np.array([0.5, 0.1, 0, 1]))
 
 def test_measurement_non_corresponding_values():
-    m = dlisio.plumbing.Measurement()
+    m = Measurement()
     m.attic = {
         'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
         'MAXIMUM-DEVIATION' : [2, 3, 2],
+        'STANDARD-DEVIATION': [3, 2],
         'REFERENCE'         : [3, 6],
         'PLUS-TOLERANCE'    : [0.4, 0.2, 0.1, 0.3, 0.5],
         'MINUS-TOLERANCE'   : [0.5, 0.1, 0],
@@ -396,18 +303,69 @@ def test_measurement_non_corresponding_values():
 
     m.load()
 
-    assert list(m.samples)  == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    msg = 'cannot reshape array of size {} into shape 4'
+    with pytest.raises(ValueError) as error:
+        _ = m.samples
+        assert error.value == msg.format(11)
 
-    assert list(m.max_deviation)     == [2, 3, 2]
-    assert list(m.reference)       == [3, 6]
-    assert list(m.plus_tolerance)  == [0.4, 0.2, 0.1, 0.3, 0.5]
-    assert list(m.minus_tolerance) == [0.5, 0.1, 0]
+    with pytest.raises(ValueError) as error:
+        _ = m.max_deviation
+        assert error.value == msg.format(3)
+
+    with pytest.raises(ValueError) as error:
+        _ = m.std_deviation
+        assert error.value == msg.format(2)
+
+    with pytest.raises(ValueError) as error:
+        _ = m.reference
+        assert error.value == msg.format(2)
+
+    with pytest.raises(ValueError) as error:
+        _ = m.plus_tolerance
+        assert error.value == msg.format(5)
+
+    with pytest.raises(ValueError) as error:
+        _ = m.minus_tolerance
+        assert error.value == msg.format(3)
+
+def test_measurement_more_than_one_sample(assert_log):
+    m = Measurement()
+    m.attic = {
+        'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        'MAXIMUM-DEVIATION' : [2, 3, 1, 3],
+        'STANDARD-DEVIATION': [3, 2, 1, 3, 4, 5],
+        'REFERENCE'         : [3, 6, 3, 4, 5, 1, 9, 6],
+        'PLUS-TOLERANCE'    : [4, 2, 1, 3, 5, 6, 5, 7, 2, 1],
+        'MINUS-TOLERANCE'   : [5, 2, 3, 6, 2, 2, 2, 4, 6, 7, 9, 1],
+        'DIMENSION'         : [2]
+    }
+
+    m.load()
+
+    assert np.array_equal(m.samples[2], np.array([5, 6]))
+
+    msg = 'found {} samples, should be 1'
+    _ = m.max_deviation
+    assert_log(msg.format(2))
+
+    _ = m.std_deviation
+    assert_log(msg.format(3))
+
+    _ = m.reference
+    assert_log(msg.format(4))
+
+    _ = m.plus_tolerance
+    assert_log(msg.format(5))
+
+    _ = m.minus_tolerance
+    assert_log(msg.format(6))
 
 @pytest.mark.parametrize('reference, samples', [
     ([1, 2], [3, 4, 5, 6]),
     ([1.1, 2.2], [3.3, 4.4, 5.5, 6.6]),
     ([True, False], [True, False, True, False]),
     (['val1', 'val2'], ['val3', 'val4', 'val5', 'val6']),
+    ([(1, 1), (2, 2)], [(3, 3), (4, 4), (5, 5), (6, 6)]),
     ([complex(1, 1), complex(2, 2)],
      [complex(3, 3), complex(4, 4), complex(5, 5), complex(6, 6)]),
     ([datetime(1991, 1, 1), datetime(1992, 2, 2)],
@@ -415,13 +373,13 @@ def test_measurement_non_corresponding_values():
       datetime(1995, 5, 5), datetime(1996, 6, 6)])
 ])
 def test_measurement_repcode(reference, samples):
-    m = dlisio.plumbing.Measurement()
-    m.attic = {'DIMENSION' : [2], 'AXIS' : []}
+    m = Measurement()
+    m.attic = {'DIMENSION' : [2]}
 
     m.attic['MEASUREMENT'] = samples
     m.attic['REFERENCE'] = reference
     m.load()
 
-    assert np.array_equal(np.array(reference), m.reference[0])
+    assert np.array_equal(np.array(reference), m.reference)
     sampled = [samples[0:2], samples[2:4]]
     assert np.array_equal(np.array(sampled), m.samples)

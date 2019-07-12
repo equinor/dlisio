@@ -291,11 +291,11 @@ def test_parameter(f):
 
     sample = np.reshape(np.array([1, 2, 3, 4, 5, 6]), (2,3))
 
-    assert np.array_equal(p.values['ZONE-A'], sample)
-    assert np.array_equal(p.values['DLISIO-UNDEF-1'][1], np.array([10, 11, 12]))
+    assert np.array_equal(p.values[0], sample)
+    assert np.array_equal(p.values[1][1], np.array([10, 11, 12]))
 
-    assert p.values['DLISIO-UNDEF-2'][0][1] == 14
-    assert p.values['DLISIO-UNDEF-3'][1][2] == 24
+    assert p.values[2][0][1] == 14
+    assert p.values[3][1][2] == 24
 
     key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
     p = f.objects[key]
@@ -304,7 +304,7 @@ def test_parameter(f):
 
     assert p.long_name == longname
 
-    value = p.values['ZONE-A']
+    value = p.values[0]
     assert np.array_equal(value, np.array([101, 120]))
 
 def test_equipment(f):
@@ -385,12 +385,12 @@ def test_measurement(f):
     plus    = np.array([[5, 10], [5, 10], [5, 10]])
     minus   = np.array([[1, 1], [1, 1], [1, 1]])
 
-    assert np.array_equal(m.samples[0]         , samples)
-    assert np.array_equal(m.max_deviation[0]   , maxdev)
-    assert np.array_equal(m.std_deviation[0]   , stddev)
-    assert np.array_equal(m.reference[0]       , ref)
-    assert np.array_equal(m.plus_tolerance[0]  , plus)
-    assert np.array_equal(m.minus_tolerance[0] , minus)
+    assert np.array_equal(m.samples[0]      , samples)
+    assert np.array_equal(m.max_deviation   , maxdev)
+    assert np.array_equal(m.std_deviation   , stddev)
+    assert np.array_equal(m.reference       , ref)
+    assert np.array_equal(m.plus_tolerance  , plus)
+    assert np.array_equal(m.minus_tolerance , minus)
 
 def test_coefficient(f):
     key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
@@ -464,7 +464,7 @@ def test_computation(f):
     assert com.source             == process
 
     values  = np.array([[140, 99], [144, 172], [202, 52], [109, 120]])
-    assert np.array_equal(com.values[zone.name], values)
+    assert np.array_equal(com.values[0], values)
 
 
 def test_splice(f):

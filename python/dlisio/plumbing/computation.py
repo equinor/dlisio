@@ -1,8 +1,9 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse
+from .valuetypes import scalar, vector, reverse, skip
 from .linkage import obname, objref
-from .utils import sampling, zonify
+from .utils import *
 
+import logging
 import numpy as np
 
 
@@ -11,13 +12,13 @@ class Computation(BasicObject):
     Results of computations that are more appropriately expressed as static
     information rather than as channels.
 
-    Computation values are indexed by the zone they are defined in. If no zones
-    are defined, the computation is *unzoned* and there should only be one
-    computation value. Unzoned computation values are defined everywhere. Note
-    that each computation value may be scalar or an ndarray.
+    The computation value(s) may be scalars or an array. In
+    the later case, the structure of the array is defined in the dimension
+    attribute. The zones attribute specifies which zones the computations is
+    defined. If there are no zones the computation is defined everywhere.
 
     The axis attribute, if present, defines axis labels for multidimensional
-    samples.
+    value(s).
 
     See also
     --------
@@ -39,7 +40,8 @@ class Computation(BasicObject):
         'DIMENSION' : reverse('dimension'),
         'AXIS'      : reverse('axis'),
         'ZONES'     : vector('zones'),
-        'SOURCE'    : scalar('source')
+        'SOURCE'    : scalar('source'),
+        'VALUES'    : skip()
     }
 
     linkage = {
@@ -73,52 +75,53 @@ class Computation(BasicObject):
 
     @property
     def values(self):
-        """ Computation values uses a dict interface
+        """ Computation values
 
-        Computation value(s) may be scalar or array's. The values are only
-        defined in certain zones. If no zones are defined, the value is said to
+        Computation value(s) may be scalar or array's. The size/dimensionallity
+        of each value is defined in the dimensions attribute.
+
+        Each value may or may not be zoned, i.e. it is only defined in a
+        certain zone. If this is the case the first zone, computation.zones[0],
+        will correspond to the first value, computation.values[0] and so on.
+        If there is no zones, there should only be one value, which is said to
         be unzoned, i.e. it is defined everywere.
+
+        Raises
+        ------
+
+        ValueError
+            Unable to structure the values based on the information available.
 
         Returns
         -------
 
-        values : dict
-            indexed by Zone
+        values : structured np.ndarray
 
         Notes
         -----
 
-        If there is no values or DLISIO is unable to structure the samples due
-        to insufficient or contradictory information in the object, the
-        unstructured array is return as is and can be accessed under the label
-        *RAW*. Note that in this case the standard deem the meaning of the
-        values to be undefined.
-
-        If Zones are missing, DLISIO uses defaulted zonelabels.
+        If dlisio is unable to structure the values due to insufficient or
+        contradictory information in the object, an ValueError is raised.  The
+        raw array can still be accessed through attic, but note that in this
+        case, the semantic meaning of the array is undefined.
 
         Examples
         --------
 
-        Values from a spesific zone:
+        First value:
 
-        >>> parameter.values['ZONE-C']
+        >>> computation.values[0]
         [10, 20, 30]
 
-        Values from each zone:
+        Zone (if any) where that parameter value is valid:
 
-        >>>  zone, value in parameter.values.items():
-        ...     print(zone, value)
-        'ZONE-A' [120, 130, 140]
-        'ZONE-B' [160, 170, 180]
+        >>> computation.zones[0]
+        Zone('ZONE-A')
         """
         try:
-            data = self.attic['VALUES']
+            values = self.attic['VALUES']
         except KeyError:
-            return {'RAW' : np.empty(0)}
+            return np.empty(0)
 
-        try:
-            sampled = sampling(data, self.dimension, count=len(self.zones))
-        except ValueError:
-            return {'RAW' : np.array(data)}
-
-        return zonify(self.zones, sampled)
+        shape = validshape(values, self.dimension, samplecount=len(self.zones))
+        return sampling(values, shape)

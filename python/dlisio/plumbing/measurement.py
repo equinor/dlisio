@@ -1,8 +1,9 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse
+from .valuetypes import scalar, vector, reverse, skip
 from .linkage import objref, obname
-from .utils import sampling
+from .utils import *
 
+import logging
 import numpy as np
 
 
@@ -25,15 +26,21 @@ class Measurement(BasicObject):
     5.8.7.1 - Static and Frame Data, CALIBRATION-MEASUREMENT objects.
     """
     attributes = {
-          'PHASE'             : scalar('phase'),
-          'MEASUREMENT-SOURCE': scalar('source'),
-          'TYPE'              : scalar('mtype'),
-          'DIMENSION'         : reverse('dimension'),
-          'AXIS'              : reverse('axis'),
-          'SAMPLE-COUNT'      : scalar('samplecount'),
-          'BEGIN-TIME'        : scalar('begin_time'),
-          'DURATION'          : scalar('duration'),
-          'STANDARD'          : vector('standard'),
+        'PHASE'             : scalar('phase'),
+        'MEASUREMENT-SOURCE': scalar('source'),
+        'TYPE'              : scalar('mtype'),
+        'DIMENSION'         : reverse('dimension'),
+        'AXIS'              : reverse('axis'),
+        'MEASUREMENT'       : skip(),
+        'SAMPLE-COUNT'      : scalar('samplecount'),
+        'MAXIMUM-DEVIATION' : skip(),
+        'STANDARD-DEVIATION': skip(),
+        'BEGIN-TIME'        : scalar('begin_time'),
+        'DURATION'          : scalar('duration'),
+        'REFERENCE'         : skip(),
+        'STANDARD'          : vector('standard'),
+        'PLUS-TOLERANCE'    : skip(),
+        'MINUS-TOLERANCE'   : skip(),
     }
 
     linkage = {
@@ -80,14 +87,13 @@ class Measurement(BasicObject):
         may be either a scalar or ndarray
         """
         try:
-            data = self.attic['MEASUREMENT']
+            samples = self.attic['MEASUREMENT']
         except KeyError:
             return np.empty(0)
 
-        try:
-            return sampling(data, self.dimension)
-        except ValueError:
-            return np.array(data)
+        shape = validshape(samples, self.dimension)
+        return sampling(samples, shape)
+
 
     @property
     def max_deviation(self):
@@ -101,14 +107,12 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            data = self.attic['MAXIMUM-DEVIATION']
+            dev = self.attic['MAXIMUM-DEVIATION']
         except KeyError:
             return np.empty(0)
 
-        try:
-            return sampling(data, self.dimension)
-        except ValueError:
-            return np.array(data)
+        shape = validshape(dev, self.dimension)
+        return sampling(dev, shape, single=True)
 
     @property
     def std_deviation(self):
@@ -122,14 +126,12 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            data = self.attic['STANDARD-DEVIATION']
+            dev = self.attic['STANDARD-DEVIATION']
         except KeyError:
             return np.empty(0)
 
-        try:
-            return sampling(data, self.dimension)
-        except ValueError:
-            return np.array(data)
+        shape = validshape(dev, self.dimension)
+        return sampling(dev, shape, single=True)
 
     @property
     def reference(self):
@@ -139,14 +141,12 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            data = self.attic['REFERENCE']
+            ref = self.attic['REFERENCE']
         except KeyError:
             return np.empty(0)
 
-        try:
-            return sampling(data, self.dimension)
-        except ValueError:
-            return np.array(data)
+        shape = validshape(ref, self.dimension)
+        return sampling(ref, shape, single=True)
 
     @property
     def plus_tolerance(self):
@@ -159,14 +159,12 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            data = self.attic['PLUS-TOLERANCE']
+            tolerance = self.attic['PLUS-TOLERANCE']
         except KeyError:
             return np.empty(0)
 
-        try:
-            return sampling(data, self.dimension)
-        except ValueError:
-            return np.array(data)
+        shape = validshape(tolerance, self.dimension)
+        return sampling(tolerance, shape, single=True)
 
     @property
     def minus_tolerance(self):
@@ -179,11 +177,9 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            data = self.attic['MINUS-TOLERANCE']
+            tolerance   = self.attic['MINUS-TOLERANCE']
         except KeyError:
             return np.empty(0)
 
-        try:
-            return sampling(data, self.dimension)
-        except ValueError:
-            return np.array(data)
+        shape = validshape(tolerance, self.dimension)
+        return sampling(tolerance, shape, single=True)
