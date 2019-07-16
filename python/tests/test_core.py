@@ -395,14 +395,6 @@ def test_calibrations(DWL206):
     assert len(list(calibration.calibrated))   == 1
     assert len(list(calibration.uncalibrated)) == 1
 
-def test_Unknown(DWL206):
-    unknown = next(iter(DWL206.unknowns))
-    print(unknown)
-    # should have all unknown should have attributes as a field
-    # so this shouldn't be AttributeError
-    _ = unknown.attributes
-    assert len(list(DWL206.unknowns)) == 457
-
 def test_fmtstring(DWL206):
     reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
     reference2 = "ffff"
