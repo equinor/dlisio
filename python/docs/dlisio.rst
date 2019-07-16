@@ -118,6 +118,14 @@ Parameter
     :inherited-members:
     :exclude-members: stripspaces
 
+Path
+----
+.. autoclass:: Path(BasicObject)
+    :members:
+    :member-order: bysource
+    :inherited-members:
+    :exclude-members: stripspaces
+
 Process
 -------
 .. autoclass:: Process(BasicObject)

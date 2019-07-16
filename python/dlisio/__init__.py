@@ -32,6 +32,8 @@ class dlis(object):
         'WELL-REFERENCE'         : plumbing.Wellref.create,
         'GROUP'                  : plumbing.Group.create,
         'PROCESS'                : plumbing.Process.create,
+        'PATH'                   : plumbing.Path.create,
+
     }
 
     """dict: Parsing guide for native dlis object-types. Maps the native dlis

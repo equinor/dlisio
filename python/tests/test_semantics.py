@@ -586,6 +586,53 @@ def test_process(f):
     assert p1.status              == 'COMPLETE'
 
 
+def test_path(f):
+    key = fingerprint('PATH', 'PATH1', 10, 0)
+    p1 = f.objects[key]
+
+    key = fingerprint('PATH', 'PATH2', 10, 0)
+    p2 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    in1 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    in2 = f.objects[key]
+
+    key = fingerprint('FRAME', 'FRAME1', 10, 0)
+    fr1 = f.objects[key]
+
+    key = fingerprint('FRAME', 'FRAME2', 10, 0)
+    fr2 = f.objects[key]
+
+    key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
+    wr = f.objects[key]
+
+    assert p1.borehole_depth       == 87
+    assert p1.value                == [in2, in1]
+    assert p1.tool_zero_offset     == -7
+    assert p1.radial_drift         == 105
+    assert p1.measure_point_offset == 82
+    assert p1.depth_offset         == -123
+    assert p1.frame                == fr1
+    assert p1.well_reference_point == wr
+    assert p1.time                 == 180
+    assert p1.angular_drift        == in1
+    assert p1.vertical_depth       == in2
+
+    assert p2.borehole_depth       == in2
+    assert p2.value                == [in2]
+    assert p2.tool_zero_offset     == -7
+    assert p2.radial_drift         == in2
+    assert p2.measure_point_offset == 82
+    assert p2.depth_offset         == -123
+    assert p2.frame                == fr2
+    assert p2.well_reference_point == wr
+    assert p2.time                 == in2
+    assert p2.angular_drift        == 64
+    assert p2.vertical_depth       == -119
+
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]
