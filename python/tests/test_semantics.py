@@ -548,6 +548,44 @@ def test_group(f):
     assert g3.groups      == [g1, g2]
     assert g3.objecttype  == 'IGNORE-ME-PLZ'
 
+
+def test_process(f):
+    key = fingerprint('PROCESS', 'PROC1', 10, 0)
+    p1 = f.objects[key]
+
+    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
+    param1 = f.objects[key]
+
+    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
+    param3 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    in2 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    out1 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    out2 = f.objects[key]
+
+    key = fingerprint('COMPUTATION', 'COMPUT1', 10, 0)
+    ic1 = f.objects[key]
+
+    key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
+    oc1 = f.objects[key]
+
+    assert p1.input_channels      == [in2]
+    assert p1.parameters          == [param1, param3]
+    assert p1.output_channels     == [out1, out2]
+    assert p1.description         == 'Random process'
+    assert p1.properties          == ['RE-SAMPLED', 'LITHOLOGY-CORRECTED']
+    assert p1.trademark_name      == 'Cute process'
+    assert p1.input_computations  == [ic1]
+    assert p1.output_computations == [oc1]
+    assert p1.version             == 'The one and only'
+    assert p1.status              == 'COMPLETE'
+
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]

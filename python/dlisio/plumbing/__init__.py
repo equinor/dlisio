@@ -16,6 +16,7 @@ from .coefficient import Coefficient
 from .splice import Splice
 from .wellref import Wellref
 from .group import Group
+from .process import Process
 from .unknown import Unknown
 
 from .valuetypes import *
