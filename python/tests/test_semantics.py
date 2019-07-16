@@ -507,6 +507,47 @@ def test_wellref(f):
     assert wellref.coordinates['elevation']  == 0.25
 
 
+def test_group(f):
+    key = fingerprint('GROUP', 'GROUP1', 10, 0)
+    g1 = f.objects[key]
+
+    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
+    param = f.objects[key]
+
+    key = fingerprint('GROUP', 'GROUP2', 10, 0)
+    g2 = f.objects[key]
+
+    key = fingerprint('GROUP', 'GROUP3', 10, 0)
+    g3 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    ch = f.objects[key]
+
+    key = fingerprint('TOOL', 'TOOL1', 10, 0)
+    tool = f.objects[key]
+
+    # Create axis1 and relink
+    ax1 = dlisio.plumbing.Axis()
+    ax1.name = 'AX1'
+    ax1.origin = 10
+    ax1.copynumber = 0
+
+    f.objects[ax1.fingerprint] = ax1
+    g1.link(f.objects)
+
+    assert g1.objects     == [ax1, None]
+    assert g1.description == 'some axis group'
+    assert g1.objecttype  == 'AXIS'
+
+    assert g2.objects     == [param]
+    assert g2.description == 'various objects'
+    assert g2.objecttype  == None
+
+    assert g3.objects     == [None, ch, tool]
+    assert g3.description == 'messed up group'
+    assert g3.groups      == [g1, g2]
+    assert g3.objecttype  == 'IGNORE-ME-PLZ'
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]

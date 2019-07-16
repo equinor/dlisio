@@ -78,6 +78,14 @@ Fileheader
     :exclude-members: stripspaces
     :inherited-members:
 
+Group
+-----
+.. autoclass:: Group(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
 Longname
 --------
 .. autoclass:: Longname(BasicObject)

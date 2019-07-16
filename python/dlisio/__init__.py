@@ -30,7 +30,9 @@ class dlis(object):
         'COMPUTATION'            : plumbing.Computation.create,
         'SPLICE'                 : plumbing.Splice.create,
         'WELL-REFERENCE'         : plumbing.Wellref.create,
+        'GROUP'                  : plumbing.Group.create,
     }
+
     """dict: Parsing guide for native dlis object-types. Maps the native dlis
     object-type to python object-constructors. E.g. all dlis objects with type
     AXIS will be constructed into Axis objects. It is possible to both remove
