@@ -78,6 +78,14 @@ Fileheader
     :exclude-members: stripspaces
     :inherited-members:
 
+Group
+-----
+.. autoclass:: Group(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
 Longname
 --------
 .. autoclass:: Longname(BasicObject)
@@ -110,6 +118,22 @@ Parameter
     :inherited-members:
     :exclude-members: stripspaces
 
+Path
+----
+.. autoclass:: Path(BasicObject)
+    :members:
+    :member-order: bysource
+    :inherited-members:
+    :exclude-members: stripspaces
+
+Process
+-------
+.. autoclass:: Process(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
 Tool
 ----
 .. autoclass:: Tool(BasicObject)
@@ -129,6 +153,22 @@ Equipment
 Zone
 ----
 .. autoclass:: Zone(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
+Splice
+------
+.. autoclass:: Splice(BasicObject)
+    :members:
+    :member-order: bysource
+    :exclude-members: stripspaces
+    :inherited-members:
+
+Wellref
+-------
+.. autoclass:: Wellref(BasicObject)
     :members:
     :member-order: bysource
     :exclude-members: stripspaces

@@ -464,6 +464,175 @@ def test_computation(f):
     assert np.array_equal(com.values[zone.name], values)
 
 
+def test_splice(f):
+    key = fingerprint('SPLICE', 'SPLICE1', 10, 0)
+    splice = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN4', 10, 0)
+    in1 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    in2 = f.objects[key]
+
+    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
+    zone1 = f.objects[key]
+
+    # Output channel does not exist, but should be accessible through refs
+    assert splice.output_channel == None
+    assert splice.refs['output_channel'].id         == 'CHANN-NEW'
+    assert splice.refs['output_channel'].origin     == 10
+    assert splice.refs['output_channel'].copynumber ==  0
+
+    assert splice.input_channels == [in1, in2]
+
+    # Second zone does not exist, but should be accessible through refs
+    assert splice.zones                       == [zone1 , None]
+    assert splice.refs['zones'][1].id         == 'ZONE-B'
+    assert splice.refs['zones'][1].origin     == 10
+    assert splice.refs['zones'][1].copynumber == 0
+
+
+def test_wellref(f):
+    key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
+    wellref = f.objects[key]
+
+    assert wellref.permanent_datum           == 'Ground Level'
+    assert wellref.vertical_zero             == 'Kelly Bushing'
+    assert wellref.permanent_datum_elevation == -89
+    assert wellref.above_permanent_datum     == -5
+    assert wellref.magnetic_declination      == -22
+
+    assert wellref.coordinates['longitude']  == -11.25
+    assert wellref.coordinates['latitude']   == 60.75
+    assert wellref.coordinates['elevation']  == 0.25
+
+
+def test_group(f):
+    key = fingerprint('GROUP', 'GROUP1', 10, 0)
+    g1 = f.objects[key]
+
+    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
+    param = f.objects[key]
+
+    key = fingerprint('GROUP', 'GROUP2', 10, 0)
+    g2 = f.objects[key]
+
+    key = fingerprint('GROUP', 'GROUP3', 10, 0)
+    g3 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    ch = f.objects[key]
+
+    key = fingerprint('TOOL', 'TOOL1', 10, 0)
+    tool = f.objects[key]
+
+    # Create axis1 and relink
+    ax1 = dlisio.plumbing.Axis()
+    ax1.name = 'AX1'
+    ax1.origin = 10
+    ax1.copynumber = 0
+
+    f.objects[ax1.fingerprint] = ax1
+    g1.link(f.objects)
+
+    assert g1.objects     == [ax1, None]
+    assert g1.description == 'some axis group'
+    assert g1.objecttype  == 'AXIS'
+
+    assert g2.objects     == [param]
+    assert g2.description == 'various objects'
+    assert g2.objecttype  == None
+
+    assert g3.objects     == [None, ch, tool]
+    assert g3.description == 'messed up group'
+    assert g3.groups      == [g1, g2]
+    assert g3.objecttype  == 'IGNORE-ME-PLZ'
+
+
+def test_process(f):
+    key = fingerprint('PROCESS', 'PROC1', 10, 0)
+    p1 = f.objects[key]
+
+    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
+    param1 = f.objects[key]
+
+    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
+    param3 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    in2 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
+    out1 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    out2 = f.objects[key]
+
+    key = fingerprint('COMPUTATION', 'COMPUT1', 10, 0)
+    ic1 = f.objects[key]
+
+    key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
+    oc1 = f.objects[key]
+
+    assert p1.input_channels      == [in2]
+    assert p1.parameters          == [param1, param3]
+    assert p1.output_channels     == [out1, out2]
+    assert p1.description         == 'Random process'
+    assert p1.properties          == ['RE-SAMPLED', 'LITHOLOGY-CORRECTED']
+    assert p1.trademark_name      == 'Cute process'
+    assert p1.input_computations  == [ic1]
+    assert p1.output_computations == [oc1]
+    assert p1.version             == 'The one and only'
+    assert p1.status              == 'COMPLETE'
+
+
+def test_path(f):
+    key = fingerprint('PATH', 'PATH1', 10, 0)
+    p1 = f.objects[key]
+
+    key = fingerprint('PATH', 'PATH2', 10, 0)
+    p2 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
+    in1 = f.objects[key]
+
+    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
+    in2 = f.objects[key]
+
+    key = fingerprint('FRAME', 'FRAME1', 10, 0)
+    fr1 = f.objects[key]
+
+    key = fingerprint('FRAME', 'FRAME2', 10, 0)
+    fr2 = f.objects[key]
+
+    key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
+    wr = f.objects[key]
+
+    assert p1.borehole_depth       == 87
+    assert p1.value                == [in2, in1]
+    assert p1.tool_zero_offset     == -7
+    assert p1.radial_drift         == 105
+    assert p1.measure_point_offset == 82
+    assert p1.depth_offset         == -123
+    assert p1.frame                == fr1
+    assert p1.well_reference_point == wr
+    assert p1.time                 == 180
+    assert p1.angular_drift        == in1
+    assert p1.vertical_depth       == in2
+
+    assert p2.borehole_depth       == in2
+    assert p2.value                == [in2]
+    assert p2.tool_zero_offset     == -7
+    assert p2.radial_drift         == in2
+    assert p2.measure_point_offset == 82
+    assert p2.depth_offset         == -123
+    assert p2.frame                == fr2
+    assert p2.well_reference_point == wr
+    assert p2.time                 == in2
+    assert p2.angular_drift        == 64
+    assert p2.vertical_depth       == -119
+
+
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
     unknown = f.objects[key]

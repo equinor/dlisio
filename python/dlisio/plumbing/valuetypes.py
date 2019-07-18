@@ -2,6 +2,7 @@ ValueTypeBoolean = 0
 ValueTypeScalar = 1
 ValueTypeVector = 2
 ValueTypeReverse = 3
+ValueTypeDict = 4
 
 def boolean(name):
     return (name, ValueTypeBoolean)
@@ -14,6 +15,9 @@ def vector(name):
 
 def reverse(name):
     return (name, ValueTypeReverse)
+
+def dictentry(name):
+    return (name, ValueTypeDict)
 
 def vtvalue(value_type, value):
     """
@@ -30,6 +34,9 @@ def vtvalue(value_type, value):
 
     elif value_type == ValueTypeBoolean:
         return bool(value[0])
+
+    elif value_type == ValueTypeDict:
+        return value[0]
 
     else:
         problem = 'unknown value extraction descriptor {}'
