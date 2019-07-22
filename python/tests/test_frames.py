@@ -43,6 +43,9 @@ def makeframe():
     time1.reprc = 13 # i2
 
     frame = dlisio.plumbing.Frame()
+    frame.name = 'MAINFRAME'
+    frame.origin = 0
+    frame.copynumber = 0
     frame.channels = [time0, tdep, time1]
 
     return frame
@@ -71,10 +74,14 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
 
 def test_duplicated_channels(assert_log):
     frame = makeframe()
-    frame.channels = [frame.channels[0], frame.channels[0]]
+    channel = frame.channels[0]
+    frame.channels = [channel, channel]
     with pytest.raises(ValueError):
         frame.dtype.names
     assert_log("duplicated mnemonics")
+
+    frame.link([frame, channel])
+    assert_log("belongs to frame")
 
 def test_instance_dtype_fmt():
     frame = makeframe()

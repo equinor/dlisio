@@ -295,7 +295,7 @@ class Frame(BasicObject):
                     msg = ("Frame {} contract is broken. "
                            "Channel {} already belongs to frame {}. "
                            "Assigning a new one")
-                    logging.warn(msg.format(self.fingerprint,
+                    logging.warning(msg.format(self.fingerprint,
                                  ch.fingerprint, ch.frame.fingerprint))
                 ch.frame = self
             except AttributeError:
