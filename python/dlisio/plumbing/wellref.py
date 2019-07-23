@@ -1,6 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, dictentry, vtvalue
-
+from .valuetypes import scalar, skip
 
 class Wellref(BasicObject):
     """
@@ -51,13 +50,14 @@ class Wellref(BasicObject):
         'PERMANENT-DATUM-ELEVATION' : scalar('permanent_datum_elevation'),
         'ABOVE-PERMANENT-DATUM'     : scalar('above_permanent_datum'),
         'MAGNETIC-DECLINATION'      : scalar('magnetic_declination'),
-        'COORDINATE-1-NAME'         : dictentry('coordinate'),
-        'COORDINATE-1-VALUE'        : dictentry('coordinate'),
-        'COORDINATE-2-NAME'         : dictentry('coordinate'),
-        'COORDINATE-2-VALUE'        : dictentry('coordinate'),
-        'COORDINATE-3-NAME'         : dictentry('coordinate'),
-        'COORDINATE-3-VALUE'        : dictentry('coordinate'),
+        'COORDINATE-1-NAME'         : skip(),
+        'COORDINATE-1-VALUE'        : skip(),
+        'COORDINATE-2-NAME'         : skip(),
+        'COORDINATE-2-VALUE'        : skip(),
+        'COORDINATE-3-NAME'         : skip(),
+        'COORDINATE-3-VALUE'        : skip(),
     }
+
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'WELL-REFERENCE')
@@ -70,37 +70,14 @@ class Wellref(BasicObject):
 
 
     def load(self):
-        buf = {
-            'COORDINATE-1-NAME'  : 'coordinate1',
-            'COORDINATE-1-VALUE' : None,
-            'COORDINATE-2-NAME'  : 'coordinate2',
-            'COORDINATE-2-VALUE' : None,
-            'COORDINATE-3-NAME'  : 'coordinate3',
-            'COORDINATE-3-VALUE' : None
-        }
-        attrs = self.attributes
-        for label, value in self.attic.items():
-            if value is None: continue
+        super().load()
 
-            try:
-                attr, value_type = attrs[label]
-            except KeyError:
-                self.stash[label] = value
-                continue
+        self.coordinates = {}
+        custom_label = 'COORDINATE-{}'
+        name = 'COORDINATE-{}-NAME'
+        value = 'COORDINATE-{}-VALUE'
 
-            val = vtvalue(value_type, value)
-
-            if label in buf:
-                buf[label] = val
-            else:
-                setattr(self, attr, val)
-
-        coords = {
-            buf['COORDINATE-1-NAME'] : buf['COORDINATE-1-VALUE'],
-            buf['COORDINATE-2-NAME'] : buf['COORDINATE-2-VALUE'],
-            buf['COORDINATE-3-NAME'] : buf['COORDINATE-3-VALUE']
-        }
-
-        self.coordinates = coords
-        self.stripspaces()
-
+        for i in range(1, 4):
+            key = self.attic.get(name.format(i), [custom_label.format(i)])[0]
+            val = self.attic.get(value.format(i), [None])[0]
+            self.coordinates[key] = val
