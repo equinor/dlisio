@@ -8,7 +8,7 @@ from dlisio.plumbing.coefficient import Coefficient
 
 import dlisio
 
-from . import merge_files
+from . import merge_files, assert_log
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
@@ -784,7 +784,7 @@ def test_dynamic_class_attribute(fpath):
             # manual cleanup. "reload" doesn't work
             del c.__class__.attributes['MY_PARAM']
 
-def test_dynamic_linkage(fpath):
+def test_dynamic_linkage(fpath, assert_log):
     with dlisio.load(fpath) as (f, _):
         key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c = f.objects[key]
@@ -818,6 +818,8 @@ def test_dynamic_linkage(fpath):
         assert c.label        == "SMTH"
         assert c.paramlinks   == [param2, None]
         assert c.unknown_link == u
+
+        assert_log("missing attribute")
 
 def test_dynamic_change_through_instance(fpath):
     with dlisio.load(fpath) as (f, _):

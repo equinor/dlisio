@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import dlisio
+from dlisio.plumbing import linkage
 
 from . import DWL206, assert_log
 
@@ -147,3 +148,20 @@ def test_channel_curves():
     assert ch_fmt   == "qqqqqqqq"
     assert post_fmt == "Ldddddd"
 
+def test_not_a_link(assert_log):
+    f = dlisio.plumbing.Frame()
+    f.linkage = dict(f.linkage)
+    f.linkage['notlink'] = linkage.objref
+    f.refs["notlink"] = "not a link"
+
+    f.link([f])
+    assert_log("wrong linkage")
+
+def test_wrong_linkage(assert_log):
+    f = dlisio.plumbing.Frame()
+    f.linkage = dict(f.linkage)
+    f.linkage['wrong reference'] = "wrong reference"
+    f.refs['wrong reference'] = dlisio.core.obname(3, 4, "aa");
+
+    f.link([f])
+    assert_log("wrong linkage")
