@@ -452,13 +452,16 @@ def test_computation(f):
     key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
+    key = fingerprint('PROCESS', 'PROC1', 10, 0)
+    process = f.objects[key]
+
     assert com.long_name          == 'computation object 2'
     assert com.properties         == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
     assert com.dimension          == [4, 2]
     assert com.attic["DIMENSION"] == [2, 4]
     assert com.axis               == [axis3, axis2]
     assert com.zones              == [zone]
-    assert com.refs['source']     == [('PROCESS', (10, 0, 'PROC1'))]
+    assert com.source             == process
 
     values  = np.array([[140, 99], [144, 172], [202, 52], [109, 120]])
     assert np.array_equal(com.values[zone.name], values)
