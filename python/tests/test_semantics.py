@@ -574,17 +574,17 @@ def test_process(f):
     key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
     oc1 = f.objects[key]
 
-    assert p1.input_channels      == [in2]
-    assert p1.parameters          == [param1, param3]
-    assert p1.output_channels     == [out1, out2]
     assert p1.description         == 'Random process'
-    assert p1.properties          == ['RE-SAMPLED', 'LITHOLOGY-CORRECTED']
     assert p1.trademark_name      == 'Cute process'
+    assert p1.version             == 'The one and only'
+    assert p1.properties          == ['RE-SAMPLED', 'LITHOLOGY-CORRECTED']
+    assert p1.status              == 'COMPLETE'
+    assert p1.input_channels      == [in2]
+    assert p1.output_channels     == [out1, out2]
     assert p1.input_computations  == [ic1]
     assert p1.output_computations == [oc1]
-    assert p1.version             == 'The one and only'
-    assert p1.status              == 'COMPLETE'
-
+    assert p1.parameters          == [param1, param3]
+    assert p1.comments            == ["It was", "nicely", "executed", "??"]
 
 def test_path(f):
     key = fingerprint('PATH', 'PATH1', 10, 0)
