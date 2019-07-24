@@ -461,11 +461,11 @@ TEST_CASE("dlis comp string") {
 }
 
 
-TEST_CASE("fingerprint length matches bytes written") {
+TEST_CASE("fingerprint matches bytes written") {
     std::string type = "CHANNEL";
     std::string id = "IDENT";
     auto origin = 0;
-    auto copy = 0;
+    auto copy = 3;
 
     int size;
     auto err = dlis_object_fingerprint_size(
@@ -494,6 +494,7 @@ TEST_CASE("fingerprint length matches bytes written") {
 
     auto fingerprint = std::string(buffer.data());
     CHECK(fingerprint.size() == size);
+    CHECK(fingerprint == "T.CHANNEL-I.IDENT-O.0-C.3");
 }
 
 TEST_CASE("fingerprint on empty string") {
