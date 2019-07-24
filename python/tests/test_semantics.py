@@ -526,16 +526,16 @@ def test_group(f):
     key = fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
-    # Create axis1 and relink
-    ax1 = dlisio.plumbing.Axis()
-    ax1.name = 'AX1'
-    ax1.origin = 10
-    ax1.copynumber = 0
+    key = fingerprint('AXIS', 'AXIS1', 10, 0)
+    ax1 = f.objects[key]
 
-    f.objects[ax1.fingerprint] = ax1
-    g1.link(f.objects)
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
+    ax2 = f.objects[key]
 
-    assert g1.objects     == [ax1, None]
+    key = fingerprint('AXIS', 'AXIS3', 10, 0)
+    ax3 = f.objects[key]
+
+    assert g1.objects     == [ax1, ax3]
     assert g1.description == 'some axis group'
     assert g1.objecttype  == 'AXIS'
 
@@ -543,7 +543,7 @@ def test_group(f):
     assert g2.description == 'various objects'
     assert g2.objecttype  == None
 
-    assert g3.objects     == [None, ch, tool]
+    assert g3.objects     == [ax2, ch, tool]
     assert g3.description == 'messed up group'
     assert g3.groups      == [g1, g2]
     assert g3.objecttype  == 'IGNORE-ME-PLZ'
