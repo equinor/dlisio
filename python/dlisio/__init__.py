@@ -360,6 +360,61 @@ class dlis(object):
         return self.indexedobjects['PARAMETER'].values()
 
     @property
+    def process(self):
+        """ Read all Process objects
+
+        Returns
+        -------
+
+        processes : dict_values
+        """
+        return self.indexedobjects['PROCESS'].values()
+
+    @property
+    def group(self):
+        """ Read all Group objects
+
+        Returns
+        -------
+
+        groups : dict_values
+        """
+        return self.indexedobjects['GROUP'].values()
+
+    @property
+    def wellref(self):
+        """ Read all Wellref objects
+
+        Returns
+        -------
+
+        wellrefs : dict_values
+        """
+        return self.indexedobjects['WELL-REFERENCE'].values()
+
+    @property
+    def splice(self):
+        """ Read all Splice objects
+
+        Returns
+        -------
+
+        splice : dict_values
+        """
+        return self.indexedobjects['SPLICE'].values()
+
+    @property
+    def path(self):
+        """ Read all Path objects
+
+        Returns
+        -------
+
+        path : dict_values
+        """
+        return self.indexedobjects['PATH'].values()
+
+    @property
     def equipments(self):
         """ Read all Equipment objects
 

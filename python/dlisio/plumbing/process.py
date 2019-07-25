@@ -1,4 +1,3 @@
-
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname
@@ -11,13 +10,14 @@ class Process(BasicObject):
 
     Attributes
     ----------
+
     description : str
 
     trademark_name  : str
         Trademark name refers to the process and its products.
 
     version : str
-        Version attribute is the producer software version of the process.
+        Software version.
 
     properties : list of str
         Properties that applies to the output of the process, as a result of
@@ -51,7 +51,7 @@ class Process(BasicObject):
     -----
 
     The Process object reflects the logical record type Process, defined in
-    rp66. SPLICE records are listed in Appendix A.2 - Logical Record Types and
+    rp66. PROCESS records are listed in Appendix A.2 - Logical Record Types and
     described in detail in Chapter 5.8.5 - Static and Frame Data, Process
     objects.
     """
@@ -80,7 +80,7 @@ class Process(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'PROCESS')
-        self.desccription        = None
+        self.description         = None
         self.trademark_name      = None
         self.version             = None
         self.properties          = []

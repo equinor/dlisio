@@ -9,23 +9,23 @@ class Wellref(BasicObject):
     ----------
 
     permanent_datum : str
-        Permanent datum defines level from where vertical distance is measured
+        Level from where vertical distance is measured
 
     vertical_zero : str
         Vertical zero is an entity that corresponds to zero depth.
 
-    permanent_datum_elevation :
+    permanent_datum_elevation
         Permanent datum, structure or entity from which the vertical distance
         can be measured.
 
-    above_permanent_datum :
+    above_permanent_datum
         Distance of permanent Datum above mean sea level. Negative values
         indicates that the Permanent datum is below mean sea level
 
-    magnetic_declination :
-        Magnetic Declination is  angle between  the line of direction to
-        geographic north and the line of direction to magnetic north. This
-        defines angle with vertex at well reference point.
+    magnetic_declination
+        Angle between  the line of direction to geographic north and the line
+        of direction to magnetic north. This defines angle with vertex at well
+        reference point.
 
     coordinate : dict
         Independent spatial coordinates. Typically, latitude, longitude and

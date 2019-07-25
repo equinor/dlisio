@@ -10,17 +10,14 @@ class Path(BasicObject):
     are combined to define part or all of a Data Path, and variation in the
     alignment.
 
-
     Attributes
     ----------
 
     frame_type : Frame
         The frame in which the channel's of the current path are recorded.
 
-    well_reference_point : Well Reference Point
-        Well reference point reference the Object in the current Logical File
-        that specifies the Well Reference Point for entities specified by the
-        remaining Attributes of the Path Object.
+    well_reference_point : Wellref
+        Well Reference Point
 
     value : list of Channel
         Value Channel for the current Path.
