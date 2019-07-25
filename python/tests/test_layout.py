@@ -81,8 +81,8 @@ def test_load_7K_file_with_several_LR():
 def test_padbytes_as_large_as_record():
     # 180-byte long explicit record with padding, and padbytes are set to 180
     # (leaving the resulting len(data) == 0)
+    f = dlisio.open('data/layout/padbytes-large-as-record.dlis')
     try:
-        f = dlisio.open('data/layout/padbytes-large-as-record.dlis')
         f.reindex([0], [180])
 
         rec = f.extract([0])[0]
@@ -94,8 +94,8 @@ def test_padbytes_as_large_as_record():
 def test_padbytes_as_large_as_segment():
     # 180-byte long explicit record with padding, and padbytes are set to 176
     # record is expected to not be present
+    f = dlisio.open('data/layout/padbytes-large-as-segment-body.dlis')
     try:
-        f = dlisio.open('data/layout/padbytes-large-as-segment-body.dlis')
         f.reindex([0], [180])
 
         rec = f.extract([0])[0]
