@@ -451,7 +451,6 @@ noexcept (false) {
     const auto* ptr = file.data();
     std::vector< std::pair< std::string, int > > xs;
 
-    char fingerprint[280] = {};
     char name[256] = {};
 
     for (auto i : candidates) {
@@ -468,10 +467,11 @@ noexcept (false) {
         std::uint8_t copy;
         std::int32_t idlen;
         dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
-        std::memset(fingerprint, 0, sizeof(fingerprint));
-        dlis_object_fingerprint(5, "FRAME", idlen, name, origin, copy, fingerprint);
 
-        xs.emplace_back(std::string(fingerprint), i);
+        dl::obname tmp{ dl::origin{ origin },
+                        dl::ushort{ copy },
+                        dl::ident{ std::string{ name, name + idlen } } };
+        xs.emplace_back(tmp.fingerprint("FRAME"), i);
     }
 
     return xs;
