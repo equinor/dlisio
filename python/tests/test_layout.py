@@ -103,3 +103,15 @@ def test_padbytes_as_large_as_segment():
     finally:
         f.close()
 
+def test_load_fdata_VR_aligned():
+    with dlisio.load('data/layout/fdata-vr-aligned.dlis') as (f, *_):
+        assert len(f.fdata_index) == 1
+        assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0]
+
+def test_load_fdata_many_in_same_VR():
+    with dlisio.load('data/layout/fdata-many-in-same-vr.dlis') as (f, *_):
+        assert len(f.fdata_index) == 2
+        assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0, 1]
+        ident = '3'*255
+        fingerprint = 'T.FRAME-I.'+ident+'-O.1073741823-C.255'
+        assert f.fdata_index[fingerprint] == [3]
