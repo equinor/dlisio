@@ -598,3 +598,13 @@ def test_cut_middle_template_attribute(tmpdir, merge):
     with pytest.raises(IndexError) as excinfo:
         dlisio.load(path)
     assert "unexpected end-of-record" in str(excinfo.value)
+
+def test_value_broken_utf8(tmpdir, merge):
+    path = os.path.join(str(tmpdir), 'value_broken_utf8.dlis')
+    content = [
+        'data/parse/start.dlis.part',
+        'data/parse/template/broken-utf8.dlis.part',
+    ]
+    merge(path, content)
+    with dlisio.load(path):
+        pass

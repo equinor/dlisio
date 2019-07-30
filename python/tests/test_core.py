@@ -366,10 +366,6 @@ def test_dtype(DWL206):
                                ('TENS_SL', np.float32),
                                ('DEPT_SL', np.float32)])
 
-def test_load_file_with_broken_utf8():
-    with dlisio.load('data/broken-degree-symbol.dlis') as (f, *tail):
-        pass
-
 def test_record_attributes():
     stream = dlisio.open('data/3-syntactic-logical-records.dlis')
     tells = [80, 116, 148]
