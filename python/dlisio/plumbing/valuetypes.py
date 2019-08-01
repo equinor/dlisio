@@ -1,3 +1,5 @@
+import logging
+
 ValueTypeBoolean = 0
 ValueTypeScalar = 1
 ValueTypeVector = 2
@@ -19,11 +21,17 @@ def reverse(name):
 def skip():
     return ('', ValueTypeSkip)
 
-def vtvalue(value_type, value):
+def vtvalue(value_type, value, attr, obj):
     """
     Returns actual value of value vector based on value_type
     """
+    err = "Expected only 1 value in the attribute {} of object {} {}. "
+    action = "Using the first value."
+    msg = (err + action).format(attr, obj.type, obj.name)
+
     if value_type == ValueTypeScalar:
+        if len(value) != 1:
+            logging.warning(msg);
         return value[0]
 
     elif value_type == ValueTypeVector:
@@ -33,6 +41,8 @@ def vtvalue(value_type, value):
         return value[::-1]
 
     elif value_type == ValueTypeBoolean:
+        if len(value) != 1:
+            logging.warning(msg);
         return bool(value[0])
 
     elif value_type == ValueTypeSkip:

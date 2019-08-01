@@ -2,7 +2,7 @@ import pytest
 
 import dlisio
 
-from . import merge_files
+from . import merge_files, assert_log
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
@@ -185,3 +185,16 @@ def test_wellref_coordinates():
     wellref.load()
     assert len(wellref.coordinates) == 3
     assert wellref.coordinates['COORDINATE-1'] == None
+
+def test_valuetype_mismatch(assert_log):
+    tool = dlisio.plumbing.tool.Tool()
+    tool.attic = {
+        'DESCRIPTION' : ["Description", "Unexpected description"],
+        'STATUS'      : ["Yes", 0],
+    }
+    tool.load()
+
+    assert tool.description == "Description"
+    assert tool.status      == True
+    assert_log("1 value in the attribute DESCRIPTION")
+    assert_log("1 value in the attribute STATUS")

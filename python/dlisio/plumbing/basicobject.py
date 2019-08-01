@@ -272,7 +272,7 @@ class BasicObject():
             if value_type == ValueTypeSkip:
                 continue
 
-            val = vtvalue(value_type, value)
+            val = vtvalue(value_type, value, label, self)
 
             if islink(value[0]):
                 self.refs[attr] = val
