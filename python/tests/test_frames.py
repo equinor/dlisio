@@ -1,8 +1,10 @@
 import numpy as np
+import pytest
 
 import dlisio
+from dlisio.plumbing import linkage
 
-from . import DWL206
+from . import DWL206, assert_log
 
 def test_frame_getitem(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
@@ -42,6 +44,9 @@ def makeframe():
     time1.reprc = 13 # i2
 
     frame = dlisio.plumbing.Frame()
+    frame.name = 'MAINFRAME'
+    frame.origin = 0
+    frame.copynumber = 0
     frame.channels = [time0, tdep, time1]
 
     return frame
@@ -68,6 +73,17 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     frame = makeframe()
     _ = memoryview(np.zeros(1, dtype = frame.dtype))
 
+def test_duplicated_channels(assert_log):
+    frame = makeframe()
+    channel = frame.channels[0]
+    frame.channels = [channel, channel]
+    with pytest.raises(ValueError):
+        frame.dtype.names
+    assert_log("duplicated mnemonics")
+
+    frame.link([frame, channel])
+    assert_log("belongs to frame")
+
 def test_instance_dtype_fmt():
     frame = makeframe()
     frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
@@ -75,6 +91,18 @@ def test_instance_dtype_fmt():
     # fmtstr is unchanged
     assert 'fDDD' == frame.fmtstr()
     assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+
+@pytest.mark.parametrize('fmt', [
+    ("x-{:d}.{:s}.{:d}"),
+    ("x-{:s}.{:d}.{:d}.{:d}"),
+])
+def test_instance_dtype_wrong_fmt(fmt, assert_log):
+    frame = makeframe()
+
+    frame.dtype_fmt = fmt
+    with pytest.raises(Exception):
+        frame.dtype.names
+    assert_log("rich label")
 
 def test_class_dtype_fmt():
     original = dlisio.plumbing.Frame.dtype_format
@@ -120,3 +148,20 @@ def test_channel_curves():
     assert ch_fmt   == "qqqqqqqq"
     assert post_fmt == "Ldddddd"
 
+def test_not_a_link(assert_log):
+    f = dlisio.plumbing.Frame()
+    f.linkage = dict(f.linkage)
+    f.linkage['notlink'] = linkage.objref
+    f.refs["notlink"] = "not a link"
+
+    f.link([f])
+    assert_log("wrong linkage")
+
+def test_wrong_linkage(assert_log):
+    f = dlisio.plumbing.Frame()
+    f.linkage = dict(f.linkage)
+    f.linkage['wrong reference'] = "wrong reference"
+    f.refs['wrong reference'] = dlisio.core.obname(3, 4, "aa");
+
+    f.link([f])
+    assert_log("wrong linkage")

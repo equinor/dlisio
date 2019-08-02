@@ -39,7 +39,7 @@ class Computation(BasicObject):
         'DIMENSION' : reverse('dimension'),
         'AXIS'      : reverse('axis'),
         'ZONES'     : vector('zones'),
-        'SOURCE'    : vector('source')
+        'SOURCE'    : scalar('source')
     }
 
     linkage = {
@@ -69,7 +69,7 @@ class Computation(BasicObject):
         self.zones       = []
 
         #: The immediate source of the Computation
-        self.source = []
+        self.source = None
 
     @property
     def values(self):

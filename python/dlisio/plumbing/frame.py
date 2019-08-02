@@ -152,9 +152,8 @@ class Frame(BasicObject):
         seen = {}
         types = []
 
-        source = "duplicated mnemonic in frame '{}'"
-        problem = "but rich label for channel '{}' cannot be formatted"
-        msg = ', '.join((source, problem))
+        duplerr = "duplicated mnemonics in frame '{}': {}"
+        fmterr = "rich label for channel '{}' cannot be formatted in frame '{}'"
         info = 'name = {}, origin = {}, copynumber = {}'.format
 
         fmtlabel = self.dtype_fmt.format
@@ -171,8 +170,8 @@ class Frame(BasicObject):
 
             try:
                 label = fmtlabel(ch.name, ch.origin, ch.copynumber)
-            except (TypeError, ValueError):
-                logging.error(msg.format(self.name, ch.name))
+            except (IndexError, ValueError):
+                logging.error(fmterr.format(ch.name, self.name))
                 logging.debug(info(ch.name, ch.origin, ch.copynumber))
                 raise
 
@@ -186,8 +185,8 @@ class Frame(BasicObject):
 
             try:
                 label = fmtlabel(prev.name, prev.origin, prev.copynumber)
-            except (TypeError, ValueError):
-                logging.error(msg.format(self.name, ch.name))
+            except (IndexError, ValueError):
+                logging.error(fmterr.format(ch.name, self.name))
                 logging.debug(info(prev.name, prev.origin, prev.copynumber))
                 raise
 
@@ -196,7 +195,12 @@ class Frame(BasicObject):
             types[prev_index] = (label, prev.dtype)
             seen[ch.name] = None
 
-        self._dtype = np.dtype(types)
+        try:
+            self._dtype = np.dtype(types)
+        except ValueError as exc:
+            logging.error(duplerr.format(self.name, exc))
+            raise
+
         return self._dtype
 
     def fmtstr(self):
@@ -291,7 +295,7 @@ class Frame(BasicObject):
                     msg = ("Frame {} contract is broken. "
                            "Channel {} already belongs to frame {}. "
                            "Assigning a new one")
-                    logging.warn(msg.format(self.fingerprint,
+                    logging.warning(msg.format(self.fingerprint,
                                  ch.fingerprint, ch.frame.fingerprint))
                 ch.frame = self
             except AttributeError:

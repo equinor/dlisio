@@ -63,6 +63,15 @@ class BasicObject():
     >>> coeff.attributes = dict(coeff.attributes)
     ... coeff.attributes['UNIQUE_PARAM'] = valuetypes.scalar('uniqueparam')
     ... coeff.load()
+
+    Values for the dictionary are valuetypes:
+
+    + *scalar* 1 value
+    + *vector* list of values
+    + *reverse* list of values will be reversed
+    + *skip* skip the value on object parsing. Custom action might be
+      performed later
+
     """
 
     linkage    = {}
@@ -260,7 +269,10 @@ class BasicObject():
                 self.stash[label] = value
                 continue
 
-            val = vtvalue(value_type, value)
+            if value_type == ValueTypeSkip:
+                continue
+
+            val = vtvalue(value_type, value, label, self)
 
             if islink(value[0]):
                 self.refs[attr] = val

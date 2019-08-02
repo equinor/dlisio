@@ -66,7 +66,7 @@ class Process(BasicObject):
         'INPUT-COMPUTATIONS'  : vector('input_computations'),
         'OUTPUT-COMPUTATIONS' : vector('output_computations'),
         'PARAMETERS'          : vector('parameters'),
-        'COMMENTS '           : vector('comments')
+        'COMMENTS'            : vector('comments')
     }
 
     linkage = {

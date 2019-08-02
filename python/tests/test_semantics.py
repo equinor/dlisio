@@ -8,7 +8,7 @@ from dlisio.plumbing.coefficient import Coefficient
 
 import dlisio
 
-from . import merge_files
+from . import merge_files, assert_log
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
@@ -452,13 +452,16 @@ def test_computation(f):
     key = fingerprint('ZONE', 'ZONE-A', 10, 0)
     zone = f.objects[key]
 
+    key = fingerprint('PROCESS', 'PROC1', 10, 0)
+    process = f.objects[key]
+
     assert com.long_name          == 'computation object 2'
     assert com.properties         == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
     assert com.dimension          == [4, 2]
     assert com.attic["DIMENSION"] == [2, 4]
     assert com.axis               == [axis3, axis2]
     assert com.zones              == [zone]
-    assert com.refs['source']     == [('PROCESS', (10, 0, 'PROC1'))]
+    assert com.source             == process
 
     values  = np.array([[140, 99], [144, 172], [202, 52], [109, 120]])
     assert np.array_equal(com.values[zone.name], values)
@@ -526,16 +529,16 @@ def test_group(f):
     key = fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
 
-    # Create axis1 and relink
-    ax1 = dlisio.plumbing.Axis()
-    ax1.name = 'AX1'
-    ax1.origin = 10
-    ax1.copynumber = 0
+    key = fingerprint('AXIS', 'AXIS1', 10, 0)
+    ax1 = f.objects[key]
 
-    f.objects[ax1.fingerprint] = ax1
-    g1.link(f.objects)
+    key = fingerprint('AXIS', 'AXIS2', 10, 0)
+    ax2 = f.objects[key]
 
-    assert g1.objects     == [ax1, None]
+    key = fingerprint('AXIS', 'AXIS3', 10, 0)
+    ax3 = f.objects[key]
+
+    assert g1.objects     == [ax1, ax3]
     assert g1.description == 'some axis group'
     assert g1.objecttype  == 'AXIS'
 
@@ -543,7 +546,7 @@ def test_group(f):
     assert g2.description == 'various objects'
     assert g2.objecttype  == None
 
-    assert g3.objects     == [None, ch, tool]
+    assert g3.objects     == [ax2, ch, tool]
     assert g3.description == 'messed up group'
     assert g3.groups      == [g1, g2]
     assert g3.objecttype  == 'IGNORE-ME-PLZ'
@@ -574,17 +577,17 @@ def test_process(f):
     key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
     oc1 = f.objects[key]
 
-    assert p1.input_channels      == [in2]
-    assert p1.parameters          == [param1, param3]
-    assert p1.output_channels     == [out1, out2]
     assert p1.description         == 'Random process'
-    assert p1.properties          == ['RE-SAMPLED', 'LITHOLOGY-CORRECTED']
     assert p1.trademark_name      == 'Cute process'
+    assert p1.version             == 'The one and only'
+    assert p1.properties          == ['RE-SAMPLED', 'LITHOLOGY-CORRECTED']
+    assert p1.status              == 'COMPLETE'
+    assert p1.input_channels      == [in2]
+    assert p1.output_channels     == [out1, out2]
     assert p1.input_computations  == [ic1]
     assert p1.output_computations == [oc1]
-    assert p1.version             == 'The one and only'
-    assert p1.status              == 'COMPLETE'
-
+    assert p1.parameters          == [param1, param3]
+    assert p1.comments            == ["It was", "nicely", "executed", "??"]
 
 def test_path(f):
     key = fingerprint('PATH', 'PATH1', 10, 0)
@@ -784,7 +787,7 @@ def test_dynamic_class_attribute(fpath):
             # manual cleanup. "reload" doesn't work
             del c.__class__.attributes['MY_PARAM']
 
-def test_dynamic_linkage(fpath):
+def test_dynamic_linkage(fpath, assert_log):
     with dlisio.load(fpath) as (f, _):
         key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c = f.objects[key]
@@ -818,6 +821,8 @@ def test_dynamic_linkage(fpath):
         assert c.label        == "SMTH"
         assert c.paramlinks   == [param2, None]
         assert c.unknown_link == u
+
+        assert_log("missing attribute")
 
 def test_dynamic_change_through_instance(fpath):
     with dlisio.load(fpath) as (f, _):

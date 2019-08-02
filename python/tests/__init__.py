@@ -48,3 +48,9 @@ def update_envelope_VRL_and_LRSL(b, lrs_offset = None):
     vrl = len(b) - 80
     b[80] = vrl // 256
     b[81] = vrl %  256
+
+@pytest.fixture
+def assert_log(caplog):
+    def assert_message(message_id):
+        assert any([message_id in r.message for r in caplog.records])
+    return assert_message

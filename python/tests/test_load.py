@@ -2,7 +2,7 @@ import pytest
 
 import dlisio
 
-from . import merge_files
+from . import merge_files, assert_log
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
@@ -152,3 +152,49 @@ def test_curves(fpath):
         # Read the first value of the second frame of channel CH01
         assert curves['CH01'][1][0] == 153.0
         assert curves[1]['CH01'][0] == 153.0
+
+def test_wellref_coordinates():
+    wellref = dlisio.plumbing.wellref.Wellref()
+    wellref.attic = {
+        'COORDINATE-2-VALUE' : [2],
+        'COORDINATE-1-NAME'  : ['longitude'],
+        'COORDINATE-3-NAME'  : ['elevation'],
+        'COORDINATE-1-VALUE' : [1],
+        'COORDINATE-3-VALUE' : [3],
+        'COORDINATE-2-NAME'  : ['latitude'],
+    }
+
+    wellref.load()
+
+    assert wellref.coordinates['longitude']  == 1
+    assert wellref.coordinates['latitude']   == 2
+    assert wellref.coordinates['elevation']  == 3
+
+    del wellref.attic['COORDINATE-3-VALUE']
+    wellref.load()
+    assert wellref.coordinates['latitude']   == 2
+    assert wellref.coordinates['elevation']  == None
+
+    del wellref.attic['COORDINATE-2-NAME']
+    wellref.load()
+    assert wellref.coordinates['longitude']    == 1
+    assert wellref.coordinates['COORDINATE-2'] == 2
+
+    del wellref.attic['COORDINATE-1-NAME']
+    del wellref.attic['COORDINATE-1-VALUE']
+    wellref.load()
+    assert len(wellref.coordinates) == 3
+    assert wellref.coordinates['COORDINATE-1'] == None
+
+def test_valuetype_mismatch(assert_log):
+    tool = dlisio.plumbing.tool.Tool()
+    tool.attic = {
+        'DESCRIPTION' : ["Description", "Unexpected description"],
+        'STATUS'      : ["Yes", 0],
+    }
+    tool.load()
+
+    assert tool.description == "Description"
+    assert tool.status      == True
+    assert_log("1 value in the attribute DESCRIPTION")
+    assert_log("1 value in the attribute STATUS")

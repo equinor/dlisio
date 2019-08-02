@@ -434,6 +434,11 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "origin",     &dl::obname::origin )
         .def_readonly( "copynumber", &dl::obname::copy )
         .def_readonly( "id",         &dl::obname::id )
+        .def(py::init([](int origin, std::uint8_t copynum, std::string id){
+            return dl::obname{dl::origin{origin}, 
+                              dl::ushort{copynum},
+                              dl::ident{id}}; 
+        }))
         .def( "fingerprint",         &dl::obname::fingerprint )
         .def( "__eq__",              &dl::obname::operator == )
         .def( "__ne__",              &dl::obname::operator != )
