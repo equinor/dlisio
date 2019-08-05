@@ -7,8 +7,12 @@ File Handle
 ===========
 .. autoclass:: dlisio.dlis()
     :members:
+    :exclude-members: types
     :member-order: bysource
     :undoc-members:
+
+    .. autoinstanceattribute:: types
+        :annotation: = {}
 
 .. currentmodule:: dlisio.plumbing
 
