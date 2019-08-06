@@ -88,6 +88,16 @@ def test_load_7K_file_with_several_LR():
     with dlisio.load('data/layout/7K-file.dlis'):
         pass
 
+def test_truncated():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/truncated.dlis')
+    assert "file truncated" in str(excinfo.value)
+
+def test_too_small_record():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/too-small-record.dlis')
+    assert "in record 0 corrupted" in str(excinfo.value)
+
 def test_padbytes_as_large_as_record():
     # 180-byte long explicit record with padding, and padbytes are set to 180
     # (leaving the resulting len(data) == 0)
