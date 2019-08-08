@@ -317,7 +317,6 @@ record& stream::at( int i, record& rec ) noexcept (false) {
 
                 const auto vrl_len = remaining + len;
                 const auto tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
-                consistent = false;
                 const auto msg = "visible record/segment inconsistency: "
                                  "segment (which is {}) "
                                  ">= visible (which is {}) "
