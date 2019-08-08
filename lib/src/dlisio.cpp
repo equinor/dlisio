@@ -576,6 +576,7 @@ template < typename T, typename... Ts >
 char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) noexcept (true) {
     std::memcpy( dst, ptr, sizeof( T ) );
     dst += sizeof( T );
+    // cppcheck-suppress CastIntegerToAddressAtReturn
     return pack( dst, ptrs ... );
 }
 
@@ -589,6 +590,7 @@ char* pack( char* dst,
     dst += sizeof( *len );
     std::memcpy( dst, str, *len );
     dst += *len;
+    // cppcheck-suppress CastIntegerToAddressAtReturn
     return pack( dst, ptrs ... );
 }
 
