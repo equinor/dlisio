@@ -315,13 +315,13 @@ record& stream::at( int i, record& rec ) noexcept (false) {
                  */
 
                 const auto vrl_len = remaining + len;
-                const auto tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
+                const auto cur_tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
                 const auto msg = "visible record/segment inconsistency: "
                                  "segment (which is {}) "
                                  ">= visible (which is {}) "
                                  "in record {} (at tell {})"
                 ;
-                const auto str = fmt::format(msg, len, vrl_len, i, tell);
+                const auto str = fmt::format(msg, len, vrl_len, i, cur_tell);
                 throw std::runtime_error(str);
             }
 
