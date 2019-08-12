@@ -121,21 +121,20 @@ noexcept (false)
     auto& residuals = ofs.residuals;
     auto& explicits = ofs.explicits;
 
-    int err;
     const char* next;
     int count = 0;
     int initial_residual = 0;
 
     while (true) {
-        err = dlis_index_records( begin,
-                                  end,
-                                  alloc_size,
-                                  &initial_residual,
-                                  &next,
-                                  &count,
-                                  count + tells.data(),
-                                  count + residuals.data(),
-                                  count + explicits.data() );
+        int err = dlis_index_records( begin,
+                                      end,
+                                      alloc_size,
+                                      &initial_residual,
+                                      &next,
+                                      &count,
+                                      count + tells.data(),
+                                      count + residuals.data(),
+                                      count + explicits.data() );
 
         switch (err) {
             case DLIS_OK: break;
