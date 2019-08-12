@@ -400,8 +400,8 @@ record& stream::at( int i, record& rec ) noexcept (false) {
     }
 }
 
-void stream::reindex( std::vector< long long > tells,
-                      std::vector< int > residuals ) noexcept (false) {
+void stream::reindex( const std::vector< long long >& tells,
+                      const std::vector< int >& residuals ) noexcept (false) {
     if (tells.empty())
         throw std::invalid_argument( "tells must be non-empty" );
 
