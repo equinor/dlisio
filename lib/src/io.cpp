@@ -449,6 +449,7 @@ findfdata(mio::mmap_source& file,
 noexcept (false) {
 
     const auto* ptr = file.data();
+    const auto* end = file.data() + file.size();
     std::vector< std::pair< std::string, int > > xs;
 
     char name[256] = {};
@@ -466,7 +467,12 @@ noexcept (false) {
         std::int32_t origin;
         std::uint8_t copy;
         std::int32_t idlen;
-        dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
+        auto cur = dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
+        if (std::distance( cur, end ) < 0)
+        {
+            auto msg = "File corrupted. Error on reading fdata obname";
+            throw std::runtime_error(msg);
+        }
 
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },

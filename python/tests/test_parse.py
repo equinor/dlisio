@@ -8,8 +8,8 @@ from . import merge_files
 
 @pytest.fixture
 def merge(merge_files):
-    def merge(path, content):
-        merge_files(path, content, 104)
+    def merge(path, content, lrs_offset=104):
+        merge_files(path, content, lrs_offset)
     return merge
 
 @pytest.mark.future_test_attributes
@@ -608,3 +608,15 @@ def test_value_broken_utf8(tmpdir, merge):
     merge(path, content)
     with dlisio.load(path):
         pass
+
+def test_fdata_bad_ident(tmpdir, merge):
+    path = os.path.join(str(tmpdir), 'fdata_bad_ident.dlis')
+    content = [
+        'data/parse/sul.dlis.part',
+        'data/parse/implicit/fdata-bad-ident.dlis.part',
+    ]
+    merge(path, content, lrs_offset=None)
+    with pytest.raises(RuntimeError) as excinfo:
+        dlisio.load(path)
+
+    assert "fdata obname" in str(excinfo.value)
