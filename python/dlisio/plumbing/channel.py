@@ -3,8 +3,11 @@ from ..reprc import dtype, fmt
 from ..dlisutils import curves
 from .valuetypes import scalar, vector
 from .linkage import obname, objref
+from .utils import *
 
 import numpy as np
+from collections import OrderedDict
+
 
 class Channel(BasicObject):
     """
@@ -167,3 +170,16 @@ class Channel(BasicObject):
         frame = self.frame
         pre_fmt, fmt, post_fmt = frame.fmtstrchannel(self)
         return curves(frame.file, frame, self.dtype, pre_fmt, fmt, post_fmt)
+
+    def describe_attr(self, buf, width, indent, exclude):
+        describe_description(buf, self.long_name, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Physical unit of sample']   = self.units
+        d['Sample dimensions']         = self.dimension
+        d['Axis']                      = self.axis
+        d['Maximum sample dimensions'] = self.element_limit
+        d['Property indicators']       = self.properties
+        d['Source']                    = self.source
+
+        describe_dict(buf, d, width, indent, exclude)

@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 
 class Longname(BasicObject):
@@ -89,3 +92,22 @@ class Longname(BasicObject):
         #: records or objects of the Producer’s internal or corporate database
         self.private_symbol  = None
 
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['General modifier']   =  self.modifier
+        d['Quantity']           =  self.quantity
+        d['Quantity modifier']  =  self.quantity_mod
+        d['Altered form']       =  self.altered_form
+        d['Entity']             =  self.entity
+        d['Entity modifier']    =  self.entity_mod
+        d['Entity number']      =  self.entity_nr
+        d['Entity part']        =  self.entity_part
+        d['Entity part number'] =  self.entity_part_nr
+        d['Generic source']     =  self.generic_source
+        d['Source part']        =  self.source_part
+        d['Source part number'] =  self.source_part_nr
+        d['Conditions']         =  self.conditions
+        d['Standard symbol']    =  self.standard_symbol
+        d['Private symbol']     =  self.private_symbol
+
+        describe_dict(buf, d, width, indent, exclude)

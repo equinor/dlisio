@@ -1,4 +1,5 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+from io import StringIO
 import logging
 import numpy as np
 import re
@@ -102,11 +103,46 @@ class dlis(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        print("dlis: closed {}".format(self))
         self.close()
 
     def close(self):
         self.file.close()
+
+    def __repr__(self):
+        try:
+            fh = list(self.fileheader)[0]
+            desc = fh.id
+        except IndexError:
+            desc = 'Unknown'
+        return 'dlis({})'.format(desc)
+
+    def describe(self, width=80, indent=''):
+        buf = StringIO()
+        plumbing.describe_header(buf, 'Logical File', width, indent)
+
+        d = OrderedDict()
+        d['Description']  = repr(self)
+        d['Frames']       = len(self.frames)
+        d['Channels']     = len(self.channels)
+        d['Object count'] = len(self.objects)
+        plumbing.describe_dict(buf, d, width, indent)
+
+        known, unknown = {}, {}
+        for objtype, val in self.indexedobjects.items():
+            if objtype in self.types:
+                known[objtype] = len(val)
+            else:
+                unknown[objtype] = len(val)
+
+        if known:
+            plumbing.describe_header(buf, 'Known objects', width, indent, lvl=2)
+            plumbing.describe_dict(buf, known, width, indent)
+
+        if unknown:
+            plumbing.describe_header(buf, 'Unknown objects', width, indent, lvl=2)
+            plumbing.describe_dict(buf, unknown, width, indent)
+
+        return plumbing.Summary(info=buf.getvalue())
 
     def storage_label(self):
         blob = self.file.get(bytearray(80), self.sul_offset, 80)
@@ -606,6 +642,26 @@ class Batch(tuple):
     def close(self):
         for f in self:
             f.close()
+
+    def __repr__(self):
+        return 'Batch(logical files: {})'.format(len(self))
+
+    def describe(self, width=80, indent=''):
+        buf = StringIO()
+        plumbing.describe_header(buf, 'Batch of Logical Files', width, indent)
+
+        d = {'Number of Logical Files' : len(self)}
+        plumbing.describe_dict(buf, d, width, indent)
+
+        for f in self:
+            d = OrderedDict()
+            d['Description'] = repr(f)
+            d['Frames']   = len(f.frames)
+            d['Channels'] = len(f.channels)
+            plumbing.describe_dict(buf, d, width, indent)
+
+        return plumbing.Summary(info=buf.getvalue())
+
 
 def find_fileheaders(records, exi):
     # Logical files start whenever a FILE-HEADER is encountered. When a logical

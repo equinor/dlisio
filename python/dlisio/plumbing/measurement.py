@@ -3,6 +3,7 @@ from .valuetypes import scalar, vector, reverse, skip
 from .linkage import objref, obname
 from .utils import *
 
+from collections import OrderedDict
 import logging
 import numpy as np
 
@@ -183,3 +184,48 @@ class Measurement(BasicObject):
 
         shape = validshape(tolerance, self.dimension)
         return sampling(tolerance, shape, single=True)
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Type of measurement']       = self.mtype
+        d['Calibration standard']      = self.standard
+        d['Phase in job sequence']     = self.phase
+        d['Start time of acquisition'] = self.begin_time
+        d['Duration time']             = self.duration
+        d['Data source']               = self.source
+
+        describe_header(buf, 'Metadata', width, indent, lvl=2)
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Dimensions']       = self.dimension
+        d['Axis labels']      = self.axis
+        try:
+            samplecount = len(self.samples)
+        except ValueError:
+            samplecount = 0
+        d['Number of values'] = samplecount
+        samples = 'Samples used to compute std/max-dev'
+        d[samples] = self.samplecount
+
+        if exclude['empty']: d = remove_empties(d)
+        if d: describe_header(buf, 'Samples', width, indent, lvl=2)
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Reference']       = 'REFERENCE'
+        d['Minus Tolerance'] = 'MINUS-TOLERANCE'
+        d['Plus Tolerance']  = 'PLUS-TOLERANCE'
+        d['Std deviation']   = 'STANDARD-DEVIATION'
+        d['Max deviation']   = 'MAXIMUM-DEVIATION'
+
+        describe_sampled_attrs(
+                buf,
+                self.attic,
+                self.dimension,
+                'MEASUREMENT',
+                d,
+                width,
+                indent,
+                exclude
+        )

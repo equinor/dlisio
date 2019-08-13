@@ -1,6 +1,9 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname
+from .utils import *
+
+from collections import OrderedDict
 
 
 class Process(BasicObject):
@@ -91,3 +94,25 @@ class Process(BasicObject):
         self.output_computations = []
         self.parameters          = []
         self.comments            = []
+
+    def describe_attr(self, buf, width, indent, exclude):
+        describe_description(buf, self.description, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Trademark name'] = self.trademark_name
+        d['Status']         = self.status
+        d['Version']        = self.version
+        d['Comments']       = self.comments
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Properties']  = self.properties
+        d['Parameters']  = replist(self.parameters, 'name')
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Input Channels']      = replist(self.input_channels, 'name')
+        d['Output Channels']     = replist(self.output_channels, 'name')
+        d['Input Computations']  = replist(self.input_computations, 'name')
+        d['Output computations'] = replist(self.output_computations, 'name')
+        describe_dict(buf, d, width, indent, exclude)

@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, boolean
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 
 class Equipment(BasicObject):
@@ -94,3 +97,34 @@ class Equipment(BasicObject):
 
         #: Angular drift
         self.angular_drift  = None
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Trademark name']     = self.trademark_name
+        d['Generic type']       = self.generic_type
+        d['Operational status'] = self.status
+        d['Serial number']      = self.serial_number
+        d['Location']           = self.location
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Height, Length']      = [self.height, self.length]
+        d['Diameter (min, max)'] = [self.diameter_min, self.diameter_max]
+        d['Volume']              = self.volume
+        d['Weight']              = self.weight
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Minimum borehole size'] = self.hole_size
+        d['Max pressure']          = self.pressure
+        d['Max temperature']       = self.temperature
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Vertical depth'] = self.vertical_depth
+        d['Radial drift ']  = self.radial_drift
+        d['Angular drift']  = self.angular_drift
+
+        describe_dict(buf, d, width, indent, exclude)

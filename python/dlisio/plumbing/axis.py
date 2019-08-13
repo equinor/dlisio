@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 
 class Axis(BasicObject):
@@ -38,3 +41,11 @@ class Axis(BasicObject):
         #: Constant, signed spacing along the axis between successive
         #: coordinates
         self.spacing     = None
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Description'] = self.axis_id
+        d['Spacing']     = self.spacing
+        d['Coordinates'] = self.coordinates
+
+        describe_dict(buf, d, width, indent, exclude)

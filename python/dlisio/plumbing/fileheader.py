@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 class Fileheader(BasicObject):
     """
@@ -61,3 +64,10 @@ class Fileheader(BasicObject):
 
         #:Descriptive identification of the logical file
         self.id         = None
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Description'] = self.id
+        d['Position in storage set'] = self.sequencenr
+
+        describe_dict(buf, d, width, indent, exclude)

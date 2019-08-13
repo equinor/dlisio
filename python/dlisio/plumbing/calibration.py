@@ -1,6 +1,9 @@
 from .basicobject import BasicObject
 from .valuetypes import vector, scalar
 from .linkage import obname
+from .utils import describe_dict, replist
+
+from collections import OrderedDict
 
 class Calibration(BasicObject):
     """
@@ -58,3 +61,14 @@ class Calibration(BasicObject):
         #: Parameters containing numerical and textual information assosiated
         #: with the calibration process.
         self.parameters        = []
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Computational method']  = self.method
+        d['Calibrated channels']   = replist(self.calibrated  , 'name')
+        d['Uncalibrated channels'] = replist(self.uncalibrated, 'name')
+        d['Coefficients']          = replist(self.coefficients, 'name')
+        d['Measurements']          = replist(self.measurements, 'name')
+        d['Parameters']            = replist(self.parameters  , 'name')
+
+        describe_dict(buf, d, width, indent, exclude)

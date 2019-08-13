@@ -125,3 +125,25 @@ class Computation(BasicObject):
 
         shape = validshape(values, self.dimension, samplecount=len(self.zones))
         return sampling(values, shape)
+
+    def describe_attr(self, buf, width, indent, exclude):
+        describe_description(buf, self.long_name, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Sample dimensions']   = self.dimension
+        d['Axis labels']         = self.axis
+        d['Zones']               = self.zones
+        d['Property indicators'] = self.properties
+        d['Source object']       = self.source
+        describe_dict(buf, d, width, indent, exclude)
+
+        describe_sampled_attrs(
+                buf,
+                self.attic,
+                self.dimension,
+                'VALUES',
+                None,
+                width,
+                indent,
+                exclude
+        )

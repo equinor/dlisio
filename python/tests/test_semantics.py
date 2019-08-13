@@ -70,6 +70,8 @@ def test_file_header(f):
     assert fh.sequencenr == "8"
     assert fh.id         == "some logical file"
 
+    _ = fh.describe(indent='   ', width=70, exclude='e')
+
 def test_origin(f):
     key = fingerprint('ORIGIN', 'DEFINING_ORIGIN', 10, 0)
     def_origin = f.objects[key]
@@ -104,6 +106,8 @@ def test_origin(f):
     assert random_origin.file_set_nr == 1042
     assert random_origin.file_nr     == 6
 
+    _ = random_origin.describe(indent='   ', width=70, exclude='e')
+
 def test_axis(f):
     key = fingerprint('AXIS', 'AXIS2', 10, 0)
     axis = f.objects[key]
@@ -111,6 +115,8 @@ def test_axis(f):
     assert axis.axis_id     == 'AX2'
     assert axis.coordinates == ['very near', 'not so far']
     assert axis.spacing     == 'a bit'
+
+    _ = axis.describe(indent='   ', width=70, exclude='e')
 
 def test_longname(f):
     key = fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
@@ -131,6 +137,8 @@ def test_longname(f):
     assert ln.conditions      == ['at standard temperature']
     assert ln.standard_symbol == 'SYM'
     assert ln.private_symbol  == 'BOL'
+
+    _ = ln.describe(indent='   ', width=70, exclude='e')
 
 def test_channel(f):
     key = fingerprint('TOOL', 'TOOL1', 10, 0)
@@ -164,6 +172,8 @@ def test_channel(f):
     assert channel.element_limit          == [11, 15, 10]
     assert channel.attic["ELEMENT-LIMIT"] == [10, 15, 11]
     assert channel.source                 == tool
+
+    _ = channel.describe(indent='   ', width=70, exclude='e')
 
 def test_channel_fdata(f):
     key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
@@ -268,6 +278,8 @@ def test_zone(f):
     assert zone.maximum     == 13398
     assert zone.minimum     == 8603
 
+    _ = zone.describe(indent='   ', width=70, exclude='e')
+
 def test_parameter(f):
     key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
     p = f.objects[key]
@@ -307,6 +319,8 @@ def test_parameter(f):
     value = p.values[0]
     assert np.array_equal(value, np.array([101, 120]))
 
+    _ = p.describe(indent='   ', width=70, exclude='e')
+
 def test_equipment(f):
     key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
     e = f.objects[key]
@@ -327,6 +341,8 @@ def test_equipment(f):
     assert e.vertical_depth == 103
     assert e.radial_drift   == 130
     assert e.angular_drift  == 41
+
+    _ = e.describe(indent='   ', width=70, exclude='e')
 
 def test_tool(f):
     key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
@@ -353,6 +369,8 @@ def test_tool(f):
     assert tool.channels                == [channel1, channel2]
     assert tool.parameters              == [param1, None, param2]
     assert len(tool.refs["parameters"]) == 3
+
+    _ = tool.describe(indent='   ', width=70, exclude='e')
 
 def test_measurement(f):
     key = fingerprint('TOOL', 'TOOL1', 10, 0)
@@ -392,6 +410,8 @@ def test_measurement(f):
     assert np.array_equal(m.plus_tolerance  , plus)
     assert np.array_equal(m.minus_tolerance , minus)
 
+    _ = m.describe(indent='   ', width=70, exclude='e')
+
 def test_coefficient(f):
     key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
     c = f.objects[key]
@@ -401,6 +421,8 @@ def test_coefficient(f):
     assert c.references      == [18, 32]
     assert c.plus_tolerance  == [1, 1]
     assert c.minus_tolerance == [2, 1]
+
+    _ = c.describe(indent='   ', width=70, exclude='e')
 
 def test_calibration(f):
     key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
@@ -439,6 +461,8 @@ def test_calibration(f):
     assert c.parameters   == [param1, param2, param3]
     assert c.method       == "USELESS"
 
+    _ = c.describe(indent='   ', width=70, exclude='e')
+
 def test_computation(f):
     key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
     com = f.objects[key]
@@ -466,6 +490,7 @@ def test_computation(f):
     values  = np.array([[140, 99], [144, 172], [202, 52], [109, 120]])
     assert np.array_equal(com.values[0], values)
 
+    _ = com.describe(indent='   ', width=70, exclude='e')
 
 def test_splice(f):
     key = fingerprint('SPLICE', 'SPLICE1', 10, 0)
@@ -494,6 +519,7 @@ def test_splice(f):
     assert splice.refs['zones'][1].origin     == 10
     assert splice.refs['zones'][1].copynumber == 0
 
+    _ = splice.describe(indent='   ', width=70, exclude='e')
 
 def test_wellref(f):
     key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
@@ -509,6 +535,7 @@ def test_wellref(f):
     assert wellref.coordinates['latitude']   == 60.75
     assert wellref.coordinates['elevation']  == 0.25
 
+    _ = wellref.describe(indent='   ', width=70, exclude='e')
 
 def test_group(f):
     key = fingerprint('GROUP', 'GROUP1', 10, 0)
@@ -551,6 +578,7 @@ def test_group(f):
     assert g3.groups      == [g1, g2]
     assert g3.objecttype  == 'IGNORE-ME-PLZ'
 
+    _ = g3.describe(indent='   ', width=70, exclude='e')
 
 def test_process(f):
     key = fingerprint('PROCESS', 'PROC1', 10, 0)
@@ -588,6 +616,8 @@ def test_process(f):
     assert p1.output_computations == [oc1]
     assert p1.parameters          == [param1, param3]
     assert p1.comments            == ["It was", "nicely", "executed", "??"]
+
+    _ = p1.describe(indent='   ', width=70, exclude='e')
 
 def test_path(f):
     key = fingerprint('PATH', 'PATH1', 10, 0)
@@ -635,6 +665,7 @@ def test_path(f):
     assert p2.angular_drift        == 64
     assert p2.vertical_depth       == -119
 
+    _ = p2.describe(indent='   ', width=70, exclude='e')
 
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
@@ -643,6 +674,8 @@ def test_unknown(f):
     assert unknown.stash["SOME_LIST"]   == ["LIST_V1", "LIST_V2"]
     assert unknown.stash["SOME_VALUE"]  == ["VAL1"]
     assert unknown.stash["SOME_STATUS"] == [1]
+
+    _ = unknown.describe(indent='   ', width=70, exclude='e')
 
 def test_unexpected_attributes(f):
     key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)

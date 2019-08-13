@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 
 class Zone(BasicObject):
@@ -40,3 +43,11 @@ class Zone(BasicObject):
         self.maximum     = None
         #: Earliest time or shallowest point, inclusive
         self.minimum     = None
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Description'] = self.description
+        d['Domain']      = self.domain
+        d['Interval']    = '[{}, {})'.format(self.minimum, self.maximum)
+
+        describe_dict(buf, d, width, indent, exclude)

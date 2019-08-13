@@ -2,7 +2,9 @@ from .. import core
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname, objref
+from .utils import describe_dict
 
+from collections import OrderedDict
 from copy import deepcopy
 
 class Group(BasicObject):
@@ -72,3 +74,11 @@ class Group(BasicObject):
             self.linkage['objects'] = obname(self.objecttype)
 
         super().link(objects)
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Description']  = self.description
+        d['Object list']  = self.objects
+        d['Group list']   = self.groups
+
+        describe_dict(buf, d, width, indent, exclude)

@@ -1,5 +1,9 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, skip
+from .utils import *
+
+from collections import OrderedDict
+
 
 class Wellref(BasicObject):
     """
@@ -81,3 +85,16 @@ class Wellref(BasicObject):
             key = self.attic.get(name.format(i), [custom_label.format(i)])[0]
             val = self.attic.get(value.format(i), [None])[0]
             self.coordinates[key] = val
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Permanent datum']           =  self.permanent_datum
+        d['Vertical zero']             =  self.vertical_zero
+        d['Permanent datum elevation'] =  self.permanent_datum_elevation
+        d['Above permanent datum']     =  self.above_permanent_datum
+        d['Magnetic declination']      =  self.magnetic_declination
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        describe_header(buf, 'Coordinates', width, indent, lvl=2)
+        describe_dict(buf, self.coordinates, width, indent, exclude)

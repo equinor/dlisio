@@ -1,6 +1,9 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname
+from .utils import describe_dict, replist
+
+from collections import OrderedDict
 
 
 class Splice(BasicObject):
@@ -66,3 +69,11 @@ class Splice(BasicObject):
         self.output_channel  = None
         self.input_channels  = []
         self.zones           = []
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Zones'] = replist(self.zones, 'name')
+        d['Output Channel'] = replist(self.output_channel, 'name')
+        d['Input Channels'] = replist(self.input_channels, 'name')
+
+        describe_dict(buf, d, width, indent, exclude)
