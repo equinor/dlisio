@@ -1,4 +1,5 @@
 import pytest
+import logging
 
 import dlisio
 

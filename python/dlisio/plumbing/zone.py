@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 
 class Zone(BasicObject):
@@ -27,7 +30,6 @@ class Zone(BasicObject):
         'MINIMUM'    : scalar('minimum')
     }
 
-    labelfmt = '{:s}.{:d}.{:d}'
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'ZONE')
@@ -42,6 +44,10 @@ class Zone(BasicObject):
         #: Earliest time or shallowest point, inclusive
         self.minimum     = None
 
-        #: Instance-specific label for duplicated mnemonics.
-        #: Defaults to Zone.labelfmt
-        self.labelfmt = self.labelfmt
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Description'] = self.description
+        d['Domain']      = self.domain
+        d['Interval']    = '[{}, {})'.format(self.minimum, self.maximum)
+
+        describe_dict(buf, d, width, indent, exclude)

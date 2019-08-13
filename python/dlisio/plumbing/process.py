@@ -1,7 +1,9 @@
-
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname
+from .utils import *
+
+from collections import OrderedDict
 
 
 class Process(BasicObject):
@@ -11,13 +13,14 @@ class Process(BasicObject):
 
     Attributes
     ----------
+
     description : str
 
     trademark_name  : str
         Trademark name refers to the process and its products.
 
     version : str
-        Version attribute is the producer software version of the process.
+        Software version.
 
     properties : list of str
         Properties that applies to the output of the process, as a result of
@@ -51,7 +54,7 @@ class Process(BasicObject):
     -----
 
     The Process object reflects the logical record type Process, defined in
-    rp66. SPLICE records are listed in Appendix A.2 - Logical Record Types and
+    rp66. PROCESS records are listed in Appendix A.2 - Logical Record Types and
     described in detail in Chapter 5.8.5 - Static and Frame Data, Process
     objects.
     """
@@ -80,7 +83,7 @@ class Process(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'PROCESS')
-        self.desccription        = None
+        self.description         = None
         self.trademark_name      = None
         self.version             = None
         self.properties          = []
@@ -91,3 +94,25 @@ class Process(BasicObject):
         self.output_computations = []
         self.parameters          = []
         self.comments            = []
+
+    def describe_attr(self, buf, width, indent, exclude):
+        describe_description(buf, self.description, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Trademark name'] = self.trademark_name
+        d['Status']         = self.status
+        d['Version']        = self.version
+        d['Comments']       = self.comments
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Properties']  = self.properties
+        d['Parameters']  = replist(self.parameters, 'name')
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Input Channels']      = replist(self.input_channels, 'name')
+        d['Output Channels']     = replist(self.output_channels, 'name')
+        d['Input Computations']  = replist(self.input_computations, 'name')
+        d['Output computations'] = replist(self.output_computations, 'name')
+        describe_dict(buf, d, width, indent, exclude)

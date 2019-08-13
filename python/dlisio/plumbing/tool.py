@@ -1,6 +1,9 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector, boolean
 from .linkage import obname
+from .utils import *
+
+from collections import OrderedDict
 
 class Tool(BasicObject):
     """
@@ -60,3 +63,23 @@ class Tool(BasicObject):
 
         #: Parameter that directly affect or reflect the operation of the tool
         self.parameters      = []
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Description']    = self.description
+        d['Trademark name'] = self.trademark_name
+        d['Generic name']   = self.generic_name
+        d['Status']         = self.status
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        channels = replist(self.channels, 'name')
+        parameters = replist(self.parameters, 'name')
+        parts = replist(self.parts, 'name')
+
+        d = OrderedDict()
+        d['Channels']   = channels
+        d['Parameters'] = parameters
+        d['Parts']      = parts
+
+        describe_dict(buf, d, width, indent, exclude)

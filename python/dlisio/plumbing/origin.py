@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
+from .utils import describe_dict
+
+from collections import OrderedDict
 
 class Origin(BasicObject):
     """ Describes the creation of the logical file.
@@ -121,3 +124,34 @@ class Origin(BasicObject):
 
         #: The version of the namespace.
         self.namespace_version = None
+
+    def describe_attr(self, buf, width, indent, exclude):
+        fileset  = '{} / {}'.format(self.file_set_name, self.file_set_nr)
+        fileinfo = '{} / {}'.format(self.file_nr, self.file_type)
+        d = OrderedDict()
+        d['Logical file ID']          = self.file_id
+        d['File set name and number'] = fileset
+        d['File number and type']     = fileinfo
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        well     = '{} / {}'.format(self.well_id, self.well_name)
+        producer = '{} / {}'.format(self.producer_code, self.producer_name)
+        d = OrderedDict()
+        d['Field']                   = self.field_name
+        d['Well (id/name)']          = well
+        d['Produced by (code/name)'] = producer
+        d['Produced for']            = self.company
+        d['Order number']            = self.order_nr
+        d['Run number']              = self.run_nr
+        d['Descent number']          = self.descent_nr
+        d['Created']                 = self.creation_time
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        prog = '{}, (version: {})'.format(self.product, self.version)
+        d = OrderedDict()
+        d['Created by'] = prog
+        d['Other programs/services'] = self.programs
+
+        describe_dict(buf, d, width, indent, exclude)

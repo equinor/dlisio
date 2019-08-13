@@ -342,7 +342,7 @@ def test_parameter(DWL206):
     assert param.axis       == []
     assert param.zones      == []
 
-    assert list(param.values['RAW'])    == ['DOWNLOG_ONLY']
+    assert param.values[0] == 'DOWNLOG_ONLY'
     assert len(list(DWL206.parameters)) == 226
 
 
@@ -360,12 +360,15 @@ def test_measurement(DWL206):
     assert m.begin_time      == datetime(2011, 8, 20, 18, 13, 38)
     assert m.duration        == 30
     assert m.standard        == []
-    assert list(m.samples)         == [2.640824317932129]
-    assert list(m.max_deviation)   == [11.421565055847168]
-    assert list(m.std_deviation)   == [3.4623820781707764]
-    assert list(m.reference)       == [0.0]
-    assert list(m.plus_tolerance)  == []
-    assert list(m.minus_tolerance) == []
+
+    assert np.array_equal(m.samples , np.array([2.640824317932129]))
+
+    assert m.max_deviation   == 11.421565055847168
+    assert m.std_deviation   == 3.4623820781707764
+    assert m.reference       == 0.0
+
+    assert np.array_equal(m.plus_tolerance , np.empty(0))
+    assert np.array_equal(m.minus_tolerance, np.empty(0))
 
     assert len(list(DWL206.measurements)) == 6
 

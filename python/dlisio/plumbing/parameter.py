@@ -1,9 +1,12 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse
+from .valuetypes import scalar, vector, reverse, skip
 from .linkage import obname
-from .utils import sampling, zonify
+from .utils import *
 
+import logging
 import numpy as np
+from collections import OrderedDict
+
 
 class Parameter(BasicObject):
     """Parameter
@@ -11,8 +14,11 @@ class Parameter(BasicObject):
     A parameter object describes a parameter used in the acquisition and
     processing of data.  The parameter value(s) may be scalars or an array. In
     the later case, the structure of the array is defined in the dimension
-    attribute. The zone attribute specifies which zone(s) the parameter is
-    defined. If there are no zone(s) the parameter is defined everywhere.
+    attribute. The zones attribute specifies which zones the parameter is
+    defined. If there are no zones the parameter is defined everywhere.
+
+    The axis attribute, if present, defines axis labels for multidimensional
+    value(s).
 
     See also
     --------
@@ -32,6 +38,7 @@ class Parameter(BasicObject):
         'DIMENSION' : reverse('dimension'),
         'AXIS'      : reverse('axis'),
         'ZONES'     : vector('zones'),
+        'VALUES'    : skip(),
     }
 
     linkage = {
@@ -56,53 +63,74 @@ class Parameter(BasicObject):
 
     @property
     def values(self):
-        """ Parameter values uses a dict interface
+        """ Parameter values
 
         Parameter value(s) may be scalar or array's. The size/dimensionallity
-        of each value is defined in the dimensions attribute. The values are
-        only defined in certain zones. If no zones are defined, the value is
-        said to be unzoned, i.e. it is defined everywere.
+        of each value is defined in the dimensions attribute.
+
+        Each value may or may not be zoned, i.e. it is only defined in a
+        certain zone. If this is the case the first zone, parameter.zones[0],
+        will correspond to the first value, parameter.values[0] and so on.  If
+        there is no zones, there should only be one value, which is said to be
+        unzoned, i.e. it is defined everywere.
+
+        Raises
+        ------
+
+        ValueError
+            Unable to structure the values based on the information available.
 
         Returns
         -------
 
-        values : dict
-            indexed by Zone
+        values : structured np.ndarray
 
         Notes
         -----
 
-        If there is no values or DLISIO is unable to structure the samples due
-        to insufficient or contradictory information in the object, the
-        unstructured array is return as is and can be accessed under the label
-        *RAW*. Note that in this case the standard deem the meaning of the
-        values to be undefined.
-
-        If Zones are missing, DLISIO uses defaulted zonelabels.
+        If dlisio is unable to structure the values due to insufficient or
+        contradictory information in the object, an ValueError is raised.  The
+        raw array can still be accessed through attic, but note that in this
+        case, the semantic meaning of the array is undefined.
 
         Examples
         --------
 
-        Values from a spesific zone:
+        First value:
 
-        >>> parameter.values['ZONE-C']
+        >>> parameter.values[0]
         [10, 20, 30]
 
-        Values from each zone:
+        Zone (if any) where that parameter value is valid:
 
-        >>>  zone, value in parameter.values.items():
-        ...     print(zone, value)
-        'ZONE-A' [120, 130, 140]
-        'ZONE-B' [160, 170, 180]
+        >>> parameter.zones[0]
+        Zone('ZONE-A')
         """
         try:
-            data = self.attic['VALUES']
+            values = self.attic['VALUES']
         except KeyError:
-            return {'RAW' : np.empty(0)}
+            return np.empty(0)
 
-        try:
-            sampled = sampling(data, self.dimension, count=len(self.zones))
-        except ValueError:
-            return {'RAW' : np.array(data)}
+        shape = validshape(values, self.dimension, samplecount=len(self.zones))
+        return sampling(values, shape)
 
-        return zonify(self.zones, sampled)
+    def describe_attr(self, buf, width, indent, exclude):
+        describe_description(buf, self.long_name, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Sample dimensions'] = self.dimension
+        d['Axis labels']       = self.axis
+        d['Zones']             = self.zones
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        describe_sampled_attrs(
+                buf,
+                self.attic,
+                self.dimension,
+                'VALUES',
+                None,
+                width,
+                indent,
+                exclude
+        )

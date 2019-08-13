@@ -1,5 +1,8 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
+from .utils import *
+
+from collections import OrderedDict
 
 class Coefficient(BasicObject):
     """
@@ -46,3 +49,27 @@ class Coefficient(BasicObject):
         #: Maximum value that a sample can fall below the reference and still
         #: be "within tolerance"
         self.minus_tolerance = []
+
+    def describe_attr(self, buf, width, indent, exclude):
+        d = OrderedDict()
+        d['Coefficient type']   = self.label
+        d['Number of value(s)'] = len(self.coefficients)
+
+        describe_dict(buf, d, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Reference value(s)'] =  'REFERENCES'
+        d['Minus Tolerance(s)'] =  'PLUS-TOLERANCES'
+        d['Plus Tolerance(s)']  =  'MINUS-TOLERANCES'
+
+        describe_sampled_attrs(
+                buf,
+                self.attic,
+                [1],
+                'COEFFICIENTS',
+                d,
+                width,
+                indent,
+                exclude,
+                single=False
+        )

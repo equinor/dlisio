@@ -1,5 +1,6 @@
 from .. import core
 from .valuetypes import *
+from .utils import *
 
 import logging
 
@@ -126,17 +127,8 @@ class BasicObject():
             pass
 
     def __repr__(self):
-        return "dlisio.{}(id={}, origin={}, copynumber={})".format(
-                self.type,
-                self.name,
-                self.origin,
-                self.copynumber)
-
-    def __str__(self):
-        s  = "dlisio.{}:\n".format(self.type)
-        for key, value in self.__dict__.items():
-            s += "\t{}: {}\n".format(key, value)
-        return s
+        """Return a string representation of the object"""
+        return '{}({})'.format(self.type.capitalize(), self.name)
 
     @property
     def fingerprint(self):
@@ -280,3 +272,82 @@ class BasicObject():
                 setattr(self, attr, val)
 
         self.stripspaces()
+
+    def describe(self, width=80, indent='', exclude='er'):
+        """Printable summary of the object
+
+        Parameters
+        ----------
+
+        width : int
+            the maximum width of each line.
+
+        indent : str
+            string that will be prepended to each line.
+
+        exclude : str
+            exclude certain parts of the object in the summary.
+
+        Returns
+        -------
+
+        summary : Summary
+            A printable summary of the object
+
+        Notes
+        -----
+
+        The exclude parameter gives the option to ommit parts of the summary.
+        The table below states the different modes available.
+
+        ====== ==========================================
+        option Description
+        ====== ==========================================
+        'h'    header
+        'a'    known attributes
+        's'    attributes from stash                  [1]
+        'i'    attributes that violates the standard  [2]
+        'e'    attributes with empty values (default) [3]
+        'r'    attributes from refs (default)         [4]
+        ====== ==========================================
+
+        [1] Stash contains attributes that are unknown to dlisio
+        [2] Only applicable to attributes that should be interpreted in a
+        specific way, such as Parameter.values. If not applicable, it is
+        ignored.
+        [3] Do not print attributes that have no value.
+        [4] refs is a dict of attributes that contains references to other
+        objects. If found, dlisio populates attributes with the objects
+        corresponding to the references. The original reference, as represented
+        on disk, can be accessed through the refs attribute.
+        """
+        from io import StringIO
+
+        buf = StringIO()
+        exclude = parseoptions(exclude)
+
+        if not exclude['head']:
+            describe_header(buf, self.type.capitalize(), width, indent)
+            describe_dict(buf, headerinfo(self), width, indent, exclude)
+
+        if not exclude['attr']:
+            self.describe_attr(buf, indent=indent, width=width, exclude=exclude)
+
+        if not exclude['stash']:
+            if len(self.stash) > 0:
+                describe_header(buf, 'Unknown attributes', width, indent, lvl=2)
+                describe_dict(buf, self.stash, width, indent, exclude)
+
+        if not exclude['refs']:
+            if len(self.refs) > 0:
+                describe_header(buf, 'References', width, indent, lvl=2)
+                describe_dict(buf, self.refs, width, indent, exclude)
+
+        return Summary(info=buf.getvalue())
+
+    def describe_attr(self, buf, width, indent, exclude):
+        """Describe the attributes of the object.
+
+        This method is intended to be called internally from describe()
+        """
+        pass

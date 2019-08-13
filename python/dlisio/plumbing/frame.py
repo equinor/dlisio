@@ -1,8 +1,8 @@
 from .basicobject import BasicObject
-from ..reprc import fmt
 from ..dlisutils import curves
 from .valuetypes import scalar, vector, boolean
 from .linkage import obname
+from .utils import *
 
 import numpy as np
 import logging
@@ -301,3 +301,28 @@ class Frame(BasicObject):
             except AttributeError:
                 #happens if ch has been parsed as other type
                 pass
+
+    def describe_attr(self, buf, width=80, indent='', exclude=''):
+        if len(self.channels) > 0:
+            if self.index_type is not None:
+                d = OrderedDict()
+                d['Description']      =  self.description
+                d['Indexed by']       =  self.index_type
+                d['Interval']         =  str([self.index_min, self.index_max])
+                d['Direction']        =  self.direction
+                d['Constant spacing'] =  self.spacing
+                d['Index channel']    =  self.channels[0]
+
+                describe_header(buf, 'Channel indexing', width, indent, lvl=2)
+                describe_dict(buf, d, width, indent, exclude)
+
+            else:
+                index  = 'There is no index channel, channels are indexed '
+                index += 'by samplenumber, i.e [1,2,3,..,n]'
+                describe_text(buf, index, indent=indent, width=width)
+
+            describe_header(buf, 'Channels', width, indent, lvl=2)
+            channels = replist(self.channels, 'name')
+            describe_array(buf, channels, width, indent)
+        else:
+            describe_text(buf, 'Frame has no channels', width, indent)
