@@ -83,7 +83,7 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
 
         case DLIS_NOTFOUND: {
             const auto msg = "searched {} bytes, but could not find "
-                             "visbile record envelope pattern [0xFF 0x01]"
+                             "visible record envelope pattern [0xFF 0x01]"
             ;
             throw dl::not_found(fmt::format(msg, search_limit));
         }

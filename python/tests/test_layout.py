@@ -78,6 +78,16 @@ def test_load_pre_vrl_garbage():
         assert f.storage_label() == f.storage_label()
         assert f.sul_offset == 12
 
+def test_old_vrs():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/old-vr.dlis')
+    assert "could not find visible record" in str(excinfo.value)
+
+def test_broken_vr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/incomplete-vr.dlis')
+    assert "file may be corrupted" in str(excinfo.value)
+
 def test_load_small_file():
     # <4K files infinite loop bug check
     with dlisio.load('data/layout/small.dlis'):
