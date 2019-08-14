@@ -80,7 +80,7 @@ def test_load_pre_vrl_garbage():
 
 def test_load_small_file():
     # <4K files infinite loop bug check
-    with dlisio.load('data/layout/example-record.dlis'):
+    with dlisio.load('data/layout/small.dlis'):
         pass
 
 def test_load_7K_file_with_several_LR():
@@ -135,3 +135,20 @@ def test_load_fdata_many_in_same_VR():
         ident = '3'*255
         fingerprint = 'T.FRAME-I.'+ident+'-O.1073741823-C.255'
         assert f.fdata_index[fingerprint] == [3]
+
+def test_3lrs_in_lr_in_vr():
+    with dlisio.load('data/layout/example-record.dlis'):
+        pass
+
+def test_2_lr_in_vr():
+    with dlisio.load('data/layout/2lr-in-vr.dlis'):
+        pass
+
+def test_lr_in_2vrs():
+    with dlisio.load('data/layout/lr-in-2vrs.dlis'):
+        pass
+
+def test_vrl_and_lrsh_mismatch():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/wrong-lrhs.dlis')
+    assert "visible record/segment inconsistency" in str(excinfo.value)
