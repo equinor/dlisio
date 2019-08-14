@@ -133,6 +133,15 @@ def test_padbytes_as_large_as_segment():
     finally:
         f.close()
 
+def test_bad_padbytes():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/padbytes-bad.dlis')
+    assert "bad segment trim" in str(excinfo.value)
+
+def test_padbytes_encrypted():
+    with dlisio.load('data/layout/padbytes-encrypted.dlis'):
+        pass
+
 def test_load_fdata_VR_aligned():
     with dlisio.load('data/layout/fdata-vr-aligned.dlis') as (f, *_):
         assert len(f.fdata_index) == 1
