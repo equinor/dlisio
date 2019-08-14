@@ -63,6 +63,16 @@ def test_load_pre_sul_garbage():
         assert f.storage_label() == f.storage_label()
         assert f.sul_offset == 12
 
+def test_notdlis():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/nondlis.txt')
+    assert "could not find storage label" in str(excinfo.value)
+
+def test_broken_sul():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/layout/incomplete-sul.dlis')
+    assert "file may be corrupted" in str(excinfo.value)
+
 def test_load_pre_vrl_garbage():
     with dlisio.load('data/layout/pre-sul-pre-vrl-garbage.dlis') as (f,):
         assert f.storage_label() == f.storage_label()
