@@ -395,6 +395,7 @@ using value_vector = mpark::variant<
  */
 struct object_attribute {
     dl::ident           label = {};
+     // cppcheck-suppress constStatement
     dl::uvari           count = dl::uvari{ 1 };
     representation_code reprc = representation_code::ident;
     dl::units           units = {};
