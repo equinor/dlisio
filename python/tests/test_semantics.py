@@ -372,6 +372,20 @@ def test_tool(f):
 
     _ = tool.describe(indent='   ', width=70, exclude='e')
 
+def test_message(f):
+    key = fingerprint('MESSAGE', 'MESSAGE1', 10, 0)
+    mes = f.objects[key]
+
+    assert mes.message_type   == 'SYSTEM'
+    assert mes.time           == datetime(1990, 4, 20, 12, 58, 59, 1)
+    assert mes.borehole_drift == 65282
+    assert mes.vertical_depth == 120
+    assert mes.radial_drift   == 65093
+    assert mes.angular_drift  == 344
+    assert mes.text           == ['System says hi!']
+
+    _ = mes.describe(indent='   ', width=70, exclude='e')
+
 def test_measurement(f):
     key = fingerprint('TOOL', 'TOOL1', 10, 0)
     tool = f.objects[key]
@@ -666,6 +680,15 @@ def test_path(f):
     assert p2.vertical_depth       == -119
 
     _ = p2.describe(indent='   ', width=70, exclude='e')
+
+def test_comment(f):
+    key = fingerprint('COMMENT', 'COMMENT1', 10, 0)
+    com = f.objects[key]
+
+    assert com.text == ['Trust me, this is a very nice comment',
+                        "What, you don't believe me?", ':-(']
+
+    _ = com.describe(indent='   ', width=70, exclude='e')
 
 def test_unknown(f):
     key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)

@@ -9,8 +9,10 @@ from .tool import Tool
 from .zone import Zone
 from .parameter import Parameter
 from .calibration import Calibration
+from .comment import Comment
 from .equipment import Equipment
 from .measurement import Measurement
+from .message import Message
 from .computation import Computation
 from .coefficient import Coefficient
 from .splice import Splice

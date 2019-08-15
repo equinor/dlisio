@@ -34,7 +34,8 @@ class dlis(object):
         'GROUP'                  : plumbing.Group.create,
         'PROCESS'                : plumbing.Process.create,
         'PATH'                   : plumbing.Path.create,
-
+        'MESSAGE'                : plumbing.Message.create,
+        'COMMENT'                : plumbing.Comment.create,
     }
 
     """dict: Parsing guide for native dlis object-types. Maps the native dlis
@@ -499,6 +500,28 @@ class dlis(object):
         calibrations : dict_values
         """
         return self.indexedobjects['CALIBRATION'].values()
+
+    @property
+    def comments(self):
+        """ Read all Comment objects
+
+        Returns
+        -------
+        comment : dict_values
+
+        """
+        return self.indexedobjects['COMMENT'].values()
+
+    @property
+    def messages(self):
+        """ Read all Message objects
+
+        Returns
+        -------
+        meassage : dict_values
+
+        """
+        return self.indexedobjects['MESSAGE'].values()
 
     @property
     def unknowns(self):
