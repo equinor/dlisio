@@ -83,7 +83,7 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
 
         case DLIS_NOTFOUND: {
             const auto msg = "searched {} bytes, but could not find "
-                             "visbile record envelope pattern [0xFF 0x01]"
+                             "visible record envelope pattern [0xFF 0x01]"
             ;
             throw dl::not_found(fmt::format(msg, search_limit));
         }
@@ -449,9 +449,9 @@ findfdata(mio::mmap_source& file,
 noexcept (false) {
 
     const auto* ptr = file.data();
+    const auto* end = file.data() + file.size();
     std::vector< std::pair< std::string, int > > xs;
 
-    char fingerprint[280] = {};
     char name[256] = {};
 
     for (auto i : candidates) {
@@ -467,11 +467,17 @@ noexcept (false) {
         std::int32_t origin;
         std::uint8_t copy;
         std::int32_t idlen;
-        dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
-        std::memset(fingerprint, 0, sizeof(fingerprint));
-        dlis_object_fingerprint(5, "FRAME", idlen, name, origin, copy, fingerprint);
+        auto cur = dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
+        if (std::distance( cur, end ) < 0)
+        {
+            auto msg = "File corrupted. Error on reading fdata obname";
+            throw std::runtime_error(msg);
+        }
 
-        xs.emplace_back(std::string(fingerprint), i);
+        dl::obname tmp{ dl::origin{ origin },
+                        dl::ushort{ copy },
+                        dl::ident{ std::string{ name, name + idlen } } };
+        xs.emplace_back(tmp.fingerprint("FRAME"), i);
     }
 
     return xs;
