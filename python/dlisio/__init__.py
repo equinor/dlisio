@@ -294,6 +294,60 @@ class dlis(object):
         self.problematic = problematic
         return self
 
+    def object(self, type, name, origin=None, copynr=None):
+        """
+        Direct access to a single object.
+        dlis-objects are uniquely identifiable by the combination of
+        type, name, origin and copynumber of the object. However, in most cases
+        type and name is sufficient to identify a specific object.
+        If origin and/or copynr is omitted in the function call, and there are
+        multiple objects matching the type and name, a ValueError is raised.
+
+        Parameters
+        ----------
+        type: str
+            type as specified in RP66
+        name: str
+            name
+        origin: number, optional
+            number specifying which origin object the current object belongs to
+        copynr: number, optional
+            number specifying the copynumber of current object
+
+        Returns
+        -------
+        obj: searched object
+
+        Examples
+        --------
+
+        >>> ch = f.object("CHANNEL", "MKAP", 2, 0)
+        >>> print(ch.name)
+        MKAP
+
+        """
+        if origin is None or copynr is None:
+            obj = list(self.match('^'+name+'$', type))
+            if len(obj) == 1:
+                return obj[0]
+            elif len(obj) == 0:
+                msg = "No objects with name {} and type {} are found"
+                raise ValueError(msg.format(name, type))
+            elif len(obj) > 1:
+                msg = "There are multiple {}s named {}. Found: {}"
+                desc = ""
+                for o in obj:
+                    desc += ("(origin={}, copy={}), "
+                             .format(o.origin, o.copynumber))
+                raise ValueError(msg.format(type, name, desc))
+        else:
+            fingerprint = core.fingerprint(type, name, origin, copynr)
+            try:
+                return self.indexedobjects[type][fingerprint]
+            except KeyError:
+                msg = "Object {}.{}.{} of type {} is not found"
+                raise ValueError(msg.format(name, origin, copynr, type))
+
     @property
     def fileheader(self):
         """ Read all Fileheader objects
