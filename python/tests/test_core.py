@@ -4,8 +4,6 @@ from datetime import datetime
 
 import dlisio
 
-from . import DWL206
-
 # The example record from the specification
 stdrecord = bytearray([
     # The eflr function assumes unsegmented record

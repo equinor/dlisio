@@ -8,8 +8,6 @@ from dlisio.plumbing.coefficient import Coefficient
 
 import dlisio
 
-from . import merge_files, assert_log
-
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
     path = str(tmpdir_factory.mktemp('semantic').join('semantic.dlis'))

@@ -4,8 +4,6 @@ import pytest
 import dlisio
 from dlisio.plumbing import linkage
 
-from . import DWL206, assert_log
-
 def test_frame_getitem(DWL206):
     key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
     frame = DWL206.objects[key]

@@ -4,7 +4,6 @@ from datetime import datetime
 
 import dlisio
 from dlisio.plumbing import *
-from . import assert_log
 from io import StringIO
 
 def test_sampling_scalar_dims():

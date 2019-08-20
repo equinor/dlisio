@@ -1,6 +1,5 @@
 import dlisio
 import pytest
-from . import DWL206
 
 def test_sul(DWL206):
     label = ''.join([

@@ -4,7 +4,6 @@ import os
 
 import dlisio
 from dlisio.core import reprc
-from . import merge_files
 
 @pytest.fixture
 def merge(merge_files):

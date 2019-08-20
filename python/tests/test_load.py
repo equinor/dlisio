@@ -2,8 +2,6 @@ import pytest
 
 import dlisio
 
-from . import merge_files, assert_log
-
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
     path = str(tmpdir_factory.mktemp('load').join('manylogfiles.dlis'))
