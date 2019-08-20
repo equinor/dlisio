@@ -49,3 +49,52 @@ def assert_log(caplog):
     def assert_message(message_id):
         assert any([message_id in r.message for r in caplog.records])
     return assert_message
+
+@pytest.fixture(scope="module")
+def fpath(tmpdir_factory, merge_files):
+    path = str(tmpdir_factory.mktemp('semantic').join('semantic.dlis'))
+    content = [
+        'data/semantic/envelope.dlis.part',
+        'data/semantic/file-header.dlis.part',
+        'data/semantic/origin.dlis.part',
+        'data/semantic/well-reference-point.dlis.part',
+        'data/semantic/axis.dlis.part',
+        'data/semantic/long-name-record.dlis.part',
+        'data/semantic/channel.dlis.part',
+        'data/semantic/frame.dlis.part',
+        'data/semantic/fdata-frame1-1.dlis.part',
+        'data/semantic/fdata-frame1-2.dlis.part',
+        'data/semantic/fdata-frame1-3.dlis.part',
+        'data/semantic/path.dlis.part',
+        'data/semantic/zone.dlis.part',
+        'data/semantic/parameter.dlis.part',
+        'data/semantic/equipment.dlis.part',
+        'data/semantic/tool.dlis.part',
+        'data/semantic/process.dlis.part',
+        'data/semantic/computation.dlis.part',
+        'data/semantic/measurement.dlis.part',
+        'data/semantic/coefficient.dlis.part',
+        'data/semantic/coefficient-wrong.dlis.part',
+        'data/semantic/calibration.dlis.part',
+        'data/semantic/group.dlis.part',
+        'data/semantic/splice.dlis.part',
+        'data/semantic/message.dlis.part',
+        'data/semantic/comment.dlis.part',
+        'data/semantic/update.dlis.part',
+        'data/semantic/unknown.dlis.part',
+        'data/semantic/channel-reprcode.dlis.part',
+        'data/semantic/frame-reprcode.dlis.part',
+        'data/semantic/fdata-reprcode.dlis.part',
+        'data/semantic/file-header2.dlis.part',
+        'data/semantic/origin2.dlis.part',
+        'data/semantic/channel-dimension.dlis.part',
+        'data/semantic/frame-dimension.dlis.part',
+        'data/semantic/fdata-dimension.dlis.part',
+    ]
+    merge_files(path, content)
+    return path
+
+@pytest.fixture(scope="module")
+def f(fpath):
+    with dlisio.load(fpath) as (f, *_):
+        yield f
