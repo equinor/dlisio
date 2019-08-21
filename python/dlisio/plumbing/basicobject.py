@@ -172,6 +172,12 @@ class BasicObject():
 
         Iterate through values in refs and link objects based on
         provided linkage
+
+        Parameters
+        ----------
+        objects : dict(fingerprint -> object).
+                  Usually is provided by dlis.objects property
+
         """
 
         linkage = self.linkage

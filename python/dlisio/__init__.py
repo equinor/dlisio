@@ -89,7 +89,6 @@ class dlis(object):
         self.sul_offset = sul_offset
         self.fdata_index = implicits
 
-        self.objects = {}
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
 
@@ -288,7 +287,6 @@ class dlis(object):
         for obj in objects.values():
             obj.link(objects)
 
-        self.objects = objects
         self.indexedobjects = indexedobjects
         self.problematic = problematic
         return self
@@ -346,6 +344,24 @@ class dlis(object):
             except KeyError:
                 msg = "Object {}.{}.{} of type {} is not found"
                 raise ValueError(msg.format(name, origin, copynr, type))
+
+    @property
+    def objects(self):
+        """Gathers and returns all the objects present in the file.
+
+        Returns
+        -------
+        dict : fingerprint (internal) -> object
+
+        Hint
+        ----
+        Use direct object access (object) or access to the objects by type
+        (f.channels, f.frames) where possible
+        """
+        objects = {}
+        for v in self.indexedobjects.values():
+            objects.update(v)
+        return objects
 
     @property
     def fileheader(self):
