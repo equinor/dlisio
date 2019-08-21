@@ -75,10 +75,8 @@ def test_partitioning(fpath):
 
 def test_objects(fpath):
     with dlisio.load(fpath) as (f1, f2, f3):
-        key = dlisio.core.fingerprint('FILE-HEADER', 'N', 10, 0)
-        fh2 = f2.objects[key]
-        key = dlisio.core.fingerprint('FILE-HEADER', 'N', 11, 0)
-        fh3 = f3.objects[key]
+        fh2 = f2.object('FILE-HEADER', 'N', 10, 0)
+        fh3 = f3.object('FILE-HEADER', 'N', 11, 0)
 
         assert len(f1.fileheader) == 0
         assert len(f1.origin)     == 2
@@ -115,21 +113,17 @@ def test_objects_with_encrypted_records(tmpdir_factory, merge_files):
     merge_files(fpath, content)
 
     with dlisio.load(fpath) as (f1, f2):
-        key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-        f1_channel = f1.objects[key]
-        f2_channel = f2.objects[key]
+        f1_channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
+        f2_channel = f2.object('CHANNEL', 'CHANN1', 10, 0)
 
         assert len(f1_channel.dimension) == 3
         assert len(f2_channel.dimension) == 1
 
 def test_link(fpath):
     with dlisio.load(fpath) as (f1, f2, _):
-        key = dlisio.core.fingerprint('FRAME', 'FRAME1', 10, 0)
-        frame1 = f1.objects[key]
-        frame2 = f2.objects[key]
-
-        key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-        channel = f1.objects[key]
+        frame1  = f1.object('FRAME', 'FRAME1', 10, 0)
+        frame2  = f2.object('FRAME', 'FRAME1', 10, 0)
+        channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
 
         # The same frame is present in two different logical files. The
         # channels in frame.channel are only present in the first
@@ -139,8 +133,7 @@ def test_link(fpath):
 
 def test_curves(fpath):
     with dlisio.load(fpath) as (_, f2, _):
-        key = dlisio.core.fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
-        frame = f2.objects[key]
+        frame = f2.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
 
         # Read the first value of the first frame of channel CH01

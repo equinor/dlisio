@@ -5,8 +5,7 @@ import dlisio
 from dlisio.plumbing import linkage
 
 def test_frame_getitem(DWL206):
-    key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame = DWL206.objects[key]
+    frame = DWL206.object('FRAME', '2000T', 2, 0)
     curves = frame.curves()
 
     expected = [16677259.0, 852606.0, 2233.0, 852606.0]

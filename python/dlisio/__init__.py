@@ -1,7 +1,6 @@
 from collections import defaultdict, OrderedDict
 from io import StringIO
 import logging
-import numpy as np
 import re
 
 from . import core

@@ -1,6 +1,5 @@
 import pytest
 
-from dlisio.core import fingerprint
 from dlisio.plumbing import valuetypes, linkage
 from dlisio.plumbing.coefficient import Coefficient
 
@@ -20,8 +19,7 @@ def test_dynamic_class(f):
             self.value = None
             self.status = None
 
-    key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
-    unknown = f.objects[key]
+    unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
     with pytest.raises(AttributeError):
         assert unknown.value == "VAL1"
 
@@ -29,8 +27,7 @@ def test_dynamic_class(f):
         f.types['UNKNOWN_SET'] = ActuallyKnown
         f.load()
 
-        key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
-        unknown = f.objects[key]
+        unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
 
         assert unknown.list == ["LIST_V1", "LIST_V2"]
         assert unknown.value == "VAL1"
@@ -45,14 +42,9 @@ def test_change_object_type(f):
         dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Channel
         f.load()
 
-        key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
-        longname = f.objects[key]
-
-        key = dlisio.core.fingerprint('AXIS', 'AXIS1', 10, 0)
-        axis = f.objects[key]
-
-        key = dlisio.core.fingerprint('CHANNEL', 'PARAM1', 10, 0)
-        obj = f.objects[key]
+        longname = f.object('LONG-NAME', 'PARAM1-LONG', 10, 0)
+        axis     = f.object('AXIS', 'AXIS1', 10, 0)
+        obj      = f.object('CHANNEL', 'PARAM1', 10, 0)
 
         # obj should have been parsed as a Channel
         assert isinstance(obj, dlisio.plumbing.Channel)
@@ -78,8 +70,7 @@ def test_remove_object_type(f):
         del dlisio.dlis.types['CHANNEL']
         f.load()
 
-        key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-        obj = f.objects[key]
+        obj = f.object('CHANNEL', 'CHANN1', 10, 0)
 
         # Channel should be parsed as Unknown, but the type should still
         # reflects what's on file
@@ -93,15 +84,14 @@ def test_remove_object_type(f):
         f.types['CHANNEL'] = dlisio.plumbing.Channel
 
     f.load()
-    obj = f.objects[key]
+    obj = f.object('CHANNEL', 'CHANN1', 10, 0)
 
     # Channels should now be parsed as Channel.allobjects
     assert isinstance(obj, dlisio.plumbing.Channel)
     assert obj not in f.unknowns
 
 def test_dynamic_instance_attribute(f):
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-    c = f.objects[key]
+    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
     # update attributes only for one object
     c.attributes = dict(c.attributes)
     c.attributes['MY_PARAM'] = valuetypes.vector('myparams')
@@ -110,8 +100,7 @@ def test_dynamic_instance_attribute(f):
     assert c.myparams == ["wrong", "W"]
 
     # check that other object of the same type is not affected
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
-    c = f.objects[key]
+    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
 
     with pytest.raises(KeyError):
         _ = c.attributes['myparams']
@@ -121,8 +110,7 @@ def test_dynamic_class_attribute(f):
         # update attribute for the class
         Coefficient.attributes['MY_PARAM'] = valuetypes.vector('myparams')
 
-        key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-        c = f.objects[key]
+        c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
 
         assert c.attributes['MY_PARAM'] == valuetypes.vector('myparams')
         c.load()
@@ -133,8 +121,7 @@ def test_dynamic_class_attribute(f):
         del c.__class__.attributes['MY_PARAM']
 
 def test_dynamic_linkage(f, assert_log):
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-    c = f.objects[key]
+    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
 
     c.attributes = dict(c.attributes)
     c.attributes['LINKS_TO_PARAMETERS'] = valuetypes.vector('paramlinks')
@@ -157,10 +144,8 @@ def test_dynamic_linkage(f, assert_log):
 
     c.link(f.objects)
 
-    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
-    param2 = f.objects[key]
-    key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
-    u = f.objects[key]
+    param2 = f.object('PARAMETER', 'PARAM2', 10, 0)
+    u      = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
 
     assert c.label        == "SMTH"
     assert c.paramlinks   == [param2, None]
@@ -170,17 +155,14 @@ def test_dynamic_linkage(f, assert_log):
 
 def test_dynamic_change_through_instance(f):
     try:
-        key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
-        c = f.objects[key]
+        c = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
         c.attributes['MY_PARAM']            = valuetypes.vector('myparams')
         c.attributes['LINKS_TO_PARAMETERS'] = (
                     valuetypes.vector('paramlinks'))
         c.linkage['paramlinks']             = linkage.obname("PARAMETER")
 
-        key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
-        param2 = f.objects[key]
-        key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-        c = f.objects[key]
+        param2 = f.object('PARAMETER', 'PARAM2', 10, 0)
+        c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c.load()
         c.link(f.objects)
 

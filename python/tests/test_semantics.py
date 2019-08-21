@@ -2,12 +2,10 @@ import pytest
 from datetime import datetime
 import numpy as np
 
-from dlisio.core import fingerprint
 import dlisio
 
 def test_file_header(f):
-    key = fingerprint('FILE-HEADER', 'N', 10, 0)
-    fh = f.objects[key]
+    fh = f.object('FILE-HEADER', 'N', 10, 0)
     assert fh.type       == "FILE-HEADER"
     assert fh.name       == "N"
     assert fh.origin     == 10
@@ -19,8 +17,7 @@ def test_file_header(f):
     _ = fh.describe(indent='   ', width=70, exclude='e')
 
 def test_origin(f):
-    key = fingerprint('ORIGIN', 'DEFINING_ORIGIN', 10, 0)
-    def_origin = f.objects[key]
+    def_origin = f.object('ORIGIN', 'DEFINING_ORIGIN', 10, 0)
     assert def_origin.type              == "ORIGIN"
     assert def_origin.origin            == 10
     assert def_origin.file_id           == "some logical file"
@@ -45,8 +42,7 @@ def test_origin(f):
     assert def_origin.namespace_name    == "DIC1"
     assert def_origin.namespace_version == 6
 
-    key = fingerprint('ORIGIN', 'RANDOM', 127, 0)
-    random_origin = f.objects[key]
+    random_origin = f.object('ORIGIN', 'RANDOM', 127, 0)
     assert random_origin.origin      == 127
     assert random_origin.file_id     == "some other logical file"
     assert random_origin.file_set_nr == 1042
@@ -55,8 +51,7 @@ def test_origin(f):
     _ = random_origin.describe(indent='   ', width=70, exclude='e')
 
 def test_axis(f):
-    key = fingerprint('AXIS', 'AXIS2', 10, 0)
-    axis = f.objects[key]
+    axis = f.object('AXIS', 'AXIS2', 10, 0)
 
     assert axis.axis_id     == 'AX2'
     assert axis.coordinates == ['very near', 'not so far']
@@ -65,8 +60,7 @@ def test_axis(f):
     _ = axis.describe(indent='   ', width=70, exclude='e')
 
 def test_longname(f):
-    key = fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
-    ln  = f.objects[key]
+    ln  = f.object('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
 
     assert ln.modifier        == ['channel 1 long name']
     assert ln.quantity        == 'color'
@@ -87,23 +81,12 @@ def test_longname(f):
     _ = ln.describe(indent='   ', width=70, exclude='e')
 
 def test_channel(f):
-    key = fingerprint('TOOL', 'TOOL1', 10, 0)
-    tool = f.objects[key]
-
-    key = fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
-    longname = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    channel = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS1', 10, 0)
-    axis1 = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS2', 10, 0)
-    axis2 = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS3', 10, 0)
-    axis3 = f.objects[key]
+    tool     = f.object('TOOL', 'TOOL1', 10, 0)
+    longname = f.object('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+    channel  = f.object('CHANNEL', 'CHANN1', 10, 0)
+    axis1    = f.object('AXIS', 'AXIS1', 10, 0)
+    axis2    = f.object('AXIS', 'AXIS2', 10, 0)
+    axis3    = f.object('AXIS', 'AXIS3', 10, 0)
 
     assert channel.long_name              == longname
     assert channel.properties             == ["AVERAGED", "DERIVED", "PATCHED"]
@@ -122,28 +105,22 @@ def test_channel(f):
     _ = channel.describe(indent='   ', width=70, exclude='e')
 
 def test_channel_fdata(f):
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    channel = f.objects[key]
+    channel = f.object('CHANNEL', 'CHANN1', 10, 0)
     curves = channel.curves()
 
     assert list(curves[0][0][0]) == [1, 2]
     assert list(curves[1][1][1]) == [521, 522]
     assert list(curves[2][2][2]) == [1041, 1042]
 
-    key = fingerprint('FRAME', 'FRAME1', 10, 0)
-    frame = f.objects[key]
+    frame = f.object('FRAME', 'FRAME1', 10, 0)
     ch1_curves = frame.curves()["CHANN1"]
 
     assert np.array_equal(curves, ch1_curves)
 
 def test_frame(f):
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    channel1 = f.objects[key]
-    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    channel2 = f.objects[key]
-
-    key = fingerprint('FRAME', 'FRAME1', 10, 0)
-    frame1 = f.objects[key]
+    channel1 = f.object('CHANNEL', 'CHANN1', 10, 0)
+    channel2 = f.object('CHANNEL', 'CHANN2', 10, 0)
+    frame1   = f.object('FRAME', 'FRAME1', 10, 0)
 
     assert frame1.description == "Main frame"
     assert frame1.channels    == [channel1, channel2]
@@ -154,8 +131,7 @@ def test_frame(f):
     assert frame1.index_min   == 1
     assert frame1.index_max   == 100
 
-    key = fingerprint('FRAME', 'FRAME2', 10, 0)
-    frame2 = f.objects[key]
+    frame2 = f.object('FRAME', 'FRAME2', 10, 0)
 
     #for second frame many attributes are absent
     assert frame2.description == "Secondary frame"
@@ -168,8 +144,7 @@ def test_frame(f):
     assert frame2.index_max   == None
 
 def test_fdata_reprcode(f):
-    key = fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
-    frame = f.objects[key]
+    frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
     curves = frame.curves()
 
     assert list(curves[0][0])     == [153, -1]
@@ -196,8 +171,7 @@ def test_fdata_reprcode(f):
 
 def test_fdata_dimension(fpath):
     with dlisio.load(fpath) as (_, g):
-        key = fingerprint('FRAME', 'FRAME-DIMENSION', 11, 0)
-        frame = g.objects[key]
+        frame = g.object('FRAME', 'FRAME-DIMENSION', 11, 0)
         curves = frame.curves()
 
         assert list(curves[0][0][0])    == [1, 2, 3]
@@ -216,8 +190,7 @@ def test_fdata_dimension(fpath):
         assert list(curves[0][6])       == [1, 2, 3, 4]
 
 def test_zone(f):
-    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
-    zone = f.objects[key]
+    zone = f.object('ZONE', 'ZONE-A', 10, 0)
 
     assert zone.description == 'Some along zone'
     assert zone.domain      == 'VERTICAL-DEPTH'
@@ -227,17 +200,11 @@ def test_zone(f):
     _ = zone.describe(indent='   ', width=70, exclude='e')
 
 def test_parameter(f):
-    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
-    p = f.objects[key]
-
-    key = fingerprint('LONG-NAME', 'PARAM3-LONG', 10, 0)
-    longname = f.objects[key]
-    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
-    zoneA = f.objects[key]
-    key = fingerprint('AXIS', 'AXIS2', 10, 0)
-    axis2 = f.objects[key]
-    key = fingerprint('AXIS', 'AXIS3', 10, 0)
-    axis3 = f.objects[key]
+    p        = f.object('PARAMETER', 'PARAM3', 10, 0)
+    longname = f.object('LONG-NAME', 'PARAM3-LONG', 10, 0)
+    zoneA    = f.object('ZONE', 'ZONE-A', 10, 0)
+    axis2    = f.object('AXIS', 'AXIS2', 10, 0)
+    axis3    = f.object('AXIS', 'AXIS3', 10, 0)
 
     assert p.long_name           == longname
     assert p.dimension           == [2, 3]
@@ -255,10 +222,8 @@ def test_parameter(f):
     assert p.values[2][0][1] == 14
     assert p.values[3][1][2] == 24
 
-    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
-    p = f.objects[key]
-    key = fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
-    longname = f.objects[key]
+    p = f.object('PARAMETER', 'PARAM1', 10, 0)
+    longname = f.object('LONG-NAME', 'PARAM1-LONG', 10, 0)
 
     assert p.long_name == longname
 
@@ -268,8 +233,7 @@ def test_parameter(f):
     _ = p.describe(indent='   ', width=70, exclude='e')
 
 def test_equipment(f):
-    key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
-    e = f.objects[key]
+    e = f.object('EQUIPMENT', 'EQUIP1', 10, 0)
     assert e.trademark_name == "some equipment"
     assert e.status         == True
     assert e.generic_type   == "Pad"
@@ -291,21 +255,12 @@ def test_equipment(f):
     _ = e.describe(indent='   ', width=70, exclude='e')
 
 def test_tool(f):
-    key = fingerprint('EQUIPMENT', 'EQUIP1', 10, 0)
-    e = f.objects[key]
-
-    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
-    param1 = f.objects[key]
-    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
-    param2 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    channel1 = f.objects[key]
-    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    channel2 = f.objects[key]
-
-    key = fingerprint('TOOL', 'TOOL1', 10, 0)
-    tool = f.objects[key]
+    e        = f.object('EQUIPMENT', 'EQUIP1', 10, 0)
+    param1   = f.object('PARAMETER', 'PARAM1', 10, 0)
+    param2   = f.object('PARAMETER', 'PARAM2', 10, 0)
+    channel1 = f.object('CHANNEL', 'CHANN1', 10, 0)
+    channel2 = f.object('CHANNEL', 'CHANN2', 10, 0)
+    tool     = f.object('TOOL', 'TOOL1', 10, 0)
 
     assert tool.description             == "description of tool 1"
     assert tool.trademark_name          == "TOOL123"
@@ -319,8 +274,7 @@ def test_tool(f):
     _ = tool.describe(indent='   ', width=70, exclude='e')
 
 def test_message(f):
-    key = fingerprint('MESSAGE', 'MESSAGE1', 10, 0)
-    mes = f.objects[key]
+    mes = f.object('MESSAGE', 'MESSAGE1', 10, 0)
 
     assert mes.message_type   == 'SYSTEM'
     assert mes.time           == datetime(1990, 4, 20, 12, 58, 59, 1)
@@ -333,17 +287,10 @@ def test_message(f):
     _ = mes.describe(indent='   ', width=70, exclude='e')
 
 def test_measurement(f):
-    key = fingerprint('TOOL', 'TOOL1', 10, 0)
-    tool = f.objects[key]
-
-    key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
-    m = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS1', 10, 0)
-    axis1 = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS2', 10, 0)
-    axis2 = f.objects[key]
+    tool  = f.object('TOOL', 'TOOL1', 10, 0)
+    m     = f.object('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
+    axis1 = f.object('AXIS', 'AXIS1', 10, 0)
+    axis2 = f.object('AXIS', 'AXIS2', 10, 0)
 
     assert m.phase              == "MASTER"
     assert m.source             == tool
@@ -373,8 +320,7 @@ def test_measurement(f):
     _ = m.describe(indent='   ', width=70, exclude='e')
 
 def test_coefficient(f):
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
-    c = f.objects[key]
+    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
 
     assert c.label           == "GAIN"
     assert c.coefficients    == [18, 25]
@@ -385,34 +331,18 @@ def test_coefficient(f):
     _ = c.describe(indent='   ', width=70, exclude='e')
 
 def test_calibration(f):
-    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
-    param1 = f.objects[key]
-    key = fingerprint('PARAMETER', 'PARAM2', 10, 0)
-    param2 = f.objects[key]
-    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
-    param3 = f.objects[key]
-
-    key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
-    meas1 = f.objects[key]
-    key = fingerprint('CALIBRATION-MEASUREMENT', 'MEAS2', 10, 0)
-    meas2 = f.objects[key]
-
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
-    coeff1 = f.objects[key]
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF2', 10, 0)
-    coeff2 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    channel1 = f.objects[key]
-    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    channel2 = f.objects[key]
-    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
-    channel3 = f.objects[key]
-    key = fingerprint('CHANNEL', 'CHANN4', 10, 0)
-    channel4 = f.objects[key]
-
-    key = fingerprint('CALIBRATION', 'CALIBR1', 10, 0)
-    c = f.objects[key]
+    param1   = f.object('PARAMETER', 'PARAM1', 10, 0)
+    param2   = f.object('PARAMETER', 'PARAM2', 10, 0)
+    param3   = f.object('PARAMETER', 'PARAM3', 10, 0)
+    meas1    = f.object('CALIBRATION-MEASUREMENT', 'MEAS1', 10, 0)
+    meas2    = f.object('CALIBRATION-MEASUREMENT', 'MEAS2', 10, 0)
+    coeff1   = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+    coeff2   = f.object('CALIBRATION-COEFFICIENT', 'COEFF2', 10, 0)
+    channel1 = f.object('CHANNEL', 'CHANN1', 10, 0)
+    channel2 = f.object('CHANNEL', 'CHANN2', 10, 0)
+    channel3 = f.object('CHANNEL', 'CHANN3', 10, 0)
+    channel4 = f.object('CHANNEL', 'CHANN4', 10, 0)
+    c        = f.object('CALIBRATION', 'CALIBR1', 10, 0)
 
     assert c.calibrated   == [channel1, channel2]
     assert c.uncalibrated == [channel3, channel4]
@@ -424,20 +354,11 @@ def test_calibration(f):
     _ = c.describe(indent='   ', width=70, exclude='e')
 
 def test_computation(f):
-    key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
-    com = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS2', 10, 0)
-    axis2 = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS3', 10, 0)
-    axis3 = f.objects[key]
-
-    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
-    zone = f.objects[key]
-
-    key = fingerprint('PROCESS', 'PROC1', 10, 0)
-    process = f.objects[key]
+    com     = f.object('COMPUTATION', 'COMPUT2', 10, 0)
+    axis2   = f.object('AXIS', 'AXIS2', 10, 0)
+    axis3   = f.object('AXIS', 'AXIS3', 10, 0)
+    zone    = f.object('ZONE', 'ZONE-A', 10, 0)
+    process = f.object('PROCESS', 'PROC1', 10, 0)
 
     assert com.long_name          == 'computation object 2'
     assert com.properties         == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
@@ -453,17 +374,10 @@ def test_computation(f):
     _ = com.describe(indent='   ', width=70, exclude='e')
 
 def test_splice(f):
-    key = fingerprint('SPLICE', 'SPLICE1', 10, 0)
-    splice = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN4', 10, 0)
-    in1 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    in2 = f.objects[key]
-
-    key = fingerprint('ZONE', 'ZONE-A', 10, 0)
-    zone1 = f.objects[key]
+    splice = f.object('SPLICE', 'SPLICE1', 10, 0)
+    in1    = f.object('CHANNEL', 'CHANN4', 10, 0)
+    in2    = f.object('CHANNEL', 'CHANN1', 10, 0)
+    zone1  = f.object('ZONE', 'ZONE-A', 10, 0)
 
     # Output channel does not exist, but should be accessible through refs
     assert splice.output_channel == None
@@ -482,8 +396,7 @@ def test_splice(f):
     _ = splice.describe(indent='   ', width=70, exclude='e')
 
 def test_wellref(f):
-    key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
-    wellref = f.objects[key]
+    wellref = f.object('WELL-REFERENCE', 'THE-WELL', 10, 0)
 
     assert wellref.permanent_datum           == 'Ground Level'
     assert wellref.vertical_zero             == 'Kelly Bushing'
@@ -498,32 +411,15 @@ def test_wellref(f):
     _ = wellref.describe(indent='   ', width=70, exclude='e')
 
 def test_group(f):
-    key = fingerprint('GROUP', 'GROUP1', 10, 0)
-    g1 = f.objects[key]
-
-    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
-    param = f.objects[key]
-
-    key = fingerprint('GROUP', 'GROUP2', 10, 0)
-    g2 = f.objects[key]
-
-    key = fingerprint('GROUP', 'GROUP3', 10, 0)
-    g3 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
-    ch = f.objects[key]
-
-    key = fingerprint('TOOL', 'TOOL1', 10, 0)
-    tool = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS1', 10, 0)
-    ax1 = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS2', 10, 0)
-    ax2 = f.objects[key]
-
-    key = fingerprint('AXIS', 'AXIS3', 10, 0)
-    ax3 = f.objects[key]
+    g1    = f.object('GROUP', 'GROUP1', 10, 0)
+    param = f.object('PARAMETER', 'PARAM3', 10, 0)
+    g2    = f.object('GROUP', 'GROUP2', 10, 0)
+    g3    = f.object('GROUP', 'GROUP3', 10, 0)
+    ch    = f.object('CHANNEL', 'CHANN3', 10, 0)
+    tool  = f.object('TOOL', 'TOOL1', 10, 0)
+    ax1   = f.object('AXIS', 'AXIS1', 10, 0)
+    ax2   = f.object('AXIS', 'AXIS2', 10, 0)
+    ax3   = f.object('AXIS', 'AXIS3', 10, 0)
 
     assert g1.objects     == [ax1, ax3]
     assert g1.description == 'some axis group'
@@ -541,29 +437,14 @@ def test_group(f):
     _ = g3.describe(indent='   ', width=70, exclude='e')
 
 def test_process(f):
-    key = fingerprint('PROCESS', 'PROC1', 10, 0)
-    p1 = f.objects[key]
-
-    key = fingerprint('PARAMETER', 'PARAM1', 10, 0)
-    param1 = f.objects[key]
-
-    key = fingerprint('PARAMETER', 'PARAM3', 10, 0)
-    param3 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    in2 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN3', 10, 0)
-    out1 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    out2 = f.objects[key]
-
-    key = fingerprint('COMPUTATION', 'COMPUT1', 10, 0)
-    ic1 = f.objects[key]
-
-    key = fingerprint('COMPUTATION', 'COMPUT2', 10, 0)
-    oc1 = f.objects[key]
+    p1     = f.object('PROCESS', 'PROC1', 10, 0)
+    param1 = f.object('PARAMETER', 'PARAM1', 10, 0)
+    param3 = f.object('PARAMETER', 'PARAM3', 10, 0)
+    in2    = f.object('CHANNEL', 'CHANN1', 10, 0)
+    out1   = f.object('CHANNEL', 'CHANN3', 10, 0)
+    out2   = f.object('CHANNEL', 'CHANN2', 10, 0)
+    ic1    = f.object('COMPUTATION', 'COMPUT1', 10, 0)
+    oc1    = f.object('COMPUTATION', 'COMPUT2', 10, 0)
 
     assert p1.description         == 'Random process'
     assert p1.trademark_name      == 'Cute process'
@@ -580,26 +461,13 @@ def test_process(f):
     _ = p1.describe(indent='   ', width=70, exclude='e')
 
 def test_path(f):
-    key = fingerprint('PATH', 'PATH1', 10, 0)
-    p1 = f.objects[key]
-
-    key = fingerprint('PATH', 'PATH2', 10, 0)
-    p2 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    in1 = f.objects[key]
-
-    key = fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    in2 = f.objects[key]
-
-    key = fingerprint('FRAME', 'FRAME1', 10, 0)
-    fr1 = f.objects[key]
-
-    key = fingerprint('FRAME', 'FRAME2', 10, 0)
-    fr2 = f.objects[key]
-
-    key = fingerprint('WELL-REFERENCE', 'THE-WELL', 10, 0)
-    wr = f.objects[key]
+    p1  = f.object('PATH', 'PATH1', 10, 0)
+    p2  = f.object('PATH', 'PATH2', 10, 0)
+    in1 = f.object('CHANNEL', 'CHANN1', 10, 0)
+    in2 = f.object('CHANNEL', 'CHANN2', 10, 0)
+    fr1 = f.object('FRAME', 'FRAME1', 10, 0)
+    fr2 = f.object('FRAME', 'FRAME2', 10, 0)
+    wr  = f.object('WELL-REFERENCE', 'THE-WELL', 10, 0)
 
     assert p1.borehole_depth       == 87
     assert p1.value                == [in2, in1]
@@ -628,8 +496,7 @@ def test_path(f):
     _ = p2.describe(indent='   ', width=70, exclude='e')
 
 def test_comment(f):
-    key = fingerprint('COMMENT', 'COMMENT1', 10, 0)
-    com = f.objects[key]
+    com = f.object('COMMENT', 'COMMENT1', 10, 0)
 
     assert com.text == ['Trust me, this is a very nice comment',
                         "What, you don't believe me?", ':-(']
@@ -637,8 +504,7 @@ def test_comment(f):
     _ = com.describe(indent='   ', width=70, exclude='e')
 
 def test_unknown(f):
-    key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
-    unknown = f.objects[key]
+    unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
 
     assert unknown.stash["SOME_LIST"]   == ["LIST_V1", "LIST_V2"]
     assert unknown.stash["SOME_VALUE"]  == ["VAL1"]
@@ -647,8 +513,7 @@ def test_unknown(f):
     _ = unknown.describe(indent='   ', width=70, exclude='e')
 
 def test_unexpected_attributes(f):
-    key = fingerprint('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-    c = f.objects[key]
+    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
 
     assert c.label                           == "SMTH"
     assert c.plus_tolerance                  == [] #count 0
@@ -666,18 +531,10 @@ def test_unexpected_attributes(f):
 
 def test_match(f):
     refs = []
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN3', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN4', 10, 0)
-    refs.append( f.objects[key] )
+    refs.append( f.object('CHANNEL', 'CHANN1', 10, 0) )
+    refs.append( f.object('CHANNEL', 'CHANN2', 10, 0) )
+    refs.append( f.object('CHANNEL', 'CHANN3', 10, 0) )
+    refs.append( f.object('CHANNEL', 'CHANN4', 10, 0) )
 
     channels = f.match('CHAN.*')
 
@@ -688,20 +545,11 @@ def test_match(f):
 def test_match_type(f):
     refs = []
 
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN2', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN3', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('CHANNEL', 'CHANN4', 10, 0)
-    refs.append( f.objects[key] )
-
-    key = dlisio.core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
-    refs.append( f.objects[key] )
+    refs.append( f.object('CHANNEL', 'CHANN1', 10, 0) )
+    refs.append( f.object('CHANNEL', 'CHANN2', 10, 0) )
+    refs.append( f.object('CHANNEL', 'CHANN3', 10, 0) )
+    refs.append( f.object('CHANNEL', 'CHANN4', 10, 0) )
+    refs.append( f.object('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0) )
 
     objs = f.match('CHAN.*', type='CHANNEL|LONG-NAME')
 
