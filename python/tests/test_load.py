@@ -78,22 +78,20 @@ def test_objects(fpath):
         fh2 = f2.object('FILE-HEADER', 'N', 10, 0)
         fh3 = f3.object('FILE-HEADER', 'N', 11, 0)
 
-        assert len(f1.fileheader) == 0
-        assert len(f1.origin)     == 2
+        assert f1.fileheader == None
+        assert len(f1.origins)    == 2
         assert len(f1.channels)   == 4
         assert len(f1.frames)     == 2
 
         assert fh2.sequencenr == '8'
         assert fh2.id         == 'some logical file'
-        assert fh2 not in f3.fileheader
 
-        assert len(f2.origin)   == 1
+        assert len(f2.origins)  == 1
         assert len(f2.channels) == 27
         assert len(f2.frames)   == 3
 
         assert fh3.sequencenr == '10'
         assert fh3.id         == 'Yet another logical file'
-        assert fh3 not in f2.fileheader
 
 def test_objects_with_encrypted_records(tmpdir_factory, merge_files):
     fpath = str(tmpdir_factory.mktemp('load').join('same-object.dlis'))

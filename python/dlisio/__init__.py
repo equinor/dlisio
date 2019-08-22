@@ -82,6 +82,7 @@ class dlis(object):
     plumbing.BasicObject.attributes : attributes
     plumbing.BasicObject.linkage    : linkage
     """
+
     def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
@@ -311,6 +312,65 @@ class dlis(object):
         self.problematic = problematic
         return self
 
+    class IndexedObjectDescriptor:
+        """ Read all objects of corresponding type
+        """
+        def __init__(self, t):
+            self.t = t
+
+        def __get__(self, instance, owner):
+            return instance.indexedobjects[self.t].values()
+
+    @property
+    def fileheader(self):
+        """ Read Fileheader object
+
+        Returns
+        -------
+        fileheader : Fileheader
+
+        """
+        values = list(self.indexedobjects['FILE-HEADER'].values())
+
+        if len(values) != 1:
+            msg = "Expected exactly one fileheader. Was: {}"
+            logging.warning(msg.format(values))
+            if len(values) == 0:
+                return None
+        else:
+            return values[0]
+
+    origins      = IndexedObjectDescriptor("ORIGIN")
+    axes         = IndexedObjectDescriptor("AXIS")
+    longnames    = IndexedObjectDescriptor("LONG-NAME")
+    channels     = IndexedObjectDescriptor("CHANNEL")
+    frames       = IndexedObjectDescriptor("FRAME")
+    zones        = IndexedObjectDescriptor("ZONE")
+    tools        = IndexedObjectDescriptor("TOOL")
+    parameters   = IndexedObjectDescriptor("PARAMETER")
+    processes    = IndexedObjectDescriptor("PROCESS")
+    groups       = IndexedObjectDescriptor("GROUP")
+    wellrefs     = IndexedObjectDescriptor("WELL-REFERENCE")
+    splices      = IndexedObjectDescriptor("SPLICE")
+    paths        = IndexedObjectDescriptor("PATH")
+    equipments   = IndexedObjectDescriptor("EQUIPMENT")
+    computations = IndexedObjectDescriptor("COMPUTATION")
+    measurements = IndexedObjectDescriptor("CALIBRATION-MEASUREMENT")
+    coefficients = IndexedObjectDescriptor("CALIBRATION-COEFFICIENT")
+    calibrations = IndexedObjectDescriptor("CALIBRATION")
+    comments     = IndexedObjectDescriptor("COMMENT")
+    messages     = IndexedObjectDescriptor("MESSAGE")
+
+    @property
+    def unknowns(self):
+        """ Read all objects not parsed to known type
+        """
+        return (obj
+            for typename, object_set in self.indexedobjects.items()
+            for obj in object_set.values()
+            if typename not in self.types
+        )
+
     def object(self, type, name, origin=None, copynr=None):
         """
         Direct access to a single object.
@@ -382,239 +442,6 @@ class dlis(object):
         for v in self.indexedobjects.values():
             objects.update(v)
         return objects
-
-    @property
-    def fileheader(self):
-        """ Read all Fileheader objects
-
-        Returns
-        -------
-        fileheader : dict_values
-
-        """
-        return self.indexedobjects['FILE-HEADER'].values()
-
-    @property
-    def origin(self):
-        """ Read all Origin objects
-
-        Returns
-        -------
-        origin : dict_values
-        """
-        return self.indexedobjects['ORIGIN'].values()
-
-    @property
-    def axes(self):
-        """ Read all Axis objects
-
-        Returns
-        -------
-        axes: dict_values
-        """
-        return self.indexedobjects['AXIS'].values()
-
-    @property
-    def longnames(self):
-        """ Read all Longname objects
-
-        Returns
-        -------
-        long-name : dict_values
-        """
-        return self.indexedobjects['LONG-NAME'].values()
-
-    @property
-    def channels(self):
-        """ Read all channel objects
-
-        Returns
-        -------
-        channel : dict_values
-
-        Examples
-        --------
-        Print all Channel names
-
-        >>> for channel in f.channels:
-        ...     print(channel.name)
-        """
-        return self.indexedobjects['CHANNEL'].values()
-
-    @property
-    def frames(self):
-        """ Read all Frame objects
-
-        Returns
-        -------
-        frames: dict_values
-        """
-        return self.indexedobjects['FRAME'].values()
-
-    @property
-    def tools(self):
-        """ Read all Tool objects
-
-        Returns
-        -------
-        tools: dict_values
-        """
-        return self.indexedobjects['TOOL'].values()
-
-    @property
-    def zones(self):
-        """ Read all Zone objects
-
-        Returns
-        -------
-        zones: dict_values
-        """
-        return self.indexedobjects['ZONE'].values()
-
-    @property
-    def parameters(self):
-        """ Read all Parameter objects
-
-        Returns
-        -------
-        parameters: dict_values
-        """
-        return self.indexedobjects['PARAMETER'].values()
-
-    @property
-    def process(self):
-        """ Read all Process objects
-
-        Returns
-        -------
-
-        processes : dict_values
-        """
-        return self.indexedobjects['PROCESS'].values()
-
-    @property
-    def group(self):
-        """ Read all Group objects
-
-        Returns
-        -------
-
-        groups : dict_values
-        """
-        return self.indexedobjects['GROUP'].values()
-
-    @property
-    def wellref(self):
-        """ Read all Wellref objects
-
-        Returns
-        -------
-
-        wellrefs : dict_values
-        """
-        return self.indexedobjects['WELL-REFERENCE'].values()
-
-    @property
-    def splice(self):
-        """ Read all Splice objects
-
-        Returns
-        -------
-
-        splice : dict_values
-        """
-        return self.indexedobjects['SPLICE'].values()
-
-    @property
-    def path(self):
-        """ Read all Path objects
-
-        Returns
-        -------
-
-        path : dict_values
-        """
-        return self.indexedobjects['PATH'].values()
-
-    @property
-    def equipments(self):
-        """ Read all Equipment objects
-
-        Returns
-        -------
-        equipments : dict_values
-        """
-        return self.indexedobjects['EQUIPMENT'].values()
-
-    @property
-    def computations(self):
-        """ Read all computation objects
-
-        Returns
-        -------
-        computations : dict_values
-        """
-        return self.indexedobjects['COMPUTATION'].values()
-
-    @property
-    def measurements(self):
-        """ Read all Measurement objects
-
-        Returns
-        -------
-        measurement : dict_values
-        """
-        return self.indexedobjects['CALIBRATION-MEASUREMENT'].values()
-
-    @property
-    def coefficients(self):
-        """ Read all Coefficient objects
-
-        Returns
-        -------
-        coefficient : dict_values
-        """
-        return self.indexedobjects['CALIBRATION-COEFFICIENT'].values()
-
-    @property
-    def calibrations(self):
-        """ Read all Calibration objects
-
-        Returns
-        -------
-        calibrations : dict_values
-        """
-        return self.indexedobjects['CALIBRATION'].values()
-
-    @property
-    def comments(self):
-        """ Read all Comment objects
-
-        Returns
-        -------
-        comment : dict_values
-
-        """
-        return self.indexedobjects['COMMENT'].values()
-
-    @property
-    def messages(self):
-        """ Read all Message objects
-
-        Returns
-        -------
-        meassage : dict_values
-
-        """
-        return self.indexedobjects['MESSAGE'].values()
-
-    @property
-    def unknowns(self):
-        return (obj
-            for typename, object_set in self.indexedobjects.items()
-            for obj in object_set.values()
-            if typename not in self.types
-        )
 
 def open(path):
     """ Open a file

@@ -7,7 +7,7 @@ File Handle
 ===========
 .. autoclass:: dlisio.dlis()
     :members:
-    :exclude-members: types
+    :exclude-members: types, IndexedObjectDescriptor
     :member-order: bysource
     :undoc-members:
 

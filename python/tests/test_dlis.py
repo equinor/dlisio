@@ -162,3 +162,26 @@ def test_match_special_characters(g):
     for ch in channels:
         assert ch in refs
 
+def test_indexedobjects(f):
+    assert f.fileheader.name   == "N"
+    assert len(f.origins)      == 2
+    assert len(f.axes)         == 3
+    assert len(f.longnames)    == 4
+    assert len(f.channels)     == 31
+    assert len(f.frames)       == 3
+    assert len(f.zones)        == 1
+    assert len(f.tools)        == 1
+    assert len(f.parameters)   == 3
+    assert len(f.processes)    == 2
+    assert len(f.groups)       == 3
+    assert len(f.wellrefs)     == 1
+    assert len(f.splices)      == 1
+    assert len(f.paths)        == 2
+    assert len(f.equipments)   == 1
+    assert len(f.computations) == 3
+    assert len(f.measurements) == 2
+    assert len(f.coefficients) == 3
+    assert len(f.calibrations) == 1
+    assert len(f.comments)     == 1
+    assert len(f.messages)     == 1
+
