@@ -144,7 +144,11 @@ class dlis(object):
         blob = self.file.get(bytearray(80), self.sul_offset, 80)
         return core.storage_label(blob)
 
-    def raw_objectsets(self, reload = False):
+    def raw_objectsets(self):
+        """
+        Parses attic and returns objects. If attic is empty, will extract
+        data from disk
+        """
         if self.attic is None:
             self.attic = self.file.extract(self.explicit_indices)
 
