@@ -26,7 +26,7 @@ def test_dynamic_class(f):
         assert unknown.value == "VAL1"
 
     try:
-        f.types['UNKNOWN_SET'] = ActuallyKnown.create
+        f.types['UNKNOWN_SET'] = ActuallyKnown
         f.load()
 
         key = fingerprint('UNKNOWN_SET', 'OBJ1', 10, 0)
@@ -42,7 +42,7 @@ def test_dynamic_class(f):
 def test_change_object_type(f):
     try:
         # Parse all parameters as if they where Channels
-        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Channel.create
+        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Channel
         f.load()
 
         key = dlisio.core.fingerprint('LONG-NAME', 'PARAM1-LONG', 10, 0)
@@ -70,7 +70,7 @@ def test_change_object_type(f):
     finally:
         # even if the test fails, make sure that types is reset to its default,
         # to not interfere with other tests
-        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Parameter.create
+        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Parameter
 
 def test_remove_object_type(f):
     try:
@@ -90,7 +90,7 @@ def test_remove_object_type(f):
     finally:
         # even if the test fails, make sure that types is reset to its default,
         # to not interfere with other tests
-        f.types['CHANNEL'] = dlisio.plumbing.Channel.create
+        f.types['CHANNEL'] = dlisio.plumbing.Channel
 
     f.load()
     obj = f.objects[key]

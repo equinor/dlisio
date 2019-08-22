@@ -15,31 +15,31 @@ except pkg_resources.DistributionNotFound:
 
 class dlis(object):
     types = {
-        'AXIS'                   : plumbing.Axis.create,
-        'FILE-HEADER'            : plumbing.Fileheader.create,
-        'ORIGIN'                 : plumbing.Origin.create,
-        'LONG-NAME'              : plumbing.Longname.create,
-        'FRAME'                  : plumbing.Frame.create,
-        'CHANNEL'                : plumbing.Channel.create,
-        'ZONE'                   : plumbing.Zone.create,
-        'TOOL'                   : plumbing.Tool.create,
-        'PARAMETER'              : plumbing.Parameter.create,
-        'EQUIPMENT'              : plumbing.Equipment.create,
-        'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
-        'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
-        'CALIBRATION'            : plumbing.Calibration.create,
-        'COMPUTATION'            : plumbing.Computation.create,
-        'SPLICE'                 : plumbing.Splice.create,
-        'WELL-REFERENCE'         : plumbing.Wellref.create,
-        'GROUP'                  : plumbing.Group.create,
-        'PROCESS'                : plumbing.Process.create,
-        'PATH'                   : plumbing.Path.create,
-        'MESSAGE'                : plumbing.Message.create,
-        'COMMENT'                : plumbing.Comment.create,
+        'AXIS'                   : plumbing.Axis,
+        'FILE-HEADER'            : plumbing.Fileheader,
+        'ORIGIN'                 : plumbing.Origin,
+        'LONG-NAME'              : plumbing.Longname,
+        'FRAME'                  : plumbing.Frame,
+        'CHANNEL'                : plumbing.Channel,
+        'ZONE'                   : plumbing.Zone,
+        'TOOL'                   : plumbing.Tool,
+        'PARAMETER'              : plumbing.Parameter,
+        'EQUIPMENT'              : plumbing.Equipment,
+        'CALIBRATION-MEASUREMENT': plumbing.Measurement,
+        'CALIBRATION-COEFFICIENT': plumbing.Coefficient,
+        'CALIBRATION'            : plumbing.Calibration,
+        'COMPUTATION'            : plumbing.Computation,
+        'SPLICE'                 : plumbing.Splice,
+        'WELL-REFERENCE'         : plumbing.Wellref,
+        'GROUP'                  : plumbing.Group,
+        'PROCESS'                : plumbing.Process,
+        'PATH'                   : plumbing.Path,
+        'MESSAGE'                : plumbing.Message,
+        'COMMENT'                : plumbing.Comment,
     }
 
     """dict: Parsing guide for native dlis object-types. Maps the native dlis
-    object-type to python object-constructors. E.g. all dlis objects with type
+    object-type to python class. E.g. all dlis objects with type
     AXIS will be constructed into Axis objects. It is possible to both remove
     and add new object-types before loading or reloading a file. New objects
     will behave the same way as the defaulted object-types.
@@ -56,24 +56,20 @@ class dlis(object):
     >>> from dlisio.plumbing.valuetypes import scalar, vector
     >>> from dlisio.plumbing.linkage import obname
     >>> class Channel440(BasicObject):
-    ... attributes = {
+    ...   attributes = {
     ...     'LONG-NAME' : scalar('longname'),
     ...     'SAMPLES'   : vector('samples')
-    ... }
-    ... linkage= { 'longname' : obname('LONG-NAME') }
-    ... def __init__(self, obj = None, name = None):
+    ...   }
+    ...   linkage= { 'longname' : obname('LONG-NAME') }
+    ...   def __init__(self, obj = None, name = None):
     ...     super().__init_(obj, name = name, type = '440-CHANNEL')
     ...     self.longname = None
     ...     self.samples  = []
 
     Add the new object-type and load the file
 
-    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440.create
+    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440
     >>> f = dlisio.load('filename')
-
-    Access all objects off type 440-CHANNEL
-
-    >>> channels440 = f.types['440-CHANNEL']
 
     Remove object-type CHANNEL. CHANNEL objects will no longer
     have a specialized parsing routine and will be parsed as Unknown objects
@@ -271,7 +267,7 @@ class dlis(object):
             # TODO: handle replacement sets
             for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type](o, name = name, file = self)
+                    obj = self.types[os.type].create(o, name = name, file = self)
                 except KeyError:
                     obj = plumbing.Unknown.create(o, name = name, type = os.type)
 
