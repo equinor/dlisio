@@ -15,6 +15,37 @@ class Channel(BasicObject):
     against e.g. depth or time. Each sample can be a scalar or a n-dimentional
     array.
 
+    Attributes
+    ----------
+
+    long_name : str or Longname
+        Descriptive name of the channel.
+
+    reprc : int
+        Representation code
+
+    units : str
+        Physical units of each element in the channel's sample arrays
+
+    properties : list(str)
+        Property indicators that summerizes the characteristics of the
+        channel and the processing that have produced it.
+
+    dimension : list(int)
+        Dimensions of the samples
+
+    axis : list(Axis)
+        Coordinate axes of the samples
+
+    element_limit : list(int)
+        The maximum size of the sample dimensions
+
+    source
+        The source of the channel. Returns the source object, if any
+
+    frame : Frame
+        Frame to which channel belongs to
+
     See also
     --------
 
@@ -47,38 +78,19 @@ class Channel(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'CHANNEL')
-        #: Descriptive name of the channel.
         self.long_name     = None
-
-        #: Representation code
         self.reprc         = None
-
-        #: Physical units of each element in the channel's sample arrays
         self.units         = None
-
-        #: Property indicators that summerizes the characteristics of the
-        #: channel and the processing that have produced it.
         self.properties    = []
-
-        #: Dimensions of the samples
         self.dimension     = []
-
-        #: Coordinate axes of the samples
         self.axis          = []
-
-        #: The maximum size of the sample dimensions
         self.element_limit = []
-
-        #: The source of the channel. Returns the source object, if any
         self.source        = None
 
-        #: The numpy data type of the sample array
+        # The numpy data type of the sample array
         self._dtype        = None
-
-        #: Format-string of the channel. Mainly indended for internal use
+        # Format-string of the channel. Mainly indended for internal use
         self._fmtstr       = None
-
-        #: Frame to which channel belongs to
         self.frame        = None
 
     @property

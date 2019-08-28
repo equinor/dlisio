@@ -16,9 +16,7 @@ class Message(BasicObject):
         source and purpose of the message.
 
     time
-        time the message was issued. Either an absolute time represented by
-        datetime or elapsed time from file-creation (see
-        :py:attr:`~dlisio.plumbing.origin.creation_time`).
+        time the message was issued. |crtime|
 
     borehole_drift
         borehole drift of the tool zero point when message was issued.
@@ -32,7 +30,7 @@ class Message(BasicObject):
     angular_drift
         angular drift of the tool zero point when message was issued.
 
-    text : list of str
+    text : list(str)
         message(s).
 
     See also

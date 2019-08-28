@@ -21,7 +21,7 @@ class Path(BasicObject):
     well_reference_point : Wellref
         Well Reference Point
 
-    value : list of Channel
+    value : list(Channel)
         Value Channel for the current Path.
 
     borehole_depth
@@ -29,8 +29,40 @@ class Path(BasicObject):
         current Path, It may or may not be described by a channel object.
 
     vertical_depth
-        Specifies the constant vertical depth coordinate for the
+        Specifies the constant Vertical Depth coordinate for the
         current Path, It may or may not be described by a channel object.
+
+    radial_drift
+        Specifies the constant Radial Drift coordinate for the
+        current Path, It may or may not be described by a channel object.
+
+    angular_drift
+        Specifies the constant Angular Drift coordinate for the
+        current Path, It may or may not be described by a channel object.
+
+    time
+        Specifies the constant Time coordinate for the
+        current Path, It may or may not be described by a channel object.
+        |crtime|
+
+    depth_offset
+        Specifies the Depth Offset, which indicates how much the *value*
+        is "off depth".
+
+    measure_point_offset
+        Specifies a Measure Point Offset, which indicates a fixed distance
+        along Borehole Depth from the Value Channel’s Measure Point to a
+        Data Reference Point.
+
+    tool_zero_offset
+        Distance of the Data Reference Point for the current Path above
+        the tool string’s Tool Zero Point.
+
+
+    See also
+    --------
+
+    BasicObject : The basic object that Parameter is derived from
 
     Notes
     -----
@@ -72,13 +104,13 @@ class Path(BasicObject):
         self.well_reference_point = None
         self.value                = []
         self.borehole_depth       = None
+        self.vertical_depth       = None
         self.radial_drift         = None
         self.angular_drift        = None
         self.time                 = None
         self.depth_offset         = None
         self.measure_point_offset = None
         self.tool_zero_offset     = None
-        self.vertical_depth       = None
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

@@ -32,10 +32,10 @@ class Splice(BasicObject):
     output_channel : Channel
         Concatination of all input channels
 
-    input_channels : list of Channel
+    input_channels : list(Channel)
         Channels that where used to create the output channel
 
-    Zones : Zone
+    Zones : list(Zone)
         Zones of each input channel that is used in the concatination process
 
     See also

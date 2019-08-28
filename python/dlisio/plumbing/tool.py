@@ -12,6 +12,30 @@ class Tool(BasicObject):
     *tool.parts*. Tools objects also keep a list of all channels that where produced by
     the tool in *tool.channels*.
 
+    Attributes
+    ----------
+
+    description : str
+        Textual description of the tool
+
+    trademark_name : str
+        The producer's name for the tool
+
+    generic_name : str
+        The name generally used by the industry to describe such a tool
+
+    status : bool
+        If the tool is enabled to provide information to the acquisition system
+
+    parts : list(Equipment)
+        Equipments that makes up the tool
+
+    channels : list(Channel)
+        Channels that are produced by this tool
+
+    parameters : list(Parameter)
+        Parameters that directly affect or reflect the operation of the tool
+
     See also
     --------
 
@@ -42,26 +66,12 @@ class Tool(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'TOOL')
-        #: Textual description of the tool
         self.description     = None
-
-        #: The producer's name for the tool
         self.trademark_name  = None
-
-        #: The name generally used by the industry to describe such a tool
         self.generic_name    = None
-
-        #: If the tool is enabled to provide information to the acquisition
-        #: system
         self.status          = None
-
-        #: The equipment that makes up the tool
         self.parts           = []
-
-        #: Channels that are produced by this tool
         self.channels        = []
-
-        #: Parameter that directly affect or reflect the operation of the tool
         self.parameters      = []
 
     def describe_attr(self, buf, width, indent, exclude):

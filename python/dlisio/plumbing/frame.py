@@ -18,10 +18,30 @@ class Frame(BasicObject):
 
     Attributes
     ----------
-    dtype_format : str
-        The basic format string for duplicated mnemonics - this string is the
-        default formatting for creating unique labels from the
-        mnemonic-origin-copynumber triple in dtype.
+
+    description : str
+        Textual description of the Frame.
+
+    channels : list(Channel)
+        Channels in the frame
+
+    index_type : str
+        The measurement of the index, e.g. borehole-depth
+
+    direction : str
+        Direction of the index (Increasing or decreasing)
+
+    spacing
+        Constant spacing in the index
+
+    index_min
+        Minimum value of the index
+
+    index_max
+        Maximum value of the index
+
+    encrypted : bool
+        If the frame was encrypted
 
     See also
     --------
@@ -59,39 +79,24 @@ class Frame(BasicObject):
 
         self.file        = file
 
-        #: Textual description of the Frame.
         self.description = None
-
-        #: Channels in the frame
         self.channels    = []
-
-        #: The measurement of the index, e.g. borehole-depth
         self.index_type  = None
-
-        #: Direction of the index (Increasing or decreasing)
         self.direction   = None
-
-        #: Constant spacing in the index
         self.spacing     = None
-
-        #: Encrypted frame
         self.encrypted   = False
-
-        #: Minimum value of the index
         self.index_min   = None
-
-        #: Maximum value of the index
         self.index_max   = None
 
-        #: Format-string of the frame. Mainly indended for internal use
+        # Format-string of the frame. Mainly indended for internal use
         self._fmtstr     = ""
 
-        #: The data-type of the structured array that contains all samples
-        #: arrays from all channels.
+        # The data-type of the structured array that contains all samples
+        # arrays from all channels.
         self._dtype      = None
 
-        #: Instance-specific dtype label formatter on duplicated mnemonics.
-        #: Defaults to Frame.dtype_format
+        # Instance-specific dtype label formatter on duplicated mnemonics.
+        # Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format
 
     @classmethod

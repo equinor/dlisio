@@ -20,6 +20,31 @@ class Computation(BasicObject):
     The axis attribute, if present, defines axis labels for multidimensional
     value(s).
 
+    Attributes
+    ----------
+
+    long_name : str or Longname
+        Descriptive name of the computation
+
+    properties : list(str)
+        Property indicators that summarizes the characteristics of the
+        computation and the processing that has occurred to produce it
+
+    dimension : list(int)
+        Array structure of a single value
+
+    axis : list(Axis)
+        Coordinate axes of the values
+
+    zones : list(Zone)
+        Mutually disjoint zones over which the value of the current
+        computation is constant
+
+    source
+        The immediate source of the Computation
+
+    values
+
     See also
     --------
 
@@ -53,24 +78,11 @@ class Computation(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'COMPUTATION')
-        #: Descriptive name of the computation
         self.long_name   = None
-
-        #:Property indicators that summarizes the characteristics of the computation
-        #: and the processing that has occurred to produce it
         self.properties  = []
-
-        #: Array structure of a single value
         self.dimension   = []
-
-        #: Coordinate axes of the values
         self.axis        = []
-
-        #: Mutually disjoint zones over which the value of the current
-        #: computation is constant
         self.zones       = []
-
-        #: The immediate source of the Computation
         self.source = None
 
     @property
