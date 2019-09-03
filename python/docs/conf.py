@@ -52,7 +52,6 @@ if LooseVersion(sphinx.__version__) < LooseVersion("1.8"):
 else:
     autodoc_default_options = {
         'members': None,
-        'inherited-members': None,
     }
 
 # Add any paths that contain templates here, relative to this directory.
