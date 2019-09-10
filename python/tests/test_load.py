@@ -58,9 +58,15 @@ def test_partitioning(fpath):
     with dlisio.load(fpath) as (f1, f2, f3, *tail):
         assert len(tail) == 0
 
-        assert len(f1.objects) == 8
-        assert len(f2.objects) == 32
-        assert len(f3.objects) == 1
+        def getobjects(f):
+            objects = {}
+            for v in f.indexedobjects.values():
+                objects.update(v)
+            return objects
+
+        assert len(getobjects(f1)) == 8
+        assert len(getobjects(f2)) == 32
+        assert len(getobjects(f3)) == 1
 
         key = dlisio.core.fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
 

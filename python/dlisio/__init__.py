@@ -120,7 +120,12 @@ class dlis(object):
         d['Description']  = repr(self)
         d['Frames']       = len(self.frames)
         d['Channels']     = len(self.channels)
-        d['Object count'] = len(self.objects)
+
+        objects = {}
+        for v in self.indexedobjects.values():
+            objects.update(v)
+
+        d['Object count'] = len(objects)
         plumbing.describe_dict(buf, d, width, indent)
 
         known, unknown = {}, {}
@@ -428,24 +433,6 @@ class dlis(object):
             except KeyError:
                 msg = "Object {}.{}.{} of type {} is not found"
                 raise ValueError(msg.format(name, origin, copynr, type))
-
-    @property
-    def objects(self):
-        """Gathers and returns all the objects present in the file.
-
-        Returns
-        -------
-        dict : fingerprint (internal) -> object
-
-        Hint
-        ----
-        Use direct object access (object) or access to the objects by type
-        (f.channels, f.frames) where possible
-        """
-        objects = {}
-        for v in self.indexedobjects.values():
-            objects.update(v)
-        return objects
 
 def open(path):
     """ Open a file

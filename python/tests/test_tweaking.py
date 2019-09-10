@@ -142,7 +142,11 @@ def test_dynamic_linkage(f, assert_log):
     c.refs["wrongobname"] = c.refs["paramlinks"]
     c.refs["wrongobjref"] = c.refs["unknown_link"]
 
-    c.link(f.objects)
+    objects = {}
+    for v in f.indexedobjects.values():
+        objects.update(v)
+
+    c.link(objects)
 
     param2 = f.object('PARAMETER', 'PARAM2', 10, 0)
     u      = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
@@ -164,7 +168,12 @@ def test_dynamic_change_through_instance(f):
         param2 = f.object('PARAMETER', 'PARAM2', 10, 0)
         c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
         c.load()
-        c.link(f.objects)
+
+        objects = {}
+        for v in f.indexedobjects.values():
+            objects.update(v)
+
+        c.link(objects)
 
         assert c.myparams     == ["wrong", "W"]
         assert c.paramlinks   == [param2, None]

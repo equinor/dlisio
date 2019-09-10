@@ -118,7 +118,9 @@ stdrecord = bytearray([
 ])
 
 def test_objects(DWL206):
-    objects = DWL206.objects
+    objects = {}
+    for v in DWL206.indexedobjects.values():
+        objects.update(v)
     assert len(list(objects)) == 864
 
 def test_fingerprint():

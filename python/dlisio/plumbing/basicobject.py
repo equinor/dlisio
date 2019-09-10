@@ -176,7 +176,16 @@ class BasicObject():
         Parameters
         ----------
         objects : dict(fingerprint -> object).
-                  Usually is provided by dlis.objects property
+
+        Example
+        -------
+
+        Gather all existing objects and relink channel
+
+        >>> objects = {}
+        >>> for v in f.indexedobjects.values():
+        >>>     objects.update(v)
+        >>> channel.link(objects)
 
         """
 

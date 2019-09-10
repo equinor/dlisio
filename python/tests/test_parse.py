@@ -534,7 +534,10 @@ def test_cut_before_object(tmpdir, merge):
     ]
     merge(path, content)
     with dlisio.load(path) as (f,):
-        assert len(f.objects) == 0
+        objects = {}
+        for v in f.indexedobjects.values():
+            objects.update(v)
+        assert len(objects) == 0
 
 
 @pytest.mark.skip(reason="result inconsistent")
