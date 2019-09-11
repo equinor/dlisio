@@ -13,6 +13,44 @@ class Measurement(BasicObject):
     Records of measurements, references, and tolerances used to compute
     calibration coefficients.
 
+    Attributes
+    ----------
+
+    phase : str
+        In what phase of the overall job sequence the measurement as acquired
+
+    source
+        Source the measurement
+
+    mtype : str
+        Type of measurement
+
+    dimension : list(int)
+        Structure of the sample array
+
+    axis : list(Axis)
+        Coordinate axis of the sample array
+
+    samplecount : int
+        Number of samples used to compute the max/std_deviation
+
+    begin_time
+        Time of the sample acquisition. |crtime|
+
+    duration
+        Time duration of the sample acquisition
+
+    standard
+        Measurable quantity of the calibration standard used to produce the
+        sample
+
+    samples
+    max_deviation
+    std_deviation
+    reference
+    plus_tolerance
+    minus_tolerance
+
     See also
     --------
 
@@ -51,33 +89,14 @@ class Measurement(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = "CALIBRATION-MEASUREMENT")
-        #: In what phase of the overall job sequence the
-        #: measurement as aquired
         self.phase           = None
-
-        #: Source the measurement
         self.source          = None
-
-        #: Type of measurement
         self.mtype           = None
-
-        #: Structure of the sample array
         self.dimension       = []
-
-        #: Coordinate axis of the sample array
         self.axis            = []
-
-        #: Number of samples used to compute the max/std_deviation
         self.samplecount     = None
-
-        #: Time of the sample acquisition
         self.begin_time      = None
-
-        #: Time duration of the sample acquisition
         self.duration        = None
-
-        #: Measurable quantity of the calibration standard used to produce the
-        #: sample
         self.standard        = []
 
     @property

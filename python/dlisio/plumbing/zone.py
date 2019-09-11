@@ -11,6 +11,17 @@ class Zone(BasicObject):
     use zones to define spesific regions in wells or time intervals where the
     object data is valid.
 
+    Attributes
+    ----------
+    description : str
+        Description of the zone
+    domain : str
+        Type of interval, e.g. borhole-depth, time or vertical-depth
+    maximum
+        Latest time or deepest point, not inclusive
+    minimum
+        Earliest time or shallowest point, inclusive
+
     See also
     --------
 
@@ -33,15 +44,9 @@ class Zone(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'ZONE')
-        #: Description of the zone
         self.description = None
-
-        #: Type of interval, e.g. borhole-depth, time or vertical-depth
         self.domain      = None
-
-        #: Latest time or deepest point, not inclusive
         self.maximum     = None
-        #: Earliest time or shallowest point, inclusive
         self.minimum     = None
 
     def describe_attr(self, buf, width, indent, exclude):

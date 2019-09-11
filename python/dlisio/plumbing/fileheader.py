@@ -39,6 +39,16 @@ class Fileheader(BasicObject):
         | DLIS-file 1 | ... | DLIS-File n |
          ---------------------------------
 
+    Attributes
+    ----------
+
+    sequencenr : str
+        Sequential position of the logical file in a storage set
+
+    id : str
+        Descriptive identification of the logical file
+
+
     See also
     --------
 
@@ -59,10 +69,7 @@ class Fileheader(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'FILE-HEADER')
-        #: Sequential position of the logical file in a storage set
         self.sequencenr = None
-
-        #:Descriptive identification of the logical file
         self.id         = None
 
     def describe_attr(self, buf, width, indent, exclude):

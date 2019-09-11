@@ -20,6 +20,24 @@ class Parameter(BasicObject):
     The axis attribute, if present, defines axis labels for multidimensional
     value(s).
 
+    Attributes
+    ----------
+
+    long_name : Longname
+        Descriptive name of the channel.
+
+    dimension : list(int)
+        Dimensions of the parameter values
+
+    axis : list(Axis)
+        Coordinate axes of the parameter values
+
+    zones : list(Zone)
+        Mutually disjoint intervals where the parameter values is constant
+
+    values
+
+
     See also
     --------
 
@@ -49,16 +67,9 @@ class Parameter(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'PARAMETER')
-        #: Descriptive name of the channel.
         self.long_name = None
-
-        #: Dimensions of the parameter values
         self.dimension = []
-
-        #: Coordinate axes of the parameter values
         self.axis      = []
-
-        #: Mutually disjoint intervals where the parameter values is constant
         self.zones     = []
 
     @property

@@ -52,7 +52,6 @@ if LooseVersion(sphinx.__version__) < LooseVersion("1.8"):
 else:
     autodoc_default_options = {
         'members': None,
-        'inherited-members': None,
     }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -287,3 +286,10 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+rst_epilog = """
+.. |crtime| replace::
+  Either an absolute time represented by datetime or elapsed time
+  from file-creation (see :attr:`Origin.creation_time`).
+
+"""

@@ -10,7 +10,7 @@ class Comment(BasicObject):
     Attributes
     ----------
 
-    text : list of str
+    text : list(str)
         Textual comments
 
     See also

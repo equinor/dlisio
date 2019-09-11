@@ -21,10 +21,10 @@ class Group(BasicObject):
         Specifies the type of object that is referenced in the object list
         attribute.
 
-    object_list
+    object_list : list
         References to arbitrary objects.
 
-    group_list : list of Group
+    group_list : list(Group)
         Reference to other Group objects
 
     Notes

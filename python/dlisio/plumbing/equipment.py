@@ -11,6 +11,60 @@ class Equipment(BasicObject):
     and downhole equipment used in the acquistion of the data. Typically, tools
     (specified by the Tool object) is a composition of equipment.
 
+    Attributes
+    ----------
+
+    trademark_name : str
+        The producer's name for the equipment
+
+    status : bool
+        Operational status
+
+    generic_type : str
+        Generic type
+
+    serial_number : str
+        Serial number
+
+    location : str
+        General location of equipment during acqusition
+
+    height
+        Heigth
+
+    length
+        Length
+
+    diameter_min
+        Minimum diameter
+
+    diameter_max
+        Maximum diameter
+
+    volume
+        Volume
+
+    weight
+        Weight
+
+    hole_size
+        Hole size
+
+    pressure
+        Pressure
+
+    temperature
+        Temperature
+
+    vertical_depth
+        Vertical depth
+
+    radial_drift
+        Radial drift
+
+    angular_drift
+        Angular drift
+
     See also
     --------
 
@@ -47,55 +101,22 @@ class Equipment(BasicObject):
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'EQUIPMENT')
 
-        #: The producer's name for the equipment
         self.trademark_name = None
-
-        #: Operational status
         self.status         = None
-
-        #: Generic type
         self.generic_type   = None
-
-        #: Serial number
         self.serial_number  = None
-
-        #: General location of equipment during acqusition
         self.location       = None
-
-        #: Height
         self.height         = None
-
-        #: Lenght
         self.length         = None
-
-        #: Minimum diameter
         self.diameter_min   = None
-
-        #: Maximum diameter
         self.diameter_max   = None
-
-        #: Volume
         self.volume         = None
-
-        #: Weight
         self.weight         = None
-
-        #: Hole size
         self.hole_size      = None
-
-        #: Pressure
         self.pressure       = None
-
-        #: Temperature
         self.temperature    = None
-
-        #: Vertical depth
         self.vertical_depth = None
-
-        #: Radial drift
         self.radial_drift   = None
-
-        #: Angular drift
         self.angular_drift  = None
 
     def describe_attr(self, buf, width, indent, exclude):

@@ -29,176 +29,109 @@ RP66 objects (native dlis)
 Axis
 ----
 .. autoclass:: Axis(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr
 
 Calibration
 -----------
 .. autoclass:: Calibration(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr
 
 Channel
 -------
-.. autoclass:: Channel()
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+.. autoclass:: Channel(BasicObject)
+    :exclude-members: describe_attr, load, fmtstr
 
 Coefficent
 ----------
 .. autoclass:: Coefficient(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr
 
 Comment
 -------
 .. autoclass:: Comment(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
+    :exclude-members: describe_attr
 
 Computation
 -----------
 .. autoclass:: Computation(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Frame
------
-.. autoclass:: Frame(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Fileheader
-----------
-.. autoclass:: Fileheader(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Group
------
-.. autoclass:: Group(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Longname
---------
-.. autoclass:: Longname(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Measurement
------------
-.. autoclass:: Measurement(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Message
--------
-.. autoclass:: Message(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Origin
-------
-.. autoclass:: Origin(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Parameter
----------
-.. autoclass:: Parameter(BasicObject)
-    :members:
-    :member-order: bysource
-    :inherited-members:
-    :exclude-members: stripspaces
-
-Path
-----
-.. autoclass:: Path(BasicObject)
-    :members:
-    :member-order: bysource
-    :inherited-members:
-    :exclude-members: stripspaces
-
-Process
--------
-.. autoclass:: Process(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
-
-Tool
-----
-.. autoclass:: Tool(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr
 
 Equipment
 ---------
 .. autoclass:: Equipment(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr
 
-Zone
+Fileheader
+----------
+.. autoclass:: Fileheader(BasicObject)
+    :exclude-members: describe_attr
+
+Frame
+-----
+.. autoclass:: Frame(BasicObject)
+    :exclude-members: describe_attr, link, create, fmtstr, fmtstrchannel
+
+Group
+-----
+.. autoclass:: Group(BasicObject)
+    :exclude-members: describe_attr, link
+
+Longname
+--------
+.. autoclass:: Longname(BasicObject)
+    :exclude-members: describe_attr
+
+Measurement
+-----------
+.. autoclass:: Measurement(BasicObject)
+    :exclude-members: describe_attr
+
+Message
+-------
+.. autoclass:: Message(BasicObject)
+    :exclude-members: describe_attr
+
+Origin
+------
+.. autoclass:: Origin(BasicObject)
+    :exclude-members: describe_attr
+
+Parameter
+---------
+.. autoclass:: Parameter(BasicObject)
+    :exclude-members: describe_attr
+
+Path
 ----
-.. autoclass:: Zone(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+.. autoclass:: Path(BasicObject)
+    :exclude-members: describe_attr
+
+Process
+-------
+.. autoclass:: Process(BasicObject)
+    :exclude-members: describe_attr
 
 Splice
 ------
 .. autoclass:: Splice(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr
+
+Tool
+----
+.. autoclass:: Tool(BasicObject)
+    :exclude-members: describe_attr
 
 Wellref
 -------
 .. autoclass:: Wellref(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: describe_attr, load
+
+Zone
+----
+.. autoclass:: Zone(BasicObject)
+    :exclude-members: describe_attr
 
 Unknown
 -------
 .. autoclass:: Unknown(BasicObject)
-    :members:
-    :member-order: bysource
-    :exclude-members: stripspaces
-    :inherited-members:
+    :exclude-members: create

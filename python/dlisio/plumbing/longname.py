@@ -8,6 +8,60 @@ from collections import OrderedDict
 class Longname(BasicObject):
     """ Structured names of other objects.
 
+    Attributes
+    ----------
+
+    modifier : list(str)
+        General modifier
+
+    quantity : str
+        Something that is measureable E.g. the diameter of a pipe
+
+    quantity_mod : list(str)
+        Specialization of a quantity
+
+    altered_form : str
+        Altered form of the quantity. E.g. standard deviation is an altered
+        form of a temperature quantity.
+
+    entity : str
+        The entity of which the quantity is measured. E.g. entity =
+        borehole, quantity = diameter
+
+    entity_mod : list(str)
+        Specialization of an entity
+
+    entity_nr : str
+        Distinguishes multiple instances of the same entity
+
+    entity_part : str
+        Part of an entity
+
+    entity_part_nr : str
+        Distinguishes multiple instances of the same entity part
+
+    generic_source : str
+        The source of the information
+
+    source_part : list(str)
+        A specific part of the source information. E.g. "transmitter"
+
+    source_part_nr : list(str)
+        Distinguishes multiple instances of the same source part
+
+    conditions : list(str)
+        Conditions applicable at the time the information was acquired or
+        generated
+
+    standard_symbol : str
+        Industry-standardized symbolic name by which the information is
+        known. The possible values are specified by POSC
+
+    private_symbol : str
+        Association between the recorded information and corresponding
+        records or objects of the Producer’s internal or corporate database
+
+
     See also
     --------
 
@@ -42,54 +96,20 @@ class Longname(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'LONG-NAME')
-        #: General modifier
         self.modifier        = []
-
-        #: Something that is measureable E.g. the diameter of a pipe
         self.quantity        = None
-
-        #: Specialization of a quantity
         self.quantity_mod    = []
-
-        #: Altered form of the quantity. E.g. standard deviation is an altered
-        #: form of a temperature quantity.
         self.altered_form    = None
-
-        #: The entity of which the quantity is measured. E.g. entity =
-        #: borehole, quantity = diameter
         self.entity          = None
-
-        #: Specialization of an entity
         self.entity_mod      = []
-
-        #: Distinguishes multiple instances of the same entity
         self.entity_nr       = None
-
-        #: Part of an entity
         self.entity_part     = None
-
-        #: Distinguishes multiple instances of the same entity part
         self.entity_part_nr  = None
-
-        #: The source of the informations
         self.generic_source  = None
-
-        #: A spesific part of the source information. E.g. "transmitter"
         self.source_part     = []
-
-        #: Distinguishes multiple instances of the same source part
         self.source_part_nr  = []
-
-        #: Conditions applicable at the time the information was acquired or
-        #: generated
         self.conditions      = []
-
-        #: Industry-standardized symbolic name by which the information is
-        #: known. The possible values are specified by POSC
         self.standard_symbol = None
-
-        #: Association between the recorded information and corresponding
-        #: records or objects of the Producer’s internal or corporate database
         self.private_symbol  = None
 
     def describe_attr(self, buf, width, indent, exclude):

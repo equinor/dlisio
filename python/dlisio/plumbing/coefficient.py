@@ -9,6 +9,26 @@ class Coefficient(BasicObject):
     Records of measurements, references, and tolerances used in the calibration
     of channels.
 
+    Attributes
+    ----------
+
+    label : str
+        Identify the coefficient-role in the calibration process
+
+    coefficients : list
+        Coefficients corresponding to the label
+
+    references : list
+        Nominal values for each coefficient
+
+    plus_tolerance : list
+        Maximum value that a sample can exceed the reference and still be
+        "within tolerance"
+
+    minus_tolerance : list
+        Maximum value that a sample can fall below the reference and still
+        be "within tolerance"
+
     See also
     --------
 
@@ -33,21 +53,10 @@ class Coefficient(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = "CALIBRATION-COEFFICIENT")
-        #: Identify the coefficient-role in the calibration process
         self.label           = None
-
-        #: Coefficients corresponding to the label
         self.coefficients    = []
-
-        #: Nominal values for each coefficient
         self.references      = []
-
-        #: Maximum value that a sample can exceed the reference and still be
-        #: "within tolerance"
         self.plus_tolerance  = []
-
-        #: Maximum value that a sample can fall below the reference and still
-        #: be "within tolerance"
         self.minus_tolerance = []
 
     def describe_attr(self, buf, width, indent, exclude):

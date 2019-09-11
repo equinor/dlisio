@@ -12,6 +12,18 @@ class Axis(BasicObject):
     array of channels. One axis object describes only one coordinate axis. I.e
     a three dimensional array is described by three Axis objects.
 
+    Attributes
+    ----------
+
+    axis_id : str
+        Axis identifier
+
+    coordinates : list
+        Explicit coordinate value along the axis
+
+    spacing
+        Constant, signed spacing along the axis between successive coordinates
+
     See also
     --------
 
@@ -32,14 +44,8 @@ class Axis(BasicObject):
 
     def __init__(self, obj = None, name = None):
         super().__init__(obj, name = name, type = 'AXIS')
-        #: Axis identifier
         self.axis_id     = None
-
-        #: Explicit coordinate value along the axis
         self.coordinates = []
-
-        #: Constant, signed spacing along the axis between successive
-        #: coordinates
         self.spacing     = None
 
     def describe_attr(self, buf, width, indent, exclude):

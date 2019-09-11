@@ -22,7 +22,7 @@ class Process(BasicObject):
     version : str
         Software version.
 
-    properties : list of str
+    properties : list(str)
         Properties that applies to the output of the process, as a result of
         the process.
 
@@ -30,25 +30,31 @@ class Process(BasicObject):
         Indicated the status of the process. It's typically updated to indicate
         when the process is completed or aborted.
 
-    input_channels : list of Channel
+    input_channels : list(Channel)
         Channels that are used directly by this Process.
 
-    output_channels : list of Channel
+    output_channels : list(Channel)
         Channels that are produced directly by this Process.
 
-    input_computation : list of Computation
+    input_computation : list(Computation)
         Computations that are used directly by this Process.
 
-    output_computation : list of Computation
+    output_computation : list(Computation)
         Computations that are produced directly by this Process.
 
-    parameters : list of Parameter
+    parameters : list(Parameter)
         Parameters that are used by the Process or that directly affect the
         operation of the Process.
 
-    comments : list of str
+    comments : list(str)
         Comments contains information specific to the particular
         execution of the process.
+
+    See also
+    --------
+
+    BasicObject : The basic object that Parameter is derived from
+
 
     Notes
     -----
