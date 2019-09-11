@@ -3,7 +3,7 @@ import pytest
 import dlisio
 
 @pytest.fixture(scope="module")
-def fpath(tmpdir_factory, merge_files):
+def fpath(tmpdir_factory, merge_files_manyLR):
     path = str(tmpdir_factory.mktemp('load').join('manylogfiles.dlis'))
     content = [
         'data/semantic/envelope.dlis.part',
@@ -22,7 +22,7 @@ def fpath(tmpdir_factory, merge_files):
         # Third logical file, only has a FILE-HEADER
         'data/semantic/file-header2.dlis.part',
     ]
-    merge_files(path, content)
+    merge_files_manyLR(path, content)
     return path
 
 def test_context_manager(fpath):
@@ -99,7 +99,7 @@ def test_objects(fpath):
         assert fh3.sequencenr == '10'
         assert fh3.id         == 'Yet another logical file'
 
-def test_objects_with_encrypted_records(tmpdir_factory, merge_files):
+def test_objects_with_encrypted_records(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('load').join('same-object.dlis'))
     content = [
         'data/semantic/envelope.dlis.part',
@@ -114,7 +114,7 @@ def test_objects_with_encrypted_records(tmpdir_factory, merge_files):
         'data/semantic/axis-encrypted.dlis.part',
         'data/semantic/channel-same-objects.dlis.part',
     ]
-    merge_files(fpath, content)
+    merge_files_manyLR(fpath, content)
 
     with dlisio.load(fpath) as (f1, f2):
         f1_channel = f1.object('CHANNEL', 'CHANN1', 10, 0)

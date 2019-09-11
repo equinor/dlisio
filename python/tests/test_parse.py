@@ -6,9 +6,9 @@ import dlisio
 from dlisio.core import reprc
 
 @pytest.fixture
-def merge(merge_files):
-    def merge(path, content, lrs_offset=104):
-        merge_files(path, content, lrs_offset)
+def merge(merge_files_oneLR):
+    def merge(path, content):
+        merge_files_oneLR(path, content)
     return merge
 
 @pytest.mark.future_test_attributes
@@ -597,7 +597,7 @@ def test_fdata_bad_ident(tmpdir, merge):
         'data/parse/sul.dlis.part',
         'data/parse/implicit/fdata-bad-ident.dlis.part',
     ]
-    merge(path, content, lrs_offset=None)
+    merge(path, content)
     with pytest.raises(RuntimeError) as excinfo:
         dlisio.load(path)
 
