@@ -99,3 +99,66 @@ def test_too_many_objects_nameonly(g):
         _ = g.object("CHANNEL", "CHANNEL1")
     assert "There are multiple" in str(exc.value)
 
+def test_match(g):
+    refs = []
+    refs.append( g.object('CHANNEL', 'CHANNEL1', 0, 0) )
+    refs.append( g.object('CHANNEL', 'CHANNEL1.V2', 0, 0) )
+    refs.append( g.object('CHANNEL', 'CHANNEL1', 0, 1) )
+
+    channels = g.match('.*chan.*')
+
+    assert len(list(channels)) == 3
+    for ch in channels:
+        assert ch in refs
+
+    channels = g.match('.*chan.*', ".*")
+    assert len(list(channels)) == 5
+
+def test_match_type(g):
+    refs = []
+
+    refs.append( g.object('NONCHANNEL', 'UNEFRAME', 0, 0) )
+    refs.append( g.object('FRAME', 'UNEFRAME', 0, 0) )
+
+    objs = g.match('UNEFR.*', type='NONCHANNEL|FRAME')
+
+    assert len(list(objs)) == len(refs)
+    for obj in objs:
+        assert obj in refs
+
+    objs = g.match('', type='NONCHANNEL|frame')
+
+    assert len(list(objs)) == len(refs)
+    for obj in objs:
+        assert obj in refs
+
+def test_match_invalid_regex(g):
+    with pytest.raises(ValueError):
+        _ = next(g.match('*'))
+
+    with pytest.raises(ValueError):
+        _ = next(g.match('AIBK', type='*'))
+
+def test_match_special_characters(g):
+    o1 = g.object('440.TYPE', '440-CHANNEL', 0, 0)
+    o2 = g.object('440-TYPE', '440.CHANNEL', 0, 0)
+
+    refs = [o1, o2]
+    channels = g.match('440.CHANNEL', '440.TYPE')
+
+    assert len(list(channels)) == 2
+    for ch in channels:
+        assert ch in refs
+
+    refs = [o1]
+    channels = g.match('440-CHANNEL', '440.TYPE')
+    assert len(list(channels)) == 1
+    for ch in channels:
+        assert ch in refs
+
+    refs = [o2]
+    channels = g.match('440.CHANNEL', '440-TYPE')
+    assert len(list(channels)) == 1
+    for ch in channels:
+        assert ch in refs
+

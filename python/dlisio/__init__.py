@@ -149,30 +149,34 @@ class dlis(object):
 
         return core.parse_objects(self.attic)
 
-    def match(self, pattern, type=None):
+    def match(self, pattern, type="CHANNEL"):
         """ Filter channels by mnemonics
 
-        Returns all channel with mnemonics matching a regex [1]. By default the
-        targeted object-set only includes native rp66 CHANNEL objects. This
-        target set can be extended with the type parameter
+        Returns all objects of given type with mnemonics matching a regex [1].
+        By default only matches pattern against Channel objects.
+        Use the type parameter to match against other object types.
+        Note that type support regex as well.
+        pattern and type are not case-sensitive, i.e. match("TDEP") and
+        match("tdep") yield the same result.
 
         [1] https://docs.python.org/3.7/library/re.html
-
 
         Parameters
         ----------
 
         pattern : str
-            Regex to match channel mnemonics against
+            Regex to match object mnemonics against.
 
         type : str
-            Extend the targeted object-set to include all objects that have a
-            type matching the inputed regex. Must be a valid regex
+            Extend the targeted object-set to include all objects that
+            have a type which matches the supplied type.
+            type may be a regex.
+            To see available types, refer to dlis.types.keys()
 
-        Returns
+        Yields
         -------
 
-        channels : generator of channels/objects
+        objects : generator of objects
 
         Notes
         -----
@@ -191,8 +195,16 @@ class dlis(object):
         '[]'   Set of characters
         ====== =======================
 
+        **Please bear in mind that any special character you include
+        will have special meaning as per regex**
+
+        See Also
+        --------
+
+        types : Available known types
+
         Examples
-        -------
+        --------
 
         Return all channels which have mnemonics matching 'AIBK':
 
@@ -207,22 +219,30 @@ class dlis(object):
 
         >>> channels = f.match('AI.*')
 
+        Return all CUSTOM-FRAME objects where the mnemonic includes 'PR':
+
+        >>> frames = f.match('.*RP.*', 'custom-frame')
+
+        Remember, that special characters always have their regex meaning:
+
+        >>> for o in f.match("CHANNEL.23"):
+        ...     print(o)
+        Channel(CHANNEL.23)
+        Channel(CHANNEL123)
+
         """
         def compileregex(pattern):
             try:
-                return re.compile(pattern)
+                return re.compile(pattern, re.IGNORECASE)
             except:
                 msg = 'Invalid regex: {}'.format(pattern)
                 raise ValueError(msg)
 
         objs = {}
-        if type is None:
-            objs = self.indexedobjects['CHANNEL']
-        else:
-            ctype = compileregex(type)
-            for key, value in self.indexedobjects.items():
-                if not re.match(ctype, key): continue
-                objs.update(value)
+        ctype = compileregex(type)
+        for key, value in self.indexedobjects.items():
+            if not re.match(ctype, key): continue
+            objs.update(value)
 
         cpattern = compileregex(pattern)
         for obj in objs.values():

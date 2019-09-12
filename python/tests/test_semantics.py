@@ -528,38 +528,3 @@ def test_unexpected_attributes(f):
                                                   (10, 0, "PARAMU")]
     assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
                                                   (10, 0, "OBJ1"))]
-
-def test_match(f):
-    refs = []
-    refs.append( f.object('CHANNEL', 'CHANN1', 10, 0) )
-    refs.append( f.object('CHANNEL', 'CHANN2', 10, 0) )
-    refs.append( f.object('CHANNEL', 'CHANN3', 10, 0) )
-    refs.append( f.object('CHANNEL', 'CHANN4', 10, 0) )
-
-    channels = f.match('CHAN.*')
-
-    assert len(list(channels)) == 4
-    for ch in channels:
-        assert ch in refs
-
-def test_match_type(f):
-    refs = []
-
-    refs.append( f.object('CHANNEL', 'CHANN1', 10, 0) )
-    refs.append( f.object('CHANNEL', 'CHANN2', 10, 0) )
-    refs.append( f.object('CHANNEL', 'CHANN3', 10, 0) )
-    refs.append( f.object('CHANNEL', 'CHANN4', 10, 0) )
-    refs.append( f.object('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0) )
-
-    objs = f.match('CHAN.*', type='CHANNEL|LONG-NAME')
-
-    assert len(list(objs)) == len(refs)
-    for obj in objs:
-        assert obj in refs
-
-def test_match_invalid_regex(f):
-    with pytest.raises(ValueError):
-        _ = next(f.match('*'))
-
-    with pytest.raises(ValueError):
-        _ = next(f.match('AIBK', type='*'))
