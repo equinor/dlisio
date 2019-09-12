@@ -2,8 +2,6 @@ import pytest
 
 import dlisio
 
-from . import merge_files, assert_log
-
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files):
     path = str(tmpdir_factory.mktemp('load').join('manylogfiles.dlis'))
@@ -60,9 +58,15 @@ def test_partitioning(fpath):
     with dlisio.load(fpath) as (f1, f2, f3, *tail):
         assert len(tail) == 0
 
-        assert len(f1.objects) == 8
-        assert len(f2.objects) == 32
-        assert len(f3.objects) == 1
+        def getobjects(f):
+            objects = {}
+            for v in f.indexedobjects.values():
+                objects.update(v)
+            return objects
+
+        assert len(getobjects(f1)) == 8
+        assert len(getobjects(f2)) == 32
+        assert len(getobjects(f3)) == 1
 
         key = dlisio.core.fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
 
@@ -77,27 +81,23 @@ def test_partitioning(fpath):
 
 def test_objects(fpath):
     with dlisio.load(fpath) as (f1, f2, f3):
-        key = dlisio.core.fingerprint('FILE-HEADER', 'N', 10, 0)
-        fh2 = f2.objects[key]
-        key = dlisio.core.fingerprint('FILE-HEADER', 'N', 11, 0)
-        fh3 = f3.objects[key]
+        fh2 = f2.object('FILE-HEADER', 'N', 10, 0)
+        fh3 = f3.object('FILE-HEADER', 'N', 11, 0)
 
-        assert len(f1.fileheader) == 0
-        assert len(f1.origin)     == 2
+        assert f1.fileheader == None
+        assert len(f1.origins)    == 2
         assert len(f1.channels)   == 4
         assert len(f1.frames)     == 2
 
         assert fh2.sequencenr == '8'
         assert fh2.id         == 'some logical file'
-        assert fh2 not in f3.fileheader
 
-        assert len(f2.origin)   == 1
+        assert len(f2.origins)  == 1
         assert len(f2.channels) == 27
         assert len(f2.frames)   == 3
 
         assert fh3.sequencenr == '10'
         assert fh3.id         == 'Yet another logical file'
-        assert fh3 not in f2.fileheader
 
 def test_objects_with_encrypted_records(tmpdir_factory, merge_files):
     fpath = str(tmpdir_factory.mktemp('load').join('same-object.dlis'))
@@ -117,21 +117,17 @@ def test_objects_with_encrypted_records(tmpdir_factory, merge_files):
     merge_files(fpath, content)
 
     with dlisio.load(fpath) as (f1, f2):
-        key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-        f1_channel = f1.objects[key]
-        f2_channel = f2.objects[key]
+        f1_channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
+        f2_channel = f2.object('CHANNEL', 'CHANN1', 10, 0)
 
         assert len(f1_channel.dimension) == 3
         assert len(f2_channel.dimension) == 1
 
 def test_link(fpath):
     with dlisio.load(fpath) as (f1, f2, _):
-        key = dlisio.core.fingerprint('FRAME', 'FRAME1', 10, 0)
-        frame1 = f1.objects[key]
-        frame2 = f2.objects[key]
-
-        key = dlisio.core.fingerprint('CHANNEL', 'CHANN1', 10, 0)
-        channel = f1.objects[key]
+        frame1  = f1.object('FRAME', 'FRAME1', 10, 0)
+        frame2  = f2.object('FRAME', 'FRAME1', 10, 0)
+        channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
 
         # The same frame is present in two different logical files. The
         # channels in frame.channel are only present in the first
@@ -141,8 +137,7 @@ def test_link(fpath):
 
 def test_curves(fpath):
     with dlisio.load(fpath) as (_, f2, _):
-        key = dlisio.core.fingerprint('FRAME', 'FRAME-REPRCODE', 10, 0)
-        frame = f2.objects[key]
+        frame = f2.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
 
         # Read the first value of the first frame of channel CH01

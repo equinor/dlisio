@@ -4,7 +4,6 @@ import os
 
 import dlisio
 from dlisio.core import reprc
-from . import merge_files
 
 @pytest.fixture
 def merge(merge_files):
@@ -23,8 +22,7 @@ def test_invariant_attribute(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['INVARIANT_ATTRIBUTE']
         #assert attr.count == 3
         #assert attr.reprc == dlisio.core.reprc.status
@@ -44,8 +42,7 @@ def test_invariant_attribute_in_object(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         assert attr == [8.0]
 
@@ -62,8 +59,7 @@ def test_default_attribute(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 2
         #assert attr.reprc == dlisio.core.reprc.fdoubl
@@ -82,8 +78,7 @@ def test_default_attribute_cut(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['INVARIANT_ATTRIBUTE']
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
@@ -100,8 +95,7 @@ def test_attribute_absent(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['INVARIANT_ATTRIBUTE']
         with pytest.raises(KeyError):
             _ = obj.attic['DEFAULT_ATTRIBUTE']
@@ -119,8 +113,7 @@ def test_absent_attribute_in_template(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
 
@@ -136,8 +129,7 @@ def test_global_default_attribute(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
         #assert attr.count == 1
         #assert attr.reprc == dlisio.core.reprc.ident
@@ -157,8 +149,7 @@ def test_all_attribute_bits(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 4
         #assert attr.reprc == dlisio.core.reprc.ushort
@@ -178,8 +169,7 @@ def test_label_bit_set_in_attribute(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
 
@@ -195,8 +185,7 @@ def test_label_bit_not_set_in_template(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['NEW_ATTRIBUTE']
         dt = datetime(2033, 4, 19, 20, 39, 58, 103)
         assert attr == [dt]
@@ -214,8 +203,7 @@ def test_count0_novalue(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 0
         assert attr == None
@@ -233,8 +221,7 @@ def test_count0_value_bit(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 0
         assert attr == None
@@ -252,8 +239,7 @@ def test_count0_different_repcode(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 0
         #assert attr.reprc == dlisio.core.reprc.units
@@ -286,8 +272,7 @@ def test_same_as_default_no_value(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         assert attr == [-0.75, 10.0]
 
@@ -304,8 +289,7 @@ def test_novalue_less_count(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 1
         #assert attr.reprc == dlisio.core.reprc.fdoubl
@@ -375,8 +359,7 @@ def test_repcode(tmpdir, merge, filename_p, attr_n, attr_reprc, attr_v):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic[attr_n]
         #assert attr.reprc == attr_reprc
         assert attr == [attr_v]
@@ -408,8 +391,7 @@ def test_invalid_repcode_in_template_no_value(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *_):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['INVALID']
         assert attr == [1, 2, 3, 4]
 
@@ -456,8 +438,7 @@ def test_set_type_not_set(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
 
@@ -472,8 +453,7 @@ def test_no_object_name_bit(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f, *tail):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
 
@@ -500,8 +480,7 @@ def test_no_template(tmpdir, merge):
     merge(path, content)
 
     with dlisio.load(path) as (f,):
-        key = dlisio.core.fingerprint('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        obj = f.objects[key]
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert len(obj.attic) == 0
 
 
@@ -555,7 +534,10 @@ def test_cut_before_object(tmpdir, merge):
     ]
     merge(path, content)
     with dlisio.load(path) as (f,):
-        assert len(f.objects) == 0
+        objects = {}
+        for v in f.indexedobjects.values():
+            objects.update(v)
+        assert len(objects) == 0
 
 
 @pytest.mark.skip(reason="result inconsistent")

@@ -4,8 +4,6 @@ from datetime import datetime
 
 import dlisio
 
-from . import DWL206
-
 # The example record from the specification
 stdrecord = bytearray([
     # The eflr function assumes unsegmented record
@@ -120,7 +118,9 @@ stdrecord = bytearray([
 ])
 
 def test_objects(DWL206):
-    objects = DWL206.objects
+    objects = {}
+    for v in DWL206.indexedobjects.values():
+        objects.update(v)
     assert len(list(objects)) == 864
 
 def test_fingerprint():
@@ -141,8 +141,7 @@ def test_fingerprint_invalid_argument():
         _ = dlisio.core.fingerprint("FRAME", "800T", 2, -1)
 
 def test_fileheader(DWL206):
-    key = dlisio.core.fingerprint('FILE-HEADER', '5', 2, 0)
-    fh = DWL206.objects[key]
+    fh = DWL206.object('FILE-HEADER', '5', 2, 0)
     assert fh.name == "5"
     assert fh.origin == 2
     assert fh.copynumber == 0
@@ -150,8 +149,7 @@ def test_fileheader(DWL206):
     assert fh.sequencenr == "197"
 
 def test_origin(DWL206):
-    key = dlisio.core.fingerprint('ORIGIN', 'DLIS_DEFINING_ORIGIN', 2, 0)
-    origin = DWL206.objects[key]
+    origin = DWL206.object('ORIGIN', 'DLIS_DEFINING_ORIGIN', 2, 0)
 
     assert origin.name              == "DLIS_DEFINING_ORIGIN"
     assert origin.origin            == 2
@@ -178,8 +176,7 @@ def test_origin(DWL206):
     assert origin.namespace_version == None
 
 def test_channel(DWL206):
-    key = dlisio.core.fingerprint('CHANNEL', 'TDEP', 2, 0)
-    channel = DWL206.objects[key]
+    channel = DWL206.object('CHANNEL', 'TDEP', 2, 0)
     assert channel.name            == "TDEP"
     assert channel.origin          == 2
     assert channel.copynumber      == 0
@@ -194,8 +191,7 @@ def test_channel(DWL206):
     assert channel.source is None
 
 def test_frame(DWL206):
-    key = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame = DWL206.objects[key]
+    frame = DWL206.object('FRAME', '2000T', 2, 0)
     assert frame.name            == "2000T"
     assert frame.origin          == 2
     assert frame.copynumber      == 0
@@ -210,8 +206,8 @@ def test_frame(DWL206):
     assert frame.description is None
 
 def test_channel_order(DWL206):
-    key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
-    key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
+    frame800 = DWL206.object('FRAME', '800T', 2, 0)
+    frame2000 = DWL206.object('FRAME', '2000T', 2, 0)
 
     ref2000T = ["TIME", "TDEP", "TENS_SL", "DEPT_SL"]
     ref800T  = ["TIME", "TDEP", "ETIM", "LMVL", "UMVL", "CFLA", "OCD" , "RCMD",
@@ -221,15 +217,14 @@ def test_channel_order(DWL206):
                 "SSTA", "RCMP", "RHPP", "RRPP", "CMPR", "HPPR", "RPPV", "SMSC",
                 "CMCU", "HMCU", "CMLP"]
 
-    for i, ch in enumerate(DWL206.objects[key800].channels):
+    for i, ch in enumerate(frame800.channels):
         assert ch.name == ref800T[i]
 
-    for i, ch in enumerate(DWL206.objects[key2000].channels):
+    for i, ch in enumerate(frame2000.channels):
         assert ch.name == ref2000T[i]
 
 def test_tool(DWL206):
-    key = dlisio.core.fingerprint('TOOL', 'MSCT', 2, 0)
-    tool = DWL206.objects[key]
+    tool = DWL206.object('TOOL', 'MSCT', 2, 0)
     assert tool.name            == "MSCT"
     assert tool.origin          == 2
     assert tool.copynumber      == 0
@@ -247,8 +242,7 @@ def test_tool(DWL206):
     assert len(tools) == 1
 
 def test_equipment(DWL206):
-    key = dlisio.core.fingerprint('EQUIPMENT', 'MSCT/MCFU_1/EQUIPMENT', 2, 0)
-    e = DWL206.objects[key]
+    e = DWL206.object('EQUIPMENT', 'MSCT/MCFU_1/EQUIPMENT', 2, 0)
 
     assert e.name            == "MSCT/MCFU_1/EQUIPMENT"
     assert e.origin          == 2
@@ -274,8 +268,7 @@ def test_equipment(DWL206):
     assert len(list(DWL206.equipments)) == 14
 
 def test_parameter(DWL206):
-    key = dlisio.core.fingerprint('PARAMETER', 'FLSHSTRM', 2, 0)
-    param = DWL206.objects[key]
+    param = DWL206.object('PARAMETER', 'FLSHSTRM', 2, 0)
     assert param.name       == "FLSHSTRM"
     assert param.origin     == 2
     assert param.copynumber == 0
@@ -290,9 +283,8 @@ def test_parameter(DWL206):
 
 
 def test_measurement(DWL206):
-    key = dlisio.core.fingerprint('CALIBRATION-MEASUREMENT',
-                                  'MSCT_SGTE/ZM_BEF/CALI_MEAS', 2, 0)
-    m = DWL206.objects[key]
+    m = DWL206.object('CALIBRATION-MEASUREMENT',
+                      'MSCT_SGTE/ZM_BEF/CALI_MEAS', 2, 0)
 
     assert m.phase           == 'BEFORE'
     assert m.source          == None
@@ -316,9 +308,8 @@ def test_measurement(DWL206):
     assert len(list(DWL206.measurements)) == 6
 
 def test_coefficient(DWL206):
-    key = dlisio.core.fingerprint('CALIBRATION-COEFFICIENT',
-                                  'GAIN-MSCT/HPPR/CALIBRATION', 2, 0)
-    c = DWL206.objects[key]
+    c = DWL206.object('CALIBRATION-COEFFICIENT',
+                      'GAIN-MSCT/HPPR/CALIBRATION', 2, 0)
     assert c.label           == 'GAIN'
     assert c.coefficients    == [1.0]
     assert c.references      == []
@@ -328,8 +319,7 @@ def test_coefficient(DWL206):
     assert len(list(DWL206.coefficients)) == 24
 
 def test_calibrations(DWL206):
-    key = dlisio.core.fingerprint('CALIBRATION', 'CNU', 2, 0)
-    calibration = DWL206.objects[key]
+    calibration = DWL206.object('CALIBRATION', 'CNU', 2, 0)
     assert calibration.name              == "CNU"
     assert calibration.origin            == 2
     assert calibration.copynumber        == 0
@@ -345,11 +335,8 @@ def test_fmtstring(DWL206):
     reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
     reference2 = "ffff"
 
-    key800 = dlisio.core.fingerprint('FRAME', '800T', 2, 0)
-    key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-
-    frame800 = DWL206.objects[key800]
-    frame2000 = DWL206.objects[key2000]
+    frame800 = DWL206.object('FRAME', '800T', 2, 0)
+    frame2000 = DWL206.object('FRAME', '2000T', 2, 0)
 
     fmtstring1 = frame800.fmtstr()
     fmtstring2 = frame2000.fmtstr()
@@ -358,8 +345,7 @@ def test_fmtstring(DWL206):
     assert fmtstring2 == reference2
 
 def test_dtype(DWL206):
-    key2000 = dlisio.core.fingerprint('FRAME', '2000T', 2, 0)
-    frame2000 = DWL206.objects[key2000]
+    frame2000 = DWL206.object('FRAME', '2000T', 2, 0)
     dtype1 = frame2000.dtype
     assert dtype1 == np.dtype([('TIME', np.float32),
                                ('TDEP', np.float32),

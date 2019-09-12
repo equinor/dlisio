@@ -172,6 +172,21 @@ class BasicObject():
 
         Iterate through values in refs and link objects based on
         provided linkage
+
+        Parameters
+        ----------
+        objects : dict(fingerprint -> object).
+
+        Example
+        -------
+
+        Gather all existing objects and relink channel
+
+        >>> objects = {}
+        >>> for v in f.indexedobjects.values():
+        >>>     objects.update(v)
+        >>> channel.link(objects)
+
         """
 
         linkage = self.linkage

@@ -1,7 +1,6 @@
 from collections import defaultdict, OrderedDict
 from io import StringIO
 import logging
-import numpy as np
 import re
 
 from . import core
@@ -15,31 +14,31 @@ except pkg_resources.DistributionNotFound:
 
 class dlis(object):
     types = {
-        'AXIS'                   : plumbing.Axis.create,
-        'FILE-HEADER'            : plumbing.Fileheader.create,
-        'ORIGIN'                 : plumbing.Origin.create,
-        'LONG-NAME'              : plumbing.Longname.create,
-        'FRAME'                  : plumbing.Frame.create,
-        'CHANNEL'                : plumbing.Channel.create,
-        'ZONE'                   : plumbing.Zone.create,
-        'TOOL'                   : plumbing.Tool.create,
-        'PARAMETER'              : plumbing.Parameter.create,
-        'EQUIPMENT'              : plumbing.Equipment.create,
-        'CALIBRATION-MEASUREMENT': plumbing.Measurement.create,
-        'CALIBRATION-COEFFICIENT': plumbing.Coefficient.create,
-        'CALIBRATION'            : plumbing.Calibration.create,
-        'COMPUTATION'            : plumbing.Computation.create,
-        'SPLICE'                 : plumbing.Splice.create,
-        'WELL-REFERENCE'         : plumbing.Wellref.create,
-        'GROUP'                  : plumbing.Group.create,
-        'PROCESS'                : plumbing.Process.create,
-        'PATH'                   : plumbing.Path.create,
-        'MESSAGE'                : plumbing.Message.create,
-        'COMMENT'                : plumbing.Comment.create,
+        'AXIS'                   : plumbing.Axis,
+        'FILE-HEADER'            : plumbing.Fileheader,
+        'ORIGIN'                 : plumbing.Origin,
+        'LONG-NAME'              : plumbing.Longname,
+        'FRAME'                  : plumbing.Frame,
+        'CHANNEL'                : plumbing.Channel,
+        'ZONE'                   : plumbing.Zone,
+        'TOOL'                   : plumbing.Tool,
+        'PARAMETER'              : plumbing.Parameter,
+        'EQUIPMENT'              : plumbing.Equipment,
+        'CALIBRATION-MEASUREMENT': plumbing.Measurement,
+        'CALIBRATION-COEFFICIENT': plumbing.Coefficient,
+        'CALIBRATION'            : plumbing.Calibration,
+        'COMPUTATION'            : plumbing.Computation,
+        'SPLICE'                 : plumbing.Splice,
+        'WELL-REFERENCE'         : plumbing.Wellref,
+        'GROUP'                  : plumbing.Group,
+        'PROCESS'                : plumbing.Process,
+        'PATH'                   : plumbing.Path,
+        'MESSAGE'                : plumbing.Message,
+        'COMMENT'                : plumbing.Comment,
     }
 
     """dict: Parsing guide for native dlis object-types. Maps the native dlis
-    object-type to python object-constructors. E.g. all dlis objects with type
+    object-type to python class. E.g. all dlis objects with type
     AXIS will be constructed into Axis objects. It is possible to both remove
     and add new object-types before loading or reloading a file. New objects
     will behave the same way as the defaulted object-types.
@@ -56,24 +55,20 @@ class dlis(object):
     >>> from dlisio.plumbing.valuetypes import scalar, vector
     >>> from dlisio.plumbing.linkage import obname
     >>> class Channel440(BasicObject):
-    ... attributes = {
+    ...   attributes = {
     ...     'LONG-NAME' : scalar('longname'),
     ...     'SAMPLES'   : vector('samples')
-    ... }
-    ... linkage= { 'longname' : obname('LONG-NAME') }
-    ... def __init__(self, obj = None, name = None):
+    ...   }
+    ...   linkage= { 'longname' : obname('LONG-NAME') }
+    ...   def __init__(self, obj = None, name = None):
     ...     super().__init_(obj, name = name, type = '440-CHANNEL')
     ...     self.longname = None
     ...     self.samples  = []
 
     Add the new object-type and load the file
 
-    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440.create
+    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440
     >>> f = dlisio.load('filename')
-
-    Access all objects off type 440-CHANNEL
-
-    >>> channels440 = f.types['440-CHANNEL']
 
     Remove object-type CHANNEL. CHANNEL objects will no longer
     have a specialized parsing routine and will be parsed as Unknown objects
@@ -87,6 +82,7 @@ class dlis(object):
     plumbing.BasicObject.attributes : attributes
     plumbing.BasicObject.linkage    : linkage
     """
+
     def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
         self.file = stream
         self.explicit_indices = explicits
@@ -94,7 +90,6 @@ class dlis(object):
         self.sul_offset = sul_offset
         self.fdata_index = implicits
 
-        self.objects = {}
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
 
@@ -125,7 +120,12 @@ class dlis(object):
         d['Description']  = repr(self)
         d['Frames']       = len(self.frames)
         d['Channels']     = len(self.channels)
-        d['Object count'] = len(self.objects)
+
+        objects = {}
+        for v in self.indexedobjects.values():
+            objects.update(v)
+
+        d['Object count'] = len(objects)
         plumbing.describe_dict(buf, d, width, indent)
 
         known, unknown = {}, {}
@@ -149,36 +149,44 @@ class dlis(object):
         blob = self.file.get(bytearray(80), self.sul_offset, 80)
         return core.storage_label(blob)
 
-    def raw_objectsets(self, reload = False):
+    def raw_objectsets(self):
+        """
+        Parses attic and returns objects. If attic is empty, will extract
+        data from disk
+        """
         if self.attic is None:
             self.attic = self.file.extract(self.explicit_indices)
 
         return core.parse_objects(self.attic)
 
-    def match(self, pattern, type=None):
+    def match(self, pattern, type="CHANNEL"):
         """ Filter channels by mnemonics
 
-        Returns all channel with mnemonics matching a regex [1]. By default the
-        targeted object-set only includes native rp66 CHANNEL objects. This
-        target set can be extended with the type parameter
+        Returns all objects of given type with mnemonics matching a regex [1].
+        By default only matches pattern against Channel objects.
+        Use the type parameter to match against other object types.
+        Note that type support regex as well.
+        pattern and type are not case-sensitive, i.e. match("TDEP") and
+        match("tdep") yield the same result.
 
         [1] https://docs.python.org/3.7/library/re.html
-
 
         Parameters
         ----------
 
         pattern : str
-            Regex to match channel mnemonics against
+            Regex to match object mnemonics against.
 
         type : str
-            Extend the targeted object-set to include all objects that have a
-            type matching the inputed regex. Must be a valid regex
+            Extend the targeted object-set to include all objects that
+            have a type which matches the supplied type.
+            type may be a regex.
+            To see available types, refer to dlis.types.keys()
 
-        Returns
+        Yields
         -------
 
-        channels : generator of channels/objects
+        objects : generator of objects
 
         Notes
         -----
@@ -197,8 +205,16 @@ class dlis(object):
         '[]'   Set of characters
         ====== =======================
 
+        **Please bear in mind that any special character you include
+        will have special meaning as per regex**
+
+        See Also
+        --------
+
+        types : Available known types
+
         Examples
-        -------
+        --------
 
         Return all channels which have mnemonics matching 'AIBK':
 
@@ -213,22 +229,30 @@ class dlis(object):
 
         >>> channels = f.match('AI.*')
 
+        Return all CUSTOM-FRAME objects where the mnemonic includes 'PR':
+
+        >>> frames = f.match('.*RP.*', 'custom-frame')
+
+        Remember, that special characters always have their regex meaning:
+
+        >>> for o in f.match("CHANNEL.23"):
+        ...     print(o)
+        Channel(CHANNEL.23)
+        Channel(CHANNEL123)
+
         """
         def compileregex(pattern):
             try:
-                return re.compile(pattern)
+                return re.compile(pattern, re.IGNORECASE)
             except:
                 msg = 'Invalid regex: {}'.format(pattern)
                 raise ValueError(msg)
 
         objs = {}
-        if type is None:
-            objs = self.indexedobjects['CHANNEL']
-        else:
-            ctype = compileregex(type)
-            for key, value in self.indexedobjects.items():
-                if not re.match(ctype, key): continue
-                objs.update(value)
+        ctype = compileregex(type)
+        for key, value in self.indexedobjects.items():
+            if not re.match(ctype, key): continue
+            objs.update(value)
 
         cpattern = compileregex(pattern)
         for obj in objs.values():
@@ -271,7 +295,7 @@ class dlis(object):
             # TODO: handle replacement sets
             for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type](o, name = name, file = self)
+                    obj = self.types[os.type].create(o, name = name, file = self)
                 except KeyError:
                     obj = plumbing.Unknown.create(o, name = name, type = os.type)
 
@@ -293,243 +317,122 @@ class dlis(object):
         for obj in objects.values():
             obj.link(objects)
 
-        self.objects = objects
         self.indexedobjects = indexedobjects
         self.problematic = problematic
         return self
 
+    class IndexedObjectDescriptor:
+        """ Read all objects of corresponding type
+        """
+        def __init__(self, t):
+            self.t = t
+
+        def __get__(self, instance, owner):
+            return instance.indexedobjects[self.t].values()
+
     @property
     def fileheader(self):
-        """ Read all Fileheader objects
+        """ Read Fileheader object
 
         Returns
         -------
-        fileheader : dict_values
+        fileheader : Fileheader
 
         """
-        return self.indexedobjects['FILE-HEADER'].values()
+        values = list(self.indexedobjects['FILE-HEADER'].values())
 
-    @property
-    def origin(self):
-        """ Read all Origin objects
+        if len(values) != 1:
+            msg = "Expected exactly one fileheader. Was: {}"
+            logging.warning(msg.format(values))
+            if len(values) == 0:
+                return None
+        else:
+            return values[0]
 
-        Returns
-        -------
-        origin : dict_values
-        """
-        return self.indexedobjects['ORIGIN'].values()
-
-    @property
-    def axes(self):
-        """ Read all Axis objects
-
-        Returns
-        -------
-        axes: dict_values
-        """
-        return self.indexedobjects['AXIS'].values()
-
-    @property
-    def longnames(self):
-        """ Read all Longname objects
-
-        Returns
-        -------
-        long-name : dict_values
-        """
-        return self.indexedobjects['LONG-NAME'].values()
-
-    @property
-    def channels(self):
-        """ Read all channel objects
-
-        Returns
-        -------
-        channel : dict_values
-
-        Examples
-        --------
-        Print all Channel names
-
-        >>> for channel in f.channels:
-        ...     print(channel.name)
-        """
-        return self.indexedobjects['CHANNEL'].values()
-
-    @property
-    def frames(self):
-        """ Read all Frame objects
-
-        Returns
-        -------
-        frames: dict_values
-        """
-        return self.indexedobjects['FRAME'].values()
-
-    @property
-    def tools(self):
-        """ Read all Tool objects
-
-        Returns
-        -------
-        tools: dict_values
-        """
-        return self.indexedobjects['TOOL'].values()
-
-    @property
-    def zones(self):
-        """ Read all Zone objects
-
-        Returns
-        -------
-        zones: dict_values
-        """
-        return self.indexedobjects['ZONE'].values()
-
-    @property
-    def parameters(self):
-        """ Read all Parameter objects
-
-        Returns
-        -------
-        parameters: dict_values
-        """
-        return self.indexedobjects['PARAMETER'].values()
-
-    @property
-    def process(self):
-        """ Read all Process objects
-
-        Returns
-        -------
-
-        processes : dict_values
-        """
-        return self.indexedobjects['PROCESS'].values()
-
-    @property
-    def group(self):
-        """ Read all Group objects
-
-        Returns
-        -------
-
-        groups : dict_values
-        """
-        return self.indexedobjects['GROUP'].values()
-
-    @property
-    def wellref(self):
-        """ Read all Wellref objects
-
-        Returns
-        -------
-
-        wellrefs : dict_values
-        """
-        return self.indexedobjects['WELL-REFERENCE'].values()
-
-    @property
-    def splice(self):
-        """ Read all Splice objects
-
-        Returns
-        -------
-
-        splice : dict_values
-        """
-        return self.indexedobjects['SPLICE'].values()
-
-    @property
-    def path(self):
-        """ Read all Path objects
-
-        Returns
-        -------
-
-        path : dict_values
-        """
-        return self.indexedobjects['PATH'].values()
-
-    @property
-    def equipments(self):
-        """ Read all Equipment objects
-
-        Returns
-        -------
-        equipments : dict_values
-        """
-        return self.indexedobjects['EQUIPMENT'].values()
-
-    @property
-    def computations(self):
-        """ Read all computation objects
-
-        Returns
-        -------
-        computations : dict_values
-        """
-        return self.indexedobjects['COMPUTATION'].values()
-
-    @property
-    def measurements(self):
-        """ Read all Measurement objects
-
-        Returns
-        -------
-        measurement : dict_values
-        """
-        return self.indexedobjects['CALIBRATION-MEASUREMENT'].values()
-
-    @property
-    def coefficients(self):
-        """ Read all Coefficient objects
-
-        Returns
-        -------
-        coefficient : dict_values
-        """
-        return self.indexedobjects['CALIBRATION-COEFFICIENT'].values()
-
-    @property
-    def calibrations(self):
-        """ Read all Calibration objects
-
-        Returns
-        -------
-        calibrations : dict_values
-        """
-        return self.indexedobjects['CALIBRATION'].values()
-
-    @property
-    def comments(self):
-        """ Read all Comment objects
-
-        Returns
-        -------
-        comment : dict_values
-
-        """
-        return self.indexedobjects['COMMENT'].values()
-
-    @property
-    def messages(self):
-        """ Read all Message objects
-
-        Returns
-        -------
-        meassage : dict_values
-
-        """
-        return self.indexedobjects['MESSAGE'].values()
+    origins      = IndexedObjectDescriptor("ORIGIN")
+    axes         = IndexedObjectDescriptor("AXIS")
+    longnames    = IndexedObjectDescriptor("LONG-NAME")
+    channels     = IndexedObjectDescriptor("CHANNEL")
+    frames       = IndexedObjectDescriptor("FRAME")
+    zones        = IndexedObjectDescriptor("ZONE")
+    tools        = IndexedObjectDescriptor("TOOL")
+    parameters   = IndexedObjectDescriptor("PARAMETER")
+    processes    = IndexedObjectDescriptor("PROCESS")
+    groups       = IndexedObjectDescriptor("GROUP")
+    wellrefs     = IndexedObjectDescriptor("WELL-REFERENCE")
+    splices      = IndexedObjectDescriptor("SPLICE")
+    paths        = IndexedObjectDescriptor("PATH")
+    equipments   = IndexedObjectDescriptor("EQUIPMENT")
+    computations = IndexedObjectDescriptor("COMPUTATION")
+    measurements = IndexedObjectDescriptor("CALIBRATION-MEASUREMENT")
+    coefficients = IndexedObjectDescriptor("CALIBRATION-COEFFICIENT")
+    calibrations = IndexedObjectDescriptor("CALIBRATION")
+    comments     = IndexedObjectDescriptor("COMMENT")
+    messages     = IndexedObjectDescriptor("MESSAGE")
 
     @property
     def unknowns(self):
+        """ Read all objects not parsed to known type
+        """
         return (obj
             for typename, object_set in self.indexedobjects.items()
             for obj in object_set.values()
             if typename not in self.types
         )
+
+    def object(self, type, name, origin=None, copynr=None):
+        """
+        Direct access to a single object.
+        dlis-objects are uniquely identifiable by the combination of
+        type, name, origin and copynumber of the object. However, in most cases
+        type and name is sufficient to identify a specific object.
+        If origin and/or copynr is omitted in the function call, and there are
+        multiple objects matching the type and name, a ValueError is raised.
+
+        Parameters
+        ----------
+        type: str
+            type as specified in RP66
+        name: str
+            name
+        origin: number, optional
+            number specifying which origin object the current object belongs to
+        copynr: number, optional
+            number specifying the copynumber of current object
+
+        Returns
+        -------
+        obj: searched object
+
+        Examples
+        --------
+
+        >>> ch = f.object("CHANNEL", "MKAP", 2, 0)
+        >>> print(ch.name)
+        MKAP
+
+        """
+        if origin is None or copynr is None:
+            obj = list(self.match('^'+name+'$', type))
+            if len(obj) == 1:
+                return obj[0]
+            elif len(obj) == 0:
+                msg = "No objects with name {} and type {} are found"
+                raise ValueError(msg.format(name, type))
+            elif len(obj) > 1:
+                msg = "There are multiple {}s named {}. Found: {}"
+                desc = ""
+                for o in obj:
+                    desc += ("(origin={}, copy={}), "
+                             .format(o.origin, o.copynumber))
+                raise ValueError(msg.format(type, name, desc))
+        else:
+            fingerprint = core.fingerprint(type, name, origin, copynr)
+            try:
+                return self.indexedobjects[type][fingerprint]
+            except KeyError:
+                msg = "Object {}.{}.{} of type {} is not found"
+                raise ValueError(msg.format(name, origin, copynr, type))
 
 def open(path):
     """ Open a file
