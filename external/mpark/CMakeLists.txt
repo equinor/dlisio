@@ -10,3 +10,15 @@ target_include_directories(mpark-variant
     INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+#add_library(variant ALIAS mpark-variant)
+export(
+    TARGETS
+        mpark-variant
+    NAMESPACE
+        mpark::
+    FILE
+        mpark-config.cmake
+)
+
+set(MPARK_LIB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
