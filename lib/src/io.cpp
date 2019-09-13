@@ -171,8 +171,8 @@ noexcept (false)
     ofs.resize( count );
 
     const auto dist = file.size();
-    for (auto& tell : tells) tell += dist;
-
+    std::transform(tells.begin(), tells.end(), tells.begin(),
+            [ dist ]( long long t ) -> long long { return t += dist; } );
     return ofs;
 }
 
