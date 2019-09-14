@@ -1,0 +1,197 @@
+version: 2.1
+
+commands:
+  pull_submodules:
+    steps:
+      - run :
+          name: Pull submodules
+          command: |
+            git submodule init
+            git submodule update --remote
+
+  install_build_deps:
+    parameters:
+      sudo:
+        type: boolean
+        default: false
+      extra:
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: install cmake gcc python3
+          command: |
+            <<#parameters.sudo >> sudo <</parameters.sudo >> apt-get update
+            <<#parameters.sudo >> sudo <</parameters.sudo >> apt-get install \
+            -y cmake g++ python3 python3-pip git << parameters.extra >>
+
+  python_build:
+    parameters:
+      docs:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - install_build_deps:
+          sudo: true
+      - pull_submodules
+      - run:
+          name: install core
+          command: |
+            mkdir build
+            cd build
+            cmake -DBUILD_SHARED_LIBS=ON \
+                  -DCMAKE_BUILD_TYPE=Release \
+                  -DBUILD_TESTING=OFF \
+                  -DBUILD_PYTHON=OFF \
+                   << parameters.docs >> \
+                  ..
+            make
+            sudo make install
+            sudo ldconfig /usr/local/lib
+            echo "export mio_DIR=$PWD/external/mio" >> $BASH_ENV
+            echo "export mpark_DIR=$PWD/external/mpark" >> $BASH_ENV
+      - run:
+          name: install python dependencies
+          command: python -m pip install --user -r python/requirements-dev.txt
+      - run:
+          name: build python
+          command: |
+            cd python
+            python setup.py build_ext --inplace install --user test
+
+  cmake_build:
+    description: dlisio build steps
+    parameters:
+      type:
+        description: build type
+        type: enum
+        default: Release
+        enum: ["Release", "Debug", "RelWithDebInfo"]
+      scan:
+        description: scan-build or similar command prefix
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: install python extra
+          command: python3 -m pip install --user -r python/requirements-dev.txt
+      - run:
+          name: configure
+          command: |
+            mkdir build
+            cd build
+            << parameters.scan >> \
+            cmake -DBUILD_SHARED_LIBS=ON \
+                  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+                  -DCMAKE_BUILD_TYPE=<< parameters.type >> \
+                  -DPYTHON_EXECUTABLE=`which python3` \
+                  ..
+      - run:
+          name: build and install
+          command: << parameters.scan >> cmake --build build --target install
+      - run:
+          name: test
+          command: |
+            cd build
+            ctest --output-on-failure
+
+jobs:
+  gcc:
+    docker:
+      - image: debian:stable
+    steps:
+      - checkout
+      - install_build_deps
+      - pull_submodules
+      - cmake_build
+
+  clang:
+    docker:
+      - image: debian:stable
+    environment:
+      CC: /usr/bin/clang
+      CXX: /usr/bin/clang++
+    steps:
+      - checkout
+      - install_build_deps:
+          extra: clang
+      - pull_submodules
+      - cmake_build
+
+  debug:
+    docker:
+      - image: debian:stable
+    steps:
+      - checkout
+      - install_build_deps
+      - pull_submodules
+      - cmake_build:
+          type: Debug
+
+  scan-build:
+    docker:
+      - image: debian:stable
+    steps:
+      - checkout
+      - install_build_deps:
+          extra: clang clang-tools libfindbin-libs-perl
+      - pull_submodules
+      - cmake_build:
+          scan: scan-build --status-bugs
+
+  cppcheck:
+    docker:
+      - image: ubuntu:latest
+    steps:
+      - checkout
+      - install_build_deps:
+          extra: cppcheck
+      - pull_submodules
+      - run:
+          name: run cppcheck
+          command: |
+            cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTING=OFF
+            cppcheck --enable=style,portability,performance,warning \
+                     --library=posix \
+                     --suppressions-list=cppcheck/suppressions.txt \
+                     --inline-suppr \
+                     --project=compile_commands.json \
+
+  python-35:
+    docker:
+      - image: circleci/python:3.5
+    steps:
+      - python_build
+
+  python-36:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - python_build
+
+  python-37:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - python_build:
+          docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - gcc
+      - clang
+      - debug
+
+  static-analysis:
+    jobs:
+      - cppcheck
+      - scan-build
+
+  python:
+    jobs:
+      - python-35
+      - python-36
+      - python-37

@@ -4,17 +4,17 @@ project(mpark-variant CXX)
 # backport of the C++17 variant for C++11
 # https://github.com/mpark/variant
 
-add_library(mpark-variant INTERFACE)
-target_include_directories(mpark-variant
+add_library(variant INTERFACE)
+add_library(mpark::variant ALIAS variant)
+target_include_directories(variant
     SYSTEM
     INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-#add_library(variant ALIAS mpark-variant)
 export(
     TARGETS
-        mpark-variant
+        variant
     NAMESPACE
         mpark::
     FILE
