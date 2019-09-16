@@ -121,21 +121,20 @@ noexcept (false)
     auto& residuals = ofs.residuals;
     auto& explicits = ofs.explicits;
 
-    int err;
     const char* next;
     int count = 0;
     int initial_residual = 0;
 
     while (true) {
-        err = dlis_index_records( begin,
-                                  end,
-                                  alloc_size,
-                                  &initial_residual,
-                                  &next,
-                                  &count,
-                                  count + tells.data(),
-                                  count + residuals.data(),
-                                  count + explicits.data() );
+        int err = dlis_index_records( begin,
+                                      end,
+                                      alloc_size,
+                                      &initial_residual,
+                                      &next,
+                                      &count,
+                                      count + tells.data(),
+                                      count + residuals.data(),
+                                      count + explicits.data() );
 
         switch (err) {
             case DLIS_OK: break;
@@ -172,8 +171,8 @@ noexcept (false)
     ofs.resize( count );
 
     const auto dist = file.size();
-    for (auto& tell : tells) tell += dist;
-
+    std::transform(tells.begin(), tells.end(), tells.begin(),
+            [ dist ]( long long t ) -> long long { return t += dist; } );
     return ofs;
 }
 
@@ -316,14 +315,13 @@ record& stream::at( int i, record& rec ) noexcept (false) {
                  */
 
                 const auto vrl_len = remaining + len;
-                const auto tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
-                consistent = false;
+                const auto cur_tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
                 const auto msg = "visible record/segment inconsistency: "
                                  "segment (which is {}) "
                                  ">= visible (which is {}) "
                                  "in record {} (at tell {})"
                 ;
-                const auto str = fmt::format(msg, len, vrl_len, i, tell);
+                const auto str = fmt::format(msg, len, vrl_len, i, cur_tell);
                 throw std::runtime_error(str);
             }
 
@@ -401,8 +399,8 @@ record& stream::at( int i, record& rec ) noexcept (false) {
     }
 }
 
-void stream::reindex( std::vector< long long > tells,
-                      std::vector< int > residuals ) noexcept (false) {
+void stream::reindex( const std::vector< long long >& tells,
+                      const std::vector< int >& residuals ) noexcept (false) {
     if (tells.empty())
         throw std::invalid_argument( "tells must be non-empty" );
 

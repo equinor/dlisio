@@ -46,7 +46,7 @@ target_compile_options(dlisio-extension
 )
 target_link_libraries(dlisio-extension
     PUBLIC dlisio
-           mpark-variant
+           mpark::variant
            mio
            endianness
 
@@ -66,7 +66,7 @@ export(
     TARGETS
         dlisio
         dlisio-extension
-        mpark-variant
+        variant
         mio
         fmt-header-only
         endianness

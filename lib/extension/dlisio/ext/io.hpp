@@ -30,8 +30,8 @@ public:
     record  at( int i ) noexcept (false);
     record& at( int i, record& ) noexcept (false);
 
-    void reindex( std::vector< long long >,
-                  std::vector< int > )
+    void reindex( const std::vector< long long >&,
+                  const std::vector< int >& )
         noexcept (false);
 
     void close();

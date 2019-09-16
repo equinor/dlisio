@@ -153,7 +153,7 @@ void describe( const char* fname ) {
     std::vector< char > buffer( 4096, 0 );
 
     readf( buffer, 80, fp );
-    int len = storage_unit_label( buffer.data() );
+    storage_unit_label( buffer.data() );
 
     for( int record = 0; ; record++ ) {
         readf( buffer, 4, fp );

@@ -388,7 +388,7 @@ int dlis_lrsh( const char* xs,
     std::uint8_t typ;
     xs = dlis_unorm( xs, &len );
     xs = dlis_ushort( xs, &attr );
-    xs = dlis_ushort( xs, &typ );
+    dlis_ushort( xs, &typ );
 
     *seglen = len;
     *attrs = attr;
@@ -422,7 +422,7 @@ int dlis_encryption_packet_info( const char* xs,
                                  int* companycode ) {
     std::uint16_t ln, cc;
     xs = dlis_unorm( xs, &ln );
-    xs = dlis_unorm( xs, &cc );
+    dlis_unorm( xs, &cc );
 
     /*
      * RP66 rqeuires there to be at least 4 bytes, which means the actual
@@ -576,6 +576,7 @@ template < typename T, typename... Ts >
 char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) noexcept (true) {
     std::memcpy( dst, ptr, sizeof( T ) );
     dst += sizeof( T );
+    // cppcheck-suppress CastIntegerToAddressAtReturn
     return pack( dst, ptrs ... );
 }
 
@@ -589,6 +590,7 @@ char* pack( char* dst,
     dst += sizeof( *len );
     std::memcpy( dst, str, *len );
     dst += *len;
+    // cppcheck-suppress CastIntegerToAddressAtReturn
     return pack( dst, ptrs ... );
 }
 
