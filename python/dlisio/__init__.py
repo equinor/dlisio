@@ -106,8 +106,7 @@ class dlis(object):
 
     def __repr__(self):
         try:
-            fh = list(self.fileheader)[0]
-            desc = fh.id
+            desc = self.fileheader.id
         except IndexError:
             desc = 'Unknown'
         return 'dlis({})'.format(desc)

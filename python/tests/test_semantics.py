@@ -4,6 +4,11 @@ import numpy as np
 
 import dlisio
 
+def test_dlis_describe(f):
+    # Because the .describe() i.e. returns long descriptive textual string,
+    # they are hard to test. But the very least test that it is callable.
+    _ = f.describe()
+
 def test_file_header(f):
     fh = f.object('FILE-HEADER', 'N', 10, 0)
     assert fh.type       == "FILE-HEADER"
