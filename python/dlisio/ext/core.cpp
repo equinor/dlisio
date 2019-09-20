@@ -47,7 +47,7 @@ struct type_caster< mpark::variant< T... > > :
  */
 template < typename T >
 struct dlis_caster {
-    PYBIND11_TYPE_CASTER(T, _("dl::typeinfo< T >::name"));
+    PYBIND11_TYPE_CASTER(T, _("dlisio.core.type.")+_(dl::typeinfo< T >::name));
 
     static handle cast( const T& src, return_value_policy, handle ) {
         return py::cast( dl::decay( src ) ).inc_ref();
