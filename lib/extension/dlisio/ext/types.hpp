@@ -236,111 +236,111 @@ struct attref {
 template < typename T > struct typeinfo;
 template <> struct typeinfo< dl::fshort > {
     static const representation_code reprc = dl::representation_code::fshort;
-    constexpr static const char* name = "fshort";
+    constexpr static const char name[] = "fshort";
 };
 template <> struct typeinfo< dl::fsingl > {
     static const representation_code reprc = dl::representation_code::fsingl;
-    constexpr static const char* name = "fsingl";
+    constexpr static const char name[] = "fsingl";
 };
 template <> struct typeinfo< dl::fsing1 > {
     static const representation_code reprc = dl::representation_code::fsing1;
-    constexpr static const char* name = "fsing1";
+    constexpr static const char name[] = "fsing1";
 };
 template <> struct typeinfo< dl::fsing2 > {
     static const representation_code reprc = dl::representation_code::fsing2;
-    constexpr static const char* name = "fsing2";
+    constexpr static const char name[] = "fsing2";
 };
 template <> struct typeinfo< dl::isingl > {
     static const representation_code reprc = dl::representation_code::isingl;
-    constexpr static const char* name = "isingl";
+    constexpr static const char name[] = "isingl";
 };
 template <> struct typeinfo< dl::vsingl > {
     static const representation_code reprc = dl::representation_code::vsingl;
-    constexpr static const char* name = "vsingl";
+    constexpr static const char name[] = "vsingl";
 };
 template <> struct typeinfo< dl::fdoubl > {
     static const representation_code reprc = dl::representation_code::fdoubl;
-    constexpr static const char* name = "fdoubl";
+    constexpr static const char name[] = "fdoubl";
 };
 template <> struct typeinfo< dl::fdoub1 > {
     static const representation_code reprc = dl::representation_code::fdoub1;
-    constexpr static const char* name = "fdoub1";
+    constexpr static const char name[] = "fdoub1";
 };
 template <> struct typeinfo< dl::fdoub2 > {
     static const representation_code reprc = dl::representation_code::fdoub2;
-    constexpr static const char* name = "fdoub2";
+    constexpr static const char name[] = "fdoub2";
 };
 template <> struct typeinfo< dl::csingl > {
     static const representation_code reprc = dl::representation_code::csingl;
-    constexpr static const char* name = "csingl";
+    constexpr static const char name[] = "csingl";
 };
 template <> struct typeinfo< dl::cdoubl > {
     static const representation_code reprc = dl::representation_code::cdoubl;
-    constexpr static const char* name = "cdoubl";
+    constexpr static const char name[] = "cdoubl";
 };
 template <> struct typeinfo< dl::sshort > {
     static const representation_code reprc = dl::representation_code::sshort;
-    constexpr static const char* name = "sshort";
+    constexpr static const char name[] = "sshort";
 };
 template <> struct typeinfo< dl::snorm > {
     static const representation_code reprc = dl::representation_code::snorm;
-    constexpr static const char* name = "snorm";
+    constexpr static const char name[] = "snorm";
 };
 template <> struct typeinfo< dl::slong > {
     static const representation_code reprc = dl::representation_code::slong;
-    constexpr static const char* name = "slong";
+    constexpr static const char name[] = "slong";
 };
 template <> struct typeinfo< dl::ushort > {
     static const representation_code reprc = dl::representation_code::ushort;
-    constexpr static const char* name = "ushort";
+    constexpr static const char name[] = "ushort";
 };
 template <> struct typeinfo< dl::unorm > {
     static const representation_code reprc = dl::representation_code::unorm;
-    constexpr static const char* name = "unorm";
+    constexpr static const char name[] = "unorm";
 };
 template <> struct typeinfo< dl::ulong > {
     static const representation_code reprc = dl::representation_code::ulong;
-    constexpr static const char* name = "ulong";
+    constexpr static const char name[] = "ulong";
 };
 template <> struct typeinfo< dl::uvari > {
     static const representation_code reprc = dl::representation_code::uvari;
-    constexpr static const char* name = "uvari";
+    constexpr static const char name[] = "uvari";
 };
 template <> struct typeinfo< dl::ident > {
     static const representation_code reprc = dl::representation_code::ident;
-    constexpr static const char* name = "ident";
+    constexpr static const char name[] = "ident";
 };
 template <> struct typeinfo< dl::ascii > {
     static const representation_code reprc = dl::representation_code::ascii;
-    constexpr static const char* name = "ascii";
+    constexpr static const char name[] = "ascii";
 };
 template <> struct typeinfo< dl::dtime > {
     static const representation_code reprc = dl::representation_code::dtime;
-    constexpr static const char* name = "dtime";
+    constexpr static const char name[] = "dtime";
 };
 template <> struct typeinfo< dl::origin > {
     static const representation_code reprc = dl::representation_code::origin;
-    constexpr static const char* name = "origin";
+    constexpr static const char name[] = "origin";
 };
 template <> struct typeinfo< dl::obname > {
     static const representation_code reprc = dl::representation_code::obname;
-    constexpr static const char* name = "obname";
+    constexpr static const char name[] = "obname";
 };
 template <> struct typeinfo< dl::objref > {
     static const representation_code reprc = dl::representation_code::objref;
-    constexpr static const char* name = "objref";
+    constexpr static const char name[] = "objref";
 };
 template <> struct typeinfo< dl::attref > {
     static const representation_code reprc = dl::representation_code::attref;
-    constexpr static const char* name = "attref";
+    constexpr static const char name[] = "attref";
 };
 template <> struct typeinfo< dl::status > {
     static const representation_code reprc = dl::representation_code::status;
-    constexpr static const char* name = "status";
+    constexpr static const char name[] = "status";
 };
 template <> struct typeinfo< dl::units > {
     static const representation_code reprc = dl::representation_code::units;
-    constexpr static const char* name = "units";
+    constexpr static const char name[] = "units";
 };
 
 /*
