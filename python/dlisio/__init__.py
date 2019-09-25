@@ -500,8 +500,8 @@ def load(path):
     Notes
     -----
 
-    1) That the parentezies are needed when unpacking directly in the with
-    statment
+    1) That the parentheses are needed when unpacking directly in the with
+    statement
 
     2) The asterisk allows an arbitrary number of extra logical files to be
     stored in tail. Use len(tail) to check how many extra logical files there
