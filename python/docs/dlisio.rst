@@ -3,8 +3,8 @@ Open and Load
 .. autofunction:: dlisio.load
 .. autofunction:: dlisio.open
 
-File Handle
-===========
+Logical files
+=============
 .. autoclass:: dlisio.dlis()
     :members:
     :exclude-members: types, IndexedObjectDescriptor
