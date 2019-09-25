@@ -9,12 +9,28 @@ import logging
 
 
 class Frame(BasicObject):
-    """Frame-type
+    """Frame
 
-    A Frame is a horizontal segment of the log data, possibly containing multiple
-    channels. A frame objects identifies all channels that are a part of each
-    Frame, along with the type- and range of the index of the channels.
-    Note that the index itself is also a channel object.
+    A Frame is a logical gathering of multiple Channels (curves), typically
+    Channels from the same run.  A Frame containing three Channels would look
+    something like this::
+
+           TDEP     AIBK    TENS_SL
+          -------  -------  -------
+          |          |           |
+           |          |         |
+            |         |        |
+             |       |        |
+              |       |       |
+               |     |         |
+
+    Usually, the first channel in the channel list is considered to be the
+    index-channel of the Frame. See:attr:`index_type` for more information
+    about the index channels.
+
+    All Channels belonging to a Frame are directly accessible through
+    :attr:`channels`.  A full table of all the curve-data can be accessed with
+    :attr:`curves`.
 
     Attributes
     ----------
@@ -26,7 +42,10 @@ class Frame(BasicObject):
         Channels in the frame
 
     index_type : str
-        The measurement of the index, e.g. borehole-depth
+        The measurement of the index, e.g. borehole-depth. If **not** None, the
+        first channel is considered to be an index channel. If index_type is
+        None, then the Frame has no index channel and is implicitly indexed by
+        samplenumber i.e. 0, 1, ..., n.
 
     direction : str
         Direction of the index (Increasing or decreasing)
@@ -232,36 +251,118 @@ class Frame(BasicObject):
 
     def curves(self):
         """
-        Reads curves for the frame.
+        Returns a structured numpy array of all the curves
 
         Examples
         --------
-        Read curves from the frame and show curves from CHANN1 and CHANN2
+
+        The returned array supports both horizontal- and vertical slicing.
+        Do a vertical slice by specifying a single Channel
 
         >>> curves = frame.curves()
-        >>> curves["CHANN1"]
-        array([1.1, 2.2, 3.3])
-        >>> curves["CHANN2"]
-        array([6.6, 7.7, 8.8])
+        >>> curves['CHANN1']
+        array([16677259., 852606., 16678259., 852606.])
 
-        Read curves from the frame, show curves from MULTI_D_CHANNEL
+        Access a subset of Channels, note the double-bracket syntax
+
+        >>> curves[['CHANN2', 'CHANN3']]
+        array([
+            (16677259., 852606.),
+            (16678259., 852606.),
+            (16679259., 852606.),
+            (16680259., 852606.)
+        ])
+
+
+        Do a horizontal slice of all Channels, i.e. read a subset of samples
+        from all channels
+
+        >>> curves[0:2]
+        array([
+            (16677259., 852606., 2233., 852606.),
+            (16678259., 852606., 2237., 852606.)])
+
+        Horizontal and vertical slicing can be combined
+
+        >>> curves['CHANN2'][0]
+        16677259.0
+
+        And here the subscription order is irrelevant
+
+        >>> curves[0]['CHANN2']
+        16677259.0
+
+        Some curves, like image curves, have multi-dimensional samples.
+        Accessing a single sample from a 2-dimensional curve
 
         >>> curves = frame.curves()
-        >>> curves["MULTI_D_CHANNEL"]
-        array([[[  1,  2,  3],
-                [  4,  5,  6]],
-               [[  7,  8,  9],
-                [ 10, 11,  12]]])
+        >>> sample = curves['MULTI_D_CHANNEL'][0]
+        >>> sample
+        array([[ 1,  2,  3],
+               [ 4,  5,  6],
+               [ 7,  8,  9],
+               [10, 11,  12]])
 
-        Show only second sample
+        This sample is a 2-dimensional array of size 4x3. We can continue to
+        slice this sample. Note that now the subscription order here **does**
+        matter. Here we read the two last rows
 
-        >>> curves["MULTI_D_CHANNEL"][1]
+        >>> sample[-2:]
         array([[  7,  8,  9],
                [ 10, 11, 12]])
 
+        Lets read every second column
+
+        >>> sample[:,::2]
+        array([[ 1, 3],
+               [ 4, 6],
+               [ 7, 9],
+               [10, 12]])
+
+        Note the syntax. Within the brackets, everything before the ',' is row-
+        operations and everything after are column-operations. Read it as: keep
+        all rows (:) and then from first to last column, keep every 2nd column
+        (::2). The comma syntax for indexing different axes extends to array's
+        with higher orders as well.
+
+        Combine the two to read a specific element
+
+        >>> sample[0,0]
+        1
+
+        If you prefer to work with pandas over numpy, the conversion is
+        trivial
+
+        >>> import pandas as pd
+        >>> curves = pd.DataFrame(frame.curves())
+
+        If the Frame contains an index Channel, use that as index in the
+        DataFrame
+
+        >>> curves = frame.curves()
+        >>> if frame.index_type:
+        >>>     indexname  = curves.dtype.names[0]
+        >>>     curvenames = curves.dtype.names[1:]
+        >>>     pdcurves = pd.DataFrame(curves[list(curvenames)], index=curves[indexname])
+        >>>     pdcurves.index.name = indexname
+        >>> else:
+        >>>     pdcurves = pd.DataFrame(curves)
+
+        Let's walk through this. Firstly, check that *index_type* is not None,
+        if it is, there is no index channel to set. Secondly, note how the
+        curvenames are all stored in the array itself. Then all that is needed
+        is to extract the first name as index and let the rest be added to the
+        DataFrame as normal Channels.
+
+        See also
+        --------
+
+        Channel.curves : Access the curve-data directly through the Channel
+          objects
+
         Returns
         -------
-        curves : np.array
+        curves : np.ndarray
 
         """
         return curves(self.file, self, self.dtype, "", self.fmtstr(), "")
