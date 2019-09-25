@@ -11,9 +11,17 @@ from collections import OrderedDict
 
 class Channel(BasicObject):
     """
-    A channel is a sequence of measured or computed samples that are index
-    against e.g. depth or time. Each sample can be a scalar or a n-dimentional
-    array.
+    A channel is a sequence of measured or computed samples that are indexed
+    against some physical quantity e.g. depth or time. The standard supports
+    multi-dimensional samples. Each sample can be a scalar or a n-dimensional
+    array. In addition to giving access to the actual curve-data, the Channel
+    object contains metadata about the curve.
+
+    All Channels are a part of one, and only one, Frame. The parent Frame can
+    be reached directly through :py:attr:`frame`.
+
+    Refer to the :py:func:`curves` to see some examples on how to access the
+    curve-data.
 
     Attributes
     ----------
@@ -28,7 +36,7 @@ class Channel(BasicObject):
         Physical units of each element in the channel's sample arrays
 
     properties : list(str)
-        Property indicators that summerizes the characteristics of the
+        Property indicators that summarizes the characteristics of the
         channel and the processing that have produced it.
 
     dimension : list(int)
@@ -89,7 +97,7 @@ class Channel(BasicObject):
 
         # The numpy data type of the sample array
         self._dtype        = None
-        # Format-string of the channel. Mainly indended for internal use
+        # Format-string of the channel. Mainly intended for internal use
         self._fmtstr       = None
         self.frame        = None
 
@@ -148,36 +156,45 @@ class Channel(BasicObject):
 
     def curves(self):
         """
-        Reads curves for the channel.
+        Returns a numpy ndarray with the curves-values.
 
         Examples
         --------
-        Read curves for the channel and access 3rd sample
 
-        >>> curves = channel.curves()
-        >>> curves
-        array([1.1, 2.2, 3.3])
-        >>> curves[2]
-        3.3
+        Read the full curve
 
-        Read curves for multidimensional channel
+        >>> curve = channel.curves()
+        >>> curve
+        array([1.1, 2.2, 3.3, 4.4])
 
-        >>> curves = multichannel.curves()
-        >>> curves
+        The returned array supports common slicing operations
+
+        >>> curve[::2]
+        array([1.1, 3.3])
+
+        Read the full curve from a multidimensional channel
+
+        >>> curve = multichannel.curves()
+        >>> curve
         array([[[  1,  2,  3],
                 [  4,  5,  6]],
                [[  7,  8,  9],
                 [ 10, 11,  12]]])
 
-        Access 2nd sample, 1st row
+        This curve has two samples, that both are of size 2x3. From the 1st
+        sample, read the element located in the 2nd row, 3rd column
 
-        >>> curves[1][0]
-        array([7, 8, 9])
+        >>> curve[0][1][2]
+        6
+
+        See also
+        --------
+
+        Frame.curves() : Read all the curves in a Frame in one go
 
         Returns
         -------
-        curves : np.array
-
+        curves : np.ndarray
         """
         frame = self.frame
         pre_fmt, fmt, post_fmt = frame.fmtstrchannel(self)
