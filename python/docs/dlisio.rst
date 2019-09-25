@@ -16,15 +16,16 @@ Logical files
 
 .. currentmodule:: dlisio.plumbing
 
-Basic Object
+Object types
 ============
+
+Basic Object
+------------
 .. autoclass:: BasicObject()
     :members:
     :undoc-members:
     :member-order: bysource
-
-RP66 objects (native dlis)
-==========================
+    :exclude-members: stripspaces
 
 Axis
 ----
