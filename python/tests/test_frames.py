@@ -19,12 +19,18 @@ def test_frame_getitem(DWL206):
     assert curves[0]['TDEP'] == 852606.0
 
 def makeframe():
+    frame = dlisio.plumbing.Frame()
+    frame.name = 'MAINFRAME'
+    frame.origin = 0
+    frame.copynumber = 0
+
     time0 = dlisio.plumbing.Channel()
     time0.name = 'TIME'
     time0.origin = 0
     time0.copynumber = 0
     time0.dimension = [1]
     time0.reprc = 2 # f4
+    time0.frame = frame
 
     tdep = dlisio.plumbing.Channel()
     tdep.name = 'TDEP'
@@ -32,6 +38,7 @@ def makeframe():
     tdep.copynumber = 0
     tdep.dimension = [2]
     tdep.reprc = 13 # i2
+    tdep.frame = frame
 
     time1 = dlisio.plumbing.Channel()
     time1.name = 'TIME'
@@ -39,11 +46,8 @@ def makeframe():
     time1.copynumber = 0
     time1.dimension = [1]
     time1.reprc = 13 # i2
+    time1.frame = frame
 
-    frame = dlisio.plumbing.Frame()
-    frame.name = 'MAINFRAME'
-    frame.origin = 0
-    frame.copynumber = 0
     frame.channels = [time0, tdep, time1]
 
     return frame
@@ -162,3 +166,46 @@ def test_wrong_linkage(assert_log):
 
     f.link([f])
     assert_log("wrong linkage")
+
+def test_frame_index():
+    frame = makeframe()
+    frame.index_type = 'DECREASING'
+
+    assert frame.index == frame.channels[0]
+
+def test_frame_noindex(assert_info):
+    frame = makeframe()
+
+    assert frame.index is None
+    assert_info('There is no index channel')
+
+def test_frame_nochannels_no_index(assert_info):
+    frame = dlisio.plumbing.Frame()
+    frame.index_type = 'DECREASING'
+
+    assert frame.index == None
+    assert_info('There is no index channel')
+
+def test_channel_index():
+    frame = makeframe()
+    frame.index_type = 'DECREASING'
+
+    index   = frame.channels[0]
+    channel = frame.channels[1]
+
+    assert channel.index == index
+
+def test_channel_is_index(assert_info):
+    frame = makeframe()
+    frame.index_type = 'DECREASING'
+    channel = frame.channels[0]
+
+    assert channel.index == channel
+    assert_info('This channel is an index channel')
+
+def test_channel_noindex(assert_info):
+    frame = makeframe()
+    channel = frame.channels[0]
+
+    assert channel.index is None
+    assert_info('There is no index channel')
