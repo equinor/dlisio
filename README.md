@@ -82,7 +82,9 @@ By default, the python library is built.
 
 ## Tutorial ##
 
-Tutorial, documentation and how-tos will come soon.
+The API documentation is avaliable on [readthedocs](https://dlisio.readthedocs.io/en/stable/).
+Here you also find some simple examples to get you started with dlis and
+dlisio.
 
 ## Contributing ##
 
