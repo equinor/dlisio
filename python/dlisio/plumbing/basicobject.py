@@ -5,15 +5,25 @@ from .utils import *
 import logging
 
 class BasicObject():
-    """Basic object
-    Python representation of the set of logical record types (listed in
-    Appendix A - Logical Record Types, described in Chapter 5 - Static and
-    Frame Data)
+    """A Basic object that all other object-types derive from
 
-    All object-types are derived from BasicObject, but that is just a way of
-    adding the object-name field which is present in every object, as well as
-    specifying the object type. These two fields makes a unique indentifier for
-    the object.
+    BasicObject is mainly an implementation detail. Its the least common
+    denominator of all object-types.
+
+    When working with dlisio you need not care too much about the BasicObject.
+    However, keep in mind that all other object-types inherit BasicObject's
+    attributes and methods and they can be called directly on the objects.
+    Hence it might be a good idea to somewhat familiarize yourself with its
+    features.
+
+    When reading the documentation keep in mind that the attributes defined on
+    the BasicObject are **not** documented again on the derived object.
+
+    An object is uniquely identifiable within a logical file by the combination
+    of its type, name, origin and copynumber. I.e. no two objects can have the
+    same type, name, origin AND copynumber. This means that the standard allows
+    for e.g. two Channels to have the same name/mnemonic, which can easily
+    become a bit confusing.
 
     Attributes
     ----------
@@ -39,13 +49,13 @@ class BasicObject():
     stash : dict_like
         Dictionary with all attributes not specified in
         :py:attr:`~attributes`.
-
     """
 
     attributes = {}
-    """dict: Index of all the attributes this object is expected to have.
-    DLISIO will use this index on object parsing. If an attribute is not in
-    index, it will be ignored when parsing the file.
+    """dict: Parsing guide for native dlis objects. The typical user can safely
+    ignore this attribute. It is mainly intended for internal use and advanced
+    customization of dlisio's parsing routine.
+
     If attributes list is to be updated manually for the class:
 
     >>> Coefficient.attributes['MY_PARAM'] = valuetypes.scalar('myparam')
@@ -76,8 +86,10 @@ class BasicObject():
     """
 
     linkage    = {}
-    """dict: Linkage defines the rules for how each attribute links to other
-    objects.
+    """dict: Defines which attributes that contains references other objects.
+    The typical user can safely ignore this attribute. It is mainly intended
+    for internal use and advanced customization of dlisio's parsing routine.
+
     During load stage all the objects of obname, objref and attref types
     are put into refs. During link stage they are linked to actually
     loaded objects based on information provided in linkage.
@@ -151,8 +163,8 @@ class BasicObject():
     def stripspaces(self):
         """Strip spaces
 
-        Remove leading and trailing withspaces for object attributes as they
-        may be padded with whitespaces.
+        Remove leading and trailing white-spaces for object attributes as they
+        may be padded with white-spaces.
         """
 
         def strip(d):
@@ -248,7 +260,7 @@ class BasicObject():
 
         This is achieved by looping over the Python class' attribute list
         (which maps the native c++ attribute names to the attribute names in the
-        Python class) and extracting the value(s). Essensially, this is whats
+        Python class) and extracting the value(s). Essentially, this is whats
         going on:
 
         >>> for label, value in obj.items():
@@ -312,7 +324,7 @@ class BasicObject():
         Notes
         -----
 
-        The exclude parameter gives the option to ommit parts of the summary.
+        The exclude parameter gives the option to omit parts of the summary.
         The table below states the different modes available.
 
         ====== ==========================================
@@ -320,21 +332,17 @@ class BasicObject():
         ====== ==========================================
         'h'    header
         'a'    known attributes
-        's'    attributes from stash                  [1]
-        'i'    attributes that violates the standard  [2]
-        'e'    attributes with empty values (default) [3]
-        'r'    attributes from refs (default)         [4]
+        's'    attributes from stash
+        'i'    attributes that violates the standard  [1]
+        'e'    attributes with empty values (default) [2]
+        'r'    attributes from refs (default)
         ====== ==========================================
 
-        [1] Stash contains attributes that are unknown to dlisio
-        [2] Only applicable to attributes that should be interpreted in a
+        [1] Only applicable to attributes that should be interpreted in a
         specific way, such as Parameter.values. If not applicable, it is
         ignored.
-        [3] Do not print attributes that have no value.
-        [4] refs is a dict of attributes that contains references to other
-        objects. If found, dlisio populates attributes with the objects
-        corresponding to the references. The original reference, as represented
-        on disk, can be accessed through the refs attribute.
+
+        [2] Do not print attributes that have no value.
         """
         from io import StringIO
 

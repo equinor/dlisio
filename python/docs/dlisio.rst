@@ -3,8 +3,8 @@ Open and Load
 .. autofunction:: dlisio.load
 .. autofunction:: dlisio.open
 
-File Handle
-===========
+Logical files
+=============
 .. autoclass:: dlisio.dlis()
     :members:
     :exclude-members: types, IndexedObjectDescriptor
@@ -16,15 +16,16 @@ File Handle
 
 .. currentmodule:: dlisio.plumbing
 
-Basic Object
+Object types
 ============
+
+Basic Object
+------------
 .. autoclass:: BasicObject()
     :members:
     :undoc-members:
     :member-order: bysource
-
-RP66 objects (native dlis)
-==========================
+    :exclude-members: stripspaces
 
 Axis
 ----
