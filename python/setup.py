@@ -57,7 +57,7 @@ skbuild.setup(
     platforms = 'any',
     install_requires = ['numpy'],
     setup_requires = ['setuptools >= 28',
-                      'pybind11 >= 2.2',
+                      'pybind11 >= 2.3',
                       'setuptools_scm',
                       'pytest-runner',
     ],
