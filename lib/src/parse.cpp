@@ -75,6 +75,8 @@ set_descriptor parse_set_descriptor( const char* cur ) noexcept (false) {
 }
 
 struct attribute_descriptor {
+    /* label, count, reprc, units, value are valid only when 'object' and
+    'absent' are false. See parse_attribute_descriptor for parsing routine*/
     bool label;
     bool count;
     bool reprc;
