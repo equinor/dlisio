@@ -138,14 +138,6 @@ def fpath(tmpdir_factory, merge_files_manyLR):
         'data/semantic/comment.dlis.part',
         'data/semantic/update.dlis.part',
         'data/semantic/unknown.dlis.part',
-        'data/semantic/channel-reprcode.dlis.part',
-        'data/semantic/frame-reprcode.dlis.part',
-        'data/semantic/fdata-reprcode.dlis.part',
-        'data/semantic/file-header2.dlis.part',
-        'data/semantic/origin2.dlis.part',
-        'data/semantic/channel-dimension.dlis.part',
-        'data/semantic/frame-dimension.dlis.part',
-        'data/semantic/fdata-dimension.dlis.part',
     ]
     merge_files_manyLR(path, content)
     return path

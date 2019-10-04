@@ -569,3 +569,34 @@ def test_duplicate_framenos_same_frames(assert_log):
     np.testing.assert_array_equal(curves[1][0], np.array(True))
 
     assert_log("Duplicated frames")
+
+def test_fdata_dimension(tmpdir_factory, merge_files_manyLR):
+    path = str(tmpdir_factory.mktemp('dimensions').join('fdata-dim.dlis'))
+    content = [
+        'data/semantic/envelope.dlis.part',
+        'data/semantic/file-header2.dlis.part',
+        'data/semantic/origin2.dlis.part',
+        'data/semantic/channel-dimension.dlis.part',
+        'data/semantic/frame-dimension.dlis.part',
+        'data/semantic/fdata-dimension.dlis.part',
+    ]
+    merge_files_manyLR(path, content)
+
+    with dlisio.load(path) as (f, *_):
+        frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
+        curves = frame.curves()
+
+        assert list(curves[0][0][0])    == [1, 2, 3]
+        assert list(curves[0][0][1])    == [4, 5, 6]
+        assert list(curves[0][1][0])    == [1, 2]
+        assert list(curves[0][1][1])    == [3, 4]
+        assert list(curves[0][1][2])    == [5, 6]
+        assert list(curves[0][2][0][0]) == [1, 2]
+        assert list(curves[0][2][1][1]) == [9, 10]
+        assert list(curves[0][2][2][1]) == [15, 16]
+        assert list(curves[0][2][3][2]) == [23, 24]
+        assert list(curves[0][3][0])    == [1, 2]
+        assert list(curves[0][4][0])    == [1]
+        assert list(curves[0][4][1])    == [2]
+        assert list(curves[0][5][0])    == [1]
+        assert list(curves[0][6])       == [1, 2, 3, 4]

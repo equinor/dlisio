@@ -167,8 +167,8 @@ def test_indexedobjects(f):
     assert len(f.origins)      == 2
     assert len(f.axes)         == 3
     assert len(f.longnames)    == 4
-    assert len(f.channels)     == 31
-    assert len(f.frames)       == 3
+    assert len(f.channels)     == 4
+    assert len(f.frames)       == 2
     assert len(f.zones)        == 1
     assert len(f.tools)        == 1
     assert len(f.parameters)   == 3
