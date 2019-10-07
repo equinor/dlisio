@@ -118,6 +118,32 @@ class Frame(BasicObject):
         # Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format
 
+    @property
+    def index(self):
+        """The Channel that serves as an index for all other Channels in this
+        Frame.
+
+        Frames may or may not have an index Channel, see :attr:`index_type` for
+        definition of existing index channel.
+
+        Returns
+        -------
+        channel : Channel or None
+        """
+        msg = 'There is no index channel, see help(frame.index) for more info'
+        index = None
+
+        if self.index_type is None:
+            logging.warning(msg)
+            return index
+
+        try:
+            index = self.channels[0]
+        except IndexError:
+            logging.warning(msg)
+
+        return index
+
     @classmethod
     def create(cls, obj, name = None, type = None, file = None):
         self = Frame(obj, name = name, file = file)

@@ -1,4 +1,5 @@
 import pytest
+import logging
 
 import dlisio
 
@@ -102,6 +103,13 @@ def update_envelope_LRSL(b, lrs_offset = 0):
 
 @pytest.fixture
 def assert_log(caplog):
+    def assert_message(message_id):
+        assert any([message_id in r.message for r in caplog.records])
+    return assert_message
+
+@pytest.fixture
+def assert_info(caplog):
+    caplog.set_level(logging.INFO)
     def assert_message(message_id):
         assert any([message_id in r.message for r in caplog.records])
     return assert_message
