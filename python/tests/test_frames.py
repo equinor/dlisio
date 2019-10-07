@@ -149,6 +149,20 @@ def test_channel_curves():
     assert ch_fmt   == "qqqqqqqq"
     assert post_fmt == "Ldddddd"
 
+def test_channel_no_dimension(assert_log):
+    ch = dlisio.plumbing.Channel()
+    ch.name = 'CH'
+    ch.origin = 0
+    ch.copynumber = 0
+    ch.reprc = 17
+
+    with pytest.raises(ValueError) as exc:
+        ch.fmtstr()
+    assert "channel.dimension is unvalid" in str(exc.value)
+
+    ch.dimension = [1]
+    assert ch.fmtstr() == "L"
+
 def test_not_a_link(assert_log):
     f = dlisio.plumbing.Frame()
     f.linkage = dict(f.linkage)
