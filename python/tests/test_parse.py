@@ -15,9 +15,9 @@ def merge(merge_files_oneLR):
 def test_invariant_attribute(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'invariant_attribute.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/invariant.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invariant.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -34,10 +34,10 @@ def test_invariant_attribute(tmpdir, merge):
 def test_invariant_attribute_in_object(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'invariant-attribute-in-object.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/invariant.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/invariant.dlis.part',
     ]
     merge(path, content)
 
@@ -51,10 +51,10 @@ def test_invariant_attribute_in_object(tmpdir, merge):
 def test_default_attribute(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'default_attribute.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/empty.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/empty.dlis.part'
     ]
     merge(path, content)
 
@@ -70,10 +70,10 @@ def test_default_attribute(tmpdir, merge):
 def test_default_attribute_cut(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'default_attribute_cut.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/invariant.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invariant.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -86,11 +86,11 @@ def test_default_attribute_cut(tmpdir, merge):
 def test_attribute_absent(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'attribute_absent.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/invariant.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/absent.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invariant.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/absent.dlis.part'
     ]
     merge(path, content)
 
@@ -105,10 +105,10 @@ def test_attribute_absent(tmpdir, merge):
 def test_absent_attribute_in_template(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'absent-attribute-in-template.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/absent.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/absent.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -121,10 +121,10 @@ def test_absent_attribute_in_template(tmpdir, merge):
 def test_global_default_attribute(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'global-default-attribute.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/global-default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/empty.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/global-default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/empty.dlis.part'
     ]
     merge(path, content)
 
@@ -141,10 +141,10 @@ def test_global_default_attribute(tmpdir, merge):
 def test_all_attribute_bits(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'global-all-attribute-bits.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/all-set.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
     ]
     merge(path, content)
 
@@ -161,10 +161,10 @@ def test_all_attribute_bits(tmpdir, merge):
 def test_label_bit_set_in_attribute(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'label_bit_set_in_attribute.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/label-bit-set.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/label-bit-set.dlis.part',
     ]
     merge(path, content)
 
@@ -178,9 +178,9 @@ def test_label_bit_set_in_attribute(tmpdir, merge):
 def test_label_bit_not_set_in_template(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'label-bit-not-set-in-template.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/label-bit-not-set.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/label-bit-not-set.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -195,10 +195,10 @@ def test_label_bit_not_set_in_template(tmpdir, merge):
 def test_count0_novalue(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'count0-novalue.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/count0-novalue-bit.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/count0-novalue-bit.dlis.part'
     ]
     merge(path, content)
 
@@ -213,10 +213,10 @@ def test_count0_novalue(tmpdir, merge):
 def test_count0_value_bit(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'count0-value-bit.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/count0-value-bit.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/count0-value-bit.dlis.part'
     ]
     merge(path, content)
 
@@ -231,10 +231,10 @@ def test_count0_value_bit(tmpdir, merge):
 def test_count0_different_repcode(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'count0-different-repcode.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/count0-different-repcode.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/count0-different-repcode.dlis.part'
     ]
     merge(path, content)
 
@@ -249,10 +249,10 @@ def test_count0_different_repcode(tmpdir, merge):
 def test_different_repcode_no_value(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'different-repcode-no-value.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/csingle-novalue.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/csingle-novalue.dlis.part'
     ]
     merge(path, content)
 
@@ -264,10 +264,10 @@ def test_different_repcode_no_value(tmpdir, merge):
 def test_same_as_default_no_value(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'same-as-default-but-no-value.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/repeat-default-novalue.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/repeat-default-novalue.dlis.part'
     ]
     merge(path, content)
 
@@ -281,10 +281,10 @@ def test_same_as_default_no_value(tmpdir, merge):
 def test_novalue_less_count(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'novalue-less-count.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/count1-novalue.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/count1-novalue.dlis.part'
     ]
     merge(path, content)
 
@@ -301,10 +301,10 @@ def test_novalue_less_count(tmpdir, merge):
 def test_novalue_more_count(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'novalue-more-count.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/count9-novalue.dlis.part'
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/count9-novalue.dlis.part'
     ]
     merge(path, content)
 
@@ -352,9 +352,9 @@ def test_novalue_more_count(tmpdir, merge):
 def test_repcode(tmpdir, merge, filename_p, attr_n, attr_reprc, attr_v):
     path = os.path.join(str(tmpdir), filename_p + '.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/repcode/' + filename_p + '.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/repcode/' + filename_p + '.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -368,10 +368,10 @@ def test_repcode(tmpdir, merge, filename_p, attr_n, attr_reprc, attr_v):
 def test_invalid_repcode_in_template_value(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'invalid-repcode.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/invalid-repcode-value.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/all-set.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invalid-repcode-value.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part',
     ]
     merge(path, content)
 
@@ -383,10 +383,10 @@ def test_invalid_repcode_in_template_value(tmpdir, merge):
 def test_invalid_repcode_in_template_no_value(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/invalid-repcode-no-value.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/all-set.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invalid-repcode-no-value.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part',
     ]
     merge(path, content)
 
@@ -399,10 +399,10 @@ def test_invalid_repcode_in_template_no_value(tmpdir, merge):
 def test_invalid_repcode_in_objects(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'invalid-repcode-object.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/reprcode-invalid.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/reprcode-invalid.dlis.part',
     ]
     merge(path, content)
 
@@ -414,10 +414,10 @@ def test_invalid_repcode_in_objects(tmpdir, merge):
 def test_inccorect_set_header(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'incorrect-set-header.dlis')
     content = [
-        'data/parse/sul.dlis.part',
-        'data/parse/set/no-set-start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/no-set-start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -430,10 +430,10 @@ def test_inccorect_set_header(tmpdir, merge):
 def test_set_type_not_set(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'incorrect_set_header.dlis')
     content = [
-        'data/parse/sul.dlis.part',
-        'data/parse/set/no-type-flag.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/no-type-flag.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -446,9 +446,9 @@ def test_set_type_not_set(tmpdir, merge):
 def test_no_object_name_bit(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'no-object-name-bit.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/no-name-bit.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/no-name-bit.dlis.part',
     ]
     merge(path, content)
 
@@ -460,10 +460,10 @@ def test_no_object_name_bit(tmpdir, merge):
 def test_unexpected_attribute_instead_of_object(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'unexpected-attr-instead-of-object.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/invariant.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/empty.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invariant.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/empty.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(ValueError) as excinfo:
@@ -474,8 +474,8 @@ def test_unexpected_attribute_instead_of_object(tmpdir, merge):
 def test_no_template(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'no-template.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
 
@@ -487,12 +487,12 @@ def test_no_template(tmpdir, merge):
 def test_unexpected_set_in_object(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'unexpected-set-in-object.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/set/second-set.dlis.part',
-        'data/parse/template/invariant.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/set/second-set.dlis.part',
+        'data/chap3/template/invariant.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(ValueError) as excinfo:
@@ -503,11 +503,11 @@ def test_unexpected_set_in_object(tmpdir, merge):
 def test_unexpected_set_in_template(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'unexpected-set-in-template.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/set/second-set.dlis.part',
-        'data/parse/template/invariant.dlis.part',
-        'data/parse/object/object.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/set/second-set.dlis.part',
+        'data/chap3/template/invariant.dlis.part',
+        'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(ValueError) as excinfo:
@@ -518,7 +518,7 @@ def test_unexpected_set_in_template(tmpdir, merge):
 def test_cut_before_template(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'cut-before-template.dlis')
     content = [
-        'data/parse/start.dlis.part',
+        'data/chap3/start.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(IndexError) as excinfo:
@@ -529,8 +529,8 @@ def test_cut_before_template(tmpdir, merge):
 def test_cut_before_object(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'cut-before-object.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
     ]
     merge(path, content)
     with dlisio.load(path) as (f,):
@@ -544,9 +544,9 @@ def test_cut_before_object(tmpdir, merge):
 def test_cut_middle_object(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'cut-middle-object.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/cut_middle_type.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/cut_middle_type.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(IndexError) as excinfo:
@@ -558,10 +558,10 @@ def test_cut_middle_object(tmpdir, merge):
 def test_cut_middle_object_attribute(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'cut-middle-object-attribute.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/default.dlis.part',
-        'data/parse/object/object.dlis.part',
-        'data/parse/objattr/cut_middle_value.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/cut_middle_value.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(IndexError) as excinfo:
@@ -573,8 +573,8 @@ def test_cut_middle_object_attribute(tmpdir, merge):
 def test_cut_middle_template_attribute(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'cut-middle-template-attribut.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/cut_after_attribute.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/cut_after_attribute.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(IndexError) as excinfo:
@@ -584,8 +584,8 @@ def test_cut_middle_template_attribute(tmpdir, merge):
 def test_value_broken_utf8(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'value_broken_utf8.dlis')
     content = [
-        'data/parse/start.dlis.part',
-        'data/parse/template/broken-utf8.dlis.part',
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/broken-utf8.dlis.part',
     ]
     merge(path, content)
     with dlisio.load(path):
@@ -594,8 +594,8 @@ def test_value_broken_utf8(tmpdir, merge):
 def test_fdata_bad_ident(tmpdir, merge):
     path = os.path.join(str(tmpdir), 'fdata_bad_ident.dlis')
     content = [
-        'data/parse/sul.dlis.part',
-        'data/parse/implicit/fdata-bad-ident.dlis.part',
+        'data/chap3/sul.dlis.part',
+        'data/chap3/implicit/fdata-bad-ident.dlis.part',
     ]
     merge(path, content)
     with pytest.raises(RuntimeError) as excinfo:

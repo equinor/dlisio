@@ -6,21 +6,21 @@ import dlisio
 def fpath(tmpdir_factory, merge_files_manyLR):
     path = str(tmpdir_factory.mktemp('load').join('manylogfiles.dlis'))
     content = [
-        'data/semantic/envelope.dlis.part',
+        'data/chap4-7/eflr/envelope.dlis.part',
         # First logical file, does not have FILE-HEADER
-        'data/semantic/origin.dlis.part',
-        'data/semantic/channel.dlis.part',
-        'data/semantic/frame.dlis.part',
+        'data/chap4-7/eflr/origin.dlis.part',
+        'data/chap4-7/eflr/channel.dlis.part',
+        'data/chap4-7/eflr/frame.dlis.part',
         # Second logical file
-        'data/semantic/file-header2.dlis.part',
-        'data/semantic/origin2.dlis.part',
-        'data/semantic/channel-inc.dlis.part',
-        'data/semantic/frame-inc.dlis.part',
-        'data/semantic/fdata-frame-inc-1.dlis.part',
-        'data/semantic/frame.dlis.part',
-        'data/semantic/fdata-frame-inc-2.dlis.part',
+        'data/chap4-7/eflr/file-header2.dlis.part',
+        'data/chap4-7/eflr/origin2.dlis.part',
+        'data/chap4-7/eflr/channel-inc.dlis.part',
+        'data/chap4-7/eflr/frame-inc.dlis.part',
+        'data/chap4-7/eflr/fdata-frame-inc-1.dlis.part',
+        'data/chap4-7/eflr/frame.dlis.part',
+        'data/chap4-7/eflr/fdata-frame-inc-2.dlis.part',
         # Third logical file, only has a FILE-HEADER
-        'data/semantic/file-header.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
     ]
     merge_files_manyLR(path, content)
     return path
@@ -102,17 +102,17 @@ def test_objects(fpath):
 def test_objects_with_encrypted_records(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('load').join('same-object.dlis'))
     content = [
-        'data/semantic/envelope.dlis.part',
+        'data/chap4-7/eflr/envelope.dlis.part',
         # First logical file
-        'data/semantic/file-header.dlis.part',
-        'data/semantic/origin.dlis.part',
-        'data/semantic/channel.dlis.part',
-        'data/semantic/axis-encrypted.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/origin.dlis.part',
+        'data/chap4-7/eflr/channel.dlis.part',
+        'data/chap4-7/eflr/axis-encrypted.dlis.part',
         # Second logical file
-        'data/semantic/file-header2.dlis.part',
-        'data/semantic/origin2.dlis.part',
-        'data/semantic/axis-encrypted.dlis.part',
-        'data/semantic/channel-same-objects.dlis.part',
+        'data/chap4-7/eflr/file-header2.dlis.part',
+        'data/chap4-7/eflr/origin2.dlis.part',
+        'data/chap4-7/eflr/axis-encrypted.dlis.part',
+        'data/chap4-7/eflr/channel-same-objects.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
 
