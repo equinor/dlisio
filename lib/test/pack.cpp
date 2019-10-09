@@ -11,15 +11,25 @@
 
 namespace {
 
-struct check_packsize {
+struct check_packflen {
+    const char* fmt;
+    std::vector< char > buffer;
+    std::vector< unsigned char > source;
+
+    ~check_packflen() {
+        int nread, nwrite;
+        const auto err = dlis_packflen(fmt, source.data(), &nread, &nwrite);
+        CHECK(err == DLIS_OK);
+        CHECK(nread == source.size());
+        CHECK(nwrite == buffer.size());
+    }
+};
+
+struct check_packsize : check_packflen {
     ~check_packsize() {
         pck_check_pack_size();
         pck_check_pack_varsize();
     }
-
-    const char* fmt;
-    std::vector< char > buffer;
-    std::vector<unsigned char> source;
 
     private:
 
@@ -42,14 +52,11 @@ struct check_packsize {
     }
 };
 
-struct check_mixed_packsize {
+struct check_mixed_packsize : check_packflen {
     ~check_mixed_packsize() {
         mix_check_pack_size();
         mix_check_pack_varsize();
     }
-
-    const char* fmt;
-    std::vector< char > buffer;
 
     private:
 
@@ -76,7 +83,7 @@ struct check_mixed_packsize {
 }
 
 TEST_CASE_METHOD(check_mixed_packsize, "pack UVARIs and ORIGINs", "[pack]") {
-    std::vector<unsigned char> source = {
+    source = {
         0xC0, 0x00, 0x00, 0x00, // 0
         0xC0, 0x00, 0x00, 0x01, // 1
         0xC0, 0x00, 0x00, 0x2E, // 46
@@ -106,7 +113,7 @@ TEST_CASE_METHOD(check_mixed_packsize, "pack UVARIs and ORIGINs", "[pack]") {
 
 TEST_CASE_METHOD(check_mixed_packsize,
                  "pack UVARIs and ORIGINs of diff size", "[pack]") {
-    std::vector<unsigned char> source = {
+    source = {
         0x01, // 1 uvari
         0x81, 0x00, // 256 uvari
         0xC0, 0x00, 0x8F, 0xFF, // 36863 uvari
@@ -618,7 +625,7 @@ TEST_CASE_METHOD(check_is_varsize, "pack attref", "[pack]") {
 }
 
 TEST_CASE_METHOD(check_mixed_packsize, "pack mixed", "[pack]") {
-    std::vector<unsigned char> source = {
+    source = {
         0x4C, 0x88, // 153 fshort
         0x81, 0x00, // 256 uvari
         // 254Y 2TZ 12M 30D 1H 33MN 17S 1MS

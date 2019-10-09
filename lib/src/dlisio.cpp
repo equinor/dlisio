@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cctype>
 #include <ciso646>
 #include <cstdint>
@@ -556,6 +557,21 @@ namespace {
 struct cursor {
     const char* src;
     char* dst;
+    int written;
+
+    void advance(int nbytes) noexcept (true) {
+        if (this->dst) this->dst += nbytes;
+        this->written += nbytes;
+    }
+
+    cursor& invalidate() noexcept (true) {
+        this->src = nullptr;
+        return *this;
+    }
+
+    bool invalid() const noexcept (true) {
+        return !this->src;
+    }
 };
 
 /*
@@ -563,35 +579,38 @@ struct cursor {
  * it when recursing pack(dst, ptrs, ...)
  */
 template < typename... Ts >
-char* pack( char* dst,
-            const std::int32_t* len,
-            const char* str,
-            const Ts* ... ptrs ) noexcept (true);
+int pack(char* dst,
+         const std::int32_t* len,
+         const char* str,
+         const Ts* ... ptrs) noexcept (true);
 
-char* pack( char* dst ) noexcept (true) {
-    return dst;
+int pack(char*) noexcept (true) {
+    return 0;
 }
 
 template < typename T, typename... Ts >
-char* pack( char* dst, const T* ptr, const Ts* ... ptrs ) noexcept (true) {
-    std::memcpy( dst, ptr, sizeof( T ) );
-    dst += sizeof( T );
-    // cppcheck-suppress CastIntegerToAddressAtReturn
-    return pack( dst, ptrs ... );
+int pack(char* dst, const T* ptr, const Ts* ... ptrs) noexcept (true) {
+    constexpr int size = sizeof(T);
+    if (dst) {
+        std::memcpy(dst, ptr, size);
+        dst += size;
+    }
+    return size + pack(dst, ptrs ...);
 }
 
 template < typename... Ts >
-char* pack( char* dst,
-            const std::int32_t* len,
-            const char* str,
-            const Ts* ... ptrs ) noexcept (true)
+int pack(char* dst,
+         const std::int32_t* len,
+         const char* str,
+         const Ts* ... ptrs) noexcept (true)
 {
-    std::memcpy( dst, len, sizeof( *len ) );
-    dst += sizeof( *len );
-    std::memcpy( dst, str, *len );
-    dst += *len;
-    // cppcheck-suppress CastIntegerToAddressAtReturn
-    return pack( dst, ptrs ... );
+    const auto size = sizeof(*len) + *len;
+    if (dst) {
+        std::memcpy(dst, len, sizeof(*len));
+        std::memcpy(dst + sizeof(*len), str, *len);
+        dst += size;
+    }
+    return size + pack(dst, ptrs ...);
 }
 
 using str = std::array< char, 256 >;
@@ -628,7 +647,8 @@ template <> struct bless< char >     { using type = str; };
 template < typename F, typename... Args >
 cursor interpret( cursor cur, F func, Args ... args ) noexcept (true) {
     cur.src = func( cur.src, address( args ) ... );
-    cur.dst = pack( cur.dst, address( args ) ... );
+    const auto written = pack(cur.dst, address( args ) ...);
+    cur.advance(written);
     return cur;
 }
 
@@ -647,45 +667,49 @@ noexcept (true)
     return interpret( cur, f, init< typename bless< Args >::type >() ... );
 }
 
-}
-
-int dlis_packf( const char* fmt, const void* src, void* dst ) {
-    cursor cur = {
-        static_cast< const char* >( src ),
-        static_cast< char* >( dst ),
-    };
+cursor packf(const char* fmt, const char* src, char* dst) noexcept (true) {
+    /*
+     * The public dlis_packf function assumes both src and dst are valid
+     * pointers, but the worker packf function has no such restriction. In
+     * addition, packflen is *essentially* packf, but it outputs the
+     * byte-count, instead of doing writes.
+     *
+     * This function implements both these operations
+     */
+    cursor cur = {src, dst, 0};
 
     std::vector< char > ascii;
     while (true) {
         switch (*fmt++) {
-            case DLIS_FMT_EOL: return DLIS_OK;
+            case DLIS_FMT_EOL:
+                return cur;
 
-            case DLIS_FMT_FSHORT: cur = interpret( cur, dlis_fshort ); break;
-            case DLIS_FMT_FSINGL: cur = interpret( cur, dlis_fsingl ); break;
-            case DLIS_FMT_FSING1: cur = interpret( cur, dlis_fsing1 ); break;
-            case DLIS_FMT_FSING2: cur = interpret( cur, dlis_fsing2 ); break;
-            case DLIS_FMT_ISINGL: cur = interpret( cur, dlis_isingl ); break;
-            case DLIS_FMT_VSINGL: cur = interpret( cur, dlis_vsingl ); break;
-            case DLIS_FMT_FDOUBL: cur = interpret( cur, dlis_fdoubl ); break;
-            case DLIS_FMT_FDOUB1: cur = interpret( cur, dlis_fdoub1 ); break;
-            case DLIS_FMT_FDOUB2: cur = interpret( cur, dlis_fdoub2 ); break;
-            case DLIS_FMT_CSINGL: cur = interpret( cur, dlis_csingl ); break;
-            case DLIS_FMT_CDOUBL: cur = interpret( cur, dlis_cdoubl ); break;
-            case DLIS_FMT_SSHORT: cur = interpret( cur, dlis_sshort ); break;
-            case DLIS_FMT_SNORM:  cur = interpret( cur, dlis_snorm  ); break;
-            case DLIS_FMT_SLONG:  cur = interpret( cur, dlis_slong  ); break;
-            case DLIS_FMT_USHORT: cur = interpret( cur, dlis_ushort ); break;
-            case DLIS_FMT_UNORM:  cur = interpret( cur, dlis_unorm  ); break;
-            case DLIS_FMT_ULONG:  cur = interpret( cur, dlis_ulong  ); break;
-            case DLIS_FMT_UVARI:  cur = interpret( cur, dlis_uvari  ); break;
-            case DLIS_FMT_IDENT:  cur = interpret( cur, dlis_ident  ); break;
-            case DLIS_FMT_DTIME:  cur = interpret( cur, dlis_dtime  ); break;
-            case DLIS_FMT_ORIGIN: cur = interpret( cur, dlis_origin ); break;
-            case DLIS_FMT_OBNAME: cur = interpret( cur, dlis_obname ); break;
-            case DLIS_FMT_OBJREF: cur = interpret( cur, dlis_objref ); break;
-            case DLIS_FMT_ATTREF: cur = interpret( cur, dlis_attref ); break;
-            case DLIS_FMT_STATUS: cur = interpret( cur, dlis_status ); break;
-            case DLIS_FMT_UNITS:  cur = interpret( cur, dlis_units  ); break;
+            case DLIS_FMT_FSHORT: cur = interpret(cur, dlis_fshort); break;
+            case DLIS_FMT_FSINGL: cur = interpret(cur, dlis_fsingl); break;
+            case DLIS_FMT_FSING1: cur = interpret(cur, dlis_fsing1); break;
+            case DLIS_FMT_FSING2: cur = interpret(cur, dlis_fsing2); break;
+            case DLIS_FMT_ISINGL: cur = interpret(cur, dlis_isingl); break;
+            case DLIS_FMT_VSINGL: cur = interpret(cur, dlis_vsingl); break;
+            case DLIS_FMT_FDOUBL: cur = interpret(cur, dlis_fdoubl); break;
+            case DLIS_FMT_FDOUB1: cur = interpret(cur, dlis_fdoub1); break;
+            case DLIS_FMT_FDOUB2: cur = interpret(cur, dlis_fdoub2); break;
+            case DLIS_FMT_CSINGL: cur = interpret(cur, dlis_csingl); break;
+            case DLIS_FMT_CDOUBL: cur = interpret(cur, dlis_cdoubl); break;
+            case DLIS_FMT_SSHORT: cur = interpret(cur, dlis_sshort); break;
+            case DLIS_FMT_SNORM:  cur = interpret(cur, dlis_snorm ); break;
+            case DLIS_FMT_SLONG:  cur = interpret(cur, dlis_slong ); break;
+            case DLIS_FMT_USHORT: cur = interpret(cur, dlis_ushort); break;
+            case DLIS_FMT_UNORM:  cur = interpret(cur, dlis_unorm ); break;
+            case DLIS_FMT_ULONG:  cur = interpret(cur, dlis_ulong ); break;
+            case DLIS_FMT_UVARI:  cur = interpret(cur, dlis_uvari ); break;
+            case DLIS_FMT_IDENT:  cur = interpret(cur, dlis_ident ); break;
+            case DLIS_FMT_DTIME:  cur = interpret(cur, dlis_dtime ); break;
+            case DLIS_FMT_ORIGIN: cur = interpret(cur, dlis_origin); break;
+            case DLIS_FMT_OBNAME: cur = interpret(cur, dlis_obname); break;
+            case DLIS_FMT_OBJREF: cur = interpret(cur, dlis_objref); break;
+            case DLIS_FMT_ATTREF: cur = interpret(cur, dlis_attref); break;
+            case DLIS_FMT_STATUS: cur = interpret(cur, dlis_status); break;
+            case DLIS_FMT_UNITS:  cur = interpret(cur, dlis_units ); break;
 
             case DLIS_FMT_ASCII: {
                 /*
@@ -693,18 +717,45 @@ int dlis_packf( const char* fmt, const void* src, void* dst ) {
                  * needs dynamic memory to be correct.
                  */
                 std::int32_t len;
-                dlis_ascii( cur.src, &len, nullptr );
-                ascii.resize( len );
-                cur.src = dlis_ascii( cur.src, &len, ascii.data() );
-                cur.dst = pack( cur.dst, &len, ascii.data() );
+                dlis_ascii(cur.src, &len, nullptr);
+                ascii.resize(len);
+                cur.src = dlis_ascii(cur.src, &len, ascii.data());
+                const auto written = pack(cur.dst, &len, ascii.data());
+                cur.advance(written);
                 break;
             }
 
             default:
-                return DLIS_UNEXPECTED_VALUE;
+                return cur.invalidate();
         }
     }
+}
 
+}
+
+int dlis_packf( const char* fmt, const void* src, void* dst ) {
+    assert(src);
+    assert(dst);
+
+    auto csrc = static_cast< const char* >(src);
+    auto cdst = static_cast< char* >(dst);
+    const auto cur = packf(fmt, csrc, cdst);
+
+    if (cur.invalid())
+        return DLIS_UNEXPECTED_VALUE;
+
+    return DLIS_OK;
+}
+
+int dlis_packflen(const char* fmt, const void* src, int* nread, int* nwrite) {
+    auto csrc = static_cast< const char* >(src);
+    const auto cur = packf(fmt, csrc, nullptr);
+
+    if (cur.invalid())
+        return DLIS_UNEXPECTED_VALUE;
+
+    if (nread)  *nread  = std::distance(csrc, cur.src);
+    if (nwrite) *nwrite = cur.written;
     return DLIS_OK;
 }
 
