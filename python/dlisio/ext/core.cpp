@@ -295,33 +295,46 @@ std::string fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
-struct fdatasize {
-    int src;
-    int dst;
-};
+void check_supported_fmtstr(const char* fmt) {
+    for (;; ++fmt) {
+        switch (*fmt) {
+            case DLIS_FMT_EOL:
+                return;
 
-fdatasize fdata_size(const char* fmt) {
-    const auto fmt_str = std::string(fmt);
-    const auto fmt_msg = "invalid format specifier in " + fmt_str;
+            /* SUPPORTED */
+            case DLIS_FMT_FSHORT:
+            case DLIS_FMT_FSINGL:
+            case DLIS_FMT_FSING1:
+            case DLIS_FMT_FSING2:
+            case DLIS_FMT_ISINGL:
+            case DLIS_FMT_VSINGL:
+            case DLIS_FMT_FDOUBL:
+            case DLIS_FMT_FDOUB1:
+            case DLIS_FMT_FDOUB2:
+            case DLIS_FMT_CSINGL:
+            case DLIS_FMT_CDOUBL:
+            case DLIS_FMT_SSHORT:
+            case DLIS_FMT_SNORM:
+            case DLIS_FMT_SLONG:
+            case DLIS_FMT_USHORT:
+            case DLIS_FMT_UNORM:
+            case DLIS_FMT_ULONG:
+            case DLIS_FMT_STATUS:
+                continue;
 
-    int variable;
-    auto err = dlis_pack_varsize(fmt, &variable, nullptr);
-    if (err) {
-        throw std::invalid_argument(fmt_msg);
+            /* UNSUPPORTED */
+            case DLIS_FMT_UVARI:
+            case DLIS_FMT_IDENT:
+            case DLIS_FMT_ASCII:
+            case DLIS_FMT_DTIME:
+            case DLIS_FMT_ORIGIN:
+            case DLIS_FMT_OBNAME:
+            case DLIS_FMT_OBJREF:
+            case DLIS_FMT_ATTREF:
+            case DLIS_FMT_UNITS:
+                throw dl::not_implemented("unsupported format in fmtstr");
+        }
     }
-
-    if (variable) {
-        throw dl::not_implemented(fmt_msg);
-    }
-
-    int src = 0;
-    int dst = 0;
-    err = dlis_pack_size(fmt, &src, &dst);
-    if (err) {
-        throw std::invalid_argument(fmt_msg);
-    }
-
-    return fdatasize { src, dst };
 }
 
 void read_fdata(const char* pre_fmt,
@@ -339,9 +352,12 @@ noexcept (false) {
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
 
-    auto pre_size  = fdata_size(pre_fmt);
-    auto data_size = fdata_size(fmt);
-    auto post_size = fdata_size(post_fmt);
+    check_supported_fmtstr(pre_fmt);
+    check_supported_fmtstr(fmt);
+    check_supported_fmtstr(post_fmt);
+
+    const auto fmt_str = std::string(fmt);
+    const auto fmt_msg = "invalid format specifier in " + fmt_str;
 
     dl::record record;
     int expected_frameno = 1;
