@@ -371,26 +371,28 @@ noexcept (false) {
                 // const auto msg = 'Non-sequential frames. expected = {}, current = {}'
             }
 
-            const auto tail = std::distance(ptr, end);
-            auto size_src = pre_size.src + data_size.src + post_size.src;
-            if (tail < size_src) {
-                const auto msg = "unaligned record: tail (which is "
-                               + std::to_string(tail)
-                               + ") < fmt_size (which is "
-                               + std::to_string(size_src)
-                               + ")"
-                               ;
-                throw std::runtime_error(msg);
-            }
+            auto assert_overflow = [end](const char* ptr, int skip) {
+                if (ptr + skip > end) {
+                    const auto msg = "corrupted record: fmtstr would read past end";
+                    throw std::runtime_error(msg);
+                }
+            };
 
-            ptr += pre_size.src;
+            int src_skip, dst_skip;
+            dlis_packflen(pre_fmt, ptr, &src_skip, nullptr);
+            assert_overflow(ptr, src_skip);
+            ptr += src_skip;
 
+            dlis_packflen(fmt, ptr, &src_skip, &dst_skip);
+            assert_overflow(ptr, src_skip);
             dlis_packf(fmt, ptr, dst);
-            dst += data_size.dst;
-            ptr += data_size.src;
+            dst += dst_skip;
+            ptr += src_skip;
             expected_frameno = frameno + 1;
 
-            ptr += post_size.src;
+            dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
+            assert_overflow(ptr, src_skip);
+            ptr += src_skip;
 
             if (ptr != end) {
                 // TODO: lift this restriction (realloc buffers)
