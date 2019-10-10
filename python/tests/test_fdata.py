@@ -112,7 +112,6 @@ def test_ulong():
     np.testing.assert_array_equal(
         curves[0][0], np.array(1))
 
-@pytest.mark.xfail(strict=True)
 def test_uvari():
     fpath = 'data/chap4-7/iflr/reprcodes/18-uvari.dlis'
     curves = load_curves(fpath)

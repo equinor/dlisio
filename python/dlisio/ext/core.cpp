@@ -320,10 +320,10 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_UNORM:
             case DLIS_FMT_ULONG:
             case DLIS_FMT_STATUS:
+            case DLIS_FMT_UVARI:
                 continue;
 
             /* UNSUPPORTED */
-            case DLIS_FMT_UVARI:
             case DLIS_FMT_IDENT:
             case DLIS_FMT_ASCII:
             case DLIS_FMT_DTIME:
