@@ -83,7 +83,7 @@ handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy
                                        src.H,
                                        src.MN,
                                        src.S,
-                                       src.MS );
+                                       src.MS * 1000);
 }
 
 template <>

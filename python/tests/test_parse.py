@@ -187,7 +187,7 @@ def test_label_bit_not_set_in_template(tmpdir, merge):
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['NEW_ATTRIBUTE']
-        dt = datetime(2033, 4, 19, 20, 39, 58, 103)
+        dt = datetime(2033, 4, 19, 20, 39, 58, 103000)
         assert attr == [dt]
 
 
@@ -336,7 +336,7 @@ def test_novalue_more_count(tmpdir, merge):
     ("20-ascii",  'ASCII',  reprc.ascii,  "ASCII VALUE"),
     ("21-dtime",  'DTIME',  reprc.dtime,  datetime(1971,
                                                    3, 21, 18,
-                                                   4, 14, 386)),
+                                                   4, 14, 386000)),
     ("22-origin", 'ORIGIN', reprc.origin, 16777217),
     ("23-obname", 'OBNAME', reprc.obname, (18, 5, "OBNAME_I")),
     ("24-objref", 'OBJREF', reprc.objref, ("OBJREF_I",

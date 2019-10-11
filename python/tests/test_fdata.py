@@ -367,7 +367,7 @@ def test_dtime_x2():
     fpath = 'data/chap4-7/iflr/reprcodes-x2/21-dtime.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(
-        curves[0][0], np.array(datetime(1971, 3, 21, 18, 4, 14, 386)))
+        curves[0][0], np.array(datetime(1971, 3, 21, 18, 4, 14, 386000)))
     np.testing.assert_array_equal(
         curves[1][0], np.array(datetime(1970, 3, 21, 18, 4, 0, 0)))
 
@@ -473,7 +473,7 @@ def test_all_reprcodes():
     np.testing.assert_array_equal(
         curves[0][19], np.array("ASCII VALUE"))
     np.testing.assert_array_equal(
-        curves[0][20], np.array(datetime(1971, 3, 21, 18, 4, 14, 386)))
+        curves[0][20], np.array(datetime(1971, 3, 21, 18, 4, 14, 386000)))
     np.testing.assert_array_equal(
         curves[0][21], np.array(16777217))
     np.testing.assert_array_equal(
@@ -494,7 +494,7 @@ def test_two_various_fdata_in_one_iflr():
 
     curves = load_curves(fpath)
     np.testing.assert_array_equal(curves[0][0],
-                          np.array(datetime(1971, 3, 21, 18, 4, 14, 386)))
+                          np.array(datetime(1971, 3, 21, 18, 4, 14, 386000)))
     np.testing.assert_array_equal(curves[0][1],
                           np.array("VALUE"))
     np.testing.assert_array_equal(curves[0][2],
