@@ -130,12 +130,18 @@ def test_ident():
     assert curves[0].dtype.itemsize == 255 * 4
     assert curves[0][0] == 'VALUE'
 
-@pytest.mark.xfail(strict=True)
 def test_ascii():
+    # The backing C++ heavily relies on objects (in this case str) being
+    # written to the array as just a pointer, because we're writing a new
+    # pointer into the appropriate offset
+    import ctypes
+    dtype = np.dtype(object)
+    assert dtype.itemsize == ctypes.sizeof(ctypes.c_void_p())
+
     fpath = 'data/chap4-7/iflr/reprcodes/20-ascii.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array("Thou shalt not kill"))
+    assert curves[0][0] == 'Thou shalt not kill'
+    assert curves[0].dtype.itemsize == dtype.itemsize
 
 @pytest.mark.xfail(strict=True)
 def test_dtime():

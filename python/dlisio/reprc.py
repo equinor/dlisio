@@ -60,7 +60,7 @@ dtype = {
     17     : 'u4',                   #Long unsigned integer
     18     : 'u4',                   #Variable-length unsigned integer
     19     : 'U255',                 #Bounded-length identifier
-    20     : 'u4,U',                 #Variable-length ASCII character string
+    20     : 'O',                    #Variable-length ASCII character string
     21     : 'M',                    #Date and time
     22     : 'u4',                   #Origin reference
     23     : 'u4,u1,u1,U',           #Object name

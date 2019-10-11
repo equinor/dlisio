@@ -322,10 +322,10 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_STATUS:
             case DLIS_FMT_UVARI:
             case DLIS_FMT_IDENT:
+            case DLIS_FMT_ASCII:
                 continue;
 
             /* UNSUPPORTED */
-            case DLIS_FMT_ASCII:
             case DLIS_FMT_DTIME:
             case DLIS_FMT_ORIGIN:
             case DLIS_FMT_OBNAME:
@@ -463,6 +463,32 @@ noexcept (false) {
                         std::memcpy(dst + i * sizeof(x), &x, sizeof(x));
                     }
                     dst += ident_size;
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_ASCII) {
+                    std::int32_t len;
+                    ptr = dlis_uvari(ptr, &len);
+                    auto ascii = py::str(ptr, len);
+                    ptr += len;
+
+                    /*
+                     * Numpy seems to default initalize object types even in
+                     * the case of np.empty to None [1]. The refcount is surely
+                     * increased, so decref it before replacing the pointer
+                     * with a fresh str.
+                     *
+                     * [1] Array of uninitialized (arbitrary) data of the given
+                     *     shape, dtype, and order. Object arrays will be
+                     *     initialized to None.
+                     *     https://docs.scipy.org/doc/numpy/reference/generated/numpy.empty.html
+                     */
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = ascii.inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
                     continue;
                 }
 
