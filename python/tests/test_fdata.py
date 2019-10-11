@@ -118,12 +118,17 @@ def test_uvari():
     np.testing.assert_array_equal(
         curves[0][0], np.array(257))
 
-@pytest.mark.xfail(strict=True)
 def test_ident():
     fpath = 'data/chap4-7/iflr/reprcodes/19-ident.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array("VALUE"))
+    # The backing C++ code heavily relies on the size of the string in bytes
+    # being 255 * uint32, so make it an extra assert.
+    #
+    # If this test fails it's probably because of wrong platform assumptions,
+    # unicode representation or similar issues, and implies revising the fdata
+    # parsing logic.
+    assert curves[0].dtype.itemsize == 255 * 4
+    assert curves[0][0] == 'VALUE'
 
 @pytest.mark.xfail(strict=True)
 def test_ascii():

@@ -59,7 +59,7 @@ dtype = {
     16     : 'u2',                   #Normal unsigned integer
     17     : 'u4',                   #Long unsigned integer
     18     : 'u4',                   #Variable-length unsigned integer
-    19     : 'u1,U',                 #Variable-length identifier
+    19     : 'U255',                 #Bounded-length identifier
     20     : 'u4,U',                 #Variable-length ASCII character string
     21     : 'M',                    #Date and time
     22     : 'u4',                   #Origin reference

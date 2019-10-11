@@ -321,10 +321,10 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_ULONG:
             case DLIS_FMT_STATUS:
             case DLIS_FMT_UVARI:
+            case DLIS_FMT_IDENT:
                 continue;
 
             /* UNSUPPORTED */
-            case DLIS_FMT_IDENT:
             case DLIS_FMT_ASCII:
             case DLIS_FMT_DTIME:
             case DLIS_FMT_ORIGIN:
@@ -342,13 +342,14 @@ void read_fdata(const char* pre_fmt,
                 const char* post_fmt,
                 dl::stream& file,
                 const std::vector< int >& indices,
-                py::buffer dstb)
+                py::object dstobj)
 noexcept (false) {
     // TODO: reverse fingerprint to skip bytes ahead-of-time
     /*
      * TODO: error has already been checked (in python), but should be more
      * thorough
      */
+    auto dstb = py::buffer(dstobj);
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
 
@@ -399,11 +400,79 @@ noexcept (false) {
             assert_overflow(ptr, src_skip);
             ptr += src_skip;
 
-            dlis_packflen(fmt, ptr, &src_skip, &dst_skip);
-            assert_overflow(ptr, src_skip);
-            dlis_packf(fmt, ptr, dst);
-            dst += dst_skip;
-            ptr += src_skip;
+            for (auto* f = fmt; *f; ++f) {
+                /*
+                 * Supporting bounded-length identifiers in frame data is
+                 * slightly more difficult than it immediately seem like, and
+                 * this implementation relies on a few assumptions that may not
+                 * hold.
+                 *
+                 * 1. numpy structured arrays interpret unicode on the fly
+                 *
+                 * On my amd64 linux:
+                 * >>> dt = np.dtype('U5')
+                 * >>> dt.itemsize
+                 * 20
+                 * >>> np.array(['foo'], dtype = dt)[0]
+                 * 'foo'
+                 * >>> np.array(['foobar'], dtype = dt)[0]
+                 * 'fooba'
+                 *
+                 * Meaning it supports string lengths of [0, n]. It apparently
+                 * (and maybe rightly so) uses null termination, or the bounded
+                 * length, which ever comes first.
+                 *
+                 * 2. numpy stores characters as int32 Py_UNICODE
+                 * Numpy seems to always use uint32, and not Py_UNICODE, which
+                 * can be both 16 and 32 bits [1]. Since it's an integer it's
+                 * endian sensitive, and widening from char works. This is not
+                 * really documented by numpy.
+                 *
+                 * 3. numpy stores no metadata with the string
+                 * It is assumed, and seems necessary from the interface, that
+                 * there is no in-band metadata stored about the strings when
+                 * used in structured arrays. This means we can just write the
+                 * unicode ourselves, and have numpy interpret it correctly.
+                 *
+                 * [1] http://docs.h5py.org/en/stable/strings.html#what-about-numpy-s-u-type
+                 *     NumPy also has a Unicode type, a UTF-32 fixed-width
+                 *     format (4-byte characters). HDF5 has no support for wide
+                 *     characters. Rather than trying to hack around this and
+                 *     “pretend” to support it, h5py will raise an error when
+                 *     attempting to create datasets or attributes of this
+                 *     type.
+                 *
+                 */
+                if (*f == DLIS_FMT_IDENT) {
+                    constexpr auto chars = 255;
+                    constexpr auto ident_size = chars * sizeof(std::uint32_t);
+
+                    std::int32_t len;
+                    char tmp[chars];
+                    ptr = dlis_ident(ptr, &len, tmp);
+
+                    /*
+                     * From reading the numpy source, it looks like they put
+                     * and interpret the unicode buffer in the array directly,
+                     * and pad with zero. This means the string is both null
+                     * and length terminated, whichever comes first.
+                     */
+                    std::memset(dst, 0, ident_size);
+                    for (auto i = 0; i < len; ++i) {
+                        const auto x = std::uint32_t(tmp[i]);
+                        std::memcpy(dst + i * sizeof(x), &x, sizeof(x));
+                    }
+                    dst += ident_size;
+                    continue;
+                }
+
+                const char localfmt[] = {*f, '\0'};
+                dlis_packflen(localfmt, ptr, &src_skip, &dst_skip);
+                assert_overflow(ptr, src_skip);
+                dlis_packf(localfmt, ptr, dst);
+                dst += dst_skip;
+                ptr += src_skip;
+            }
             expected_frameno = frameno + 1;
 
             dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
