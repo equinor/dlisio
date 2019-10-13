@@ -160,12 +160,10 @@ def test_obname():
     curves = load_curves(fpath)
     assert curves[0][0] == (18, 5, 'OBNAME_I')
 
-@pytest.mark.xfail(strict=True)
 def test_objref():
     fpath = 'data/chap4-7/iflr/reprcodes/24-objref.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(("OBJREF_I", (25, 3, "OBJREF_OBNAME"))))
+    assert curves[0][0] == ('OBJREF_I', (25, 3, 'OBJREF_OBNAME'))
 
 @pytest.mark.xfail(strict=True)
 def test_attref():
