@@ -323,11 +323,11 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_UVARI:
             case DLIS_FMT_IDENT:
             case DLIS_FMT_ASCII:
+            case DLIS_FMT_ORIGIN:
                 continue;
 
             /* UNSUPPORTED */
             case DLIS_FMT_DTIME:
-            case DLIS_FMT_ORIGIN:
             case DLIS_FMT_OBNAME:
             case DLIS_FMT_OBJREF:
             case DLIS_FMT_ATTREF:

@@ -150,12 +150,10 @@ def test_dtime():
     np.testing.assert_array_equal(
         curves[0][0], np.array(datetime(1971, 3, 21, 18, 4, 14, 386)))
 
-@pytest.mark.xfail(strict=True)
 def test_origin():
     fpath = 'data/chap4-7/iflr/reprcodes/22-origin.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(16777217))
+    assert curves[0][0] == 16777217
 
 @pytest.mark.xfail(strict=True)
 def test_obname():
