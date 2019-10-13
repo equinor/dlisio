@@ -324,11 +324,11 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_IDENT:
             case DLIS_FMT_ASCII:
             case DLIS_FMT_ORIGIN:
+            case DLIS_FMT_OBNAME:
                 continue;
 
             /* UNSUPPORTED */
             case DLIS_FMT_DTIME:
-            case DLIS_FMT_OBNAME:
             case DLIS_FMT_OBJREF:
             case DLIS_FMT_ATTREF:
             case DLIS_FMT_UNITS:
@@ -492,6 +492,28 @@ noexcept (false) {
                     continue;
                 }
 
+                if (*f == DLIS_FMT_OBNAME) {
+                    std::int32_t origin;
+                    std::uint8_t copy;
+                    std::int32_t idlen;
+                    char id[255];
+                    ptr = dlis_obname(ptr, &origin, &copy, &idlen, id);
+
+                    const auto name = dl::obname {
+                        dl::origin(origin),
+                        dl::ushort(copy),
+                        dl::ident(std::string(id, idlen)),
+                    };
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = py::cast(name).inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
                 const char localfmt[] = {*f, '\0'};
                 dlis_packflen(localfmt, ptr, &src_skip, &dst_skip);
                 assert_overflow(ptr, src_skip);
@@ -548,9 +570,9 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "copynumber", &dl::obname::copy )
         .def_readonly( "id",         &dl::obname::id )
         .def(py::init([](int origin, std::uint8_t copynum, std::string id){
-            return dl::obname{dl::origin{origin}, 
+            return dl::obname{dl::origin{origin},
                               dl::ushort{copynum},
-                              dl::ident{id}}; 
+                              dl::ident{id}};
         }))
         .def( "fingerprint",         &dl::obname::fingerprint )
         .def( "__eq__",              &dl::obname::operator == )

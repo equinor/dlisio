@@ -63,7 +63,7 @@ dtype = {
     20     : 'O',                    #Variable-length ASCII character string
     21     : 'M',                    #Date and time
     22     : 'u4',                   #Origin reference
-    23     : 'u4,u1,u1,U',           #Object name
+    23     : 'O',                    #Object name
     24     : 'u1,U,u4,u1,u1,U',      #Object reference
     25     : 'u1,U,u4,u1,u1,U,u1,U', #Attribute reference
     26     : '?',                    #Boolean status

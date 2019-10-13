@@ -155,12 +155,10 @@ def test_origin():
     curves = load_curves(fpath)
     assert curves[0][0] == 16777217
 
-@pytest.mark.xfail(strict=True)
 def test_obname():
     fpath = 'data/chap4-7/iflr/reprcodes/23-obname.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array((18, 5, "OBNAME_I")))
+    assert curves[0][0] == (18, 5, 'OBNAME_I')
 
 @pytest.mark.xfail(strict=True)
 def test_objref():
