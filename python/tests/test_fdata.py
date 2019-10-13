@@ -165,13 +165,12 @@ def test_objref():
     curves = load_curves(fpath)
     assert curves[0][0] == ('OBJREF_I', (25, 3, 'OBJREF_OBNAME'))
 
-@pytest.mark.xfail(strict=True)
 def test_attref():
     fpath = 'data/chap4-7/iflr/reprcodes/25-attref.dlis'
     curves = load_curves(fpath)
-    ex_attref = ("FIRST_INDENT", (3, 2, "ATTREF_OBNAME"), "SECOND_INDENT")
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(ex_attref))
+    assert curves[0][0] == ('FIRST_INDENT',
+                            (3, 2, 'ATTREF_OBNAME'),
+                            'SECOND_INDENT')
 
 def test_status():
     fpath = 'data/chap4-7/iflr/reprcodes/26-status.dlis'

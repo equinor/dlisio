@@ -326,11 +326,11 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_ORIGIN:
             case DLIS_FMT_OBNAME:
             case DLIS_FMT_OBJREF:
+            case DLIS_FMT_ATTREF:
                 continue;
 
             /* UNSUPPORTED */
             case DLIS_FMT_DTIME:
-            case DLIS_FMT_ATTREF:
             case DLIS_FMT_UNITS:
                 throw dl::not_implemented("unsupported format in fmtstr");
         }
@@ -542,6 +542,44 @@ noexcept (false) {
                     std::memcpy(&p, dst, sizeof(p));
                     Py_DECREF(p);
                     p = py::cast(name).inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_ATTREF) {
+                    std::int32_t id1len;
+                    char id1[255];
+                    std::int32_t origin;
+                    std::uint8_t copy;
+                    std::int32_t objnamelen;
+                    char objname[255];
+                    std::int32_t id2len;
+                    char id2[255];
+                    ptr = dlis_attref(ptr,
+                                      &id1len,
+                                      id1,
+                                      &origin,
+                                      &copy,
+                                      &objnamelen,
+                                      objname,
+                                      &id2len,
+                                      id2);
+
+                    const auto ref = dl::attref {
+                        dl::ident(std::string(id1, id1len)),
+                        dl::obname {
+                            dl::origin(origin),
+                            dl::ushort(copy),
+                            dl::ident(std::string(objname, objnamelen)),
+                        },
+                        dl::ident(std::string(id2, id2len)),
+                    };
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = py::cast(ref).inc_ref().ptr();
                     std::memcpy(dst, &p, sizeof(p));
                     dst += sizeof(p);
                     continue;

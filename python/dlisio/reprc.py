@@ -65,7 +65,7 @@ dtype = {
     22     : 'u4',                   #Origin reference
     23     : 'O',                    #Object name
     24     : 'O',                    #Object reference
-    25     : 'u1,U,u4,u1,u1,U,u1,U', #Attribute reference
+    25     : 'O',                    #Attribute reference
     26     : '?',                    #Boolean status
     27     : 'u1,U',                 #Units expression
 }
