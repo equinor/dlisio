@@ -327,11 +327,11 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_OBNAME:
             case DLIS_FMT_OBJREF:
             case DLIS_FMT_ATTREF:
+            case DLIS_FMT_UNITS:
                 continue;
 
             /* UNSUPPORTED */
             case DLIS_FMT_DTIME:
-            case DLIS_FMT_UNITS:
                 throw dl::not_implemented("unsupported format in fmtstr");
         }
     }
@@ -434,6 +434,10 @@ noexcept (false) {
                  * used in structured arrays. This means we can just write the
                  * unicode ourselves, and have numpy interpret it correctly.
                  *
+                 * --
+                 * Units is just an IDENT in disguise, so it can very well take
+                 * the same code path.
+                 *
                  * [1] http://docs.h5py.org/en/stable/strings.html#what-about-numpy-s-u-type
                  *     NumPy also has a Unicode type, a UTF-32 fixed-width
                  *     format (4-byte characters). HDF5 has no support for wide
@@ -443,7 +447,7 @@ noexcept (false) {
                  *     type.
                  *
                  */
-                if (*f == DLIS_FMT_IDENT) {
+                if (*f == DLIS_FMT_IDENT || *f == DLIS_FMT_UNITS) {
                     constexpr auto chars = 255;
                     constexpr auto ident_size = chars * sizeof(std::uint32_t);
 

@@ -67,5 +67,5 @@ dtype = {
     24     : 'O',                    #Object reference
     25     : 'O',                    #Attribute reference
     26     : '?',                    #Boolean status
-    27     : 'u1,U',                 #Units expression
+    27     : 'U255',                 #Units expression
 }

@@ -178,12 +178,10 @@ def test_status():
     np.testing.assert_array_equal(
         curves[0][0], np.array(True))
 
-@pytest.mark.xfail(strict=True)
 def test_units():
     fpath = 'data/chap4-7/iflr/reprcodes/27-units.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array("unit"))
+    assert curves[0][0] == 'unit'
 
 
 @pytest.mark.xfail(strict=True)
