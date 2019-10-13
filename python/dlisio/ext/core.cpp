@@ -328,10 +328,10 @@ void check_supported_fmtstr(const char* fmt) {
             case DLIS_FMT_OBJREF:
             case DLIS_FMT_ATTREF:
             case DLIS_FMT_UNITS:
+            case DLIS_FMT_DTIME:
                 continue;
 
             /* UNSUPPORTED */
-            case DLIS_FMT_DTIME:
                 throw dl::not_implemented("unsupported format in fmtstr");
         }
     }
@@ -584,6 +584,22 @@ noexcept (false) {
                     std::memcpy(&p, dst, sizeof(p));
                     Py_DECREF(p);
                     p = py::cast(ref).inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_DTIME) {
+                    int Y, TZ, M, D, H, MN, S, MS;
+                    ptr = dlis_dtime(ptr, &Y, &TZ, &M, &D, &H, &MN, &S, &MS);
+                    Y = dlis_year(Y);
+                    const auto US = MS * 1000;
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = PyDateTime_FromDateAndTime(Y, M, D, H, MN, S, US);
+                    if (!p) throw py::error_already_set();
                     std::memcpy(dst, &p, sizeof(p));
                     dst += sizeof(p);
                     continue;

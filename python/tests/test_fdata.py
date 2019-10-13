@@ -143,12 +143,10 @@ def test_ascii():
     assert curves[0][0] == 'Thou shalt not kill'
     assert curves[0].dtype.itemsize == dtype.itemsize
 
-@pytest.mark.xfail(strict=True)
 def test_dtime():
     fpath = 'data/chap4-7/iflr/reprcodes/21-dtime.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(datetime(1971, 3, 21, 18, 4, 14, 386)))
+    assert curves[0][0] == datetime(1971, 3, 21, 18, 4, 14, 386000)
 
 def test_origin():
     fpath = 'data/chap4-7/iflr/reprcodes/22-origin.dlis'

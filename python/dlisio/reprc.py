@@ -61,7 +61,11 @@ dtype = {
     18     : 'u4',                   #Variable-length unsigned integer
     19     : 'U255',                 #Bounded-length identifier
     20     : 'O',                    #Variable-length ASCII character string
-    21     : 'M',                    #Date and time
+    # numpy has a compact datetime, but it doesn't work with buffers,
+    # and raises ValueError: cannot include dtype 'M' in a buffer
+    # for now, work around it by making it a datetime.datetime
+    # https://github.com/numpy/numpy/issues/4983
+    21     : 'O',                    #Date and time
     22     : 'u4',                   #Origin reference
     23     : 'O',                    #Object name
     24     : 'O',                    #Object reference
