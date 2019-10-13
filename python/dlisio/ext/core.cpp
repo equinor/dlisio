@@ -295,48 +295,6 @@ std::string fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
-void check_supported_fmtstr(const char* fmt) {
-    for (;; ++fmt) {
-        switch (*fmt) {
-            case DLIS_FMT_EOL:
-                return;
-
-            /* SUPPORTED */
-            case DLIS_FMT_FSHORT:
-            case DLIS_FMT_FSINGL:
-            case DLIS_FMT_FSING1:
-            case DLIS_FMT_FSING2:
-            case DLIS_FMT_ISINGL:
-            case DLIS_FMT_VSINGL:
-            case DLIS_FMT_FDOUBL:
-            case DLIS_FMT_FDOUB1:
-            case DLIS_FMT_FDOUB2:
-            case DLIS_FMT_CSINGL:
-            case DLIS_FMT_CDOUBL:
-            case DLIS_FMT_SSHORT:
-            case DLIS_FMT_SNORM:
-            case DLIS_FMT_SLONG:
-            case DLIS_FMT_USHORT:
-            case DLIS_FMT_UNORM:
-            case DLIS_FMT_ULONG:
-            case DLIS_FMT_STATUS:
-            case DLIS_FMT_UVARI:
-            case DLIS_FMT_IDENT:
-            case DLIS_FMT_ASCII:
-            case DLIS_FMT_ORIGIN:
-            case DLIS_FMT_OBNAME:
-            case DLIS_FMT_OBJREF:
-            case DLIS_FMT_ATTREF:
-            case DLIS_FMT_UNITS:
-            case DLIS_FMT_DTIME:
-                continue;
-
-            /* UNSUPPORTED */
-                throw dl::not_implemented("unsupported format in fmtstr");
-        }
-    }
-}
-
 void read_fdata(const char* pre_fmt,
                 const char* fmt,
                 const char* post_fmt,
@@ -348,17 +306,12 @@ noexcept (false) {
     /*
      * TODO: error has already been checked (in python), but should be more
      * thorough
+     *
+     * TODO: veriy that format string is valid
      */
     auto dstb = py::buffer(dstobj);
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
-
-    check_supported_fmtstr(pre_fmt);
-    check_supported_fmtstr(fmt);
-    check_supported_fmtstr(post_fmt);
-
-    const auto fmt_str = std::string(fmt);
-    const auto fmt_msg = "invalid format specifier in " + fmt_str;
 
     dl::record record;
     int expected_frameno = 1;
