@@ -295,53 +295,23 @@ std::string fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
-struct fdatasize {
-    int src;
-    int dst;
-};
-
-fdatasize fdata_size(const char* fmt) {
-    const auto fmt_str = std::string(fmt);
-    const auto fmt_msg = "invalid format specifier in " + fmt_str;
-
-    int variable;
-    auto err = dlis_pack_varsize(fmt, &variable, nullptr);
-    if (err) {
-        throw std::invalid_argument(fmt_msg);
-    }
-
-    if (variable) {
-        throw dl::not_implemented(fmt_msg);
-    }
-
-    int src = 0;
-    int dst = 0;
-    err = dlis_pack_size(fmt, &src, &dst);
-    if (err) {
-        throw std::invalid_argument(fmt_msg);
-    }
-
-    return fdatasize { src, dst };
-}
-
 void read_fdata(const char* pre_fmt,
                 const char* fmt,
                 const char* post_fmt,
                 dl::stream& file,
                 const std::vector< int >& indices,
-                py::buffer dstb)
+                py::object dstobj)
 noexcept (false) {
     // TODO: reverse fingerprint to skip bytes ahead-of-time
     /*
      * TODO: error has already been checked (in python), but should be more
      * thorough
+     *
+     * TODO: veriy that format string is valid
      */
+    auto dstb = py::buffer(dstobj);
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
-
-    auto pre_size  = fdata_size(pre_fmt);
-    auto data_size = fdata_size(fmt);
-    auto post_size = fdata_size(post_fmt);
 
     dl::record record;
     int expected_frameno = 1;
@@ -371,26 +341,235 @@ noexcept (false) {
                 // const auto msg = 'Non-sequential frames. expected = {}, current = {}'
             }
 
-            const auto tail = std::distance(ptr, end);
-            auto size_src = pre_size.src + data_size.src + post_size.src;
-            if (tail < size_src) {
-                const auto msg = "unaligned record: tail (which is "
-                               + std::to_string(tail)
-                               + ") < fmt_size (which is "
-                               + std::to_string(size_src)
-                               + ")"
-                               ;
-                throw std::runtime_error(msg);
+            auto assert_overflow = [end](const char* ptr, int skip) {
+                if (ptr + skip > end) {
+                    const auto msg = "corrupted record: fmtstr would read past end";
+                    throw std::runtime_error(msg);
+                }
+            };
+
+            int src_skip, dst_skip;
+            dlis_packflen(pre_fmt, ptr, &src_skip, nullptr);
+            assert_overflow(ptr, src_skip);
+            ptr += src_skip;
+
+            for (auto* f = fmt; *f; ++f) {
+                /*
+                 * Supporting bounded-length identifiers in frame data is
+                 * slightly more difficult than it immediately seem like, and
+                 * this implementation relies on a few assumptions that may not
+                 * hold.
+                 *
+                 * 1. numpy structured arrays interpret unicode on the fly
+                 *
+                 * On my amd64 linux:
+                 * >>> dt = np.dtype('U5')
+                 * >>> dt.itemsize
+                 * 20
+                 * >>> np.array(['foo'], dtype = dt)[0]
+                 * 'foo'
+                 * >>> np.array(['foobar'], dtype = dt)[0]
+                 * 'fooba'
+                 *
+                 * Meaning it supports string lengths of [0, n]. It apparently
+                 * (and maybe rightly so) uses null termination, or the bounded
+                 * length, which ever comes first.
+                 *
+                 * 2. numpy stores characters as int32 Py_UNICODE
+                 * Numpy seems to always use uint32, and not Py_UNICODE, which
+                 * can be both 16 and 32 bits [1]. Since it's an integer it's
+                 * endian sensitive, and widening from char works. This is not
+                 * really documented by numpy.
+                 *
+                 * 3. numpy stores no metadata with the string
+                 * It is assumed, and seems necessary from the interface, that
+                 * there is no in-band metadata stored about the strings when
+                 * used in structured arrays. This means we can just write the
+                 * unicode ourselves, and have numpy interpret it correctly.
+                 *
+                 * --
+                 * Units is just an IDENT in disguise, so it can very well take
+                 * the same code path.
+                 *
+                 * [1] http://docs.h5py.org/en/stable/strings.html#what-about-numpy-s-u-type
+                 *     NumPy also has a Unicode type, a UTF-32 fixed-width
+                 *     format (4-byte characters). HDF5 has no support for wide
+                 *     characters. Rather than trying to hack around this and
+                 *     “pretend” to support it, h5py will raise an error when
+                 *     attempting to create datasets or attributes of this
+                 *     type.
+                 *
+                 */
+                if (*f == DLIS_FMT_IDENT || *f == DLIS_FMT_UNITS) {
+                    constexpr auto chars = 255;
+                    constexpr auto ident_size = chars * sizeof(std::uint32_t);
+
+                    std::int32_t len;
+                    char tmp[chars];
+                    ptr = dlis_ident(ptr, &len, tmp);
+
+                    /*
+                     * From reading the numpy source, it looks like they put
+                     * and interpret the unicode buffer in the array directly,
+                     * and pad with zero. This means the string is both null
+                     * and length terminated, whichever comes first.
+                     */
+                    std::memset(dst, 0, ident_size);
+                    for (auto i = 0; i < len; ++i) {
+                        const auto x = std::uint32_t(tmp[i]);
+                        std::memcpy(dst + i * sizeof(x), &x, sizeof(x));
+                    }
+                    dst += ident_size;
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_ASCII) {
+                    std::int32_t len;
+                    ptr = dlis_uvari(ptr, &len);
+                    auto ascii = py::str(ptr, len);
+                    ptr += len;
+
+                    /*
+                     * Numpy seems to default initalize object types even in
+                     * the case of np.empty to None [1]. The refcount is surely
+                     * increased, so decref it before replacing the pointer
+                     * with a fresh str.
+                     *
+                     * [1] Array of uninitialized (arbitrary) data of the given
+                     *     shape, dtype, and order. Object arrays will be
+                     *     initialized to None.
+                     *     https://docs.scipy.org/doc/numpy/reference/generated/numpy.empty.html
+                     */
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = ascii.inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_OBNAME) {
+                    std::int32_t origin;
+                    std::uint8_t copy;
+                    std::int32_t idlen;
+                    char id[255];
+                    ptr = dlis_obname(ptr, &origin, &copy, &idlen, id);
+
+                    const auto name = dl::obname {
+                        dl::origin(origin),
+                        dl::ushort(copy),
+                        dl::ident(std::string(id, idlen)),
+                    };
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = py::cast(name).inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_OBJREF) {
+                    std::int32_t idlen;
+                    char id[255];
+                    std::int32_t origin;
+                    std::uint8_t copy;
+                    std::int32_t objnamelen;
+                    char objname[255];
+                    ptr = dlis_objref(ptr,
+                                      &idlen,
+                                      id,
+                                      &origin,
+                                      &copy,
+                                      &objnamelen,
+                                      objname);
+
+                    const auto name = dl::objref {
+                        dl::ident(std::string(id, idlen)),
+                        dl::obname {
+                            dl::origin(origin),
+                            dl::ushort(copy),
+                            dl::ident(std::string(objname, objnamelen)),
+                        },
+                    };
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = py::cast(name).inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_ATTREF) {
+                    std::int32_t id1len;
+                    char id1[255];
+                    std::int32_t origin;
+                    std::uint8_t copy;
+                    std::int32_t objnamelen;
+                    char objname[255];
+                    std::int32_t id2len;
+                    char id2[255];
+                    ptr = dlis_attref(ptr,
+                                      &id1len,
+                                      id1,
+                                      &origin,
+                                      &copy,
+                                      &objnamelen,
+                                      objname,
+                                      &id2len,
+                                      id2);
+
+                    const auto ref = dl::attref {
+                        dl::ident(std::string(id1, id1len)),
+                        dl::obname {
+                            dl::origin(origin),
+                            dl::ushort(copy),
+                            dl::ident(std::string(objname, objnamelen)),
+                        },
+                        dl::ident(std::string(id2, id2len)),
+                    };
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = py::cast(ref).inc_ref().ptr();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                if (*f == DLIS_FMT_DTIME) {
+                    int Y, TZ, M, D, H, MN, S, MS;
+                    ptr = dlis_dtime(ptr, &Y, &TZ, &M, &D, &H, &MN, &S, &MS);
+                    Y = dlis_year(Y);
+                    const auto US = MS * 1000;
+
+                    PyObject* p;
+                    std::memcpy(&p, dst, sizeof(p));
+                    Py_DECREF(p);
+                    p = PyDateTime_FromDateAndTime(Y, M, D, H, MN, S, US);
+                    if (!p) throw py::error_already_set();
+                    std::memcpy(dst, &p, sizeof(p));
+                    dst += sizeof(p);
+                    continue;
+                }
+
+                const char localfmt[] = {*f, '\0'};
+                dlis_packflen(localfmt, ptr, &src_skip, &dst_skip);
+                assert_overflow(ptr, src_skip);
+                dlis_packf(localfmt, ptr, dst);
+                dst += dst_skip;
+                ptr += src_skip;
             }
-
-            ptr += pre_size.src;
-
-            dlis_packf(fmt, ptr, dst);
-            dst += data_size.dst;
-            ptr += data_size.src;
             expected_frameno = frameno + 1;
 
-            ptr += post_size.src;
+            dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
+            assert_overflow(ptr, src_skip);
+            ptr += src_skip;
 
             if (ptr != end) {
                 // TODO: lift this restriction (realloc buffers)
@@ -435,9 +614,9 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "copynumber", &dl::obname::copy )
         .def_readonly( "id",         &dl::obname::id )
         .def(py::init([](int origin, std::uint8_t copynum, std::string id){
-            return dl::obname{dl::origin{origin}, 
+            return dl::obname{dl::origin{origin},
                               dl::ushort{copynum},
-                              dl::ident{id}}; 
+                              dl::ident{id}};
         }))
         .def( "fingerprint",         &dl::obname::fingerprint )
         .def( "__eq__",              &dl::obname::operator == )

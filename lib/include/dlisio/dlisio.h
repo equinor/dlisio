@@ -297,6 +297,18 @@ DLISIO_API
 int dlis_packf( const char* fmt, const void* src, void* dst );
 
 /*
+ * dlis_packflen is to dlis_packf as strlen is to strings
+ *
+ * dlis_packflen counts the number of bytes read from src, and what would be
+ * written to dst, by dlis_packf with the same fmt and src.
+ *
+ * This is particularly useful when wanting to only pack *parts* of a record,
+ * e.g. when certain columns are filtered out.
+ */
+DLISIO_API
+int dlis_packflen(const char* fmt, const void* src, int* nread, int* nwrite);
+
+/*
  * Check if a format string for packing is var-size or fixed-size
  *
  * This function is intended for checking if format strings built from

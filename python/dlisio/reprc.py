@@ -59,13 +59,17 @@ dtype = {
     16     : 'u2',                   #Normal unsigned integer
     17     : 'u4',                   #Long unsigned integer
     18     : 'u4',                   #Variable-length unsigned integer
-    19     : 'u1,U',                 #Variable-length identifier
-    20     : 'u4,U',                 #Variable-length ASCII character string
-    21     : 'M',                    #Date and time
+    19     : 'U255',                 #Bounded-length identifier
+    20     : 'O',                    #Variable-length ASCII character string
+    # numpy has a compact datetime, but it doesn't work with buffers,
+    # and raises ValueError: cannot include dtype 'M' in a buffer
+    # for now, work around it by making it a datetime.datetime
+    # https://github.com/numpy/numpy/issues/4983
+    21     : 'O',                    #Date and time
     22     : 'u4',                   #Origin reference
-    23     : 'u4,u1,u1,U',           #Object name
-    24     : 'u1,U,u4,u1,u1,U',      #Object reference
-    25     : 'u1,U,u4,u1,u1,U,u1,U', #Attribute reference
+    23     : 'O',                    #Object name
+    24     : 'O',                    #Object reference
+    25     : 'O',                    #Attribute reference
     26     : '?',                    #Boolean status
-    27     : 'u1,U',                 #Units expression
+    27     : 'U255',                 #Units expression
 }

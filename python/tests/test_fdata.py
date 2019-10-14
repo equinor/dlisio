@@ -112,62 +112,63 @@ def test_ulong():
     np.testing.assert_array_equal(
         curves[0][0], np.array(1))
 
-@pytest.mark.xfail(strict=True)
 def test_uvari():
     fpath = 'data/chap4-7/iflr/reprcodes/18-uvari.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(
         curves[0][0], np.array(257))
 
-@pytest.mark.xfail(strict=True)
 def test_ident():
     fpath = 'data/chap4-7/iflr/reprcodes/19-ident.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array("VALUE"))
+    # The backing C++ code heavily relies on the size of the string in bytes
+    # being 255 * uint32, so make it an extra assert.
+    #
+    # If this test fails it's probably because of wrong platform assumptions,
+    # unicode representation or similar issues, and implies revising the fdata
+    # parsing logic.
+    assert curves[0].dtype.itemsize == 255 * 4
+    assert curves[0][0] == 'VALUE'
 
-@pytest.mark.xfail(strict=True)
 def test_ascii():
+    # The backing C++ heavily relies on objects (in this case str) being
+    # written to the array as just a pointer, because we're writing a new
+    # pointer into the appropriate offset
+    import ctypes
+    dtype = np.dtype(object)
+    assert dtype.itemsize == ctypes.sizeof(ctypes.c_void_p())
+
     fpath = 'data/chap4-7/iflr/reprcodes/20-ascii.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array("Thou shalt not kill"))
+    assert curves[0][0] == 'Thou shalt not kill'
+    assert curves[0].dtype.itemsize == dtype.itemsize
 
-@pytest.mark.xfail(strict=True)
 def test_dtime():
     fpath = 'data/chap4-7/iflr/reprcodes/21-dtime.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(datetime(1971, 3, 21, 18, 4, 14, 386)))
+    assert curves[0][0] == datetime(1971, 3, 21, 18, 4, 14, 386000)
 
-@pytest.mark.xfail(strict=True)
 def test_origin():
     fpath = 'data/chap4-7/iflr/reprcodes/22-origin.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(16777217))
+    assert curves[0][0] == 16777217
 
-@pytest.mark.xfail(strict=True)
 def test_obname():
     fpath = 'data/chap4-7/iflr/reprcodes/23-obname.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array((18, 5, "OBNAME_I")))
+    assert curves[0][0] == (18, 5, 'OBNAME_I')
 
-@pytest.mark.xfail(strict=True)
 def test_objref():
     fpath = 'data/chap4-7/iflr/reprcodes/24-objref.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(("OBJREF_I", (25, 3, "OBJREF_OBNAME"))))
+    assert curves[0][0] == ('OBJREF_I', (25, 3, 'OBJREF_OBNAME'))
 
-@pytest.mark.xfail(strict=True)
 def test_attref():
     fpath = 'data/chap4-7/iflr/reprcodes/25-attref.dlis'
     curves = load_curves(fpath)
-    ex_attref = ("FIRST_INDENT", (3, 2, "ATTREF_OBNAME"), "SECOND_INDENT")
-    np.testing.assert_array_equal(
-        curves[0][0], np.array(ex_attref))
+    assert curves[0][0] == ('FIRST_INDENT',
+                            (3, 2, 'ATTREF_OBNAME'),
+                            'SECOND_INDENT')
 
 def test_status():
     fpath = 'data/chap4-7/iflr/reprcodes/26-status.dlis'
@@ -175,12 +176,10 @@ def test_status():
     np.testing.assert_array_equal(
         curves[0][0], np.array(True))
 
-@pytest.mark.xfail(strict=True)
 def test_units():
     fpath = 'data/chap4-7/iflr/reprcodes/27-units.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array("unit"))
+    assert curves[0][0] == 'unit'
 
 
 @pytest.mark.xfail(strict=True)
