@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 but most notably, without sectioning changes into type-of-change.
 
+## [0.1.14] - 2019.10.14
+* dlisio have learned to read curves with variable length data types. Thus,
+  every data-type that the standard allows for curves are now supported by
+  dlisio.
+* Frame and Channel-objects now has a index-property. index returns the channel
+  object that serves as the index-channel for the given Frame-/Channel.
+
 ## [0.1.13] - 2019.10.3
 * The sphinx documentation on readthedocs has a few new section: About the
   project, an introduction to some dlis-concepts and a quick guide to help new
@@ -58,6 +65,7 @@ but most notably, without sectioning changes into type-of-change.
   into logical files. This have resulted in a behavioral change where load now
   returns a tuple-like object of n-logical files.
 
+[0.1.14]: https://github.com/equinor/dlisio/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/equinor/dlisio/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/equinor/dlisio/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/equinor/dlisio/compare/v0.1.10...v0.1.11
