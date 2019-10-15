@@ -63,8 +63,8 @@ class Calibration(BasicObject):
         'parameters'   : obname("PARAMETER")
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'CALIBRATION')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'CALIBRATION', lf = lf)
         self.method            = None
         self.calibrated        = []
         self.uncalibrated      = []

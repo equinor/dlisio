@@ -98,8 +98,8 @@ class Path(BasicObject):
         'value'                : obname('CHANNEL')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'PATH')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'PATH', lf = lf)
         self.frame                = None
         self.well_reference_point = None
         self.value                = []

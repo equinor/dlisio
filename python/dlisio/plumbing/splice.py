@@ -64,8 +64,8 @@ class Splice(BasicObject):
         'zones'           : obname('ZONE')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'SPLICE')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'SPLICE', lf = lf)
         self.output_channel  = None
         self.input_channels  = []
         self.zones           = []

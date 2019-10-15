@@ -93,10 +93,8 @@ class Frame(BasicObject):
 
     dtype_format = '{:s}.{:d}.{:d}'
 
-    def __init__(self, obj = None, name = None, file = None):
-        super().__init__(obj, name = name, type = 'FRAME')
-
-        self.file        = file
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'FRAME', lf = lf)
 
         self.description = None
         self.channels    = []
@@ -143,12 +141,6 @@ class Frame(BasicObject):
             logging.warning(msg)
 
         return index
-
-    @classmethod
-    def create(cls, obj, name = None, type = None, file = None):
-        self = Frame(obj, name = name, file = file)
-        self.load()
-        return self
 
     @property
     def dtype(self):
@@ -393,7 +385,7 @@ class Frame(BasicObject):
         is to extract the first name as index and let the rest be added to the
         DataFrame as normal Channels.
         """
-        return curves(self.file, self, self.dtype, "", self.fmtstr(), "")
+        return curves(self.logicalfile, self, self.dtype, "", self.fmtstr(), "")
 
     def fmtstrchannel(self, channel):
         """Generate format-strings for one Frame channel

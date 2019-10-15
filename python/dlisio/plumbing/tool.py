@@ -64,8 +64,8 @@ class Tool(BasicObject):
         "parameters" : obname("PARAMETER"),
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'TOOL')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'TOOL', lf = lf)
         self.description     = None
         self.trademark_name  = None
         self.generic_name    = None

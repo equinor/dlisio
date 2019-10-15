@@ -537,9 +537,14 @@ class dlis(object):
             # TODO: handle replacement sets
             for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type].create(o, name = name, file = self)
+                    obj = self.types[os.type].create(o, name = name, lf = self)
                 except KeyError:
-                    obj = plumbing.Unknown.create(o, name = name, type = os.type)
+                    obj = plumbing.Unknown.create(
+                        o,
+                        name = name,
+                        type = os.type,
+                        lf = self
+                    )
 
                 fingerprint = obj.fingerprint
                 if fingerprint in objects:

@@ -65,8 +65,8 @@ class Parameter(BasicObject):
         'zones'     : obname("ZONE")
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'PARAMETER')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'PARAMETER', lf = lf)
         self.long_name = None
         self.dimension = []
         self.axis      = []

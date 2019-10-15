@@ -42,8 +42,8 @@ class Axis(BasicObject):
         'SPACING'     : scalar('spacing'),
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'AXIS')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'AXIS', lf = lf)
         self.axis_id     = None
         self.coordinates = []
         self.spacing     = None

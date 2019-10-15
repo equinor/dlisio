@@ -84,8 +84,8 @@ class Channel(BasicObject):
         'source'    : objref
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'CHANNEL')
+    def __init__(self, obj = None, name = None, lf=None):
+        super().__init__(obj, name = name, type = 'CHANNEL', lf=lf)
         self.long_name     = None
         self.reprc         = None
         self.units         = None

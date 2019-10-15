@@ -63,8 +63,8 @@ class Wellref(BasicObject):
     }
 
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'WELL-REFERENCE')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'WELL-REFERENCE', lf = lf)
         self.permanent_datum           = None
         self.vertical_zero             = None
         self.permanent_datum_elevation = None

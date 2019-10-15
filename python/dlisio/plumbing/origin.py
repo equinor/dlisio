@@ -120,8 +120,8 @@ class Origin(BasicObject):
         'NAME-SPACE-VERSION': scalar('namespace_version')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'ORIGIN')
+    def __init__(self, obj = None, name = None, lf=None):
+        super().__init__(obj, name = name, type = 'ORIGIN', lf=lf)
         self.file_id           = None
         self.file_set_name     = None
         self.file_set_nr       = None

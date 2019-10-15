@@ -94,8 +94,8 @@ class Longname(BasicObject):
         'PRIVATE-SYMBOL'    : scalar('private_symbol')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'LONG-NAME')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'LONG-NAME', lf = lf)
         self.modifier        = []
         self.quantity        = None
         self.quantity_mod    = []

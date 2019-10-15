@@ -114,12 +114,14 @@ class BasicObject():
     >>> coeff.link(f.objects)
     """
 
-    def __init__(self, obj, name = None, type = None):
+    def __init__(self, obj, name = None, type = None, lf = None):
         self.type       = type
         self.name       = name
         self.origin     = None
         self.copynumber = None
         self.attic      = obj
+
+        self.logicalfile = lf
 
         #: Dictionary with all unexpected attributes.
         #: While all expected attributes are presented as members of object
@@ -244,14 +246,14 @@ class BasicObject():
                 setattr(self, attr, lnk)
 
     @classmethod
-    def create(cls, obj, name = None, type = None, file = None):
+    def create(cls, obj, name = None, type = None, lf = None):
         """ Create Python object of provided class and load values
         from native object
 
         This process is generalized for most of the types derived from
         basic_object.
         """
-        self = cls(obj, name = name)
+        self = cls(obj, name = name, lf = lf)
         self.load()
         return self
 

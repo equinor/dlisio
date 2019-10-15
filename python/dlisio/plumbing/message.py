@@ -55,8 +55,8 @@ class Message(BasicObject):
         'TEXT'           : vector('text'),
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'MESSAGE')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'MESSAGE', lf = lf)
         self.message_type   = None
         self.time           = None
         self.borehole_drift = None

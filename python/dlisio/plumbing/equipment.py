@@ -98,8 +98,8 @@ class Equipment(BasicObject):
         'ANGULAR-DRIFT'   : scalar('angular_drift')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'EQUIPMENT')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'EQUIPMENT', lf = lf)
 
         self.trademark_name = None
         self.status         = None

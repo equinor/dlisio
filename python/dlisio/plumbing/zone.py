@@ -42,8 +42,8 @@ class Zone(BasicObject):
     }
 
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'ZONE')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'ZONE', lf = lf)
         self.description = None
         self.domain      = None
         self.maximum     = None

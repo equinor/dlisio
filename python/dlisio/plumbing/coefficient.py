@@ -51,8 +51,8 @@ class Coefficient(BasicObject):
         "MINUS-TOLERANCES": vector('minus_tolerance')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = "CALIBRATION-COEFFICIENT")
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = "CALIBRATION-COEFFICIENT", lf = lf)
         self.label           = None
         self.coefficients    = []
         self.references      = []

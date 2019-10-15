@@ -48,8 +48,8 @@ class Group(BasicObject):
 
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'GROUP')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'GROUP', lf = lf)
         self.description = None
         self.objecttype  = None
         self.objects     = []

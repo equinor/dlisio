@@ -87,8 +87,8 @@ class Measurement(BasicObject):
         'source' : objref
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = "CALIBRATION-MEASUREMENT")
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = "CALIBRATION-MEASUREMENT", lf = lf)
         self.phase           = None
         self.source          = None
         self.mtype           = None

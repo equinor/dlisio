@@ -27,8 +27,8 @@ class Comment(BasicObject):
     """
     attributes = { 'TEXT' : vector('text') }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'COMMENT')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'COMMENT', lf = lf)
         self.text = []
 
     def describe_attr(self, buf, width, indent, exclude):
