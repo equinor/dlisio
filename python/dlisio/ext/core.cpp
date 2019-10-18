@@ -400,6 +400,58 @@ noexcept (false) {
                  *     type.
                  *
                  */
+                 auto swap_pointer = [&](py::object obj)
+                 {
+                     PyObject* p;
+                     std::memcpy(&p, dst, sizeof(p));
+                     Py_DECREF(p);
+                     p = obj.inc_ref().ptr();
+                     std::memcpy(dst, &p, sizeof(p));
+                     dst += sizeof(p);
+                 };
+
+                 if (*f == DLIS_FMT_FSING1) {
+                    float v;
+                    float a;
+                    ptr = dlis_fsing1(ptr, &v, &a);
+                    auto t = py::make_tuple(v, a);
+
+                    swap_pointer(t);
+                    continue;
+                }
+
+                 if (*f == DLIS_FMT_FSING2) {
+                    float v;
+                    float a;
+                    float b;
+                    ptr = dlis_fsing2(ptr, &v, &a, &b);
+                    auto t = py::make_tuple(v, a, b);
+
+                    swap_pointer(t);
+                    continue;
+                }
+
+                 if (*f == DLIS_FMT_FDOUB1) {
+                    double v;
+                    double a;
+                    ptr = dlis_fdoub1(ptr, &v, &a);
+                    auto t = py::make_tuple(v, a);
+
+                    swap_pointer(t);
+                    continue;
+                }
+
+                 if (*f == DLIS_FMT_FDOUB2) {
+                    double v;
+                    double a;
+                    double b;
+                    ptr = dlis_fdoub2(ptr, &v, &a, &b);
+                    auto t = py::make_tuple(v, a, b);
+
+                    swap_pointer(t);
+                    continue;
+                }
+
                 if (*f == DLIS_FMT_IDENT || *f == DLIS_FMT_UNITS) {
                     constexpr auto chars = 255;
                     constexpr auto ident_size = chars * sizeof(std::uint32_t);
@@ -440,12 +492,7 @@ noexcept (false) {
                      *     initialized to None.
                      *     https://docs.scipy.org/doc/numpy/reference/generated/numpy.empty.html
                      */
-                    PyObject* p;
-                    std::memcpy(&p, dst, sizeof(p));
-                    Py_DECREF(p);
-                    p = ascii.inc_ref().ptr();
-                    std::memcpy(dst, &p, sizeof(p));
-                    dst += sizeof(p);
+                    swap_pointer(ascii);
                     continue;
                 }
 
@@ -462,12 +509,7 @@ noexcept (false) {
                         dl::ident(std::string(id, idlen)),
                     };
 
-                    PyObject* p;
-                    std::memcpy(&p, dst, sizeof(p));
-                    Py_DECREF(p);
-                    p = py::cast(name).inc_ref().ptr();
-                    std::memcpy(dst, &p, sizeof(p));
-                    dst += sizeof(p);
+                    swap_pointer(py::cast(name));
                     continue;
                 }
 
@@ -495,12 +537,7 @@ noexcept (false) {
                         },
                     };
 
-                    PyObject* p;
-                    std::memcpy(&p, dst, sizeof(p));
-                    Py_DECREF(p);
-                    p = py::cast(name).inc_ref().ptr();
-                    std::memcpy(dst, &p, sizeof(p));
-                    dst += sizeof(p);
+                    swap_pointer(py::cast(name));
                     continue;
                 }
 
@@ -533,12 +570,7 @@ noexcept (false) {
                         dl::ident(std::string(id2, id2len)),
                     };
 
-                    PyObject* p;
-                    std::memcpy(&p, dst, sizeof(p));
-                    Py_DECREF(p);
-                    p = py::cast(ref).inc_ref().ptr();
-                    std::memcpy(dst, &p, sizeof(p));
-                    dst += sizeof(p);
+                    swap_pointer(py::cast(ref));
                     continue;
                 }
 

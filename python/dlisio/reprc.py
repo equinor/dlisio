@@ -43,13 +43,13 @@ Note: dtype's for reprc with variable lenghts are not yet supported by dlisio
 dtype = {
     1      : 'f4',                   #Low precision floating point
     2      : 'f4',                   #IEEE single precision floating point
-    3      : '2f4',                  #Validated single precision floating point
-    4      : '3f4',                  #Two-way validated single precision floating point
+    3      : 'O',                    #Validated single precision floating point
+    4      : 'O',                    #Two-way validated single precision floating point
     5      : 'f4',                   #IBM single precision floating point
     6      : 'f4',                   #VAX single precision floating point
     7      : 'f8',                   #IEEE double precision floating point
-    8      : '2f8',                  #Validated double precision floating point
-    9      : '3f8',                  #Two-way validated double precision floating point
+    8      : 'O',                    #Validated double precision floating point
+    9      : 'O',                    #Two-way validated double precision floating point
     10     : 'c8',                   #Single precision complex
     11     : 'c16',                  #Double precision complex
     12     : 'i1',                   #Short signed integer

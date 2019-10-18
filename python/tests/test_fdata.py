@@ -25,14 +25,12 @@ def test_fsingl():
 def test_fsing1():
     fpath = 'data/chap4-7/iflr/reprcodes/03-fsing1.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array((-2, 2)))
+    assert curves[0][0] == (-2, 2)
 
 def test_fsing2():
     fpath = 'data/chap4-7/iflr/reprcodes/04-fsing2.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array((117, -13.25, 32444)))
+    assert curves[0][0] == (117, -13.25, 32444)
 
 def test_isingl():
     fpath = 'data/chap4-7/iflr/reprcodes/05-isingl.dlis'
@@ -55,14 +53,12 @@ def test_fdoubl():
 def test_fdoub1():
     fpath = 'data/chap4-7/iflr/reprcodes/08-fdoub1.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array((-13.5, -27670)))
+    assert curves[0][0] == (-13.5, -27670)
 
 def test_fdoub2():
     fpath = 'data/chap4-7/iflr/reprcodes/09-fdoub2.dlis'
     curves = load_curves(fpath)
-    np.testing.assert_array_equal(
-        curves[0][0], np.array((6728332223, -45.75, -0.0625)))
+    assert curves[0][0] == (6728332223, -45.75, -0.0625)
 
 def test_csingl():
     fpath = 'data/chap4-7/iflr/reprcodes/10-csingl.dlis'
