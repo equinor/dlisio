@@ -36,9 +36,6 @@ fmt = {
 """ reprc -> type-string
 Conversion from dlis' representation codes to type-strings that can be
 interpreted by numpy.dtype. int's and uint's are normalized to 4-byte.
-
-Note: dtype's for reprc with variable lenghts are not yet supported by dlisio
-(reprc 18-20, 22-25, 27). Datetime (21) isn't supported due to numpy issue
 """
 dtype = {
     1      : 'f4',                   #Low precision floating point
