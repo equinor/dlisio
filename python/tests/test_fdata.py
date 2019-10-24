@@ -387,6 +387,30 @@ def test_all_reprcodes():
     assert c[25] == True
     assert c[26] == "unit"
 
+def test_channel_curves():
+    fpath = 'data/chap4-7/iflr/all-reprcodes.dlis'
+    with dlisio.load(fpath) as (f, *_):
+        channel = f.object('CHANNEL', 'CH26', 10, 0)
+        curves = channel.curves()
+        assert curves[0] == True
+
+        channel = f.object('CHANNEL', 'CH22', 10, 0)
+        curves = channel.curves()
+        assert curves[0] == 16777217
+
+def test_big_ascii():
+    fpath = 'data/chap4-7/iflr/big-ascii.dlis'
+    curves = load_curves(fpath)
+    assert 'Maecenas vulputate est.' in curves[0][0]
+    assert len(curves[0][0]) == 2004
+
+@pytest.mark.skip(reason="SIGSEGV due to reading outside of memory")
+def test_broken_ascii():
+    fpath = 'data/chap4-7/iflr/broken-ascii.dlis'
+    with pytest.raises(RuntimeError) as exc:
+        _ = load_curves(fpath)
+    assert "fmtstr would read past end" in str(exc)
+
 @pytest.mark.xfail(strict=True)
 def test_two_various_fdata_in_one_iflr():
     fpath = 'data/chap4-7/iflr/two-various-fdata-in-one-iflr.dlis'
@@ -462,19 +486,10 @@ def test_duplicate_framenos_same_frames(assert_log):
 
     assert_log("Duplicated frames")
 
-def test_fdata_dimension(tmpdir_factory, merge_files_manyLR):
-    path = str(tmpdir_factory.mktemp('dimensions').join('fdata-dim.dlis'))
-    content = [
-        'data/chap4-7/eflr/envelope.dlis.part',
-        'data/chap4-7/eflr/file-header2.dlis.part',
-        'data/chap4-7/eflr/origin2.dlis.part',
-        'data/chap4-7/eflr/channel-dimension.dlis.part',
-        'data/chap4-7/eflr/frame-dimension.dlis.part',
-        'data/chap4-7/eflr/fdata-dimension.dlis.part',
-    ]
-    merge_files_manyLR(path, content)
+def test_fdata_dimension():
+    fpath = 'data/chap4-7/iflr/multidimensions-ints-various.dlis'
 
-    with dlisio.load(path) as (f, *_):
+    with dlisio.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
         curves = frame.curves()
 
@@ -493,3 +508,26 @@ def test_fdata_dimension(tmpdir_factory, merge_files_manyLR):
         np.testing.assert_array_equal(curves[0][5], [[1]])
         np.testing.assert_array_equal(curves[0][6], [1, 2, 3, 4])
 
+def test_fdata_tuple_dimension():
+    fpath = 'data/chap4-7/iflr/multidimensions-validated.dlis'
+
+    with dlisio.load(fpath) as (f, *_):
+        frame = f.object('FRAME', 'FRAME-VALIDATE', 10, 0)
+        curves = frame.curves()
+
+        assert curves[0][0].size == 3
+
+        assert curves[0][0][0] == (56, 0.0625, 0.0625)
+        assert curves[0][0][1] == (43, 0.0625, 0.0625)
+        assert curves[0][0][2] == (71, 0.5, 0.5)
+
+@pytest.mark.xfail(strict=True)
+def test_fdata_dimensions_in_multifdata():
+    fpath = 'data/chap4-7/iflr/multidimensions-multifdata.dlis'
+
+    with dlisio.load(fpath) as (f, *_):
+        frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
+        curves = frame.curves()
+
+        np.testing.assert_array_equal(curves[0][0], [[1, 2, 3], [4, 5, 6]])
+        np.testing.assert_array_equal(curves[1][0], [[7, 8, 9], [10, 11, 12]])

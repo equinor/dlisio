@@ -41,8 +41,6 @@ origin2                 Second origin file
 
 \***-inc                Files for testing multiple logical files
 
-\***-dimension          Multi-dimensional fdata tests
-
 axis-encrypted          Encrypted records
 
 channel-same-objects    Channel duplication
@@ -78,12 +76,27 @@ Filename                                         Description
 ================================================ ==================================================
 all-reprcodes.dlis                               1 Frame containing 27 Channels, each with a
                                                  different representation code
+                                                 
+big-ascii.dlis                                   Ascii with around 2000 characters
+
+broken-ascii.dlis                                Ascii with incorrect specified length. Around 240
+                                                 characters are expected, but only 20 are actually
+                                                 present
 
 duplicate-framenos.dlis                          2 FDATA containing different values, but they have
                                                  the same frame number
 
 duplicate-framenos-same-frames.dlis              2 FDATA containing the same value and having the
                                                  same frame number
+                                                 
+missing-framenos.dlis                            Only has frame number 2 and 4, frame number 1 and
+                                                 3 are missing
+                                                 
+multidimensions-ints-various.dlis                Integers with different dimensions configuration
+
+multidimensions-multifdata.dlis                  Dimensional data present inside FDATA
+
+multidimensions-validated.dlis                   Validated value inside of dimensional data
 
 out-of-order-framenos-one-frame.dlis             2 frames in 1 FDATA with decreasing frame numbers
 
@@ -91,9 +104,6 @@ out-of-order-framenos-two-frames.dlis            2 frames in 2 FDATA with decrea
 
 out-of-order-framenos-two-frames-multifdata.dlis Frame numbers would be in correct order if FDATA
                                                  order is switched.
-
-missing-framenos.dlis                            Only has frame number 2 and 4, frame number 1 and
-                                                 3 are missing
 
 two-various-fdata-in-one-iflr.dlis               2 frames in one FDATA, with multiple channels
 
