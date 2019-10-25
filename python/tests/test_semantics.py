@@ -236,7 +236,7 @@ def test_message(f):
     mes = f.object('MESSAGE', 'MESSAGE1', 10, 0)
 
     assert mes.message_type   == 'SYSTEM'
-    assert mes.time           == datetime(1990, 4, 20, 12, 58, 59, 1)
+    assert mes.time           == datetime(1990, 4, 20, 12, 58, 59, 1000)
     assert mes.borehole_drift == 65282
     assert mes.vertical_depth == 120
     assert mes.radial_drift   == 65093
