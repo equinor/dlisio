@@ -1,7 +1,7 @@
 from .basicobject import BasicObject
 from ..reprc import dtype, fmt
 from ..dlisutils import curves
-from .valuetypes import scalar, vector
+from .valuetypes import scalar, vector, reverse
 from .linkage import obname, objref
 from .utils import *
 
@@ -72,9 +72,9 @@ class Channel(BasicObject):
         'REPRESENTATION-CODE': scalar('reprc'),
         'UNITS'              : scalar('units'),
         'PROPERTIES'         : vector('properties'),
-        'DIMENSION'          : vector('dimension'),
-        'AXIS'               : vector('axis'),
-        'ELEMENT-LIMIT'      : vector('element_limit'),
+        'DIMENSION'          : reverse('dimension'),
+        'AXIS'               : reverse('axis'),
+        'ELEMENT-LIMIT'      : reverse('element_limit'),
         'SOURCE'             : scalar('source')
     }
 
@@ -137,18 +137,6 @@ class Channel(BasicObject):
             self._dtype = np.dtype((dtype[self.reprc], tuple(self.dimension)))
 
         return self._dtype
-
-    def load(self):
-        super().load()
-        self.frame = None
-        # Order of elements is reversed due to RP66 column-first data
-        # storage approach
-        self.dimension        = self.dimension[::-1]
-        try:
-            self.refs['axis'] = self.refs['axis'][::-1]
-        except KeyError:
-            pass
-        self.element_limit    = self.element_limit [::-1]
 
     def fmtstr(self):
         """Generate format-string for Channel
