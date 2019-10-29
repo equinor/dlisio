@@ -131,12 +131,10 @@ class Channel(BasicObject):
         """
         if self._dtype: return self._dtype
 
-        if len(self.dimension) == 1:
-            shape = self.dimension[0]
+        if self.dimension == [1]:
+            self._dtype = np.dtype(dtype[self.reprc])
         else:
-            shape = tuple(self.dimension)
-
-        self._dtype = np.dtype((dtype[self.reprc], shape))
+            self._dtype = np.dtype((dtype[self.reprc], tuple(self.dimension)))
 
         return self._dtype
 
