@@ -543,9 +543,9 @@ class dlis(object):
             # TODO: handle replacement sets
             for name, o in os.objects.items():
                 try:
-                    obj = self.types[os.type].create(o, name = name, lf = self)
+                    obj = self.types[os.type](o, name = name, lf = self)
                 except KeyError:
-                    obj = plumbing.Unknown.create(
+                    obj = plumbing.Unknown(
                         o,
                         name = name,
                         type = os.type,

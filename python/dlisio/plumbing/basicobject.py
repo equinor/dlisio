@@ -265,17 +265,6 @@ class BasicObject():
 
         return stash
 
-    @classmethod
-    def create(cls, obj, name = None, type = None, lf = None):
-        """ Create Python object of provided class and load values
-        from native object
-
-        This process is generalized for most of the types derived from
-        basic_object.
-        """
-        self = cls(obj, name = name, lf = lf)
-        return self
-
     def describe(self, width=80, indent='', exclude='er'):
         """Printable summary of the object
 

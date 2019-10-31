@@ -16,8 +16,3 @@ class Unknown(BasicObject):
         if type is None:
             type = 'UNKNOWN'
         super().__init__(obj, name = name, type = type, lf = lf)
-
-    @classmethod
-    def create(cls, obj, name = None, type = None, lf = None):
-        self = Unknown(obj, name = name, type = type, lf = lf)
-        return self
