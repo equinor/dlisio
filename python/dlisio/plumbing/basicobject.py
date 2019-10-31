@@ -265,25 +265,6 @@ class BasicObject():
 
         return stash
 
-    def stripspaces(self):
-        """Strip spaces
-
-        Remove leading and trailing white-spaces for object attributes as they
-        may be padded with white-spaces.
-        """
-
-        def strip(d):
-            for key, value in d.items():
-                if isinstance(value, str):
-                    d[key] = value.strip()
-                elif isinstance(value, list):
-                    for inx, v in enumerate(value):
-                        if isinstance(v, str):
-                            d[key][inx] = v.strip()
-
-        strip(self.__dict__)
-        strip(self.stash)
-
     @classmethod
     def create(cls, obj, name = None, type = None, lf = None):
         """ Create Python object of provided class and load values
