@@ -4,6 +4,8 @@ from .valuetypes import scalar, vector, boolean
 from .linkage import obname
 from .utils import *
 
+from .. import core
+
 import numpy as np
 import logging
 
@@ -77,34 +79,24 @@ class Frame(BasicObject):
     objects.
     """
     attributes = {
-        'DESCRIPTION': scalar('description'),
-        'CHANNELS'   : vector('channels'),
-        'INDEX-TYPE' : scalar('index_type'),
-        'DIRECTION'  : scalar('direction'),
-        'SPACING'    : scalar('spacing'),
-        'ENCRYPTED'  : boolean('encrypted'),
-        'INDEX-MIN'  : scalar('index_min'),
-        'INDEX-MAX'  : scalar('index_max')
+        'DESCRIPTION': scalar,
+        'CHANNELS'   : vector,
+        'INDEX-TYPE' : scalar,
+        'DIRECTION'  : scalar,
+        'SPACING'    : scalar,
+        'ENCRYPTED'  : boolean,
+        'INDEX-MIN'  : scalar,
+        'INDEX-MAX'  : scalar,
     }
 
     linkage = {
-        'channels' : obname("CHANNEL")
+        'CHANNELS' : obname('CHANNEL')
     }
 
     dtype_format = '{:s}.{:d}.{:d}'
 
     def __init__(self, obj = None, name = None, lf = None):
         super().__init__(obj, name = name, type = 'FRAME', lf = lf)
-
-        self.description = None
-        self.channels    = []
-        self.index_type  = None
-        self.direction   = None
-        self.spacing     = None
-        self.encrypted   = False
-        self.index_min   = None
-        self.index_max   = None
-
         # Format-string of the frame. Mainly indended for internal use
         self._fmtstr     = 'i'
 
@@ -115,6 +107,39 @@ class Frame(BasicObject):
         # Instance-specific dtype label formatter on duplicated mnemonics.
         # Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format
+
+    @property
+    def description(self):
+        return self['DESCRIPTION']
+
+    @property
+    def channels(self):
+        return self['CHANNELS']
+
+    @property
+    def index_type(self):
+        return self['INDEX-TYPE']
+
+    @property
+    def direction(self):
+        return self['DIRECTION']
+
+    @property
+    def spacing(self):
+        return self['SPACING']
+
+    @property
+    def encrypted(self):
+        if 'ENCRYPTED' in self.attic: return True
+        else:                         return False
+
+    @property
+    def index_min(self):
+        return self['INDEX-MIN']
+
+    @property
+    def index_max(self):
+        return self['INDEX-MAX']
 
     @property
     def index(self):
@@ -413,17 +438,18 @@ class Frame(BasicObject):
 
         return pre_fmt, ch_fmt, post_fmt
 
-    def link(self, objects):
-        super().link(objects)
+    def link(self):
+        # Reference from a Channel to the Frame it belongs to is not explicitly
+        # present in file. However it is very convenient that Channels are
+        # aware of their parent frame. Without a this reference present in the
+        # file, its the Frame's responsibility to update all it's Channel with
+        # a reference back to itself.
         for ch in self.channels:
             try:
-                if ch.frame:
-                    msg = ("Frame {} contract is broken. "
-                           "Channel {} already belongs to frame {}. "
-                           "Assigning a new one")
-                    logging.warning(msg.format(self.fingerprint,
-                                 ch.fingerprint, ch.frame.fingerprint))
-                ch.frame = self
+                if ch._frame:
+                    msg = '{} already belongs to {}, ownership given to {}'
+                    logging.warning(msg.format(ch, ch.frame, self))
+                ch._frame = core.obname(self.origin, self.copynumber, self.name)
             except AttributeError:
                 #happens if ch has been parsed as other type
                 pass

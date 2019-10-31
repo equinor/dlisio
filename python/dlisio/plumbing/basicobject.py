@@ -1,5 +1,6 @@
 from .. import core
 from .valuetypes import *
+from .linkage import *
 from .utils import *
 
 import logging
@@ -45,10 +46,6 @@ class BasicObject():
         Attic refers the underlying basic_object, which
         is a dict-representation of the data on disk. The attic can be
         None if this particular instance was not loaded from disk.
-
-    stash : dict_like
-        Dictionary with all attributes not specified in
-        :py:attr:`~attributes`.
     """
 
     attributes = {}
@@ -56,62 +53,109 @@ class BasicObject():
     ignore this attribute. It is mainly intended for internal use and advanced
     customization of dlisio's parsing routine.
 
-    If attributes list is to be updated manually for the class:
+    In short, this dictionary tells dlisio parse each attribute for a given
+    object. By default it implements rules defined by the dlis-spec. However it
+    can easily be customized if you'd like dlisio to parse your file in a
+    different way.
 
-    >>> Coefficient.attributes['MY_PARAM'] = valuetypes.scalar('myparam')
-    ... dlisio.load(fpath)
+    Examples
+    --------
 
-    All the Coefficient objects will map MY_PARAM from the source file
-    to myparam. Updating object instance attributes will actually update
-    attributes for the whole class
+    Lets take a look at Channel.attributes, it looks like this:
 
-    >>> coeff = f.objects[key]
-    ... coeff['MY_PARAM'] = valuetypes.scalar('myparam')
+    .. code-block:: python
 
-    In order to update attributes only for one particular object, redefine
-    the attributes dictionary for the object and reload
+        attributes = {
+            'LONG-NAME'          : scalar,
+            'REPRESENTATION-CODE': scalar,
+            'UNITS'              : scalar,
+            'PROPERTIES'         : vector,
+            'DIMENSION'          : reverse,
+            'AXIS'               : reverse,
+            'ELEMENT-LIMIT'      : reverse,
+            'SOURCE'             : scalar,
+        }
 
-    >>> coeff.attributes = dict(coeff.attributes)
-    ... coeff.attributes['UNIQUE_PARAM'] = valuetypes.scalar('uniqueparam')
-    ... coeff.load()
+    The keys are from the dlis-spec, i.e. this is how the attributes of a
+    CHANNEL-object are named in the file. The values tells dlisio how to
+    interpret these keys. In the dlis-spec it's defined that 'UNITS' only
+    contains a single value. This is communicated to dlisio with the
+    'scalar'-keyword. I.e. Channels __getitem__ will return a single value:
 
-    Values for the dictionary are valuetypes:
+    >>> channel['UNITS']
+    'm/s'
 
-    + *scalar* 1 value
-    + *vector* list of values
-    + *reverse* list of values will be reversed
-    + *skip* skip the value on object parsing. Custom action might be
-      performed later
+    The __getitem__ is not intended for direct use. However it is called
+    internally from all properties of the Channel-object. I.e. you observe the
+    same here:
 
+    >>> channel.units
+    'm/s'
+
+    The following example might be a bit absurd, but keep in mind that this
+    approach can be applied to _any_ attribute of _any_ object-type, even Unknown
+    object-types.
+
+    But now let's say that you are in possession of a file that you know is
+    structured differently from what the standard specifies. It contains some
+    weird Channel's where there are multiple units per Channel. Simply update
+    the attribute-dict before loading the file and dlisio will parse 'UNITS' as
+    a list:
+
+    >>> from dlisio.plumbing import vector
+    >>> Channel.attributes['UNITS'] = vector
+    >>> with dlisio.load('file.dlis') as (f, *_):
+    ...     ch = f.object('CHANNEL', 'TDEP')
+    ...     ch.units
+    ['m/s', 'rad/s']
+
+    The same can be achieved for a _specific_ object. Forcing a copy of the
+    attribute-dict for a given object before altering it makes sure your
+    changes only apply _that_ object
+
+    >>> ch = f.object('CHANNEL', 'TDEP')
+    >>> ch.attributes = dict(ch.attributes)
+    >>> Channel.attributes['UNITS'] = vector
+    >>> ch.units
+    ['m/s', 'rad/s']
+
+    References
+    ----------
+
+    [1] http://w3.energistics.org/RP66/V1/Toc/main.html
     """
 
     linkage    = {}
-    """dict: Defines which attributes that contains references other objects.
-    The typical user can safely ignore this attribute. It is mainly intended
-    for internal use and advanced customization of dlisio's parsing routine.
+    """dict: Defines which attributes contain references to other objects.  The
+    typical user can safely ignore this attribute. It is mainly intended for
+    internal use and advanced customization of dlisio's parsing routine.
 
-    During load stage all the objects of obname, objref and attref types
-    are put into refs. During link stage they are linked to actually
-    loaded objects based on information provided in linkage.
-    If linkage is to be updated manually for the class:
+    Object-to-object references often contains implicit information. E.g.
+    Frame.channels implicitly reference Channel object, so the type 'CHANNEL' is
+    not specified in the file. Hence dlisio needs to be told about this.
 
-    >>> Coefficient.linkage['myparam'] = linkage.obname("PARAMETER")
-    ... dlisio.load(fpath)
+    Like for attributes, this behavior is customizable.
 
-    or
+    Examples
+    --------
 
-    >>> coeff = f.objects[key]
-    ... ceoff.linkage['myparam'] = linkage.obname("PARAMETER")
+    Change how dlisio parses Channel.source:
 
-    The values must be either *linkage.obname("TYPE")* or *linkage.objref*.
-    To update linkage for one object only redefine linkage:
+    >>> from dlisio.plumbing import obname
+    >>> Channel.linkage['SOURCE'] = obname('PARAMETER')
+    >>> with dlisio.load('file.dlis') as (f, *_):
+    ...     ch = f.object('channel', 'TDEP')
+    ...     ch.source
+    Parameter('2000T')
 
-    >>> coeff.linkage = dict(coeff.linkage)
-    ... ceoff.linkage['myparam'] = linkage.obname("PARAMETER")
+    The same can be achieved for a _specific_ object. Forcing a copy of the
+    linkage-dict makes sure your changes only apply to that specific object:
 
-    To relink (when refs or linkage is updated):
-
-    >>> coeff.link(f.objects)
+    >>> ch = f.object('channel', 'TDEP')
+    >>> ch.linkage = dict(ch.linkage)
+    >>> ch.linkage['SOURCE'] = dlisio.plumbing.parse.obname('PARAMETER')
+    >>> ch.source
+    Parameter('2000T')
     """
 
     def __init__(self, obj, name = None, type = None, lf = None):
@@ -121,19 +165,9 @@ class BasicObject():
         self.copynumber = None
 
         if obj is None: obj = {}
-        self.attic      = obj
+        self.attic = obj
 
         self.logicalfile = lf
-
-        #: Dictionary with all unexpected attributes.
-        #: While all expected attributes are presented as members of object
-        #: class, attributes not mentioned in specification are put into stash
-        self.stash      = {}
-
-        #: References to linked objects.
-        #: Keeps originally stored value references to objects (obname, objref,
-        #: attref) in the form of dictionary (expected attribute name : value)
-        self.refs       = {}
 
         try:
             self.name       = name.id
@@ -145,6 +179,47 @@ class BasicObject():
     def __repr__(self):
         """Return a string representation of the object"""
         return '{}({})'.format(self.type.capitalize(), self.name)
+
+    def __getitem__(self, key):
+        """Parse attributes from attic.
+
+        Intended to be called internally from the objects, properties. For
+        end-users the preferred way of reaching object-attributes are through their
+        properties.
+
+        Parse attributes from attic based on parsing rules defined in
+        :attr:`attributes`. Attributes containing references to other objects
+        use :attr:`linkage` to resolve the references and create fingerprints
+        which are then used to look up the objects in the :attr:`logicalfile`'s
+        object-pool.
+
+        Returns a default value for missing attributes. I.e. attributes defined
+        in :attr:`attributes` but are not in :attr:`attic`.
+        """
+        if key not in self.attributes and key not in self.attic:
+            raise KeyError("'{}'".format(key))
+
+        try:
+            parse_as = self.attributes[key]
+        except KeyError:
+            # No rule for parsing, keep rp66value as is, i.e. vector
+            parse_as = vector
+
+        try:
+            rp66value = self.attic[key]
+        except KeyError:
+            return defaultvalue(parse_as)
+
+        if rp66value is None: return defaultvalue(parse_as)
+        if rp66value == []  : return defaultvalue(parse_as)
+
+        if key in self.linkage and isreference(rp66value[0]):
+            reftype = self.linkage[key]
+            value = [lookup(self, reftype, v) for v in rp66value]
+        else:
+            value = [v.strip() if isinstance(v, str) else v for v in rp66value]
+
+        return parsevalue(value, parse_as)
 
     @property
     def fingerprint(self):
@@ -163,6 +238,32 @@ class BasicObject():
                                 self.name,
                                 self.origin,
                                 self.copynumber)
+    @property
+    def stash(self):
+        """Attributes unknown to dlisio
+
+        It is not uncommon for objects to have 'extra' attributes that are not
+        defined by the standard. Because such attributes are unknown to dlisio,
+        they cannot be reach through normal attributes.
+
+        Returns
+        -------
+
+        stash : dict
+            all attributes not defined in :attr:`attributes`
+        """
+        stash = {
+            key : value
+            for key, value
+            in self.attic.items()
+            if key not in self.attributes
+        }
+
+        for key, value in stash.items():
+            value = [v.strip() if isinstance(v, str) else v for v in value]
+            stash[key] = value
+
+        return stash
 
     def stripspaces(self):
         """Strip spaces
@@ -183,70 +284,6 @@ class BasicObject():
         strip(self.__dict__)
         strip(self.stash)
 
-    def link(self, objects):
-        """ Link objects
-
-        Iterate through values in refs and link objects based on
-        provided linkage
-
-        Parameters
-        ----------
-        objects : dict(fingerprint -> object).
-
-        Example
-        -------
-
-        Gather all existing objects and relink channel
-
-        >>> objects = {}
-        >>> for v in f.indexedobjects.values():
-        >>>     objects.update(v)
-        >>> channel.link(objects)
-
-        """
-
-        linkage = self.linkage
-
-        for attr, link in linkage.items():
-            try:
-                ref = self.refs[attr]
-            except KeyError:
-                continue
-
-            if ref is None: continue
-
-            def get_link(v):
-                try:
-                    fp = link(v)
-                except (AttributeError, TypeError):
-                    msg = ('wrong linkage for attribute \'{}\' of object {} of '
-                           'class {}: can\'t  link object \'{}\' with expected '
-                           'linkage type \'{}\'. Make sure linkage contains '
-                           'references only to linkable objects and object is a'
-                           ' link of expected type')
-                    logging.warning(msg.format(attr, self.name,
-                                               self.__class__, v, link))
-                    return None
-
-                try:
-                    return objects[fp]
-                except KeyError:
-                    msg = ('missing attribute \'{}\' {} referenced from object '
-                           '{} of class {}')
-                    logging.warning(msg.format(attr, v, self.name,
-                                               self.__class__))
-                    return None
-
-            if isinstance(ref, list):
-                links = []
-                for v in ref:
-                    lnk = get_link(v)
-                    links.append(lnk)
-                setattr(self, attr, links)
-            else:
-                lnk = get_link(ref)
-                setattr(self, attr, lnk)
-
     @classmethod
     def create(cls, obj, name = None, type = None, lf = None):
         """ Create Python object of provided class and load values
@@ -256,53 +293,7 @@ class BasicObject():
         basic_object.
         """
         self = cls(obj, name = name, lf = lf)
-        self.load()
         return self
-
-    def load(self):
-        """Populate the Python object with values from the native c++ object.
-
-        This is achieved by looping over the Python class' attribute list
-        (which maps the native c++ attribute names to the attribute names in the
-        Python class) and extracting the value(s). Essentially, this is whats
-        going on:
-
-        >>> for label, value in obj.items():
-        ...     if label == 'LONG-NAME': self.long_name = value
-        ...     if label == 'CHANNEL'  : self.channel   = value
-
-        For labels which are not present in attribute list, instance stash
-        is updated
-        """
-
-        def islink(val):
-            # TODO: update to check repcode when repcode is back
-            return (isinstance (val, core.obname) or
-                    isinstance (val, core.objref) or
-                    isinstance (val, core.attref))
-
-        attrs = self.attributes
-        for label, value in self.attic.items():
-            if value is None: continue
-            if len(value) == 0: continue
-
-            try:
-                attr, value_type = attrs[label]
-            except KeyError:
-                self.stash[label] = value
-                continue
-
-            if value_type == ValueTypeSkip:
-                continue
-
-            val = vtvalue(value_type, value, label, self)
-
-            if islink(value[0]):
-                self.refs[attr] = val
-            else:
-                setattr(self, attr, val)
-
-        self.stripspaces()
 
     def describe(self, width=80, indent='', exclude='er'):
         """Printable summary of the object
@@ -339,7 +330,6 @@ class BasicObject():
         's'    attributes from stash
         'i'    attributes that violates the standard  [1]
         'e'    attributes with empty values (default) [2]
-        'r'    attributes from refs (default)
         ====== ==========================================
 
         [1] Only applicable to attributes that should be interpreted in a
@@ -364,11 +354,6 @@ class BasicObject():
             if len(self.stash) > 0:
                 describe_header(buf, 'Unknown attributes', width, indent, lvl=2)
                 describe_dict(buf, self.stash, width, indent, exclude)
-
-        if not exclude['refs']:
-            if len(self.refs) > 0:
-                describe_header(buf, 'References', width, indent, lvl=2)
-                describe_dict(buf, self.refs, width, indent, exclude)
 
         return Summary(info=buf.getvalue())
 

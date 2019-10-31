@@ -53,22 +53,31 @@ class Splice(BasicObject):
 
     """
     attributes = {
-        'OUTPUT-CHANNEL'  : scalar('output_channel'),
-        'INPUT-CHANNELS'  : vector('input_channels'),
-        'ZONES'           : vector('zones')
+        'OUTPUT-CHANNEL'  : scalar,
+        'INPUT-CHANNELS'  : vector,
+        'ZONES'           : vector,
     }
 
     linkage = {
-        'output_channel'  : obname('CHANNEL'),
-        'input_channels'  : obname('CHANNEL'),
-        'zones'           : obname('ZONE')
+        'OUTPUT-CHANNEL'  : obname('CHANNEL'),
+        'INPUT-CHANNELS'  : obname('CHANNEL'),
+        'ZONES'           : obname('ZONE')
     }
 
     def __init__(self, obj = None, name = None, lf = None):
         super().__init__(obj, name = name, type = 'SPLICE', lf = lf)
-        self.output_channel  = None
-        self.input_channels  = []
-        self.zones           = []
+
+    @property
+    def output_channel(self):
+        return self['OUTPUT-CHANNEL']
+
+    @property
+    def input_channels(self):
+        return self['INPUT-CHANNELS']
+
+    @property
+    def zones(self):
+        return self['ZONES']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

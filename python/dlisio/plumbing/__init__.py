@@ -23,4 +23,5 @@ from .process import Process
 from .unknown import Unknown
 
 from .valuetypes import *
+from .linkage import *
 from .utils import *

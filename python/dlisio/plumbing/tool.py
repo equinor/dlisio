@@ -49,30 +49,51 @@ class Tool(BasicObject):
     detail in Chapter 5.8.4 - Static and Frame Data, TOOL objects.
     """
     attributes = {
-        'DESCRIPTION'    : scalar('description'),
-        'TRADEMARK-NAME' : scalar('trademark_name'),
-        'GENERIC-NAME'   : scalar('generic_name'),
-        'STATUS'         : boolean('status'),
-        'PARTS'          : vector('parts'),
-        'CHANNELS'       : vector('channels'),
-        'PARAMETERS'     : vector('parameters')
+        'DESCRIPTION'    : scalar,
+        'TRADEMARK-NAME' : scalar,
+        'GENERIC-NAME'   : scalar,
+        'STATUS'         : boolean,
+        'PARTS'          : vector,
+        'CHANNELS'       : vector,
+        'PARAMETERS'     : vector,
     }
 
     linkage = {
-        "parts"      : obname("EQUIPMENT"),
-        "channels"   : obname("CHANNEL"),
-        "parameters" : obname("PARAMETER"),
+        'PARTS'      : obname('EQUIPMENT'),
+        'CHANNELS'   : obname('CHANNEL'),
+        'PARAMETERS' : obname('PARAMETER'),
     }
 
     def __init__(self, obj = None, name = None, lf = None):
         super().__init__(obj, name = name, type = 'TOOL', lf = lf)
-        self.description     = None
-        self.trademark_name  = None
-        self.generic_name    = None
-        self.status          = None
-        self.parts           = []
-        self.channels        = []
-        self.parameters      = []
+
+    @property
+    def description(self):
+        return self['DESCRIPTION']
+
+    @property
+    def trademark_name(self):
+        return self['TRADEMARK-NAME']
+
+    @property
+    def generic_name(self):
+        return self['GENERIC-NAME']
+
+    @property
+    def status(self):
+        return self['STATUS']
+
+    @property
+    def parts(self):
+        return self['PARTS']
+
+    @property
+    def channels(self):
+        return self['CHANNELS']
+
+    @property
+    def parameters(self):
+        return self['PARAMETERS']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

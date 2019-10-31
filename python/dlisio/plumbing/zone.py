@@ -35,19 +35,32 @@ class Zone(BasicObject):
     described in detail in Chapter 5.8.1 - Static and Frame Data, Zone Objects.
     """
     attributes = {
-        'DESCRIPTION': scalar('description'),
-        'DOMAIN'     : scalar('domain'),
-        'MAXIMUM'    : scalar('maximum'),
-        'MINIMUM'    : scalar('minimum')
+        'DESCRIPTION': scalar,
+        'DOMAIN'     : scalar,
+        'MAXIMUM'    : scalar,
+        'MINIMUM'    : scalar,
     }
 
 
     def __init__(self, obj = None, name = None, lf = None):
         super().__init__(obj, name = name, type = 'ZONE', lf = lf)
-        self.description = None
-        self.domain      = None
-        self.maximum     = None
-        self.minimum     = None
+
+    @property
+    def description(self):
+        return self['DESCRIPTION']
+
+    @property
+    def domain(self):
+        return self['DOMAIN']
+
+    @property
+    def maximum(self):
+        return self['MAXIMUM']
+
+    @property
+    def minimum(self):
+        return self['MINIMUM']
+
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

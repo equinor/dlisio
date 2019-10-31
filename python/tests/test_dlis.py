@@ -162,6 +162,42 @@ def test_match_special_characters(g):
     for ch in channels:
         assert ch in refs
 
+def test_basicobject_getitem_defaultvalue(f):
+    obj = f.object('FRAME', 'FRAME2')
+
+    # Attribute index_type is absent (from attic), but we stil expect to get a
+    # default value
+    assert obj['INDEX-TYPE'] is None
+
+def test_basicobject_getitem_unexpected_attr(f):
+    obj = f.object('FRAME', 'FRAME2')
+
+    try:
+        obj.attic['NEW-ATTR'] = [1]
+
+        # Attributes unknown to dlisio, such as 'NEW-ATTR' should be reachable
+        # through __getitem__
+        assert obj['NEW-ATTR'] == [1]
+
+        # Should also be in stash
+        assert obj.stash['NEW-ATTR'] == [1]
+    finally:
+        del obj.attic['NEW-ATTR']
+
+def test_basicobject_getitem_noattribute(f):
+    obj = f.object('FRAME', 'FRAME2')
+
+    # getitem should raise an KeyError if key not in obj.attic or
+    # obj.attributes
+
+    with pytest.raises(KeyError):
+        _ = obj['DUMMY']
+
+def test_basicobject_getitem(f):
+    obj = f.object('FRAME', 'FRAME1')
+
+    assert obj['INDEX-TYPE'] == 'BOREHOLE-DEPTH'
+
 def test_indexedobjects(f):
     assert f.fileheader.name   == "N"
     assert len(f.origins)      == 2

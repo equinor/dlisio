@@ -175,19 +175,25 @@ class dlis(object):
 
     Create a new object-type
 
-    >>> from dlisio.plumbing.basicobject import BasicObject
-    >>> from dlisio.plumbing.valuetypes import scalar, vector
-    >>> from dlisio.plumbing.linkage import obname
+    >>> from dlisio.plumbing import BasicObject
+    >>> from dlisio.plumbing import scalar, vector, obname
     >>> class Channel440(BasicObject):
-    ...   attributes = {
-    ...     'LONG-NAME' : scalar('longname'),
-    ...     'SAMPLES'   : vector('samples')
-    ...   }
-    ...   linkage= { 'longname' : obname('LONG-NAME') }
-    ...   def __init__(self, obj = None, name = None):
-    ...     super().__init_(obj, name = name, type = '440-CHANNEL')
-    ...     self.longname = None
-    ...     self.samples  = []
+    ...     attributes = {
+    ...       'LONG-NAME' : scalar,
+    ...       'SAMPLES'   : vector,
+    ...     }
+    ...     linkage= { 'longname' : obname('LONG-NAME') }
+    ...
+    ...     def __init__(self, obj = None, name = None):
+    ...       super().__init_(obj, name = name, type = '440-CHANNEL')
+    ...
+    ...     @property
+    ...     def longname(self):
+    ...         return self['LONG-NAME']
+    ...
+    ...     @property
+    ...     def samples(self):
+    ...         return self['SAMPLES']
 
     Add the new object-type and load the file
 
@@ -561,11 +567,15 @@ class dlis(object):
                 objects[fingerprint] = obj
                 indexedobjects[obj.type][fingerprint] = obj
 
-        for obj in objects.values():
-            obj.link(objects)
 
         self.indexedobjects = indexedobjects
         self.problematic = problematic
+
+        # Frame objects need the additional step of updating its Channels with
+        # a reference back to itself. See Frame.link()
+        for obj in self.indexedobjects['FRAME'].values():
+            obj.link()
+
         return self
 
     def storage_label(self):

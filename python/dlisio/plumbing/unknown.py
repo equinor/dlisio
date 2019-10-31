@@ -20,5 +20,4 @@ class Unknown(BasicObject):
     @classmethod
     def create(cls, obj, name = None, type = None, lf = None):
         self = Unknown(obj, name = name, type = type, lf = lf)
-        self.load()
         return self

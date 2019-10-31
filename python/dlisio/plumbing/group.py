@@ -36,44 +36,45 @@ class Group(BasicObject):
     objects.
     """
     attributes = {
-        'DESCRIPTION' : scalar('description'),
-        'OBJECT-TYPE' : scalar('objecttype'),
-        'OBJECT-LIST' : vector('objects'),
-        'GROUP-LIST'  : vector('groups'),
+        'DESCRIPTION' : scalar,
+        'OBJECT-TYPE' : scalar,
+        'OBJECT-LIST' : vector,
+        'GROUP-LIST'  : vector,
     }
 
     linkage = {
-        'objects' : objref,
-        'groups'  : obname('GROUP'),
+        'OBJECT-LIST' : objref,
+        'GROUP-LIST'  : obname('GROUP'),
 
     }
 
     def __init__(self, obj = None, name = None, lf = None):
         super().__init__(obj, name = name, type = 'GROUP', lf = lf)
-        self.description = None
-        self.objecttype  = None
-        self.objects     = []
-        self.groups      = []
-
         self.linkage = deepcopy(self.linkage)
 
+    @property
+    def description(self):
+        return self['DESCRIPTION']
 
-    def link(self, objects):
-        """
-        Group.objects references other objects either by objref
-        or by obname(self.objecttype). DLISIO assumes objref as default, but
-        checks before linking and changes to obname(self.objecttype) if
-        nessesary'
-        """
+    @property
+    def objecttype(self):
+        return self['OBJECT-TYPE']
+
+    @property
+    def objects(self):
         try:
-            ref = self.refs['objects'][0]
-        except KeyError:
-            ref = None
+            ref = self.attic['OBJECT-LIST'][0]
+        except (KeyError, IndexError):
+            return []
 
         if isinstance(ref, core.obname):
-            self.linkage['objects'] = obname(self.objecttype)
+            self.linkage['OBJECT-LIST'] = obname(self.objecttype)
 
-        super().link(objects)
+        return self['OBJECT-LIST']
+
+    @property
+    def groups(self):
+        return self['GROUP-LIST']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

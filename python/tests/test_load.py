@@ -180,25 +180,20 @@ def test_wellref_coordinates():
         'COORDINATE-2-NAME'  : ['latitude'],
     }
 
-    wellref.load()
-
     assert wellref.coordinates['longitude']  == 1
     assert wellref.coordinates['latitude']   == 2
     assert wellref.coordinates['elevation']  == 3
 
     del wellref.attic['COORDINATE-3-VALUE']
-    wellref.load()
     assert wellref.coordinates['latitude']   == 2
     assert wellref.coordinates['elevation']  == None
 
     del wellref.attic['COORDINATE-2-NAME']
-    wellref.load()
     assert wellref.coordinates['longitude']    == 1
     assert wellref.coordinates['COORDINATE-2'] == 2
 
     del wellref.attic['COORDINATE-1-NAME']
     del wellref.attic['COORDINATE-1-VALUE']
-    wellref.load()
     assert len(wellref.coordinates) == 3
     assert wellref.coordinates['COORDINATE-1'] == None
 
@@ -208,9 +203,8 @@ def test_valuetype_mismatch(assert_log):
         'DESCRIPTION' : ["Description", "Unexpected description"],
         'STATUS'      : ["Yes", 0],
     }
-    tool.load()
 
     assert tool.description == "Description"
     assert tool.status      == True
-    assert_log("1 value in the attribute DESCRIPTION")
-    assert_log("1 value in the attribute STATUS")
+    assert_log('Expected only 1 value')
+    assert_log('Expected only 1 value')
