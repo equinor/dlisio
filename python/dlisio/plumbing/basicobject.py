@@ -119,6 +119,8 @@ class BasicObject():
         self.name       = name
         self.origin     = None
         self.copynumber = None
+
+        if obj is None: obj = {}
         self.attic      = obj
 
         self.logicalfile = lf
