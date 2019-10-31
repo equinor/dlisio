@@ -114,8 +114,8 @@ class Path(BasicObject):
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Frame']                = replist(self.frame, 'name')
-        d['Well reference point'] = replist(self.well_reference_point, 'name')
+        d['Frame']                = self.frame
+        d['Well reference point'] = self.well_reference_point
         d['Value Channel(s)']     = replist(self.value, 'name')
         describe_dict(buf, d, width, indent, exclude)
 
