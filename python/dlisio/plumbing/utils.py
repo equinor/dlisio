@@ -111,7 +111,6 @@ def sampling(data, shape, single=False):
 
     size = len(data)
     if size == 0: return np.empty(0)
-    if shape == [1]: shape = 1
 
     samplesize = np.prod(np.array(shape))
     samplecount = size // samplesize
@@ -125,7 +124,9 @@ def sampling(data, shape, single=False):
     data = np.array(data)
     elem_dtype = np.dtype((data.dtype, elem_shape))
 
-    dtype = np.dtype((elem_dtype, shape))
+    if shape == [1]: dtype = np.dtype(elem_dtype)
+    else:            dtype = np.dtype((elem_dtype, tuple(shape)))
+
     array = np.ndarray(shape=(samplecount,), dtype=dtype, buffer=data)
 
     if single:
