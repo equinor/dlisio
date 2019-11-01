@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse, skip
+from .valuetypes import scalar, vector, reverse
 from .linkage import obname
 from .utils import *
 
@@ -56,7 +56,7 @@ class Parameter(BasicObject):
         'DIMENSION' : reverse,
         'AXIS'      : reverse,
         'ZONES'     : vector,
-        'VALUES'    : skip,
+        'VALUES'    : vector,
     }
 
     linkage = {

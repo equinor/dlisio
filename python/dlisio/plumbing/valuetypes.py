@@ -18,9 +18,6 @@ vector  = 3
 # major.
 reverse = 4
 
-# Skip attribute when loading object
-skip    = 5
-
 def defaultvalue(attribute):
     """Returns a default value based on the attribute type"""
     if   attribute == scalar:  return None
@@ -50,9 +47,6 @@ def parsevalue(value, parse_as):
         if len(value) != 1:
             logging.warning(msg.format(len(value)))
         return bool(value[0])
-
-    elif parse_as == skip:
-        return ValueError("For skip type value is unknown")
 
     else:
         problem = 'unknown value extraction descriptor {}'

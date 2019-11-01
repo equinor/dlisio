@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse, skip
+from .valuetypes import scalar, vector, reverse
 from .linkage import objref, obname
 from .utils import *
 
@@ -70,16 +70,16 @@ class Measurement(BasicObject):
         'TYPE'              : scalar,
         'DIMENSION'         : reverse,
         'AXIS'              : reverse,
-        'MEASUREMENT'       : skip,
+        'MEASUREMENT'       : vector,
         'SAMPLE-COUNT'      : scalar,
-        'MAXIMUM-DEVIATION' : skip,
-        'STANDARD-DEVIATION': skip,
+        'MAXIMUM-DEVIATION' : vector,
+        'STANDARD-DEVIATION': vector,
         'BEGIN-TIME'        : scalar,
         'DURATION'          : scalar,
-        'REFERENCE'         : skip,
+        'REFERENCE'         : vector,
         'STANDARD'          : vector,
-        'PLUS-TOLERANCE'    : skip,
-        'MINUS-TOLERANCE'   : skip,
+        'PLUS-TOLERANCE'    : vector,
+        'MINUS-TOLERANCE'   : vector,
     }
 
     linkage = {

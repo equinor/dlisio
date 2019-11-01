@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, skip
+from .valuetypes import scalar
 from .utils import *
 
 from collections import OrderedDict
@@ -54,12 +54,12 @@ class Wellref(BasicObject):
         'PERMANENT-DATUM-ELEVATION' : scalar,
         'ABOVE-PERMANENT-DATUM'     : scalar,
         'MAGNETIC-DECLINATION'      : scalar,
-        'COORDINATE-1-NAME'         : skip,
-        'COORDINATE-1-VALUE'        : skip,
-        'COORDINATE-2-NAME'         : skip,
-        'COORDINATE-2-VALUE'        : skip,
-        'COORDINATE-3-NAME'         : skip,
-        'COORDINATE-3-VALUE'        : skip,
+        'COORDINATE-1-NAME'         : scalar,
+        'COORDINATE-1-VALUE'        : scalar,
+        'COORDINATE-2-NAME'         : scalar,
+        'COORDINATE-2-VALUE'        : scalar,
+        'COORDINATE-3-NAME'         : scalar,
+        'COORDINATE-3-VALUE'        : scalar,
     }
 
 
