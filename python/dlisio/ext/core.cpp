@@ -87,7 +87,7 @@ struct dlis_caster {
     PYBIND11_TYPE_CASTER(T, _("dlisio.core.type.")+_(dl::typeinfo< T >::name));
 
     static handle cast( const T& src, return_value_policy, handle ) {
-        return py::cast( dl::decay( src ) ).inc_ref();
+        return py::cast( dl::decay( src ) ).release();
     }
 
     /*
@@ -126,25 +126,25 @@ handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy
 template <>
 handle dlis_caster< dl::fsing1 >::cast( const dl::fsing1& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A).inc_ref();
+    return py::make_tuple(src.V, src.A).release();
 }
 
 template <>
 handle dlis_caster< dl::fsing2 >::cast( const dl::fsing2& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+    return py::make_tuple(src.V, src.A, src.B).release();
 }
 
 template <>
 handle dlis_caster< dl::fdoub1 >::cast( const dl::fdoub1& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A).inc_ref();
+    return py::make_tuple(src.V, src.A).release();
 }
 
 template <>
 handle dlis_caster< dl::fdoub2 >::cast( const dl::fdoub2& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+    return py::make_tuple(src.V, src.A, src.B).release();
 }
 
 template <>
@@ -193,7 +193,7 @@ handle decode_str(const std::string& src) noexcept (false) {
     if (PyErr_WarnEx(PyExc_UnicodeWarning, msg.c_str(), 1) == -1)
         throw py::error_already_set();
 
-    return pysrc.inc_ref();
+    return pysrc.release();
 }
 
 }
