@@ -308,7 +308,7 @@ def test_dtime_x2():
     fpath = 'data/chap4-7/iflr/reprcodes-x2/21-dtime.dlis'
     curves = load_curves(fpath)
     assert curves[0][0] == datetime(1971, 3, 21, 18, 4, 14, 386000)
-    assert curves[1][0] == datetime(1970, 3, 21, 18, 4, 0, 0)
+    assert curves[1][0] == datetime(1970, 3, 21, 18, 4, 14, 0)
 
 @pytest.mark.xfail(strict=True)
 def test_origin_x2():
@@ -427,7 +427,7 @@ def test_two_various_fdata_in_one_iflr():
     assert curves[0][0] == datetime(1971, 3, 21, 18, 4, 14, 386000)
     assert curves[0][1] == "VALUE"
     assert curves[0][2] == 89
-    assert curves[1][0] == datetime(1970, 3, 21, 18, 4, 0, 0)
+    assert curves[1][0] == datetime(1970, 3, 21, 18, 4, 14, 0)
     assert curves[1][1] == "SECOND-VALUE"
     assert curves[1][2] == -89
 
