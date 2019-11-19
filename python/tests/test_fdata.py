@@ -259,7 +259,7 @@ def test_slong_x2():
     fpath = 'data/chap4-7/iflr/reprcodes-x2/14-slong.dlis'
     curves = load_curves(fpath)
     assert curves[0][0] == 2147483647
-    assert curves[1][0] == -1
+    assert curves[1][0] == -153
 
 @pytest.mark.xfail(strict=True)
 def test_ushort_x2():
