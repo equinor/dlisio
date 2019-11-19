@@ -354,6 +354,14 @@ def test_units_x2():
     assert curves[0][0] == "unit"
     assert curves[1][0] == "unit2"
 
+@pytest.mark.xfail(strict=True)
+def test_multiple_fdata_in_frame_has_correct_shape():
+    # to enable more efficient resizing, larger-than-output temporaries can be
+    # useful, but the *final array* must still be exactly as large as the
+    # number-of-frames
+    fpath = 'data/chap4-7/iflr/reprcodes-x2/27-units.dlis'
+    curves = load_curves(fpath)
+    assert curves.shape == (2,)
 
 def test_all_reprcodes():
     fpath = 'data/chap4-7/iflr/all-reprcodes.dlis'
