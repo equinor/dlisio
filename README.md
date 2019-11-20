@@ -43,7 +43,7 @@ through [pypi](https://pypi.org/project/dlisio/)
 pip3 install dlisio
 ```
 
-Once dlisio is stable it will also be availble as debian, fedora, and conda
+Once dlisio is stable it will also be available as debian, fedora, and conda
 packages.
 
 ### Build dlisio ###
