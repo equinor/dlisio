@@ -108,7 +108,7 @@ class Frame(BasicObject):
         self.index_max   = None
 
         # Format-string of the frame. Mainly indended for internal use
-        self._fmtstr     = ""
+        self._fmtstr     = 'i'
 
         # The data-type of the structured array that contains all samples
         # arrays from all channels.
@@ -154,17 +154,17 @@ class Frame(BasicObject):
     def dtype(self):
         """dtype
 
-        data-type of each frame. I.e. the sum of channel.dtype of each channel
-        in self.channels.
+        data-type of each frame, i.e. the sum of channel.dtype of each channel
+        in self.channels. The first column is always FRAMENO.
 
-        If all curve mnemonics are unique, then dtype.names == [ch.name for ch
-        in self.channels]. If there are more than one channel with the same
-        name for this frame, all duplicated mnemonics are enriched with origin
-        and copynumber.
+        If all curve mnemonics are unique, then dtype.names == ['FRAMENO'] +
+        [ch.name for ch in self.channels]. If there are more than one channel
+        with the same name for this frame, all duplicated mnemonics are
+        enriched with origin and copynumber.
 
         Consider a frame with the channels mnemonics [('TIME', 0, 0), ('TDEP',
         0, 0), ('TIME, 1, 0)]. The dtype names for this frame would be
-        ('TIME.0.0', 'TDEP', 'TIME.1.0').
+        ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0').
 
         Duplicated mnemonics are formatted by the dtype_fmt attribute. To use a
         custom format for a specific frame instance, set dtype_fmt for the
@@ -177,37 +177,38 @@ class Frame(BasicObject):
 
         Returns
         -------
-
         dtype : np.dtype
 
         Examples
         --------
-
         A frame with two TIME channels:
 
         >>> frame.dtype
-        dtype([('TIME.0.0', '<f4'), ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
+        dtype([('FRAMENO', '<i4'), ('TIME.0.0', '<f4'),
+               ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
 
         Override instance-specific mnemonic formatting
 
         >>> frame.dtype
-        dtype([('TIME.0.0', '<f4'), ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
+        dtype([(FRAMENO', '<i4'), ('TIME.0.0', '<f4'),
+              ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
         >>> frame.dtype_fmt = '{:s}-{:d}-{:d}'
         >>> frame.dtype
-        dtype([('TIME-0-0', '<f4'), ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
+        dtype([(FRAMENO', 'i4'), ('TIME-0-0', '<f4'),
+               ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
         """
 
         if self._dtype: return self._dtype
 
         seen = {}
-        types = []
+        types = [('FRAMENO', 'i4')]
 
         duplerr = "duplicated mnemonics in frame '{}': {}"
         fmterr = "rich label for channel '{}' cannot be formatted in frame '{}'"
         info = 'name = {}, origin = {}, copynumber = {}'.format
 
         fmtlabel = self.dtype_fmt.format
-        for i, ch in enumerate(self.channels):
+        for i, ch in enumerate(self.channels, start = 1):
             # current has to be a list (or something mutable at least), because
             # it have to be updated on multiple labes
             current = (ch.name, ch.dtype)
@@ -264,11 +265,10 @@ class Frame(BasicObject):
 
         Returns
         -------
-
         fmtstr : str
         """
 
-        if self._fmtstr != "" : return self._fmtstr
+        if self._fmtstr != 'i' : return self._fmtstr
 
         for ch in self.channels:
             self._fmtstr += ch.fmtstr()
@@ -276,12 +276,25 @@ class Frame(BasicObject):
         return self._fmtstr
 
     def curves(self):
-        """
-        Returns a structured numpy array of all the curves
+        """All curves belonging to this frame
+
+        Get all the curves in this frame as a structured numpy array. The frame
+        includes the frame number (FRAMENO), to detect errors such as missing
+        entries and out-of-order frames.
+
+        Returns
+        -------
+        curves : np.ndarray
+            curves with dtype = self.dtype
+
+        See also
+        --------
+        Channel.curves : Access the curve-data directly through the Channel
+          objects
+        Frame.dtype : dtype of the array
 
         Examples
         --------
-
         The returned array supports both horizontal- and vertical slicing.
         Do a vertical slice by specifying a single Channel
 
@@ -379,17 +392,6 @@ class Frame(BasicObject):
         curvenames are all stored in the array itself. Then all that is needed
         is to extract the first name as index and let the rest be added to the
         DataFrame as normal Channels.
-
-        See also
-        --------
-
-        Channel.curves : Access the curve-data directly through the Channel
-          objects
-
-        Returns
-        -------
-        curves : np.ndarray
-
         """
         return curves(self.file, self, self.dtype, "", self.fmtstr(), "")
 

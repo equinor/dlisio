@@ -313,8 +313,17 @@ noexcept (false) {
     auto info = dstb.request(true);
     auto* dst = static_cast< char* >(info.ptr);
 
+    /*
+     * The frameno is a part of the dtype, and only frame.channels is allowed
+     * to call this function. If pre/post format is set, wrong data is read.
+     *
+     * The interface is not changed for now as they're to be reintroduced at
+     * some point.
+     */
+    assert(std::string(pre_fmt) == "");
+    assert(std::string(post_fmt) == "");
+
     dl::record record;
-    int expected_frameno = 1;
     for (auto i : indices) {
         /* get record */
         file.at(i, record);
@@ -333,14 +342,6 @@ noexcept (false) {
 
         /* get frame number and slots */
         while (ptr < end) {
-            std::int32_t frameno;
-            ptr = dlis_uvari(ptr, &frameno);
-
-            if (frameno != expected_frameno) {
-                // TODO: warning
-                // const auto msg = 'Non-sequential frames. expected = {}, current = {}'
-            }
-
             auto assert_overflow = [end](const char* ptr, int skip) {
                 if (ptr + skip > end) {
                     const auto msg = "corrupted record: fmtstr would read past end";
@@ -597,7 +598,6 @@ noexcept (false) {
                 dst += dst_skip;
                 ptr += src_skip;
             }
-            expected_frameno = frameno + 1;
 
             dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
             assert_overflow(ptr, src_skip);
