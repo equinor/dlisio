@@ -11,7 +11,13 @@ def curves(dlis, frame, dtype, pre_fmt, fmt, post_fmt):
     pre_fmt (to skip), fmt (to read), post_fmt (to skip)
     """
     indices = dlis.fdata_index[frame.fingerprint]
-    #note: shape is wrong for multiple data in one frame
-    a = np.empty(shape = len(indices), dtype = dtype)
-    core.read_fdata(pre_fmt, fmt, post_fmt, dlis.file, indices, a)
-    return a
+    alloc = lambda size: np.empty(shape = size, dtype = dtype)
+    return core.read_fdata(
+        pre_fmt,
+        fmt,
+        post_fmt,
+        dlis.file,
+        indices,
+        dtype.itemsize,
+        alloc,
+    )
