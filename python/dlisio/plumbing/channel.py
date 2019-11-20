@@ -213,9 +213,7 @@ class Channel(BasicObject):
         -------
         curves : np.ndarray
         """
-        frame = self.frame
-        pre_fmt, fmt, post_fmt = frame.fmtstrchannel(self)
-        return curves(frame.file, frame, self.dtype, pre_fmt, fmt, post_fmt)
+        return self.frame.curves()[self.name]
 
     def describe_attr(self, buf, width, indent, exclude):
         describe_description(buf, self.long_name, width, indent, exclude)
