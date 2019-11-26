@@ -154,6 +154,23 @@ def test_load_fdata_many_in_same_VR():
         fingerprint = 'T.FRAME-I.'+ident+'-O.1073741823-C.255'
         assert f.fdata_index[fingerprint] == [3]
 
+def test_load_fdata_VR_disaligned():
+    with dlisio.load('data/chap2/fdata-vr-disaligned.dlis') as (f, *_):
+        assert len(f.fdata_index) == 1
+        assert f.fdata_index['T.FRAME-I.IFLR-O.35-C.1'] == [0]
+
+@pytest.mark.xfail(strict=True)
+def test_load_fdata_VR_disaligned_in_obname():
+    with dlisio.load('data/chap2/fdata-vr-disaligned-in-obname.dlis') as (f, *_):
+        assert len(f.fdata_index) == 1
+        name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
+        assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
+
+@pytest.mark.xfail(strict=True)
+def test_load_fdata_encrypted():
+    with dlisio.load('data/chap2/fdata-encrypted.dlis') as (f, *_):
+        assert len(f.fdata_index) == 0
+
 def test_3lrs_in_lr_in_vr():
     with dlisio.load('data/chap2/example-record.dlis'):
         pass
