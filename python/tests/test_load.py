@@ -135,6 +135,27 @@ def test_link(fpath):
         assert channel in frame1.channels
         assert channel not in frame2.channels
 
+@pytest.mark.xfail(strict=True, reason="attempt to link empty fingerprint")
+def test_link_empty_object(tmpdir_factory, merge_files_manyLR):
+    fpath = str(tmpdir_factory.mktemp('load').join('empty-attribute.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/origin.dlis.part',
+        'data/chap4-7/eflr/channel-empty-source.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
+
+    with dlisio.load(fpath) as (f, *_):
+        c1 = f.object('CHANNEL', 'EMPTY_SOURCE_1', 10, 0)
+        try:
+            _ = c1.stash["SOURCE"]
+        except KeyError:
+            pass
+        c2 = f.object('CHANNEL', 'EMPTY_SOURCE_2', 10, 0)
+        assert c2.source == (0, 0, "", "")
+
+
 def test_curves(fpath):
     with dlisio.load(fpath) as (_, f2, _):
         frame = f2.object('FRAME', 'FRAME-INC', 10, 0)
