@@ -8,7 +8,7 @@ from dlisio.plumbing.unknown import Unknown
 @pytest.fixture(scope="module")
 def g():
     s = dlisio.open("tests/test_dlis.py") #any existing file is required
-    g = dlisio.dlis(s, [], None, [])
+    g = dlisio.dlis(s, [], [], [])
 
     ch = Channel()
     ch.name = 'CHANNEL1'

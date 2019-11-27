@@ -507,24 +507,38 @@ class dlis(object):
 
         return plumbing.Summary(info=buf.getvalue())
 
-    def load(self, sets=None):
+    def load(self, records=None, reload=True):
         """ Load and enrich raw objects into the object pool
 
         This method converts the raw object sets into first-class dlisio python
-        objects, and puts them in the objects, indexedobjects and problematic
-        members.
+        objects, and puts them in the indexedobjects and problematic members.
 
         Parameters
         ----------
-        sets : iterable of object_set
+
+        records : iterable of records
+
+        reload : bool
+            If False, append the new object too the pool of objects. If True,
+            overwrite the existing pool with new objects.
 
         Notes
         -----
-        This is a part of the two-phase initialisation of the pool, and should
-        rarely be called as an end user. This is primarily a mechanism for
-        testing and prototyping for developers, and the occasional
-        live-patching of features so that dlisio is useful, even when something
-        in particular is not merged upstream.
+
+        This method is mainly intended for internal use. It serves as a worker
+        for other methods that needs to populate the pool with new objects.
+        It's the callers responsibility to keep track of the current state of
+        the pool, and not load the same objects into the pool several times.
+
+        Examples
+        --------
+
+        When opening a file with dlisio.load('path') only a few object-types
+        are loaded into the pool. If need be, it is possible to force dlisio to
+        load every object in the file into its internal cache:
+
+        >>> with dlisio.load('file') as (f, *tail):
+        ...     f.load()
 
         """
         problem = 'multiple distinct objects '
@@ -532,12 +546,16 @@ class dlis(object):
         action = 'continuing with the last object'
         duplicate = 'duplicate fingerprint {}'
 
-        objects = {}
-        indexedobjects = defaultdict(dict)
-        problematic = []
+        if reload:
+            indexedobjects = defaultdict(dict)
+            problematic    = []
 
-        if sets is None:
-            sets = self.raw_objectsets()
+        else:
+            indexedobjects = self.indexedobjects
+            problematic    = self.problematic
+
+        if records is None: records = self.attic
+        sets = core.parse_objects(records)
 
         for os in sets:
             # TODO: handle replacement sets
@@ -553,8 +571,8 @@ class dlis(object):
                     )
 
                 fingerprint = obj.fingerprint
-                if fingerprint in objects:
-                    original = objects[fingerprint]
+                if fingerprint in indexedobjects[os.type]:
+                    original = indexedobjects[os.type][fingerprint]
 
                     logging.info(duplicate.format(fingerprint))
                     if original.attic != obj.attic:
@@ -564,12 +582,13 @@ class dlis(object):
                         logging.warning(action)
                         problematic.append((original, obj))
 
-                objects[fingerprint] = obj
                 indexedobjects[obj.type][fingerprint] = obj
 
 
         self.indexedobjects = indexedobjects
-        self.problematic = problematic
+        self.problematic    = problematic
+
+        if 'FRAME' not in [x.type for x in sets]: return self
 
         # Frame objects need the additional step of updating its Channels with
         # a reference back to itself. See Frame.link()
