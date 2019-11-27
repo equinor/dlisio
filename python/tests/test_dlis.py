@@ -5,6 +5,8 @@ from dlisio.plumbing.channel import Channel
 from dlisio.plumbing.frame import Frame
 from dlisio.plumbing.unknown import Unknown
 
+from dlisio import core
+
 @pytest.fixture(scope="module")
 def g():
     s = dlisio.open("tests/test_dlis.py") #any existing file is required
@@ -14,18 +16,21 @@ def g():
     ch.name = 'CHANNEL1'
     ch.origin = 0
     ch.copynumber = 0
+    ch.logicalfile = g
     g.indexedobjects["CHANNEL"][ch.fingerprint] = ch
 
     ch = Channel()
     ch.name = 'CHANNEL1.V2'
     ch.origin = 0
     ch.copynumber = 0
+    ch.logicalfile = g
     g.indexedobjects["CHANNEL"][ch.fingerprint] = ch
 
     ch = Channel()
     ch.name = 'CHANNEL1'
     ch.origin = 0
     ch.copynumber = 1
+    ch.logicalfile = g
     g.indexedobjects["CHANNEL"][ch.fingerprint] = ch
 
     un = Unknown()
@@ -33,12 +38,14 @@ def g():
     un.origin = 0
     un.copynumber = 0
     un.type = "NONCHANNEL"
+    un.logicalfile = g
     g.indexedobjects["NONCHANNEL"][un.fingerprint] = un
 
     fr = Frame()
     fr.name = 'UNEFRAME'
     fr.origin = 0
     fr.copynumber = 0
+    fr.logicalfile = g
     g.indexedobjects["FRAME"][fr.fingerprint] = fr
 
     un = Unknown()
@@ -46,6 +53,7 @@ def g():
     un.origin = 0
     un.copynumber = 0
     un.type = "440.TYPE"
+    un.logicalfile = g
     g.indexedobjects["440.TYPE"][un.fingerprint] = un
 
     ch = Channel()
@@ -53,8 +61,10 @@ def g():
     ch.origin = 0
     ch.copynumber = 0
     ch.type = "440-TYPE"
+    ch.logicalfile = g
     g.indexedobjects["440-TYPE"][ch.fingerprint] = ch
 
+    g.record_types = list(g.indexedobjects.keys())
     return g
 
 def test_object(g):
@@ -221,3 +231,51 @@ def test_indexedobjects(f):
     assert len(f.comments)     == 1
     assert len(f.messages)     == 1
 
+def test_initial_load(fpath):
+    with dlisio.load(fpath) as (f, *tail):
+        # Only fileheader, origin, frame, and channel should be loaded
+        assert len(f.indexedobjects) == 4
+
+def test_objecttype_load(fpath):
+    with dlisio.load(fpath) as (f, *tail):
+        fp = core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
+        parameters = f.parameters
+
+        assert len(parameters) == 3
+        assert fp in f.indexedobjects['PARAMETER']
+
+def test_loading_new_objecttype(fpath):
+    with dlisio.load(fpath) as (f, *tail):
+        fp = core.fingerprint('TOOL', 'TOOL1', 10, 0)
+        _ = f.object('TOOL', 'TOOL1', 10, 0)
+
+        assert fp in f.indexedobjects['TOOL']
+
+def test_loading_new_objecttype_match(fpath):
+    with dlisio.load(fpath) as (f, *tail):
+        fp = core.fingerprint('MESSAGE', 'MESSAGE1', 10, 0)
+
+        _ = list(f.match('.*' , type='MESSAGE'))
+
+        assert fp in f.indexedobjects['MESSAGE']
+
+def test_object_load_link(fpath):
+    with dlisio.load(fpath) as (f, *tail):
+        fp = core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
+        ch = f.object('CHANNEL', 'CHANN1')
+
+        # Accessing long-name should trigger loading of all long-names
+        _ = ch.long_name
+        assert fp in f.indexedobjects['LONG-NAME']
+        assert len(f.indexedobjects['LONG-NAME']) == 4
+
+def test_load_all(fpath):
+    with dlisio.load(fpath) as (f, *_):
+        f.load()
+        assert len(f.indexedobjects) == 23
+
+def test_unknowns_loading():
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
+        assert len(f.indexedobjects) == 4 #FILE-HEADER, ORIGIN, FRAME, CHANNEL
+        assert len(f.unknowns)       == 5
+        assert len(f.indexedobjects) == 9

@@ -127,12 +127,12 @@ class dlis(object):
     problematic : list
         Duplicated objects. If dlisio is not able to uniquely identify an object
         based on the standards definition, the object is flagged as
-        problematic. Mainly indended for debugging files.
+        problematic. Mainly intended for debugging files.
 
     indexedobject : dict
-        A full inventory of all objects in the logical file, indexed by type.
-        Note that there are more handy ways of accessing objects than through
-        this dictionary.
+        A inventory of __loaded__ objects in the logical file, indexed by type.
+        Only intended as internal storage. It is not intended to be accessed
+        directly.
     """
     types = {
         'AXIS'                   : plumbing.Axis,
@@ -225,7 +225,42 @@ class dlis(object):
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
 
-        self.load()
+        self.record_types = core.parse_set_types(self.attic)
+
+        types = ('FILE-HEADER', 'ORIGIN', 'FRAME', 'CHANNEL')
+        recs  = [rec for rec, t in zip(self.attic, self.record_types) if t in types]
+        self.load(recs)
+
+    def __getitem__(self, type):
+        """Return all objects of a given type. Parses and caches relevant
+        records if objects of the given type is not parsed yet.
+
+        All direct access of objects should be routed through this method, to
+        ensure unloaded objects are loaded when asked for.
+
+        Parameters
+        ----------
+        type : str
+            object type, e.g. CHANNEL
+
+        Returns
+        -------
+
+        objects : dict
+            all objects of type 'type'
+        """
+        if type in self.indexedobjects:
+            return self.indexedobjects[type]
+
+        recs = [rec
+            for rec, t
+            in zip(self.attic, self.record_types)
+            if t == type
+        ]
+
+        self.load(recs, reload=False)
+
+        return self.indexedobjects[type]
 
     def __enter__(self):
         return self
@@ -255,7 +290,7 @@ class dlis(object):
             self.t = t
 
         def __get__(self, instance, owner):
-            return instance.indexedobjects[self.t].values()
+            return instance[self.t].values()
 
     @property
     def fileheader(self):
@@ -266,7 +301,7 @@ class dlis(object):
         fileheader : Fileheader
 
         """
-        values = list(self.indexedobjects['FILE-HEADER'].values())
+        values = list(self['FILE-HEADER'].values())
 
         if len(values) != 1:
             msg = "Expected exactly one fileheader. Was: {}"
@@ -299,14 +334,40 @@ class dlis(object):
 
     @property
     def unknowns(self):
-        """ Return all objects that are unknown to dlisio. I.e. vendor-specific
-        objects. """
-        return (obj
-            for typename, object_set in self.indexedobjects.items()
-            for obj in object_set.values()
-            if typename not in self.types
-        )
+        """Return all objects that are unknown to dlisio.
 
+        Unknown objects are object-types that dlisio does not know about. By
+        default, any metadata object not defined by rp66v1 [1]. The are all
+        parsed as :py:class:`dlisio.plumbing.Unknown`, that implements a dict
+        interface.
+
+        [1] http://w3.energistics.org/rp66/v1/Toc/main.html
+
+        Notes
+        -----
+        Adding a custom python class for an object-type to dlis.types will
+        in-effect remove all objects of that type from unknowns.
+
+        Returns
+        -------
+        objects : defaultdict(list)
+            A defaultdict index by object-type
+
+        """
+        recs = [rec
+            for rec, t
+            in zip(self.attic, self.record_types)
+            if (t not in self.types and not rec.encrypted)
+        ]
+        self.load(recs, reload=False)
+
+        unknowns = defaultdict(list)
+
+        for key, value in self.indexedobjects.items():
+            if key in self.types: continue
+            unknowns[key] = value
+
+        return unknowns
 
     def match(self, pattern, type="CHANNEL"):
         """ Filter channels by mnemonics
@@ -392,16 +453,15 @@ class dlis(object):
                 msg = 'Invalid regex: {}'.format(pattern)
                 raise ValueError(msg)
 
-        objs = {}
-        ctype = compileregex(type)
-        for key, value in self.indexedobjects.items():
-            if not re.match(ctype, key): continue
-            objs.update(value)
-
+        ctype    = compileregex(type)
         cpattern = compileregex(pattern)
-        for obj in objs.values():
-            if not re.match(cpattern, obj.name): continue
-            yield obj
+
+        types = [x for x in self.record_types if re.match(ctype, x)]
+
+        for t in types:
+            for obj in self[t].values():
+                if not re.match(cpattern, obj.name): continue
+                yield obj
 
     def object(self, type, name, origin=None, copynr=None):
         """
@@ -452,7 +512,7 @@ class dlis(object):
         else:
             fingerprint = core.fingerprint(type, name, origin, copynr)
             try:
-                return self.indexedobjects[type][fingerprint]
+                return self[type][fingerprint]
             except KeyError:
                 msg = "Object {}.{}.{} of type {} is not found"
                 raise ValueError(msg.format(name, origin, copynr, type))
@@ -483,27 +543,24 @@ class dlis(object):
         d['Frames']       = len(self.frames)
         d['Channels']     = len(self.channels)
 
-        objects = {}
-        for v in self.indexedobjects.values():
-            objects.update(v)
-
-        d['Object count'] = len(objects)
         plumbing.describe_dict(buf, d, width, indent)
 
-        known, unknown = {}, {}
-        for objtype, val in self.indexedobjects.items():
-            if objtype in self.types:
-                known[objtype] = len(val)
+        known, unknown = [], []
+
+        for seen in set(self.record_types):
+            if seen == 'encrypted': continue
+            if seen in self.types:
+                known.append(seen)
             else:
-                unknown[objtype] = len(val)
+                unknown.append(seen)
 
         if known:
             plumbing.describe_header(buf, 'Known objects', width, indent, lvl=2)
-            plumbing.describe_dict(buf, known, width, indent)
+            [plumbing.describe_text(buf, x, width, indent) for x in known]
 
         if unknown:
-            plumbing.describe_header(buf, 'Unknown objects', width, indent, lvl=2)
-            plumbing.describe_dict(buf, unknown, width, indent)
+            plumbing.describe_header(buf, '\nUnknown objects', width, indent, lvl=2)
+            [plumbing.describe_text(buf, x, width, indent) for x in unknown]
 
         return plumbing.Summary(info=buf.getvalue())
 

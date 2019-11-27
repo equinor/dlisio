@@ -485,6 +485,11 @@ const char* parse_template( const char* begin,
 
 
 object_set parse_objects( const char*, const char* ) noexcept (false);
+const char* parse_set_component( const char*,
+                                 const char*,
+                                 ident*,
+                                 ident*,
+                                 int* ) noexcept (false);
 
 }
 

@@ -23,12 +23,12 @@ def lookup(obj, reftype, value):
         return None
 
     try:
-        return obj.logicalfile.indexedobjects[objtype][fp]
+        return obj.logicalfile[objtype][fp]
     except KeyError:
         msg = "Referenced object '{}' not in logical file"
         logging.warning(msg.format(fp))
         return None
-    except AttributeError:
+    except TypeError:
         msg = 'Unable to find referenced object, {} has no logical file'
         logging.warning(msg.format(obj))
         return None

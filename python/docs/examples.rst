@@ -80,21 +80,20 @@ Or about a logical file:
     Description  : dlis(MSCT_200LTP)
     Frames       : 2
     Channels     : 104
-    Object count : 570
 
     Known objects
     --
-    FILE-HEADER             : 1
-    ORIGIN                  : 1
-    CALIBRATION-COEFFICIENT : 24
-    CHANNEL                 : 104
-    FRAME                   : 2
+    FILE-HEADER
+    ORIGIN
+    CALIBRATION-COEFFICIENT
+    CHANNEL
+    FRAME
 
     Unknown objects
     --
-    440-CHANNEL        : 95
-    440-OP-CORE_TABLES : 250
-    440-OP-CHANNEL     : 93
+    440-CHANNEL
+    440-OP-CORE_TABLES
+    440-OP-CHANNEL
 
 Accessing objects
 -----------------

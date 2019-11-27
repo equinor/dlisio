@@ -256,8 +256,10 @@ def test_different_repcode_no_value(tmpdir, merge):
     ]
     merge(path, content)
 
-    with pytest.raises(RuntimeError) as excinfo:
-        dlisio.load(path)
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(RuntimeError) as excinfo:
+            # Load all objects
+            f.load()
     assert "value is not explicitly set" in str(excinfo.value)
 
 
@@ -308,8 +310,9 @@ def test_novalue_more_count(tmpdir, merge):
     ]
     merge(path, content)
 
-    with pytest.raises(NotImplementedError):
-        dlisio.load(path)
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(NotImplementedError):
+            f.load()
 
 @pytest.mark.future_test_attributes
 @pytest.mark.not_implemented_datetime_timezone
@@ -375,8 +378,9 @@ def test_invalid_repcode_in_template_value(tmpdir, merge):
     ]
     merge(path, content)
 
-    with pytest.raises(RuntimeError) as excinfo:
-        dlisio.load(path)
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(RuntimeError) as excinfo:
+            f.load()
     assert "unknown representation code" in str(excinfo.value)
 
 
@@ -406,8 +410,9 @@ def test_invalid_repcode_in_objects(tmpdir, merge):
     ]
     merge(path, content)
 
-    with pytest.raises(RuntimeError) as excinfo:
-        dlisio.load(path)
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(RuntimeError) as excinfo:
+            f.load()
     assert "unknown representation code" in str(excinfo.value)
 
 
@@ -466,8 +471,10 @@ def test_unexpected_attribute_instead_of_object(tmpdir, merge):
         'data/chap3/objattr/empty.dlis.part',
     ]
     merge(path, content)
-    with pytest.raises(ValueError) as excinfo:
-        dlisio.load(path)
+
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(ValueError) as excinfo:
+            f.load()
     assert "expected OBJECT" in str(excinfo.value)
 
 
@@ -495,8 +502,10 @@ def test_unexpected_set_in_object(tmpdir, merge):
         'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
-    with pytest.raises(ValueError) as excinfo:
-        dlisio.load(path)
+
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(ValueError) as excinfo:
+            f.load()
     assert "expected ATTRIB" in str(excinfo.value)
 
 
@@ -510,8 +519,10 @@ def test_unexpected_set_in_template(tmpdir, merge):
         'data/chap3/object/object.dlis.part',
     ]
     merge(path, content)
-    with pytest.raises(ValueError) as excinfo:
-        dlisio.load(path)
+
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(ValueError) as excinfo:
+            f.load()
     assert "expected ATTRIB" in str(excinfo.value)
 
 
@@ -521,8 +532,10 @@ def test_cut_before_template(tmpdir, merge):
         'data/chap3/start.dlis.part',
     ]
     merge(path, content)
-    with pytest.raises(IndexError) as excinfo:
-        dlisio.load(path)
+
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(IndexError) as excinfo:
+            f.load()
     assert "unexpected end-of-record" in str(excinfo.value)
 
 
@@ -592,8 +605,8 @@ def test_broken_utf8_value(tmpdir, merge):
     ]
     merge(path, content)
     with pytest.warns(UnicodeWarning):
-        with dlisio.load(path):
-            pass
+        with dlisio.load(path) as (f, *_):
+            f.load()
     prev_encodings = dlisio.get_encodings()
     try:
         dlisio.set_encodings(['koi8_r'])
@@ -682,8 +695,8 @@ def test_broken_utf8_set(tmpdir, merge):
     ]
     merge(path, content)
     with pytest.warns(UnicodeWarning):
-        with dlisio.load(path):
-            pass
+        with dlisio.load(path) as (f, *_):
+            f.load()
     prev_encodings = dlisio.get_encodings()
     try:
         dlisio.set_encodings(['koi8_r'])

@@ -6,29 +6,29 @@ from dlisio.plumbing import Parameter
 
 import dlisio
 
+class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
+    attributes = {
+        "SOME_LIST"   : valuetypes.vector,
+        "SOME_VALUE"  : valuetypes.scalar,
+        "SOME_STATUS" : valuetypes.boolean,
+    }
+
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = "UNKNOWN_SET", lf = lf)
+
+    @property
+    def list(self):
+        return self['SOME_LIST']
+
+    @property
+    def value(self):
+        return self['SOME_VALUE']
+
+    @property
+    def status(self):
+        return self['SOME_STATUS']
+
 def test_dynamic_class(f):
-    class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
-        attributes = {
-            "SOME_LIST"   : valuetypes.vector,
-            "SOME_VALUE"  : valuetypes.scalar,
-            "SOME_STATUS" : valuetypes.boolean,
-        }
-
-        def __init__(self, obj = None, name = None, lf = None):
-            super().__init__(obj, name = name, type = "UNKNOWN_SET", lf = lf)
-
-        @property
-        def list(self):
-            return self['SOME_LIST']
-
-        @property
-        def value(self):
-            return self['SOME_VALUE']
-
-        @property
-        def status(self):
-            return self['SOME_STATUS']
-
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
     with pytest.raises(AttributeError):
         assert unknown.value == "VAL1"
@@ -45,6 +45,15 @@ def test_dynamic_class(f):
     finally:
         del f.types['UNKNOWN_SET']
 
+def test_new_type_removed_from_unknowns(f):
+    assert len(f.unknowns) == 2
+    try:
+        f.types['UNKNOWN_SET'] = ActuallyKnown
+        f.load()
+
+        assert len(f.unknowns) == 1
+    finally:
+        del f.types['UNKNOWN_SET']
 
 def test_change_object_type(f):
     try:
@@ -85,7 +94,7 @@ def test_remove_object_type(f):
         # Channel should be parsed as Unknown, but the type should still
         # reflects what's on file
         assert isinstance(obj, dlisio.plumbing.Unknown)
-        assert obj in f.unknowns
+        assert obj.fingerprint in f.unknowns['CHANNEL']
         assert obj.type == 'CHANNEL'
 
     finally:
