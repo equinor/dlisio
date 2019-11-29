@@ -332,8 +332,8 @@ def test_calibrations(DWL206):
     assert len(list(calibration.uncalibrated)) == 1
 
 def test_fmtstring(DWL206):
-    reference1 = "ffffffffffffffffffffffffffffffffffffffflfff"
-    reference2 = "ffff"
+    reference1 = "iffffffffffffffffffffffffffffffffffffffflfff"
+    reference2 = "iffff"
 
     frame800 = DWL206.object('FRAME', '800T', 2, 0)
     frame2000 = DWL206.object('FRAME', '2000T', 2, 0)
@@ -347,7 +347,8 @@ def test_fmtstring(DWL206):
 def test_dtype(DWL206):
     frame2000 = DWL206.object('FRAME', '2000T', 2, 0)
     dtype1 = frame2000.dtype
-    assert dtype1 == np.dtype([('TIME', np.float32),
+    assert dtype1 == np.dtype([('FRAMENO', np.int32),
+                               ('TIME', np.float32),
                                ('TDEP', np.float32),
                                ('TENS_SL', np.float32),
                                ('DEPT_SL', np.float32)])

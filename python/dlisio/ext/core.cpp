@@ -325,12 +325,13 @@ std::string fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
-void read_fdata(const char* pre_fmt,
-                const char* fmt,
-                const char* post_fmt,
-                dl::stream& file,
-                const std::vector< int >& indices,
-                py::object dstobj)
+py::object read_fdata(const char* pre_fmt,
+                      const char* fmt,
+                      const char* post_fmt,
+                      dl::stream& file,
+                      const std::vector< int >& indices,
+                      std::size_t itemsize,
+                      py::object alloc)
 noexcept (false) {
     // TODO: reverse fingerprint to skip bytes ahead-of-time
     /*
@@ -339,12 +340,60 @@ noexcept (false) {
      *
      * TODO: veriy that format string is valid
      */
+    /*
+     * This function goes through a lot of ceremony to use numpy arrays
+     * directly, and to write output data in-place in the return value. The
+     * main reason is *exception safety*.
+     *
+     * Virtually every operation that goes into this can throw an exception,
+     * and when that happens it's important that not-yet-complete data is
+     * cleaned up.
+     *
+     * Of course, for all non-object types this is not a problem, as they're
+     * just bytes in an array, and std::vector would've been plenty. It's made
+     * more complicated by the presence of PyObject* pointers embedded in the
+     * data stream - there are no C++ destructors that can elegantly reach
+     * them, and doing that would pretty much be replicating numpy
+     * functionality anyway.
+     *
+     * By writing directly into the numpy array as we go, PyObjects are either
+     * default-constructed (set to None) by numpy, or properly created (and
+     * replaced) here.
+     */
+    auto allocated_rows = indices.size();
+    auto dstobj = alloc(allocated_rows);
     auto dstb = py::buffer(dstobj);
     auto info = dstb.request(true);
-    auto* dst = static_cast< char* >(info.ptr);
+    auto* dst = static_cast< unsigned char* >(info.ptr);
+
+    /*
+     * Resizing is clumsy, because in-place resize (through the method)
+     * requires there to be no references to the underlying data. That means
+     * the buffer-info and buffer must be wiped before resizing takes place,
+     * and then carefully restored to the new memory.
+     */
+    auto resize = [&](std::size_t n) {
+        info = py::buffer_info {};
+        dstb = py::buffer {};
+        dstobj.attr("resize")(n);
+        allocated_rows = n;
+        dstb = py::buffer(dstobj);
+        info = dstb.request(true);
+        dst = static_cast< unsigned char* >(info.ptr);
+    };
+
+    /*
+     * The frameno is a part of the dtype, and only frame.channels is allowed
+     * to call this function. If pre/post format is set, wrong data is read.
+     *
+     * The interface is not changed for now as they're to be reintroduced at
+     * some point.
+     */
+    assert(std::string(pre_fmt) == "");
+    assert(std::string(post_fmt) == "");
 
     dl::record record;
-    int expected_frameno = 1;
+    int frames = 0;
     for (auto i : indices) {
         /* get record */
         file.at(i, record);
@@ -363,12 +412,9 @@ noexcept (false) {
 
         /* get frame number and slots */
         while (ptr < end) {
-            std::int32_t frameno;
-            ptr = dlis_uvari(ptr, &frameno);
-
-            if (frameno != expected_frameno) {
-                // TODO: warning
-                // const auto msg = 'Non-sequential frames. expected = {}, current = {}'
+            if (frames == allocated_rows) {
+                resize(frames * 2);
+                dst += (frames * itemsize);
             }
 
             auto assert_overflow = [end](const char* ptr, int skip) {
@@ -627,19 +673,20 @@ noexcept (false) {
                 dst += dst_skip;
                 ptr += src_skip;
             }
-            expected_frameno = frameno + 1;
 
             dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
             assert_overflow(ptr, src_skip);
             ptr += src_skip;
 
-            if (ptr != end) {
-                // TODO: lift this restriction (realloc buffers)
-                auto msg = "multiple frames in one FDATA";
-                throw dl::not_implemented(msg);
-            }
+            ++frames;
         }
     }
+
+    assert(allocated_rows >= frames);
+    if (allocated_rows > frames)
+        resize(frames);
+
+    return dstobj;
 }
 
 }

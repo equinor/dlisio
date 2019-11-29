@@ -8,7 +8,7 @@ def test_frame_getitem(DWL206):
     frame = DWL206.object('FRAME', '2000T', 2, 0)
     curves = frame.curves()
 
-    expected = [16677259.0, 852606.0, 2233.0, 852606.0]
+    expected = [1, 16677259.0, 852606.0, 2233.0, 852606.0]
 
     assert list(curves[0]) == expected
 
@@ -54,8 +54,8 @@ def makeframe():
 
 def test_duplicated_mnemonics_gets_unique_labels():
     frame = makeframe()
-    assert 'fDDD' == frame.fmtstr()
-    assert ('TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype.names
+    assert 'ifDDD' == frame.fmtstr()
+    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype.names
 
 def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     # Getting a buffer from a numpy array adds a :name: field after the label
@@ -90,8 +90,9 @@ def test_instance_dtype_fmt():
     frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
 
     # fmtstr is unchanged
-    assert 'fDDD' == frame.fmtstr()
-    assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+    assert 'ifDDD' == frame.fmtstr()
+    expected_names = ('FRAMENO', 'x-TIME 0~0', 'TDEP', 'x-TIME 1~0')
+    assert expected_names == frame.dtype.names
 
 @pytest.mark.parametrize('fmt', [
     ("x-{:d}.{:s}.{:d}"),
@@ -112,8 +113,9 @@ def test_class_dtype_fmt():
         # change dtype before the object itself is constructed, so it
         dlisio.plumbing.Frame.dtype_format = 'x-{:s} {:d}~{:d}'
         frame = makeframe()
-        assert 'fDDD' == frame.fmtstr()
-        assert ('x-TIME 0~0', 'TDEP', 'x-TIME 1~0') == frame.dtype.names
+        expected_names = ('FRAMENO', 'x-TIME 0~0', 'TDEP', 'x-TIME 1~0')
+        assert expected_names == frame.dtype.names
+        assert 'ifDDD' == frame.fmtstr()
 
     finally:
         # even if the test fails, make sure the format string is reset to its
