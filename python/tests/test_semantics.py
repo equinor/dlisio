@@ -96,7 +96,6 @@ def test_channel(f):
     assert channel.long_name              == longname
     assert channel.properties             == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc                  == 16
-    assert channel.units                  == "custom unit°"
     assert channel.dimension              == [4, 3, 2]
     assert channel.attic["DIMENSION"]     == [2, 3, 4]
     assert channel.axis                   == [axis3, axis2, axis1]
@@ -108,6 +107,27 @@ def test_channel(f):
     assert channel.source                 == tool
 
     _ = channel.describe(indent='   ', width=70, exclude='e')
+
+def test_string_encoding_warns(fpath):
+    prev_encodings = dlisio.get_encodings()
+    try:
+        dlisio.set_encodings([])
+        with pytest.warns(UnicodeWarning):
+            with dlisio.load(fpath) as (f, *_):
+                channel = f.object('CHANNEL', 'CHANN1', 10, 0)
+                assert channel.units == b'custom unit\xb0'
+    finally:
+        dlisio.set_encodings(prev_encodings)
+
+def test_string_latin1_encoding_works(fpath):
+    prev_encodings = dlisio.get_encodings()
+    try:
+        dlisio.set_encodings(['latin1'])
+        with dlisio.load(fpath) as (f, *_):
+            channel = f.object('CHANNEL', 'CHANN1', 10, 0)
+            assert channel.units == "custom unit°"
+    finally:
+        dlisio.set_encodings(prev_encodings)
 
 def test_channel_fdata(f):
     channel = f.object('CHANNEL', 'CHANN1', 10, 0)

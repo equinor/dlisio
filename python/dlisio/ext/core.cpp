@@ -27,6 +27,43 @@ using namespace py::literals;
 #include <dlisio/ext/io.hpp>
 #include <dlisio/ext/types.hpp>
 
+namespace {
+/*
+ * Global list of encodings to try when making UTF-8 strings.
+ *
+ * The encodings are global, which is a result of the current design of dlisio.
+ *
+ * Ideally, what encodings to try should be configurable on a much finer level
+ * - it's quite reasonable to have multiple files open, which both can have
+ * different encodings used. In the future it's quite possible to fine tune it
+ * more, but that requires a larger redesign of dlisio's internals.
+ *
+ * However, in practice the outcome of a global-only configuration is a minor
+ * annoyance at best. DLIS only allows ASCII, so anything that isn't UTF-8
+ * compatible is already non-standard, and it's unlikely there's a need for
+ * opening *many files at once*, all with different encodings. Also, since the
+ * global can be re-set between successive file loads, work-arounds are usually
+ * possible.
+ *
+ * The main reason it has to be global is that strings are converted to python
+ * strings pretty deep in the call graph, using pybind11's casting features.
+ * The casts, however, are unary functions, so no extra parameters there.
+ * Moreover, the compounded dlis types, like ATTREF, rely on the type cast
+ * mechanism in order to convert its members to python types. To resolve this,
+ * a major redesign is needed.
+ */
+std::vector< std::string > encodings = {};
+
+void set_encodings(const std::vector< std::string >& encs) {
+    encodings = encs;
+}
+
+const std::vector< std::string >& get_encodings() {
+    return encodings;
+}
+
+}
+
 namespace pybind11 { namespace detail {
 
 /*
@@ -50,7 +87,7 @@ struct dlis_caster {
     PYBIND11_TYPE_CASTER(T, _("dlisio.core.type.")+_(dl::typeinfo< T >::name));
 
     static handle cast( const T& src, return_value_policy, handle ) {
-        return py::cast( dl::decay( src ) ).inc_ref();
+        return py::cast( dl::decay( src ) ).release();
     }
 
     /*
@@ -89,25 +126,25 @@ handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy
 template <>
 handle dlis_caster< dl::fsing1 >::cast( const dl::fsing1& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A).inc_ref();
+    return py::make_tuple(src.V, src.A).release();
 }
 
 template <>
 handle dlis_caster< dl::fsing2 >::cast( const dl::fsing2& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+    return py::make_tuple(src.V, src.A, src.B).release();
 }
 
 template <>
 handle dlis_caster< dl::fdoub1 >::cast( const dl::fdoub1& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A).inc_ref();
+    return py::make_tuple(src.V, src.A).release();
 }
 
 template <>
 handle dlis_caster< dl::fdoub2 >::cast( const dl::fdoub2& src, return_value_policy, handle )
 {
-    return py::make_tuple(src.V, src.A, src.B).inc_ref();
+    return py::make_tuple(src.V, src.A, src.B).release();
 }
 
 template <>
@@ -124,46 +161,39 @@ handle dlis_caster< dl::cdoubl >::cast( const dl::cdoubl& src, return_value_poli
 
 namespace {
 
-handle maybe_decode(const std::string& src) noexcept (false) {
-    try {
-        /* was valid UTF-8, all is well*/
-        return py::str(src).inc_ref();
-    } catch(std::runtime_error& e) {
+handle decode_str(const std::string& src) noexcept (false) {
+    auto* p = PyUnicode_FromString(src.c_str());
+    if (p) return p;
+    PyErr_Clear();
+
+    for (const auto& enc : encodings) {
+        auto* p = PyUnicode_Decode(
+                src.c_str(),
+                src.size(),
+                enc.c_str(),
+                "strict"
+            );
+
+        if (p) return p;
         PyErr_Clear();
-        /*
-         * The degree symbol is weird in UTF-8, but often shows up
-         *
-         * https://stackoverflow.com/questions/8732025/why-degree-symbol-differs-from-utf-8-from-unicode
-         *
-         * Look for this symbol in the string - if it's there, replace it with
-         * the UTF-8 one and try to return that string. If _that_ fails, return
-         * bytes
-         */
-        auto pos = src.find('\xB0');
-
-        // Ok, so it wasn't the degree symbol being encoded wrong - return the
-        // string as bytes and defer decoding to caller
-        if (pos == std::string::npos)
-            return py::bytes(src).inc_ref();
-
-        std::string source(src);
-        source.insert(pos, 1, '\xC2');
-        while ((pos = source.find('\xB0', pos + 2)) != std::string::npos) {
-            source.insert(pos, 1, '\xC2');
-        }
-
-        /*
-         * Now this should be proper unicode. If it isn't, return bytes again
-         *
-         * TODO: Return-as-bytes should probably not be a silent conversion
-         */
-        try {
-            return py::str(source).inc_ref();
-        } catch (std::runtime_error&) {
-            PyErr_Clear();
-            return py::bytes(src).inc_ref();
-        }
     }
+
+    /*
+     * To get a better warning, include the source string. The problem is that
+     * the PyExc_WarnEx (warnings.warn() in python) tries to encode the string
+     * to unicode, which is what triggers the warning in the first place,
+     * meaning C++ string concatenation or stringstreams won't work.
+     *
+     * Instead, work around this by doing '{}'.format(bytes()) to get the
+     * string-representation of the bytes.
+     */
+    auto pysrc = py::bytes(src);
+    const auto pymsg = py::str("unable to decode string {}");
+    const auto msg   = std::string(pymsg.format(pysrc));
+    if (PyErr_WarnEx(PyExc_UnicodeWarning, msg.c_str(), 1) == -1)
+        throw py::error_already_set();
+
+    return pysrc.release();
 }
 
 }
@@ -171,19 +201,19 @@ handle maybe_decode(const std::string& src) noexcept (false) {
 template <>
 handle dlis_caster< dl::ascii >::cast(const dl::ascii& src, return_value_policy, handle)
 {
-    return maybe_decode(dl::decay(src));
+    return decode_str(dl::decay(src));
 }
 
 template <>
 handle dlis_caster< dl::ident >::cast(const dl::ident& src, return_value_policy, handle)
 {
-    return maybe_decode(dl::decay(src));
+    return decode_str(dl::decay(src));
 }
 
 template <>
 handle dlis_caster< dl::units >::cast(const dl::units& src, return_value_policy, handle)
 {
-    return maybe_decode(dl::decay(src));
+    return decode_str(dl::decay(src));
 }
 
 /*
@@ -866,4 +896,7 @@ PYBIND11_MODULE(core, m) {
         auto marks = dl::findoffsets( file, 80 );
         return py::make_tuple( marks.residuals, marks.tells );
     });
+
+    m.def("set_encodings", set_encodings);
+    m.def("get_encodings", get_encodings);
 }
