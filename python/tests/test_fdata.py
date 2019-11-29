@@ -396,6 +396,11 @@ def test_broken_ascii():
         _ = load_curves(fpath)
     assert "fmtstr would read past end" in str(exc)
 
+@pytest.mark.xfail(strict=True)
+def test_broken_utf8_ascii():
+    fpath = 'data/chap4-7/iflr/broken-utf8-ascii.dlis'
+    _ = load_curves(fpath)
+
 def test_two_various_fdata_in_one_iflr():
     fpath = 'data/chap4-7/iflr/two-various-fdata-in-one-iflr.dlis'
 

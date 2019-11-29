@@ -83,6 +83,8 @@ broken-ascii.dlis                                Ascii with incorrect specified 
                                                  characters are expected, but only 20 are actually
                                                  present
 
+broken-utf8-ascii.dlis                           Ascii containing non-utf8 characters
+
 duplicate-framenos.dlis                          2 FDATA containing different values, but they have
                                                  the same frame number
 
