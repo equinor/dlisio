@@ -17,11 +17,19 @@ example-record.dlis                 A single visible record with one logical
                                     record segmented into 3 logical record
                                     segments
 
+fdata-encrypted.dlis                One encrypted fdata with characters not in
+                                    utf-8 set
+
 fdata-many-in-same-vr.dlis          A single visible record, with several
                                     Indirectly formatted logical records of type
                                     fdata
 
 fdata-vr-aligned.dlis               One fdata aligned with visible record
+
+fdata-vr-disaligned-in-obname.dlis  One fdata disaligned with visible record,
+                                    but cut happens inside obname
+
+fdata-vr-disaligned.dlis            One fdata disaligned with visible record
 
 incomplete-sul.dlis                 Incomplete storage unit label
 
