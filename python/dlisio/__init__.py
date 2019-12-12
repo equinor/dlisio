@@ -665,26 +665,6 @@ class dlis(object):
         blob = self.file.get(bytearray(80), self.sul_offset, 80)
         return core.storage_label(blob)
 
-    def raw_objectsets(self):
-        """ Return the objects as represented on disk
-
-        Parses attic and returns objects. If attic is empty, will extract
-        data from disk.
-
-        Notes
-        -----
-
-        These objects are primitive versions of the Python Classes
-        that dlisio uses to create a rich interface for the different object
-        types. If they are of interest, the preferred way of accessing them is
-        through the attic attribute of this class, or the attic attribute of
-        the rich objects.
-        """
-        if self.attic is None:
-            self.attic = self.file.extract(self.explicit_indices)
-
-        return core.parse_objects(self.attic)
-
 def open(path):
     """ Open a file
 
