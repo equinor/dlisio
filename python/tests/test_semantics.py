@@ -152,7 +152,7 @@ def test_frame(f):
     assert frame1.index_type  == "BOREHOLE-DEPTH"
     assert frame1.direction   == "DECREASING"
     assert frame1.spacing     == 119
-    assert frame1.encrypted   == True
+    assert frame1.encrypted   == False
     assert frame1.index_min   == 1
     assert frame1.index_max   == 100
 
