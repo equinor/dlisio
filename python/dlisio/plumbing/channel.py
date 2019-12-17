@@ -129,22 +129,6 @@ class Channel(BasicObject):
         return self['SOURCE']
 
     @property
-    def index(self):
-        """The Channel this Channel is indexed against, if any. See
-        :attr:`Frame.index_type` for definition of existing index channel.
-
-        Returns
-        -------
-
-        channel : Channel or None
-        """
-        msg = 'This channel is an index channel'
-        index = self.frame.index
-
-        if index == self: logging.info(msg)
-        return index
-
-    @property
     def dtype(self):
         """dtype
 
