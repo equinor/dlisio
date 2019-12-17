@@ -5,6 +5,28 @@ complete overview of changes, please refer to the git log.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 but most notably, without sectioning changes into type-of-change.
 
+## [0.1.15] - 2019.12.18
+* Metadata objects are now parsed and loaded when needed, rather than all at
+  once in `dlisio.load()`. This is not directly observable for the user, other
+  than it improves performance for `dlisio.load()`. For files with a lot of
+  metadata, the performance gain is huge.
+* dlisio can now read even more curve-data. Specifically, where multiple FDATA
+  (rows) are stored in the same IFLR.
+* The array from `Frame.curves()` now includes FRAMENO as the first column.
+  FRAMENO are the row numbers as represented in the file. It might happen that
+  there are missing rows or that they are out-of-order in the file, that is now
+  observable by inspecting FRAMENO.
+* Better support for non-ascii strings. It is now possible to tell dlisio which
+  string encodings to try if decoding with 'utf-8' fails. Supply a list of
+  encodings to `set_encodings()` and dlisio will try them in order.
+* `Frame.index` now returns the Channel mnemonic, not the `Channel`-object.
+* `Channel.index` is removed.
+* Validated types are now represented as tuples, not lists.
+* Fixes a bug where microseconds in datetime objects where interpreted as
+  milliseconds.
+* Better error message when incomplete Channels objects cause parsing of curves
+  to fail as a result.
+
 ## [0.1.14] - 2019.10.14
 * dlisio has learned to read curves with variable length data types. Thus,
   every data-type that the standard allows for curves is now supported by
@@ -67,6 +89,7 @@ but most notably, without sectioning changes into type-of-change.
   into logical files. This has resulted in a behavioral change where
   `dlisio.load()` now returns a tuple-like object of n-logical files.
 
+[0.1.15]: https://github.com/equinor/dlisio/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/equinor/dlisio/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/equinor/dlisio/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/equinor/dlisio/compare/v0.1.11...v0.1.12
