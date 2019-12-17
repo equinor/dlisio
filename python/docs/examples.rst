@@ -186,7 +186,7 @@ and/or sliced by samples:
 .. code-block:: python
 
     >>> curves = fr.curves()
-    >>> curves[['TDEP', 'TENS_SL']][0:5]
+    >>> curves[[fr.index, 'TENS_SL']][0:5]
     array([(16677259., 2233.), (16678259., 2237.), (16679259., 2211.),
            (16680259., 2193.), (16681259., 2213.)])
 

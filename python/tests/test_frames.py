@@ -249,41 +249,15 @@ def test_frame_index():
     frame = makeframe()
     frame.attic['INDEX-TYPE'] = ['DECREASING']
 
-    assert frame.index == frame.channels[0]
+    assert frame.index == frame.channels[0].name
 
 def test_frame_noindex(assert_info):
     frame = makeframe()
-
-    assert frame.index is None
-    assert_info('There is no index channel')
+    assert frame.index == 'FRAMENO'
 
 def test_frame_nochannels_no_index(assert_info):
     frame = dlisio.plumbing.Frame()
     frame.attic['INDEX-TYPE'] = ['DECREASING']
 
-    assert frame.index == None
-    assert_info('There is no index channel')
-
-def test_channel_index():
-    frame = makeframe()
-    frame.attic['INDEX-TYPE'] = ['DECREASING']
-
-    index   = frame.channels[0]
-    channel = frame.channels[1]
-
-    assert channel.index == index
-
-def test_channel_is_index(assert_info):
-    frame = makeframe()
-    frame.attic['INDEX-TYPE'] = ['DECREASING']
-    channel = frame.channels[0]
-
-    assert channel.index == channel
-    assert_info('This channel is an index channel')
-
-def test_channel_noindex(assert_info):
-    frame = makeframe()
-    channel = frame.channels[0]
-
-    assert channel.index is None
-    assert_info('There is no index channel')
+    assert frame.index is None
+    assert_info('Frame has no channels')
