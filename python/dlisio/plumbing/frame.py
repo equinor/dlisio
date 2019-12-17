@@ -143,28 +143,23 @@ class Frame(BasicObject):
 
     @property
     def index(self):
-        """The Channel that serves as an index for all other Channels in this
-        Frame.
-
-        Frames may or may not have an index Channel, see :attr:`index_type` for
-        definition of existing index channel.
+        """Mnemonic of the channel all channels in this Frame are indexed
+        against, if any. See :attr:`Frame.index_type` for definition of
+        existing index channel.
 
         Returns
         -------
-        channel : Channel or None
-        """
-        msg = 'There is no index channel, see help(frame.index) for more info'
-        index = None
 
-        if self.index_type is None:
-            logging.warning(msg)
+        mnemonic : str
+        """
+        msg = 'Frame has no channels'
+        index = None
+        if len(self.channels) == 0:
+            logging.info(msg)
             return index
 
-        try:
-            index = self.channels[0]
-        except IndexError:
-            logging.warning(msg)
-
+        if self.index_type is None: index = 'FRAMENO'
+        else:                       index = self.channels[0].name
         return index
 
     @property
@@ -396,19 +391,8 @@ class Frame(BasicObject):
         DataFrame
 
         >>> curves = frame.curves()
-        >>> if frame.index_type:
-        >>>     indexname  = curves.dtype.names[0]
-        >>>     curvenames = curves.dtype.names[1:]
-        >>>     pdcurves = pd.DataFrame(curves[list(curvenames)], index=curves[indexname])
-        >>>     pdcurves.index.name = indexname
-        >>> else:
-        >>>     pdcurves = pd.DataFrame(curves)
-
-        Let's walk through this. Firstly, check that *index_type* is not None,
-        if it is, there is no index channel to set. Secondly, note how the
-        curvenames are all stored in the array itself. Then all that is needed
-        is to extract the first name as index and let the rest be added to the
-        DataFrame as normal Channels.
+        >>> pdcurves = pd.DataFrame(curves, index=curves[f.index])
+        >>> pdcurves.index.name = f.index
         """
         return curves(self.logicalfile, self, self.dtype, "", self.fmtstr(), "")
 
