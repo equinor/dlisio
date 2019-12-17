@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse, skip
+from .valuetypes import scalar, vector, reverse
 from .linkage import obname
 from .utils import *
 
@@ -52,25 +52,37 @@ class Parameter(BasicObject):
     PARAMETER objects.
     """
     attributes = {
-        'LONG-NAME' : scalar('long_name'),
-        'DIMENSION' : reverse('dimension'),
-        'AXIS'      : reverse('axis'),
-        'ZONES'     : vector('zones'),
-        'VALUES'    : skip(),
+        'LONG-NAME' : scalar,
+        'DIMENSION' : reverse,
+        'AXIS'      : reverse,
+        'ZONES'     : vector,
+        'VALUES'    : vector,
     }
 
     linkage = {
-        'long_name' : obname("LONG-NAME"),
-        'axis'      : obname("AXIS"),
-        'zones'     : obname("ZONE")
+        'LONG-NAME' : obname('LONG-NAME'),
+        'AXIS'      : obname('AXIS'),
+        'ZONES'     : obname('ZONE')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'PARAMETER')
-        self.long_name = None
-        self.dimension = []
-        self.axis      = []
-        self.zones     = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'PARAMETER', lf = lf)
+
+    @property
+    def long_name(self):
+        return self['LONG-NAME']
+
+    @property
+    def dimension(self):
+        return self['DIMENSION']
+
+    @property
+    def axis(self):
+        return self['AXIS']
+
+    @property
+    def zones(self):
+        return self['ZONES']
 
     @property
     def values(self):

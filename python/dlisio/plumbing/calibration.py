@@ -47,30 +47,48 @@ class Calibration(BasicObject):
     CALIBRATION objects.
     """
     attributes = {
-        'METHOD'               : scalar('method'),
-        'CALIBRATED-CHANNELS'  : vector('calibrated'),
-        'UNCALIBRATED-CHANNELS': vector('uncalibrated'),
-        'COEFFICIENTS'         : vector('coefficients'),
-        'MEASUREMENTS'         : vector('measurements'),
-        'PARAMETERS'           : vector('parameters')
+        'METHOD'               : scalar,
+        'CALIBRATED-CHANNELS'  : vector,
+        'UNCALIBRATED-CHANNELS': vector,
+        'COEFFICIENTS'         : vector,
+        'MEASUREMENTS'         : vector,
+        'PARAMETERS'           : vector,
     }
 
     linkage = {
-        'calibrated'   : obname("CHANNEL"),
-        'uncalibrated' : obname("CHANNEL"),
-        'coefficients' : obname("CALIBRATION-COEFFICIENT"),
-        'measurements' : obname("CALIBRATION-MEASUREMENT"),
-        'parameters'   : obname("PARAMETER")
+        'CALIBRATED-CHANNELS'   : obname('CHANNEL'),
+        'UNCALIBRATED-CHANNELS' : obname('CHANNEL'),
+        'COEFFICIENTS'          : obname('CALIBRATION-COEFFICIENT'),
+        'MEASUREMENTS'          : obname('CALIBRATION-MEASUREMENT'),
+        'PARAMETERS'            : obname('PARAMETER')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'CALIBRATION')
-        self.method            = None
-        self.calibrated        = []
-        self.uncalibrated      = []
-        self.coefficients      = []
-        self.measurements      = []
-        self.parameters        = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'CALIBRATION', lf = lf)
+
+    @property
+    def method(self):
+        return self['METHOD']
+
+    @property
+    def calibrated(self):
+        return self['CALIBRATED-CHANNELS']
+
+    @property
+    def uncalibrated(self):
+        return self['UNCALIBRATED-CHANNELS']
+
+    @property
+    def coefficients(self):
+        return self['COEFFICIENTS']
+
+    @property
+    def measurements(self):
+        return self['MEASUREMENTS']
+
+    @property
+    def parameters(self):
+        return self['PARAMETERS']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

@@ -63,14 +63,20 @@ class Fileheader(BasicObject):
     Logical Record (FHLR).
     """
     attributes = {
-        'SEQUENCE-NUMBER': scalar('sequencenr'),
-        'ID'             : scalar('id')
+        'SEQUENCE-NUMBER': scalar,
+        'ID'             : scalar,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'FILE-HEADER')
-        self.sequencenr = None
-        self.id         = None
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'FILE-HEADER', lf = lf)
+
+    @property
+    def sequencenr(self):
+        return self['SEQUENCE-NUMBER']
+
+    @property
+    def id(self):
+        return self['ID']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

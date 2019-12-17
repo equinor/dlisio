@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse, skip
+from .valuetypes import scalar, vector, reverse
 from .linkage import objref, obname
 from .utils import *
 
@@ -65,39 +65,66 @@ class Measurement(BasicObject):
     5.8.7.1 - Static and Frame Data, CALIBRATION-MEASUREMENT objects.
     """
     attributes = {
-        'PHASE'             : scalar('phase'),
-        'MEASUREMENT-SOURCE': scalar('source'),
-        'TYPE'              : scalar('mtype'),
-        'DIMENSION'         : reverse('dimension'),
-        'AXIS'              : reverse('axis'),
-        'MEASUREMENT'       : skip(),
-        'SAMPLE-COUNT'      : scalar('samplecount'),
-        'MAXIMUM-DEVIATION' : skip(),
-        'STANDARD-DEVIATION': skip(),
-        'BEGIN-TIME'        : scalar('begin_time'),
-        'DURATION'          : scalar('duration'),
-        'REFERENCE'         : skip(),
-        'STANDARD'          : vector('standard'),
-        'PLUS-TOLERANCE'    : skip(),
-        'MINUS-TOLERANCE'   : skip(),
+        'PHASE'             : scalar,
+        'MEASUREMENT-SOURCE': scalar,
+        'TYPE'              : scalar,
+        'DIMENSION'         : reverse,
+        'AXIS'              : reverse,
+        'MEASUREMENT'       : vector,
+        'SAMPLE-COUNT'      : scalar,
+        'MAXIMUM-DEVIATION' : vector,
+        'STANDARD-DEVIATION': vector,
+        'BEGIN-TIME'        : scalar,
+        'DURATION'          : scalar,
+        'REFERENCE'         : vector,
+        'STANDARD'          : vector,
+        'PLUS-TOLERANCE'    : vector,
+        'MINUS-TOLERANCE'   : vector,
     }
 
     linkage = {
-        'axis'   : obname("AXIS"),
-        'source' : objref
+        'AXIS'               : obname('AXIS'),
+        'MEASUREMENT-SOURCE' : objref
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = "CALIBRATION-MEASUREMENT")
-        self.phase           = None
-        self.source          = None
-        self.mtype           = None
-        self.dimension       = []
-        self.axis            = []
-        self.samplecount     = None
-        self.begin_time      = None
-        self.duration        = None
-        self.standard        = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = "CALIBRATION-MEASUREMENT", lf = lf)
+
+    @property
+    def phase(self):
+        return self['PHASE']
+
+    @property
+    def source(self):
+        return self['MEASUREMENT-SOURCE']
+
+    @property
+    def mtype(self):
+        return self['TYPE']
+
+    @property
+    def dimension(self):
+        return self['DIMENSION']
+
+    @property
+    def axis(self):
+        return self['AXIS']
+
+    @property
+    def samplecount(self):
+        return self['SAMPLE-COUNT']
+
+    @property
+    def begin_time(self):
+        return self['BEGIN-TIME']
+
+    @property
+    def duration(self):
+        return self['DURATION']
+
+    @property
+    def standard(self):
+        return self['STANDARD']
 
     @property
     def samples(self):

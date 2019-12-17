@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, vector, reverse, skip
+from .valuetypes import scalar, vector, reverse
 from .linkage import obname, objref
 from .utils import *
 
@@ -60,30 +60,48 @@ class Computation(BasicObject):
     """
 
     attributes = {
-        'LONG-NAME' : scalar('long_name'),
-        'PROPERTIES': vector('properties'),
-        'DIMENSION' : reverse('dimension'),
-        'AXIS'      : reverse('axis'),
-        'ZONES'     : vector('zones'),
-        'SOURCE'    : scalar('source'),
-        'VALUES'    : skip()
+        'LONG-NAME' : scalar,
+        'PROPERTIES': vector,
+        'DIMENSION' : reverse,
+        'AXIS'      : reverse,
+        'ZONES'     : vector,
+        'SOURCE'    : scalar,
+        'VALUES'    : vector,
     }
 
     linkage = {
-        'long-name' : obname('LONG-NAME'),
-        'axis'      : obname('AXIS'),
-        'zones'     : obname('ZONE'),
-        'source'    : objref
+        'LONG-NAME' : obname('LONG-NAME'),
+        'AXIS'      : obname('AXIS'),
+        'ZONES'     : obname('ZONE'),
+        'SOURCE'    : objref
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'COMPUTATION')
-        self.long_name   = None
-        self.properties  = []
-        self.dimension   = []
-        self.axis        = []
-        self.zones       = []
-        self.source = None
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'COMPUTATION', lf = lf)
+
+    @property
+    def long_name(self):
+        return self['LONG-NAME']
+
+    @property
+    def properties(self):
+        return self['PROPERTIES']
+
+    @property
+    def dimension(self):
+        return self['DIMENSION']
+
+    @property
+    def axis(self):
+        return self['AXIS']
+
+    @property
+    def zones(self):
+        return self['ZONES']
+
+    @property
+    def source(self):
+        return self['SOURCE']
 
     @property
     def values(self):

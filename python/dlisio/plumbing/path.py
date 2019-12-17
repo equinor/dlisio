@@ -74,48 +74,82 @@ class Path(BasicObject):
 
     """
     attributes = {
-        'FRAME-TYPE'           : scalar('frame'),
-        'WELL-REFERENCE-POINT' : scalar('well_reference_point'),
-        'VALUE'                : vector('value'),
-        'BOREHOLE-DEPTH'       : scalar('borehole_depth'),
-        'VERTICAL-DEPTH'       : scalar('vertical_depth'),
-        'RADIAL-DRIFT'         : scalar('radial_drift'),
-        'ANGULAR-DRIFT'        : scalar('angular_drift'),
-        'TIME'                 : scalar('time'),
-        'DEPTH-OFFSET'         : scalar('depth_offset'),
-        'MEASURE-POINT-OFFSET' : scalar('measure_point_offset'),
-        'TOOL-ZERO-OFFSET'     : scalar('tool_zero_offset')
+        'FRAME-TYPE'           : scalar,
+        'WELL-REFERENCE-POINT' : scalar,
+        'VALUE'                : vector,
+        'BOREHOLE-DEPTH'       : scalar,
+        'VERTICAL-DEPTH'       : scalar,
+        'RADIAL-DRIFT'         : scalar,
+        'ANGULAR-DRIFT'        : scalar,
+        'TIME'                 : scalar,
+        'DEPTH-OFFSET'         : scalar,
+        'MEASURE-POINT-OFFSET' : scalar,
+        'TOOL-ZERO-OFFSET'     : scalar,
     }
 
     linkage = {
-        'borehole_depth'       : obname('CHANNEL'),
-        'vertical_depth'       : obname('CHANNEL'),
-        'radial_drift'         : obname('CHANNEL'),
-        'angular_drift'        : obname('CHANNEL'),
-        'time'                 : obname('CHANNEL'),
-        'frame'                : obname('FRAME'),
-        'well_reference_point' : obname('WELL-REFERENCE'),
-        'value'                : obname('CHANNEL')
+        'BOREHOLE-DEPTH'       : obname('CHANNEL'),
+        'VERTICAL-DEPTH'       : obname('CHANNEL'),
+        'RADIAL-DRIFT'         : obname('CHANNEL'),
+        'ANGULAR-DRIFT'        : obname('CHANNEL'),
+        'TIME'                 : obname('CHANNEL'),
+        'FRAME-TYPE'           : obname('FRAME'),
+        'WELL-REFERENCE-POINT' : obname('WELL-REFERENCE'),
+        'VALUE'                : obname('CHANNEL')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'PATH')
-        self.frame                = None
-        self.well_reference_point = None
-        self.value                = []
-        self.borehole_depth       = None
-        self.vertical_depth       = None
-        self.radial_drift         = None
-        self.angular_drift        = None
-        self.time                 = None
-        self.depth_offset         = None
-        self.measure_point_offset = None
-        self.tool_zero_offset     = None
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'PATH', lf = lf)
+
+    @property
+    def frame(self):
+        print(self.attic)
+        return self['FRAME-TYPE']
+
+    @property
+    def well_reference_point(self):
+        return self['WELL-REFERENCE-POINT']
+
+    @property
+    def value(self):
+        return self['VALUE']
+
+    @property
+    def borehole_depth(self):
+        return self['BOREHOLE-DEPTH']
+
+    @property
+    def vertical_depth(self):
+        return self['VERTICAL-DEPTH']
+
+    @property
+    def radial_drift(self):
+        return self['RADIAL-DRIFT']
+
+    @property
+    def angular_drift(self):
+        return self['ANGULAR-DRIFT']
+
+    @property
+    def time(self):
+        return self['TIME']
+
+    @property
+    def depth_offset(self):
+        return self['DEPTH-OFFSET']
+
+    @property
+    def measure_point_offset(self):
+        return self['MEASURE-POINT-OFFSET']
+
+    @property
+    def tool_zero_offset(self):
+        return self['TOOL-ZERO-OFFSET']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Frame']                = replist(self.frame, 'name')
-        d['Well reference point'] = replist(self.well_reference_point, 'name')
+        d['Frame']                = self.frame
+        d['Well reference point'] = self.well_reference_point
         d['Value Channel(s)']     = replist(self.value, 'name')
         describe_dict(buf, d, width, indent, exclude)
 

@@ -1,5 +1,5 @@
 from .basicobject import BasicObject
-from .valuetypes import scalar, skip
+from .valuetypes import scalar
 from .utils import *
 
 from collections import OrderedDict
@@ -49,34 +49,46 @@ class Wellref(BasicObject):
     Frame Data, Well reference objects.
     """
     attributes = {
-        'PERMANENT-DATUM'           : scalar('permanent_datum'),
-        'VERTICAL-ZERO'             : scalar('vertical_zero'),
-        'PERMANENT-DATUM-ELEVATION' : scalar('permanent_datum_elevation'),
-        'ABOVE-PERMANENT-DATUM'     : scalar('above_permanent_datum'),
-        'MAGNETIC-DECLINATION'      : scalar('magnetic_declination'),
-        'COORDINATE-1-NAME'         : skip(),
-        'COORDINATE-1-VALUE'        : skip(),
-        'COORDINATE-2-NAME'         : skip(),
-        'COORDINATE-2-VALUE'        : skip(),
-        'COORDINATE-3-NAME'         : skip(),
-        'COORDINATE-3-VALUE'        : skip(),
+        'PERMANENT-DATUM'           : scalar,
+        'VERTICAL-ZERO'             : scalar,
+        'PERMANENT-DATUM-ELEVATION' : scalar,
+        'ABOVE-PERMANENT-DATUM'     : scalar,
+        'MAGNETIC-DECLINATION'      : scalar,
+        'COORDINATE-1-NAME'         : scalar,
+        'COORDINATE-1-VALUE'        : scalar,
+        'COORDINATE-2-NAME'         : scalar,
+        'COORDINATE-2-VALUE'        : scalar,
+        'COORDINATE-3-NAME'         : scalar,
+        'COORDINATE-3-VALUE'        : scalar,
     }
 
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'WELL-REFERENCE')
-        self.permanent_datum           = None
-        self.vertical_zero             = None
-        self.permanent_datum_elevation = None
-        self.above_permanent_datum     = None
-        self.magnetic_declination      = None
-        self.coordinates               = {}
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'WELL-REFERENCE', lf = lf)
 
+    @property
+    def permanent_datum(self):
+        return self['PERMANENT-DATUM']
 
-    def load(self):
-        super().load()
+    @property
+    def vertical_zero(self):
+        return self['VERTICAL-ZERO']
 
-        self.coordinates = {}
+    @property
+    def permanent_datum_elevation(self):
+        return self['PERMANENT-DATUM-ELEVATION']
+
+    @property
+    def above_permanent_datum(self):
+        return self['ABOVE-PERMANENT-DATUM']
+
+    @property
+    def magnetic_declination(self):
+        return self['MAGNETIC-DECLINATION']
+
+    @property
+    def coordinates(self):
+        coordinates = {}
         custom_label = 'COORDINATE-{}'
         name = 'COORDINATE-{}-NAME'
         value = 'COORDINATE-{}-VALUE'
@@ -84,7 +96,8 @@ class Wellref(BasicObject):
         for i in range(1, 4):
             key = self.attic.get(name.format(i), [custom_label.format(i)])[0]
             val = self.attic.get(value.format(i), [None])[0]
-            self.coordinates[key] = val
+            coordinates[key] = val
+        return coordinates
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

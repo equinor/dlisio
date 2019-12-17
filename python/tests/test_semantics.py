@@ -152,7 +152,7 @@ def test_frame(f):
     assert frame1.index_type  == "BOREHOLE-DEPTH"
     assert frame1.direction   == "DECREASING"
     assert frame1.spacing     == 119
-    assert frame1.encrypted   == False #attribute absent
+    assert frame1.encrypted   == False
     assert frame1.index_min   == 1
     assert frame1.index_max   == 100
 
@@ -164,7 +164,7 @@ def test_frame(f):
     assert frame2.index_type  == None
     assert frame2.direction   == None
     assert frame2.spacing     == None
-    #assert frame2.encrypted   == True #attribute present
+    assert frame2.encrypted   == True #attribute present
     assert frame2.index_min   == None
     assert frame2.index_max   == None
 
@@ -241,14 +241,14 @@ def test_tool(f):
     channel2 = f.object('CHANNEL', 'CHANN2', 10, 0)
     tool     = f.object('TOOL', 'TOOL1', 10, 0)
 
-    assert tool.description             == "description of tool 1"
-    assert tool.trademark_name          == "TOOL123"
-    assert tool.generic_name            == "Important tool"
-    assert tool.parts                   == [e]
-    assert tool.status                  == True
-    assert tool.channels                == [channel1, channel2]
-    assert tool.parameters              == [param1, None, param2]
-    assert len(tool.refs["parameters"]) == 3
+    assert tool.description              == "description of tool 1"
+    assert tool.trademark_name           == "TOOL123"
+    assert tool.generic_name             == "Important tool"
+    assert tool.parts                    == [e]
+    assert tool.status                   == True
+    assert tool.channels                 == [channel1, channel2]
+    assert tool.parameters               == [param1, None, param2]
+    assert len(tool.attic['PARAMETERS']) == 3
 
     _ = tool.describe(indent='   ', width=70, exclude='e')
 
@@ -358,19 +358,19 @@ def test_splice(f):
     in2    = f.object('CHANNEL', 'CHANN1', 10, 0)
     zone1  = f.object('ZONE', 'ZONE-A', 10, 0)
 
-    # Output channel does not exist, but should be accessible through refs
+    # Output channel does not exist, but should be accessible through attic
     assert splice.output_channel == None
-    assert splice.refs['output_channel'].id         == 'CHANN-NEW'
-    assert splice.refs['output_channel'].origin     == 10
-    assert splice.refs['output_channel'].copynumber ==  0
+    assert splice.attic['OUTPUT-CHANNEL'][0].id         == 'CHANN-NEW'
+    assert splice.attic['OUTPUT-CHANNEL'][0].origin     == 10
+    assert splice.attic['OUTPUT-CHANNEL'][0].copynumber ==  0
 
     assert splice.input_channels == [in1, in2]
 
-    # Second zone does not exist, but should be accessible through refs
+    # Second zone does not exist, but should be accessible through attic
     assert splice.zones                       == [zone1 , None]
-    assert splice.refs['zones'][1].id         == 'ZONE-B'
-    assert splice.refs['zones'][1].origin     == 10
-    assert splice.refs['zones'][1].copynumber == 0
+    assert splice.attic['ZONES'][1].id         == 'ZONE-B'
+    assert splice.attic['ZONES'][1].origin     == 10
+    assert splice.attic['ZONES'][1].copynumber == 0
 
     _ = splice.describe(indent='   ', width=70, exclude='e')
 

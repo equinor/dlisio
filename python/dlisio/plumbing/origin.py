@@ -98,50 +98,110 @@ class Origin(BasicObject):
 
     """
     attributes = {
-        'FILE-ID'           : scalar('file_id'),
-        'FILE-SET-NAME'     : scalar('file_set_name'),
-        'FILE-SET-NUMBER'   : scalar('file_set_nr'),
-        'FILE-NUMBER'       : scalar('file_nr'),
-        'FILE-TYPE'         : scalar('file_type'),
-        'PRODUCT'           : scalar('product'),
-        'VERSION'           : scalar('version'),
-        'PROGRAMS'          : vector('programs'),
-        'CREATION-TIME'     : scalar('creation_time'),
-        'ORDER-NUMBER'      : scalar('order_nr'),
-        'DESCENT-NUMBER'    : vector('descent_nr'),
-        'RUN-NUMBER'        : vector('run_nr'),
-        'WELL-ID'           : scalar('well_id'),
-        'WELL-NAME'         : scalar('well_name'),
-        'FIELD-NAME'        : scalar('field_name'),
-        'PRODUCER-CODE'     : scalar('producer_code'),
-        'PRODUCER-NAME'     : scalar('producer_name'),
-        'COMPANY'           : scalar('company'),
-        'NAME-SPACE-NAME'   : scalar('namespace_name'),
-        'NAME-SPACE-VERSION': scalar('namespace_version')
+        'FILE-ID'           : scalar,
+        'FILE-SET-NAME'     : scalar,
+        'FILE-SET-NUMBER'   : scalar,
+        'FILE-NUMBER'       : scalar,
+        'FILE-TYPE'         : scalar,
+        'PRODUCT'           : scalar,
+        'VERSION'           : scalar,
+        'PROGRAMS'          : vector,
+        'CREATION-TIME'     : scalar,
+        'ORDER-NUMBER'      : scalar,
+        'DESCENT-NUMBER'    : vector,
+        'RUN-NUMBER'        : vector,
+        'WELL-ID'           : scalar,
+        'WELL-NAME'         : scalar,
+        'FIELD-NAME'        : scalar,
+        'PRODUCER-CODE'     : scalar,
+        'PRODUCER-NAME'     : scalar,
+        'COMPANY'           : scalar,
+        'NAME-SPACE-NAME'   : scalar,
+        'NAME-SPACE-VERSION': scalar,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'ORIGIN')
-        self.file_id           = None
-        self.file_set_name     = None
-        self.file_set_nr       = None
-        self.file_nr           = None
-        self.file_type         = None
-        self.product           = None
-        self.version           = None
-        self.programs          = []
-        self.creation_time     = None
-        self.order_nr          = None
-        self.descent_nr        = []
-        self.run_nr            = []
-        self.well_id           = None
-        self.well_name         = None
-        self.field_name        = None
-        self.producer_code     = None
-        self.producer_name     = None
-        self.company           = None
-        self.namespace_name    = None
-        self.namespace_version = None
+    def __init__(self, obj = None, name = None, lf=None):
+        super().__init__(obj, name = name, type = 'ORIGIN', lf=lf)
+
+    @property
+    def file_id(self):
+        return self['FILE-ID']
+
+    @property
+    def file_set_name(self):
+        return self['FILE-SET-NAME']
+
+    @property
+    def file_set_nr(self):
+        return self['FILE-SET-NUMBER']
+
+    @property
+    def file_nr(self):
+        return self['FILE-NUMBER']
+
+    @property
+    def file_type(self):
+        return self['FILE-TYPE']
+
+    @property
+    def product(self):
+        return self['PRODUCT']
+
+    @property
+    def version(self):
+        return self['VERSION']
+
+    @property
+    def programs(self):
+        return self['PROGRAMS']
+
+    @property
+    def creation_time(self):
+        return self['CREATION-TIME']
+
+    @property
+    def order_nr(self):
+        return self['ORDER-NUMBER']
+
+    @property
+    def descent_nr(self):
+        return self['DESCENT-NUMBER']
+
+    @property
+    def run_nr(self):
+        return self['RUN-NUMBER']
+
+    @property
+    def well_id(self):
+        return self['WELL-ID']
+
+    @property
+    def well_name(self):
+        return self['WELL-NAME']
+
+    @property
+    def field_name(self):
+        return self['FIELD-NAME']
+
+    @property
+    def producer_code(self):
+        return self['PRODUCER-CODE']
+
+    @property
+    def producer_name(self):
+        return self['PRODUCER-NAME']
+
+    @property
+    def company(self):
+        return self['COMPANY']
+
+    @property
+    def namespace_name(self):
+        return self['NAME-SPACE-NAME']
+
+    @property
+    def namespace_version(self):
+        return self['NAME-SPACE-VERSION']
 
     def describe_attr(self, buf, width, indent, exclude):
         fileset  = '{} / {}'.format(self.file_set_name, self.file_set_nr)

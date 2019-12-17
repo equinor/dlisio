@@ -25,11 +25,14 @@ class Comment(BasicObject):
     rp66. COMMENT objects are defined in Appendix A.2 - Logical Record Types,
     described in detail in Chapter 6.1.2 - Transient Data, Comment objects.
     """
-    attributes = { 'TEXT' : vector('text') }
+    attributes = { 'TEXT' : vector }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'COMMENT')
-        self.text = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'COMMENT', lf = lf)
+
+    @property
+    def text(self):
+        return self['TEXT']
 
     def describe_attr(self, buf, width, indent, exclude):
         describe_array(buf, self.text, width, indent)

@@ -44,20 +44,35 @@ class Coefficient(BasicObject):
     objects.
     """
     attributes = {
-        "LABEL"           : scalar('label'),
-        "COEFFICIENTS"    : vector('coefficients'),
-        "REFERENCES"      : vector('references'),
-        "PLUS-TOLERANCES" : vector('plus_tolerance'),
-        "MINUS-TOLERANCES": vector('minus_tolerance')
+        "LABEL"           : scalar,
+        "COEFFICIENTS"    : vector,
+        "REFERENCES"      : vector,
+        "PLUS-TOLERANCES" : vector,
+        "MINUS-TOLERANCES": vector,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = "CALIBRATION-COEFFICIENT")
-        self.label           = None
-        self.coefficients    = []
-        self.references      = []
-        self.plus_tolerance  = []
-        self.minus_tolerance = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = "CALIBRATION-COEFFICIENT", lf = lf)
+
+    @property
+    def label(self):
+        return self['LABEL']
+
+    @property
+    def coefficients(self):
+        return self['COEFFICIENTS']
+
+    @property
+    def references(self):
+        return self['REFERENCES']
+
+    @property
+    def plus_tolerance(self):
+        return self['PLUS-TOLERANCES']
+
+    @property
+    def minus_tolerance(self):
+        return self['MINUS-TOLERANCES']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

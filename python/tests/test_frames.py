@@ -3,6 +3,7 @@ import pytest
 
 import dlisio
 from dlisio.plumbing import linkage
+from dlisio import core
 
 def test_frame_getitem(DWL206):
     frame = DWL206.object('FRAME', '2000T', 2, 0)
@@ -28,28 +29,51 @@ def makeframe():
     time0.name = 'TIME'
     time0.origin = 0
     time0.copynumber = 0
-    time0.dimension = [1]
-    time0.reprc = 2 # f4
-    time0.frame = frame
+    attic = {
+        'DIMENSION': [1],
+        'REPRESENTATION-CODE' : [2] # f4
+    }
+    time0.attic = attic
 
     tdep = dlisio.plumbing.Channel()
     tdep.name = 'TDEP'
     tdep.origin = 0
     tdep.copynumber = 0
-    tdep.dimension = [2]
-    tdep.reprc = 13 # i2
-    tdep.frame = frame
+    attic = {
+        'DIMENSION': [2],
+        'REPRESENTATION-CODE' : [13] # i2
+    }
+    tdep.attic = attic
 
     time1 = dlisio.plumbing.Channel()
     time1.name = 'TIME'
     time1.origin = 1
     time1.copynumber = 0
-    time1.dimension = [1]
-    time1.reprc = 13 # i2
-    time1.frame = frame
+    attic = {
+        'DIMENSION'           : [1],
+        'REPRESENTATION-CODE' : [13], # i2
+    }
+    time1.attic = attic
 
-    frame.channels = [time0, tdep, time1]
+    #frame.channels = [time0, tdep, time1]
+    frame.attic = {
+        'CHANNELS' : [core.obname(time0.origin, time0.copynumber, time0.name),
+                      core.obname(tdep.origin,  tdep.copynumber,  tdep.name),
+                      core.obname(time1.origin, time1.copynumber, time1.name)]
+    }
 
+    logicalfile = dlisio.dlis(None, [], [], [])
+    logicalfile.indexedobjects['FRAME'] = { frame.fingerprint : frame }
+    logicalfile.indexedobjects['CHANNEL'] = {
+            time0.fingerprint : time0,
+            tdep.fingerprint  : tdep,
+            time1.fingerprint : time1,
+    }
+    for objs in logicalfile.indexedobjects.values():
+        for obj in objs.values():
+            obj.logicalfile = logicalfile
+
+    frame.link()
     return frame
 
 def test_duplicated_mnemonics_gets_unique_labels():
@@ -76,14 +100,15 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
 
 def test_duplicated_channels(assert_log):
     frame = makeframe()
-    channel = frame.channels[0]
-    frame.channels = [channel, channel]
+    channel = frame.attic['CHANNELS'][0]
+    frame.attic['CHANNELS'] = [channel, channel]
+
     with pytest.raises(ValueError):
         frame.dtype.names
     assert_log("duplicated mnemonics")
 
-    frame.link([frame, channel])
-    assert_log("belongs to frame")
+    frame.link()
+    assert_log("already belongs to")
 
 def test_instance_dtype_fmt():
     frame = makeframe()
@@ -124,27 +149,82 @@ def test_class_dtype_fmt():
 
 def test_channel_curves():
     ch1 = dlisio.plumbing.Channel()
-    ch1.dimension = [5]
-    ch1.reprc = 11
+    ch1.name       ='ch1'
+    ch1.origin     = 0
+    ch1.copynumber = 0
+    ch1.attic = {
+        'DIMENSION'           : [5],
+        'REPRESENTATION-CODE' : [11],
+    }
 
     ch2 = dlisio.plumbing.Channel()
-    ch2.dimension = [2, 2]
-    ch2.reprc = 3
+    ch2.name       ='ch2'
+    ch2.origin     = 0
+    ch2.copynumber = 0
+    ch2.attic = {
+        'DIMENSION'           : [2, 2],
+        'REPRESENTATION-CODE' : [3],
+    }
 
     ch3 = dlisio.plumbing.Channel()
-    ch3.dimension = [4, 2]
-    ch3.reprc = 26
+    ch3.name       ='ch3'
+    ch3.origin     = 0
+    ch3.copynumber = 0
+    ch3.attic = {
+        'DIMENSION'           : [4, 2],
+        'REPRESENTATION-CODE' : [26],
+    }
 
     ch4 = dlisio.plumbing.Channel()
-    ch4.dimension = [1]
-    ch4.reprc = 17
+    ch4.name       ='ch4'
+    ch4.origin     = 0
+    ch4.copynumber = 0
+    ch4.attic = {
+        'DIMENSION'           : [1],
+        'REPRESENTATION-CODE' : [17],
+    }
 
     ch5 = dlisio.plumbing.Channel()
-    ch5.dimension = [2, 3, 1]
-    ch5.reprc = 12
+    ch5.name       ='ch5'
+    ch5.origin     = 0
+    ch5.copynumber = 0
+    ch5.attic = {
+        'DIMENSION'           : [2, 3, 1],
+        'REPRESENTATION-CODE' : [12],
+    }
 
     frame = dlisio.plumbing.Frame()
-    frame.channels = [ch1, ch2, ch3, ch4, ch5]
+    frame.name       ='fr'
+    frame.origin     = 0
+    frame.copynumber = 0
+    frame.attic = {
+        'CHANNELS' : [
+            core.obname(ch1.origin, ch1.copynumber, ch1.name),
+            core.obname(ch2.origin, ch2.copynumber, ch2.name),
+            core.obname(ch3.origin, ch3.copynumber, ch3.name),
+            core.obname(ch4.origin, ch4.copynumber, ch4.name),
+            core.obname(ch5.origin, ch5.copynumber, ch5.name),
+        ]
+    }
+
+    logicalfile = dlisio.dlis(None, [], [], [])
+    logicalfile.indexedobjects['FRAME'] = {
+        frame.fingerprint : frame
+    }
+
+    logicalfile.indexedobjects['CHANNEL'] = {
+        ch1.fingerprint : ch1,
+        ch2.fingerprint : ch2,
+        ch3.fingerprint : ch3,
+        ch4.fingerprint : ch4,
+        ch5.fingerprint : ch5,
+    }
+    frame.logicalfile = logicalfile
+    ch1.logicalfile   = logicalfile
+    ch2.logicalfile   = logicalfile
+    ch3.logicalfile   = logicalfile
+    ch4.logicalfile   = logicalfile
+    ch5.logicalfile   = logicalfile
 
     pre_fmt, ch_fmt, post_fmt = frame.fmtstrchannel(ch3)
     assert pre_fmt  == "CCCCCbbbb"
@@ -156,36 +236,18 @@ def test_channel_no_dimension(assert_log):
     ch.name = 'CH'
     ch.origin = 0
     ch.copynumber = 0
-    ch.reprc = 17
+    ch.attic = { 'REPRESENTATION-CODE' : [17] }
 
     with pytest.raises(ValueError) as exc:
         ch.fmtstr()
     assert "channel.dimension is unvalid" in str(exc.value)
 
-    ch.dimension = [1]
+    ch.attic['DIMENSION'] = [1]
     assert ch.fmtstr() == "L"
-
-def test_not_a_link(assert_log):
-    f = dlisio.plumbing.Frame()
-    f.linkage = dict(f.linkage)
-    f.linkage['notlink'] = linkage.objref
-    f.refs["notlink"] = "not a link"
-
-    f.link([f])
-    assert_log("wrong linkage")
-
-def test_wrong_linkage(assert_log):
-    f = dlisio.plumbing.Frame()
-    f.linkage = dict(f.linkage)
-    f.linkage['wrong reference'] = "wrong reference"
-    f.refs['wrong reference'] = dlisio.core.obname(3, 4, "aa");
-
-    f.link([f])
-    assert_log("wrong linkage")
 
 def test_frame_index():
     frame = makeframe()
-    frame.index_type = 'DECREASING'
+    frame.attic['INDEX-TYPE'] = ['DECREASING']
 
     assert frame.index == frame.channels[0]
 
@@ -197,14 +259,14 @@ def test_frame_noindex(assert_info):
 
 def test_frame_nochannels_no_index(assert_info):
     frame = dlisio.plumbing.Frame()
-    frame.index_type = 'DECREASING'
+    frame.attic['INDEX-TYPE'] = ['DECREASING']
 
     assert frame.index == None
     assert_info('There is no index channel')
 
 def test_channel_index():
     frame = makeframe()
-    frame.index_type = 'DECREASING'
+    frame.attic['INDEX-TYPE'] = ['DECREASING']
 
     index   = frame.channels[0]
     channel = frame.channels[1]
@@ -213,7 +275,7 @@ def test_channel_index():
 
 def test_channel_is_index(assert_info):
     frame = makeframe()
-    frame.index_type = 'DECREASING'
+    frame.attic['INDEX-TYPE'] = ['DECREASING']
     channel = frame.channels[0]
 
     assert channel.index == channel

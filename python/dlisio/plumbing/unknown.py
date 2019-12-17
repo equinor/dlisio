@@ -12,13 +12,7 @@ class Unknown(BasicObject):
     BasicObject : The basic object that Unknown is derived from
 
     """
-    def __init__(self, obj = None, name = None, type = None):
+    def __init__(self, obj = None, name = None, type = None, lf = None):
         if type is None:
             type = 'UNKNOWN'
-        super().__init__(obj, name = name, type = type)
-
-    @classmethod
-    def create(cls, obj, name = None, type = None, file = None):
-        self = Unknown(obj, name = name, type = type)
-        self.load()
-        return self
+        super().__init__(obj, name = name, type = type, lf = lf)

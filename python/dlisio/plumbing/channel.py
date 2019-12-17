@@ -1,8 +1,8 @@
 from .basicobject import BasicObject
 from ..reprc import dtype, fmt
 from ..dlisutils import curves
-from .valuetypes import scalar, vector
-from .linkage import obname, objref
+from .valuetypes import scalar, vector, reverse
+from .linkage import *
 from .utils import *
 
 import numpy as np
@@ -68,38 +68,65 @@ class Channel(BasicObject):
     objects.
     """
     attributes = {
-        'LONG-NAME'          : scalar('long_name'),
-        'REPRESENTATION-CODE': scalar('reprc'),
-        'UNITS'              : scalar('units'),
-        'PROPERTIES'         : vector('properties'),
-        'DIMENSION'          : vector('dimension'),
-        'AXIS'               : vector('axis'),
-        'ELEMENT-LIMIT'      : vector('element_limit'),
-        'SOURCE'             : scalar('source')
+        'LONG-NAME'          : scalar,
+        'REPRESENTATION-CODE': scalar,
+        'UNITS'              : scalar,
+        'PROPERTIES'         : vector,
+        'DIMENSION'          : reverse,
+        'AXIS'               : reverse,
+        'ELEMENT-LIMIT'      : reverse,
+        'SOURCE'             : scalar,
     }
 
     linkage = {
-        'long_name' : obname("LONG-NAME"),
-        'axis'      : obname("AXIS"),
-        'source'    : objref
+        'LONG-NAME' : obname('LONG-NAME'),
+        'AXIS'      : obname('AXIS'),
+        'SOURCE'    : objref
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'CHANNEL')
-        self.long_name     = None
-        self.reprc         = None
-        self.units         = None
-        self.properties    = []
-        self.dimension     = []
-        self.axis          = []
-        self.element_limit = []
-        self.source        = None
-
+    def __init__(self, obj = None, name = None, lf=None):
+        super().__init__(obj, name = name, type = 'CHANNEL', lf=lf)
         # The numpy data type of the sample array
         self._dtype        = None
         # Format-string of the channel. Mainly intended for internal use
         self._fmtstr       = None
-        self.frame        = None
+        self._frame        = None
+
+    @property
+    def frame(self):
+        return lookup(self, obname('FRAME'), self._frame)
+
+    @property
+    def long_name(self):
+        return self['LONG-NAME']
+
+    @property
+    def reprc(self):
+        return self['REPRESENTATION-CODE']
+
+    @property
+    def units(self):
+        return self['UNITS']
+
+    @property
+    def properties(self):
+        return self['PROPERTIES']
+
+    @property
+    def dimension(self):
+        return self['DIMENSION']
+
+    @property
+    def axis(self):
+        return self['AXIS']
+
+    @property
+    def element_limit(self):
+        return self['ELEMENT-LIMIT']
+
+    @property
+    def source(self):
+        return self['SOURCE']
 
     @property
     def index(self):
@@ -137,18 +164,6 @@ class Channel(BasicObject):
             self._dtype = np.dtype((dtype[self.reprc], tuple(self.dimension)))
 
         return self._dtype
-
-    def load(self):
-        super().load()
-        self.frame = None
-        # Order of elements is reversed due to RP66 column-first data
-        # storage approach
-        self.dimension        = self.dimension[::-1]
-        try:
-            self.refs['axis'] = self.refs['axis'][::-1]
-        except KeyError:
-            pass
-        self.element_limit    = self.element_limit [::-1]
 
     def fmtstr(self):
         """Generate format-string for Channel

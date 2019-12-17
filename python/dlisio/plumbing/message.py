@@ -46,24 +46,45 @@ class Message(BasicObject):
     described in detail in Chapter 6.1.1 - Transient Data, message objects.
     """
     attributes = {
-        'TYPE'           : scalar('message_type'),
-        'TIME'           : scalar('time'),
-        'BOREHOLE-DRIFT' : scalar('borehole_drift'),
-        'VERTICAL-DEPTH' : scalar('vertical_depth'),
-        'RADIAL-DRIFT'   : scalar('radial_drift'),
-        'ANGULAR-DRIFT'  : scalar('angular_drift'),
-        'TEXT'           : vector('text'),
+        'TYPE'           : scalar,
+        'TIME'           : scalar,
+        'BOREHOLE-DRIFT' : scalar,
+        'VERTICAL-DEPTH' : scalar,
+        'RADIAL-DRIFT'   : scalar,
+        'ANGULAR-DRIFT'  : scalar,
+        'TEXT'           : vector,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'MESSAGE')
-        self.message_type   = None
-        self.time           = None
-        self.borehole_drift = None
-        self.vertical_depth = None
-        self.radial_drift   = None
-        self.angular_drift  = None
-        self.text           = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'MESSAGE', lf = lf)
+
+    @property
+    def message_type(self):
+        return self['TYPE']
+
+    @property
+    def time(self):
+        return self['TIME']
+
+    @property
+    def borehole_drift(self):
+        return self['BOREHOLE-DRIFT']
+
+    @property
+    def vertical_depth(self):
+        return self['VERTICAL-DEPTH']
+
+    @property
+    def radial_drift(self):
+        return self['RADIAL-DRIFT']
+
+    @property
+    def angular_drift(self):
+        return self['ANGULAR-DRIFT']
+
+    @property
+    def text(self):
+        return self['TEXT']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

@@ -117,12 +117,6 @@ stdrecord = bytearray([
     # 0x00, 0x26, # length = 38
 ])
 
-def test_objects(DWL206):
-    objects = {}
-    for v in DWL206.indexedobjects.values():
-        objects.update(v)
-    assert len(list(objects)) == 864
-
 def test_fingerprint():
     reference = "T.FRAME-I.800T-O.2-C.46"
     key = dlisio.core.fingerprint("FRAME", "800T", 2, 46)

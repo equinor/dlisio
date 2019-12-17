@@ -1,24 +1,34 @@
 import pytest
 
 from dlisio.plumbing import valuetypes, linkage
-from dlisio.plumbing.coefficient import Coefficient
+from dlisio.plumbing import Channel
+from dlisio.plumbing import Parameter
 
 import dlisio
 
+class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
+    attributes = {
+        "SOME_LIST"   : valuetypes.vector,
+        "SOME_VALUE"  : valuetypes.scalar,
+        "SOME_STATUS" : valuetypes.boolean,
+    }
+
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = "UNKNOWN_SET", lf = lf)
+
+    @property
+    def list(self):
+        return self['SOME_LIST']
+
+    @property
+    def value(self):
+        return self['SOME_VALUE']
+
+    @property
+    def status(self):
+        return self['SOME_STATUS']
+
 def test_dynamic_class(f):
-    class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
-        attributes = {
-            "SOME_LIST"   : valuetypes.vector('list'),
-            "SOME_VALUE"  : valuetypes.scalar('value'),
-            "SOME_STATUS" : valuetypes.boolean('status'),
-        }
-
-        def __init__(self, obj = None, name = None):
-            super().__init__(obj, name = name, type = "UNKNOWN_SET")
-            self.list = []
-            self.value = None
-            self.status = None
-
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
     with pytest.raises(AttributeError):
         assert unknown.value == "VAL1"
@@ -35,6 +45,15 @@ def test_dynamic_class(f):
     finally:
         del f.types['UNKNOWN_SET']
 
+def test_new_type_removed_from_unknowns(f):
+    assert len(f.unknowns) == 2
+    try:
+        f.types['UNKNOWN_SET'] = ActuallyKnown
+        f.load()
+
+        assert len(f.unknowns) == 1
+    finally:
+        del f.types['UNKNOWN_SET']
 
 def test_change_object_type(f):
     try:
@@ -75,7 +94,7 @@ def test_remove_object_type(f):
         # Channel should be parsed as Unknown, but the type should still
         # reflects what's on file
         assert isinstance(obj, dlisio.plumbing.Unknown)
-        assert obj in f.unknowns
+        assert obj.fingerprint in f.unknowns['CHANNEL']
         assert obj.type == 'CHANNEL'
 
     finally:
@@ -90,95 +109,79 @@ def test_remove_object_type(f):
     assert isinstance(obj, dlisio.plumbing.Channel)
     assert obj not in f.unknowns
 
-def test_dynamic_instance_attribute(f):
-    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-    # update attributes only for one object
-    c.attributes = dict(c.attributes)
-    c.attributes['MY_PARAM'] = valuetypes.vector('myparams')
+def test_dynamic_instance_attribute():
+    ch1 = Channel()
+    ch1.attic['PROPERTIES'] = [10]
 
-    c.load()
-    assert c.myparams == ["wrong", "W"]
+    ch2 = Channel()
+    ch2.attic['PROPERTIES'] = [10]
+
+    # Change properties to be parsed as scalar (not vector)
+    ch1.attributes = dict(ch1.attributes)
+    ch1.attributes['PROPERTIES'] = valuetypes.scalar
+
+    assert ch1.properties == 10
 
     # check that other object of the same type is not affected
-    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
+    assert ch2.properties == [10]
 
-    with pytest.raises(KeyError):
-        _ = c.attributes['myparams']
+def test_dynamic_class_attribute():
+    ch1 = Channel()
+    ch1.attic['PROPERTIES'] = [10]
 
-def test_dynamic_class_attribute(f):
+    ch2 = Channel()
+    ch2.attic['PROPERTIES'] = [10]
+
     try:
-        # update attribute for the class
-        Coefficient.attributes['MY_PARAM'] = valuetypes.vector('myparams')
+        # Change properties to be parsed as scalar (not vector)
+        original = dict(Channel.attributes)
+        Channel.attributes['PROPERTIES'] = valuetypes.scalar
 
-        c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-
-        assert c.attributes['MY_PARAM'] == valuetypes.vector('myparams')
-        c.load()
-        assert c.myparams == ["wrong", "W"]
-
+        # The change should be observable on all newly created objects
+        assert ch2.properties == 10
+        assert ch2.properties == 10
     finally:
-        # manual cleanup. "reload" doesn't work
-        del c.__class__.attributes['MY_PARAM']
+        Channel.attributes = original
 
-def test_dynamic_linkage(f, assert_log):
-    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+def test_dynamic_instance_linkage(f, assert_log):
+    ch1  = f.object('CHANNEL', 'CHANN1')
+    ch2  = f.object('CHANNEL', 'CHANN2')
+    tool = f.object('TOOL', 'TOOL1')
 
-    c.attributes = dict(c.attributes)
-    c.attributes['LINKS_TO_PARAMETERS'] = valuetypes.vector('paramlinks')
-    c.attributes['LINK_TO_UNKNOWN_OBJECT'] = (
-                valuetypes.scalar('unknown_link'))
+    assert ch1.source == tool
+    assert ch2.source == tool
 
-    c.load()
-
-    c.linkage = dict(c.linkage)
-    c.linkage['label']        = linkage.obname("EQUIPMENT")
-    c.linkage['paramlinks']   = linkage.obname("PARAMETER")
-    c.linkage['unknown_link'] = linkage.objref
-    c.linkage['notlink']      = linkage.objref
-    c.linkage['wrongobname']  = "i am just wrong obname"
-    c.linkage['wrongobjref']  = "i am just wrong objref"
-
-    c.refs["notlink"]     = "i am no link"
-    c.refs["wrongobname"] = c.refs["paramlinks"]
-    c.refs["wrongobjref"] = c.refs["unknown_link"]
-
-    objects = {}
-    for v in f.indexedobjects.values():
-        objects.update(v)
-
-    c.link(objects)
-
-    param2 = f.object('PARAMETER', 'PARAM2', 10, 0)
-    u      = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
-
-    assert c.label        == "SMTH"
-    assert c.paramlinks   == [param2, None]
-    assert c.unknown_link == u
-
-    assert_log("missing attribute")
-
-def test_dynamic_change_through_instance(f):
     try:
-        c = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
-        c.attributes['MY_PARAM']            = valuetypes.vector('myparams')
-        c.attributes['LINKS_TO_PARAMETERS'] = (
-                    valuetypes.vector('paramlinks'))
-        c.linkage['paramlinks']             = linkage.obname("PARAMETER")
+        # Change linkage rule for source from objref to obname('FRAME')
+        ch1.linkage = dict(ch1.linkage)
+        ch1.linkage['SOURCE'] = linkage.obname('FRAME')
 
-        param2 = f.object('PARAMETER', 'PARAM2', 10, 0)
-        c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-        c.load()
+        # Attic is still objref, so creating reference to object should fail.
+        # source return value from attic and warning is issued.
+        assert ch1.source == None
+        assert_log('Unable to create object-reference')
 
-        objects = {}
-        for v in f.indexedobjects.values():
-            objects.update(v)
-
-        c.link(objects)
-
-        assert c.myparams     == ["wrong", "W"]
-        assert c.paramlinks   == [param2, None]
-
+        # check that other object of the same type is not affected
+        assert ch2.source == tool
     finally:
-        del c.attributes['MY_PARAM']
-        del c.attributes['LINKS_TO_PARAMETERS']
-        del c.linkage['paramlinks']
+        ch1.linkage = Channel.linkage
+
+def test_dynamic_class_linkage(f, assert_log):
+
+    #Reload file for change to take effect
+    f.load()
+    p1 = f.object('PARAMETER', 'PARAM1')
+    p2 = f.object('PARAMETER', 'PARAM3')
+
+    try:
+        # Change how SOURCE is parsed for all Channels
+        original = dict(Parameter.linkage)
+        Parameter.linkage['AXIS'] = linkage.objref
+        # Attic is still obname, so creating reference to object should fail.
+        # source return value from attic and warning is issued.
+        assert p1.axis == [None]
+        assert p2.axis == [None, None]
+        assert_log('Unable to create object-reference')
+    finally:
+        Parameter.linkage = original
+        f.load()

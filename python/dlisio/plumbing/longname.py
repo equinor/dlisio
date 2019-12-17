@@ -77,40 +77,85 @@ class Longname(BasicObject):
     """
 
     attributes = {
-        'GENERAL-MODIFIER'  : vector('modifier'),
-        'QUANTITY'          : scalar('quantity'),
-        'QUANTITY-MODIFIER' : vector('quantity_mod'),
-        'ALTERED-FORM'      : scalar('altered_form'),
-        'ENTITY'            : scalar('entity'),
-        'ENTITY-MODIFIER'   : vector('entity_mod'),
-        'ENTITY-NUMBER'     : scalar('entity_nr'),
-        'ENTITY-PART'       : scalar('entity_part'),
-        'ENTITY-PART-NUMBER': scalar('entity_part_nr'),
-        'GENERIC-SOURCE'    : scalar('generic_source'),
-        'SOURCE-PART'       : vector('source_part'),
-        'SOURCE-PART-NUMBER': vector('source_part_nr'),
-        'CONDITIONS'        : vector('conditions'),
-        'STANDARD-SYMBOL'   : scalar('standard_symbol'),
-        'PRIVATE-SYMBOL'    : scalar('private_symbol')
+        'GENERAL-MODIFIER'  : vector,
+        'QUANTITY'          : scalar,
+        'QUANTITY-MODIFIER' : vector,
+        'ALTERED-FORM'      : scalar,
+        'ENTITY'            : scalar,
+        'ENTITY-MODIFIER'   : vector,
+        'ENTITY-NUMBER'     : scalar,
+        'ENTITY-PART'       : scalar,
+        'ENTITY-PART-NUMBER': scalar,
+        'GENERIC-SOURCE'    : scalar,
+        'SOURCE-PART'       : vector,
+        'SOURCE-PART-NUMBER': vector,
+        'CONDITIONS'        : vector,
+        'STANDARD-SYMBOL'   : scalar,
+        'PRIVATE-SYMBOL'    : scalar,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'LONG-NAME')
-        self.modifier        = []
-        self.quantity        = None
-        self.quantity_mod    = []
-        self.altered_form    = None
-        self.entity          = None
-        self.entity_mod      = []
-        self.entity_nr       = None
-        self.entity_part     = None
-        self.entity_part_nr  = None
-        self.generic_source  = None
-        self.source_part     = []
-        self.source_part_nr  = []
-        self.conditions      = []
-        self.standard_symbol = None
-        self.private_symbol  = None
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'LONG-NAME', lf = lf)
+
+    @property
+    def modifier(self):
+        return self['GENERAL-MODIFIER']
+
+    @property
+    def quantity(self):
+        return self['QUANTITY']
+
+    @property
+    def quantity_mod(self):
+        return self['QUANTITY-MODIFIER']
+
+    @property
+    def altered_form(self):
+        return self['ALTERED-FORM']
+
+    @property
+    def entity(self):
+        return self['ENTITY']
+
+    @property
+    def entity_mod(self):
+        return self['ENTITY-MODIFIER']
+
+    @property
+    def entity_nr(self):
+        return self['ENTITY-NUMBER']
+
+    @property
+    def entity_part(self):
+        return self['ENTITY-PART']
+
+    @property
+    def entity_part_nr(self):
+        return self['ENTITY-PART-NUMBER']
+
+    @property
+    def generic_source(self):
+        return self['GENERIC-SOURCE']
+
+    @property
+    def source_part(self):
+        return self['SOURCE-PART']
+
+    @property
+    def source_part_nr(self):
+        return self['SOURCE-PART-NUMBER']
+
+    @property
+    def conditions(self):
+        return self['CONDITIONS']
+
+    @property
+    def standard_symbol(self):
+        return self['STANDARD-SYMBOL']
+
+    @property
+    def private_symbol(self):
+        return self['PRIVATE-SYMBOL']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

@@ -953,11 +953,13 @@ object_vector parse_objects( const object_template& tmpl,
 
 }
 
-object_set parse_objects( const char* cur, const char* end ) {
+const char* parse_set_component( const char* cur,
+                                 const char* end,
+                                 dl::ident* type,
+                                 dl::ident* name,
+                                 int* role) {
     if (std::distance( cur, end ) <= 0)
         throw std::out_of_range( "eflr must be non-empty" );
-
-    object_set set;
 
     const auto flags = parse_set_descriptor( cur );
     cur += DLIS_DESCRIPTOR_SIZE;
@@ -970,10 +972,23 @@ object_set parse_objects( const char* cur, const char* end ) {
     /*
      * TODO: check for every read that inside [begin,end)?
      */
-    set.role = flags.role;
-    if (flags.type) cur = cast( cur, set.type );
-    if (flags.name) cur = cast( cur, set.name );
+    auto tmp_role = flags.role;
 
+    dl::ident tmp_type;
+    dl::ident tmp_name;
+
+    if (flags.type) cur = cast( cur, tmp_type );
+    if (flags.name) cur = cast( cur, tmp_name );
+
+    if (type) *type = tmp_type;
+    if (name) *name = tmp_name;
+    if (role) *role = tmp_role;
+    return cur;
+}
+
+object_set parse_objects( const char* cur, const char* end ) {
+    object_set set;
+    cur = parse_set_component( cur, end, &set.type, &set.name, &set.role);
     cur = parse_template( cur, end, set.tmpl );
 
     /*

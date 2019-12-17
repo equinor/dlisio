@@ -912,6 +912,29 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
+    m.def( "parse_set_types", [](const std::vector< dl::record >& recs ) {
+        /*
+         * Returns the set-type of each record. If a record is encrypted, it's
+         * not possible to parse the set-type. To keep the lists aligned,
+         * 'encrypted' is inserted in this case.
+         */
+        std::vector< dl::ident > types;
+        std::string encrypted = "encrypted";
+        for (const auto& rec : recs) {
+            if (rec.isencrypted()) {
+                types.push_back( dl::ident{ encrypted } );
+                continue;
+            }
+            auto begin = rec.data.data();
+            auto end   = begin + rec.data.size();
+
+            dl::ident type;
+            dl::parse_set_component( begin, end, &type, nullptr, nullptr );
+            types.push_back( type );
+        }
+        return types;
+    });
+
     m.def( "parse_objects", []( const std::vector< dl::record >& recs ) {
         std::vector< dl::object_set > objects;
         for (const auto& rec : recs) {

@@ -65,41 +65,74 @@ class Process(BasicObject):
     objects.
     """
     attributes = {
-        'DESCRIPTION'         : scalar('description'),
-        'TRADEMARK-NAME'      : scalar('trademark_name'),
-        'VERSION'             : scalar('version'),
-        'PROPERTIES'          : vector('properties'),
-        'STATUS'              : scalar('status'),
-        'INPUT-CHANNELS'      : vector('input_channels'),
-        'OUTPUT-CHANNELS'     : vector('output_channels'),
-        'INPUT-COMPUTATIONS'  : vector('input_computations'),
-        'OUTPUT-COMPUTATIONS' : vector('output_computations'),
-        'PARAMETERS'          : vector('parameters'),
-        'COMMENTS'            : vector('comments')
+        'DESCRIPTION'         : scalar,
+        'TRADEMARK-NAME'      : scalar,
+        'VERSION'             : scalar,
+        'PROPERTIES'          : vector,
+        'STATUS'              : scalar,
+        'INPUT-CHANNELS'      : vector,
+        'OUTPUT-CHANNELS'     : vector,
+        'INPUT-COMPUTATIONS'  : vector,
+        'OUTPUT-COMPUTATIONS' : vector,
+        'PARAMETERS'          : vector,
+        'COMMENTS'            : vector,
     }
 
     linkage = {
-        'description'         : obname('LONG-NAME'),
-        'input_channels'      : obname('CHANNEL'),
-        'output_channels'     : obname('CHANNEL'),
-        'input_computations'  : obname('COMPUTATION'),
-        'output_computations' : obname('COMPUTATION'),
-        'parameters'          : obname('PARAMETER')
+        'DESCRIPTION'         : obname('LONG-NAME'),
+        'INPUT-CHANNELS'      : obname('CHANNEL'),
+        'OUTPUT-CHANNELS'     : obname('CHANNEL'),
+        'INPUT-COMPUTATIONS'  : obname('COMPUTATION'),
+        'OUTPUT-COMPUTATIONS' : obname('COMPUTATION'),
+        'PARAMETERS'          : obname('PARAMETER')
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'PROCESS')
-        self.description         = None
-        self.trademark_name      = None
-        self.version             = None
-        self.properties          = []
-        self.status              = None
-        self.input_channels      = []
-        self.output_channels     = []
-        self.input_computations  = []
-        self.output_computations = []
-        self.parameters          = []
-        self.comments            = []
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'PROCESS', lf = lf)
+
+    @property
+    def description(self):
+        return self['DESCRIPTION']
+
+    @property
+    def trademark_name(self):
+        return self['TRADEMARK-NAME']
+
+    @property
+    def version(self):
+        return self['VERSION']
+
+    @property
+    def properties(self):
+        return self['PROPERTIES']
+
+    @property
+    def status(self):
+        return self['STATUS']
+
+    @property
+    def input_channels(self):
+        return self['INPUT-CHANNELS']
+
+    @property
+    def output_channels(self):
+        return self['OUTPUT-CHANNELS']
+
+    @property
+    def input_computations(self):
+        return self['INPUT-COMPUTATIONS']
+
+    @property
+    def output_computations(self):
+        return self['OUTPUT-COMPUTATIONS']
+
+    @property
+    def parameters(self):
+        return self['PARAMETERS']
+
+    @property
+    def comments(self):
+        return self['COMMENTS']
 
     def describe_attr(self, buf, width, indent, exclude):
         describe_description(buf, self.description, width, indent, exclude)

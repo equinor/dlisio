@@ -224,9 +224,10 @@ def test_sampled_attrs_wrong_value():
 
 def test_describe_description():
     ln = Longname()
-    ln.quantity       = 'diameter and stuff'
-    ln.source_part_nr = 10
-
+    ln.attic = {
+        'QUANTITY'           : ['diameter and stuff'],
+        'SOURCE-PART-NUMBER' : [10]
+    }
     # description is a Longname object
     case1 = (' Description\n'
              ' --\n'
@@ -345,7 +346,6 @@ def test_describe_ndarray():
 def test_values_empty(obj):
     obj.attic = {'VALUES' : [], 'DIMENSION' : [], 'ZONES' : []}
 
-    obj.load()
     assert np.array_equal(obj.values, np.empty(0))
     assert obj.dimension == []
     assert obj.axis      == []
@@ -355,7 +355,6 @@ def test_values_empty(obj):
 def test_dimension(obj):
     obj.attic = {'VALUES' : [], 'DIMENSION' : [1], 'ZONES' : []}
 
-    obj.load()
     assert np.array_equal(obj.values, np.empty(0))
     assert obj.dimension == [1]
     assert obj.axis      == []
@@ -365,28 +364,24 @@ def test_dimension(obj):
 def test_values_simple(obj):
     obj.attic = {'VALUES' : [14], 'DIMENSION' : [1], 'ZONES' : []}
 
-    obj.load()
     assert obj.values[0] == 14
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_infer_simple(obj):
     obj.attic = {'VALUES' : [14], 'DIMENSION' : [], 'ZONES' : []}
 
-    obj.load()
     assert obj.values[0] == 14
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_one_sample(obj):
     obj.attic = {'VALUES' : [1, 2], 'DIMENSION' : [2], 'ZONES' : []}
 
-    obj.load()
     assert list(obj.values[0]) == [1, 2]
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_wrong_dimensions(obj):
     obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [2], 'ZONES' : []}
 
-    obj.load()
     msg  = 'cannot reshape array of size 5 into shape [2]'
     with pytest.raises(ValueError) as error:
         _ = obj.values
@@ -395,10 +390,11 @@ def test_values_wrong_dimensions(obj):
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_wrong_dimensions_wrong_zones(obj):
-    obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [2], 'ZONES' : []}
-
-    obj.load()
-    obj.zones = [None for _ in range(4)]
+    obj.attic = {
+        'VALUES'    : [1, 2, 3, 4, 5],
+        'DIMENSION' : [2],
+        'ZONES'     : [None for _ in range(4)]
+    }
 
     msg  = 'cannot reshape array of size 5 into shape [2]'
     with pytest.raises(ValueError) as error:
@@ -408,43 +404,47 @@ def test_values_wrong_dimensions_wrong_zones(obj):
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_infer_dimensions_from_zones(obj):
-    obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [], 'ZONES' : []}
-
-    obj.load()
+    obj.attic = {
+        'VALUES'    : [1, 2, 3, 4, 5],
+        'DIMENSION' : [],
+        'ZONES'     : [None for _ in range(5)]
+    }
 
     # Should be able to infer correct dimension from zones
-    obj.zones = [None for _ in range(5)]
     assert np.array_equal(obj.values, np.array([1, 2, 3, 4, 5]))
     assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_no_dimensions_wrong_zones(obj):
-    obj.attic = {'VALUES' : [1], 'DIMENSION' : [], 'ZONES' : []}
-
-    obj.load()
+    obj.attic = {
+        'VALUES'    : [1],
+        'DIMENSION' : [],
+        'ZONES'     : [None for _ in range(2)]
+    }
 
     # Should use dimension over zones
-    obj.zones = [None for _ in range(2)]
     assert np.array_equal(obj.values, np.array([1]))
     assert np.array_equal(obj.attic['VALUES'], np.array([1]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_right_dimensions_wrong_zones(obj):
-    obj.attic = {'VALUES' : [1, 2, 3, 4], 'DIMENSION' : [2], 'ZONES' : []}
-
-    obj.load()
+    obj.attic = {
+        'VALUES'    : [1, 2, 3, 4],
+        'DIMENSION' : [2],
+        'ZONES'     : [None for _ in range(5)]
+    }
 
     # Should use dimension over zones
-    obj.zones = [None for _ in range(5)]
     assert np.array_equal(obj.values, np.array([[1, 2 ], [3, 4]]))
     assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_right_dimensions_right_zones(obj):
-    obj.attic = {'VALUES' : [1, 2, 3, 4], 'DIMENSION' : [2], 'ZONES' : []}
-
-    obj.load()
-    obj.zones = [None for _ in range(2)]
+    obj.attic = {
+        'VALUES'    : [1, 2, 3, 4],
+        'DIMENSION' : [2],
+        'ZONES'     : [None, None]
+    }
 
     assert np.array_equal(obj.values, np.array([[1, 2 ], [3, 4]]))
     assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
@@ -453,8 +453,6 @@ def test_values_right_dimensions_right_zones(obj):
 def test_values_multidim_values(obj):
     obj.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                    'DIMENSION' : [2, 3], 'ZONES' : []}
-
-    obj.load()
 
     assert list(obj.values[0][1]) == [3, 4]
     assert list(obj.values[1][2]) == [11, 12]
@@ -474,21 +472,17 @@ def test_parameter_computation_repcode(value):
     param.attic = {'DIMENSION' : [], 'ZONES' : []}
 
     param.attic['VALUES'] = [value]
-    param.load()
-
     assert np.array_equal(param.values[0], value)
 
     comput = Computation()
     comput.attic = {'DIMENSION' : [], 'ZONES' : []}
     comput.attic['VALUES'] = [value]
-    comput.load()
     assert np.array_equal(comput.values[0], value)
 
 def test_measurement_empty():
     m = Measurement()
     m.attic = {'MEASUREMENT' : [], 'REFERENCE' : [], 'DIMENSION' : []}
 
-    m.load()
     assert m.samples.size       == 0
     assert m.reference.size     == 0
     assert m.std_deviation.size == 0
@@ -499,7 +493,6 @@ def test_measurement_dimension():
     m = Measurement()
     m.attic = {'MEASUREMENT' : [], 'DIMENSION' : [3, 5]}
 
-    m.load()
     assert m.samples.size   == 0
     assert m.reference.size == 0
     assert m.dimension      == [5, 3]
@@ -508,8 +501,6 @@ def test_measurement_dimension():
 def test_measurement_wrong_dimension_samples():
     m = Measurement()
     m.attic = {'MEASUREMENT' : [1, 2, 3], 'DIMENSION' : [3, 5]}
-
-    m.load()
 
     msg = 'cannot reshape array of size 3 into shape [5, 3]'
     with pytest.raises(ValueError) as error:
@@ -530,8 +521,6 @@ def test_measurement_many_samples():
         'MINUS-TOLERANCE'   : [0.5, 0.1, 0, 1],
         'DIMENSION'         : [4]
     }
-
-    m.load()
 
     assert np.array_equal(m.samples[0], np.array([1, 2, 3, 4]))
     assert np.array_equal(m.samples[1], np.array([5, 6, 7, 8]))
@@ -554,8 +543,6 @@ def test_measurement_non_corresponding_values():
         'MINUS-TOLERANCE'   : [0.5, 0.1, 0],
         'DIMENSION'         : [4]
     }
-
-    m.load()
 
     msg = 'cannot reshape array of size {} into shape 4'
     with pytest.raises(ValueError) as error:
@@ -594,8 +581,6 @@ def test_measurement_more_than_one_sample(assert_log):
         'DIMENSION'         : [2]
     }
 
-    m.load()
-
     assert np.array_equal(m.samples[2], np.array([5, 6]))
 
     msg = 'found {} samples, should be 1'
@@ -632,8 +617,82 @@ def test_measurement_repcode(reference, samples):
 
     m.attic['MEASUREMENT'] = samples
     m.attic['REFERENCE'] = reference
-    m.load()
 
     assert np.array_equal(np.array(reference), m.reference)
     sampled = [samples[0:2], samples[2:4]]
     assert np.array_equal(np.array(sampled), m.samples)
+
+
+def test_lookup():
+    other = Channel()
+    other.name = 'channel'
+    other.origin = 10
+    other.copynumber = 2
+
+    lf = dlisio.dlis(None, [], [], [])
+    lf.indexedobjects['CHANNEL'] = {other.fingerprint : other}
+
+    ch = Channel()
+    ch.logicalfile = lf
+
+    value = dlisio.core.obname(10, 2, 'channel')
+    res = lookup(ch, linkage.obname('CHANNEL'), value)
+
+    assert res == other
+
+def test_lookup_value_not_a_ref(assert_log):
+    res = lookup(None, linkage.objref, 0)
+
+    assert res is None
+    assert_log('Unable to create object-reference')
+
+def test_lookup_value_should_be_objref(assert_log):
+    value = dlisio.core.obname(10, 2, 'channel')
+    res = lookup(None, linkage.objref, value)
+
+    assert res is None
+    assert_log('Unable to create object-reference')
+
+def test_lookup_no_logicalfile(assert_log):
+    value = dlisio.core.obname(10, 2, 'channel')
+    ch = Channel() #channel without reference to a logical file
+
+    res = lookup(ch, linkage.obname('CHANNEL'), value)
+
+    assert res is None
+    assert_log('has no logical file')
+
+def test_lookup_no_such_object(assert_log):
+    value = dlisio.core.obname(10, 2, 'channel')
+    ch = Channel()
+    ch.logicalfile = dlisio.dlis(None, [], [], [])
+    res = lookup(ch, linkage.obname('CHANNEL'), value)
+
+    assert res is None
+    assert_log('not in logical file')
+
+def test_parse_attribute_scalar():
+    res = parsevalue([1], scalar)
+    assert res == 1
+
+def test_parse_attribute_scalar_unexpected_element(assert_log):
+    res = parsevalue([1, 2], scalar)
+    assert res == 1
+    assert_log('Expected only 1 value')
+
+def test_parse_attribute_boolean():
+    res = parsevalue([0], boolean)
+    assert res == False
+
+def test_parse_attribute_boolean_unexpected_element(assert_log):
+    res = parsevalue([1, 2], boolean)
+    assert res == True
+    assert_log('Expected only 1 value')
+
+def test_parse_attribute_vector():
+    res = parsevalue([1], vector)
+    assert res == [1]
+
+def test_parse_attribute_reverse_unexpected_element(assert_log):
+    res = parsevalue([1, 2], reverse)
+    assert res == [2, 1]

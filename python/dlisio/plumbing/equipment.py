@@ -79,45 +79,95 @@ class Equipment(BasicObject):
     objects.
     """
     attributes = {
-        'TRADEMARK-NAME'  : scalar('trademark_name'),
-        'STATUS'          : boolean('status'),
-        'TYPE'            : scalar('generic_type'),
-        'SERIAL-NUMBER'   : scalar('serial_number'),
-        'LOCATION'        : scalar('location'),
-        'HEIGHT'          : scalar('height'),
-        'LENGTH'          : scalar('length'),
-        'MINIMUM-DIAMETER': scalar('diameter_min'),
-        'MAXIMUM-DIAMETER': scalar('diameter_max'),
-        'VOLUME'          : scalar('volume'),
-        'WEIGHT'          : scalar('weight'),
-        'HOLE-SIZE'       : scalar('hole_size'),
-        'PRESSURE'        : scalar('pressure'),
-        'TEMPERATURE'     : scalar('temperature'),
-        'VERTICAL-DEPTH'  : scalar('vertical_depth'),
-        'RADIAL-DRIFT'    : scalar('radial_drift'),
-        'ANGULAR-DRIFT'   : scalar('angular_drift')
+        'TRADEMARK-NAME'  : scalar,
+        'STATUS'          : boolean,
+        'TYPE'            : scalar,
+        'SERIAL-NUMBER'   : scalar,
+        'LOCATION'        : scalar,
+        'HEIGHT'          : scalar,
+        'LENGTH'          : scalar,
+        'MINIMUM-DIAMETER': scalar,
+        'MAXIMUM-DIAMETER': scalar,
+        'VOLUME'          : scalar,
+        'WEIGHT'          : scalar,
+        'HOLE-SIZE'       : scalar,
+        'PRESSURE'        : scalar,
+        'TEMPERATURE'     : scalar,
+        'VERTICAL-DEPTH'  : scalar,
+        'RADIAL-DRIFT'    : scalar,
+        'ANGULAR-DRIFT'   : scalar,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'EQUIPMENT')
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'EQUIPMENT', lf = lf)
 
-        self.trademark_name = None
-        self.status         = None
-        self.generic_type   = None
-        self.serial_number  = None
-        self.location       = None
-        self.height         = None
-        self.length         = None
-        self.diameter_min   = None
-        self.diameter_max   = None
-        self.volume         = None
-        self.weight         = None
-        self.hole_size      = None
-        self.pressure       = None
-        self.temperature    = None
-        self.vertical_depth = None
-        self.radial_drift   = None
-        self.angular_drift  = None
+    @property
+    def trademark_name(self):
+        return self['TRADEMARK-NAME']
+
+    @property
+    def status(self):
+        return self['STATUS']
+
+    @property
+    def generic_type(self):
+        return self['TYPE']
+
+    @property
+    def serial_number(self):
+        return self['SERIAL-NUMBER']
+
+    @property
+    def location(self):
+        return self['LOCATION']
+
+    @property
+    def height(self):
+        return self['HEIGHT']
+
+    @property
+    def length(self):
+        return self['LENGTH']
+
+    @property
+    def diameter_min(self):
+        return self['MINIMUM-DIAMETER']
+
+    @property
+    def diameter_max(self):
+        return self['MAXIMUM-DIAMETER']
+
+    @property
+    def volume(self):
+        return self['VOLUME']
+
+    @property
+    def weight(self):
+        return self['WEIGHT']
+
+    @property
+    def hole_size(self):
+        return self['HOLE-SIZE']
+
+    @property
+    def pressure(self):
+        return self['PRESSURE']
+
+    @property
+    def temperature(self):
+        return self['TEMPERATURE']
+
+    @property
+    def vertical_depth(self):
+        return self['VERTICAL-DEPTH']
+
+    @property
+    def radial_drift(self):
+        return self['RADIAL-DRIFT']
+
+    @property
+    def angular_drift(self):
+        return self['ANGULAR-DRIFT']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()

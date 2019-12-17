@@ -37,16 +37,25 @@ class Axis(BasicObject):
     described in detail in Chapter 5.3.1 - Static and Frame Data, Axis Objects.
     """
     attributes = {
-        'AXIS-ID'     : scalar('axis_id'),
-        'COORDINATES' : vector('coordinates'),
-        'SPACING'     : scalar('spacing'),
+        'AXIS-ID'     : scalar,
+        'COORDINATES' : vector,
+        'SPACING'     : scalar,
     }
 
-    def __init__(self, obj = None, name = None):
-        super().__init__(obj, name = name, type = 'AXIS')
-        self.axis_id     = None
-        self.coordinates = []
-        self.spacing     = None
+    def __init__(self, obj = None, name = None, lf = None):
+        super().__init__(obj, name = name, type = 'AXIS', lf = lf)
+
+    @property
+    def axis_id(self):
+        return self['AXIS-ID']
+
+    @property
+    def coordinates(self):
+        return self['COORDINATES']
+
+    @property
+    def spacing(self):
+        return self['SPACING']
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
