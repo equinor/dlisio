@@ -25,9 +25,8 @@ Standard (DLIS)`.
    dlisio
 
 .. toctree::
-   :maxdepth: 3
-
    examples
+   changelog
 
 Indices and tables
 ==================
