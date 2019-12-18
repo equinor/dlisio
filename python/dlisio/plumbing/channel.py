@@ -162,7 +162,7 @@ class Channel(BasicObject):
         if self._fmtstr: return self._fmtstr
 
         if not self.dimension:
-            msg = "channel.dimension is unvalid for {} (was: {})"
+            msg = "channel.dimension is invalid for {} (was: {})"
             raise ValueError(msg.format(self, self.dimension))
         samples = np.prod(np.array(self.dimension))
         reprc = fmt[self.reprc]

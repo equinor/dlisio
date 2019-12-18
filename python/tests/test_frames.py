@@ -240,7 +240,7 @@ def test_channel_no_dimension(assert_log):
 
     with pytest.raises(ValueError) as exc:
         ch.fmtstr()
-    assert "channel.dimension is unvalid" in str(exc.value)
+    assert "channel.dimension is invalid" in str(exc.value)
 
     ch.attic['DIMENSION'] = [1]
     assert ch.fmtstr() == "L"
