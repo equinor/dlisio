@@ -70,17 +70,7 @@ before_install:
     - before_install
 
 install:
-    - pip install --upgrade
-        bandit
-        numpy
-        setuptools
-        setuptools_scm
-        pytest
-        pytest-runner
-        pybind11
-        hypothesis
-        sphinx
-        scikit-build
+    - pip install --upgrade -r python/requirements-dev.txt
     - bandit -c bandit.yml -r python/
 
 before_script:
