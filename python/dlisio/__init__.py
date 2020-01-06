@@ -231,6 +231,13 @@ class dlis(object):
         recs  = [rec for rec, t in zip(self.attic, self.record_types) if t in types]
         self.load(recs)
 
+        if 'UPDATE' in self.record_types:
+            msg = ('{} contains UPDATE-object(s) which changes other '
+                   'objects. dlisio lacks support for UPDATEs, hence the '
+                   'data in this logical file might be wrongly presented.')
+
+            logging.warning(msg.format(self))
+
     def __getitem__(self, type):
         """Return all objects of a given type. Parses and caches relevant
         records if objects of the given type is not parsed yet.
