@@ -87,9 +87,6 @@ class Channel(BasicObject):
     def __init__(self, obj = None, name = None, lf=None):
         super().__init__(obj, name = name, type = 'CHANNEL', lf=lf)
         # The numpy data type of the sample array
-        self._dtype        = None
-        # Format-string of the channel. Mainly intended for internal use
-        self._fmtstr       = None
         self._frame        = None
 
     @property
@@ -140,14 +137,10 @@ class Channel(BasicObject):
 
         dtype : np.dtype
         """
-        if self._dtype: return self._dtype
-
         if self.dimension == [1]:
-            self._dtype = np.dtype(dtype[self.reprc])
+            return np.dtype(dtype[self.reprc])
         else:
-            self._dtype = np.dtype((dtype[self.reprc], tuple(self.dimension)))
-
-        return self._dtype
+            return np.dtype((dtype[self.reprc], tuple(self.dimension)))
 
     def fmtstr(self):
         """Generate format-string for Channel
@@ -159,16 +152,14 @@ class Channel(BasicObject):
 
         fmtstr : str
         """
-        if self._fmtstr: return self._fmtstr
-
         if not self.dimension:
             msg = "channel.dimension is invalid for {} (was: {})"
             raise ValueError(msg.format(self, self.dimension))
         samples = np.prod(np.array(self.dimension))
         reprc = fmt[self.reprc]
-        self._fmtstr = samples * reprc
+        fmtstr = samples * reprc
 
-        return self._fmtstr
+        return fmtstr
 
     def curves(self):
         """

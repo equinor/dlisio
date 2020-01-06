@@ -97,13 +97,6 @@ class Frame(BasicObject):
 
     def __init__(self, obj = None, name = None, lf = None):
         super().__init__(obj, name = name, type = 'FRAME', lf = lf)
-        # Format-string of the frame. Mainly indended for internal use
-        self._fmtstr     = 'i'
-
-        # The data-type of the structured array that contains all samples
-        # arrays from all channels.
-        self._dtype      = None
-
         # Instance-specific dtype label formatter on duplicated mnemonics.
         # Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format
@@ -209,9 +202,6 @@ class Frame(BasicObject):
         dtype([(FRAMENO', 'i4'), ('TIME-0-0', '<f4'),
                ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
         """
-
-        if self._dtype: return self._dtype
-
         seen = {}
         types = [('FRAMENO', 'i4')]
 
@@ -259,12 +249,12 @@ class Frame(BasicObject):
             seen[ch.name] = None
 
         try:
-            self._dtype = np.dtype(types)
+            dtype = np.dtype(types)
         except ValueError as exc:
             logging.error(duplerr.format(self.name, exc))
             raise
 
-        return self._dtype
+        return dtype
 
     def fmtstr(self):
         """Generate format-string for Frame
@@ -279,13 +269,9 @@ class Frame(BasicObject):
         -------
         fmtstr : str
         """
-
-        if self._fmtstr != 'i' : return self._fmtstr
-
-        for ch in self.channels:
-            self._fmtstr += ch.fmtstr()
-
-        return self._fmtstr
+        # The first part of every frame is always FRAMENO, which is an
+        # variable-lenght unsigned integer (i).
+        return 'i' + ''.join([x.fmtstr() for x in self.channels])
 
     def curves(self):
         """All curves belonging to this frame
