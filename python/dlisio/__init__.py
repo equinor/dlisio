@@ -280,7 +280,7 @@ class dlis(object):
     def __repr__(self):
         try:
             desc = self.fileheader.id
-        except IndexError:
+        except AttributeError:
             desc = 'Unknown'
         return 'dlis({})'.format(desc)
 
