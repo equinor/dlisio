@@ -26,6 +26,7 @@ Standard (DLIS)`.
 
 .. toctree::
    examples
+   vendors
    changelog
 
 Indices and tables
