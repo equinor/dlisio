@@ -36,10 +36,10 @@ class Process(BasicObject):
     output_channels : list(Channel)
         Channels that are produced directly by this Process.
 
-    input_computation : list(Computation)
+    input_computations : list(Computation)
         Computations that are used directly by this Process.
 
-    output_computation : list(Computation)
+    output_computations : list(Computation)
         Computations that are produced directly by this Process.
 
     parameters : list(Parameter)
