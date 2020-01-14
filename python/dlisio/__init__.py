@@ -456,7 +456,7 @@ class dlis(object):
         ctype    = compileregex(type)
         cpattern = compileregex(pattern)
 
-        types = [x for x in self.record_types if re.match(ctype, x)]
+        types = [x for x in set(self.record_types) if re.match(ctype, x)]
 
         for t in types:
             for obj in self[t].values():
