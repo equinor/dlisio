@@ -545,22 +545,20 @@ class dlis(object):
 
         plumbing.describe_dict(buf, d, width, indent)
 
-        known, unknown = [], []
+        known, unknown = {}, {}
+        for objtype in set(self.record_types):
+            if objtype == 'encrypted': continue
 
-        for seen in set(self.record_types):
-            if seen == 'encrypted': continue
-            if seen in self.types:
-                known.append(seen)
-            else:
-                unknown.append(seen)
+            if objtype in self.types: known[objtype]   = len(self[objtype])
+            else:                     unknown[objtype] = len(self[objtype])
 
         if known:
             plumbing.describe_header(buf, 'Known objects', width, indent, lvl=2)
-            [plumbing.describe_text(buf, x, width, indent) for x in known]
+            plumbing.describe_dict(buf, known, width, indent)
 
         if unknown:
-            plumbing.describe_header(buf, '\nUnknown objects', width, indent, lvl=2)
-            [plumbing.describe_text(buf, x, width, indent) for x in unknown]
+            plumbing.describe_header(buf, 'Unknown objects', width, indent, lvl=2)
+            plumbing.describe_dict(buf, unknown, width, indent)
 
         return plumbing.Summary(info=buf.getvalue())
 

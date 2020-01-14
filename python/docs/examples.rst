@@ -83,17 +83,17 @@ Or about a logical file:
 
     Known objects
     --
-    FILE-HEADER
-    ORIGIN
-    CALIBRATION-COEFFICIENT
-    CHANNEL
-    FRAME
+    FILE-HEADER             : 1
+    ORIGIN                  : 3
+    CALIBRATION-COEFFICIENT : 8
+    CHANNEL                 : 104
+    FRAME                   : 2
 
     Unknown objects
     --
-    440-CHANNEL
-    440-OP-CORE_TABLES
-    440-OP-CHANNEL
+    440-CHANNEL             : 93
+    440-OP-CORE_TABLES      : 17
+    440-OP-CHANNEL          : 101
 
 Accessing objects
 -----------------
