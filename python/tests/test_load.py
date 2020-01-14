@@ -1,5 +1,8 @@
 import pytest
 
+import shutil
+import os
+
 import dlisio
 
 @pytest.fixture(scope="module")
@@ -24,6 +27,74 @@ def fpath(tmpdir_factory, merge_files_manyLR):
     ]
     merge_files_manyLR(path, content)
     return path
+
+def test_closed_filehandles(tmpdir):
+    # Check that both the memory mapping and regular filehandle is closed
+    # property. This test uses the fact that os.remove fails on windows if the
+    # file is in use as a proxy for testing that dlisio dont leak filehandles.
+    # From the python docs [1]:
+    #
+    #   On Windows, attempting to remove a file that is in use causes an
+    #   exception to be raised; on Unix, the directory entry is removed but the
+    #   storage allocated to the file is not made available until the original
+    #   file is no longer in use.
+    #
+    # On linux on the other hand, os.remove does not fail even if there are
+    # open filehandles, hence this test only makes sence on Windows.
+    #
+    # [1] https://docs.python.org/3/library/os.html
+
+    # Copy the test file to a tmpdir in order to make this test reliable.
+    tmp = str(tmpdir.join('206_05a-_3_DWL_DWL_WIRE_258276498.DLIS'))
+    shutil.copyfile('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS', tmp)
+
+    with dlisio.load(tmp) as _:
+        pass
+
+    os.remove(tmp)
+
+def test_close_filehandles_when_load_fails(tmpdir):
+    # Check that both the memory mapping and regular filehandle is closed
+    # property. This test uses the fact that os.remove fails on windows if the
+    # file is in use as a proxy for testing that dlisio dont leak filehandles.
+    # From the python docs [1]:
+    #
+    #   On Windows, attempting to remove a file that is in use causes an
+    #   exception to be raised; on Unix, the directory entry is removed but the
+    #   storage allocated to the file is not made available until the original
+    #   file is no longer in use.
+    #
+    # On linux on the other hand, os.remove does not fail even if there are
+    # open filehandles, hence this test only makes sence on Windows.
+    #
+    # [1] https://docs.python.org/3/library/os.html
+
+    # Copy the test files to a tmpdir in order to make this test reliable.
+    offsets = str(tmpdir.join('offsets'))
+    shutil.copyfile('data/chap2/too-small-record.dlis', offsets)
+
+    extract = str(tmpdir.join('extract'))
+    shutil.copyfile('data/chap2/padbytes-bad.dlis', extract)
+
+    fdata = str(tmpdir.join('fdata'))
+    shutil.copyfile('data/chap2/fdata-encrypted.dlis', fdata)
+
+    # dlisio.load fails at core.findoffsets
+    with pytest.raises(RuntimeError):
+        _ =  dlisio.load(offsets)
+
+    # dlisio.load fails at core.stream.extract
+    with pytest.raises(RuntimeError):
+        _ =  dlisio.load(extract)
+
+    # dlisio.load fails at core.findfdata
+    with pytest.raises(UnicodeDecodeError):
+        _ =  dlisio.load(fdata)
+
+    # If dlisio have properly closed the files, removing them should work.
+    os.remove(offsets)
+    os.remove(extract)
+    os.remove(fdata)
 
 def test_context_manager(fpath):
     f, *_ = dlisio.load(fpath)
