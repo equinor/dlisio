@@ -5,6 +5,18 @@ complete overview of changes, please refer to the git log.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 but most notably, without sectioning changes into type-of-change.
 
+## [0.1.16] - 2010.01.16
+* Fixes a bug where `dlisio.load` did not properly close the memory mapping to
+  the file when loading failed.
+* Fixes a bug where `dlis.match` and `dlis.object` returned the same object
+  multiple times under certain circumstances.
+* `dlis.describe()` again includes the object-count of each object-type.
+* `dlisio.load` now warns if a file contains `Update`-objects. The current lack
+  of support for such objects means that dlisio may wrongfully present data in
+  files with `Update`-objects.
+* There is now a list of organization codes on readthedocs
+* Fixes a bug in the Process-docs
+
 ## [0.1.15] - 2019.12.18
 * Metadata objects are now parsed and loaded when needed, rather than all at
   once in `dlisio.load()`. This is not directly observable for the user, other
@@ -89,6 +101,7 @@ but most notably, without sectioning changes into type-of-change.
   into logical files. This has resulted in a behavioral change where
   `dlisio.load()` now returns a tuple-like object of n-logical files.
 
+[0.1.16]: https://github.com/equinor/dlisio/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/equinor/dlisio/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/equinor/dlisio/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/equinor/dlisio/compare/v0.1.12...v0.1.13
