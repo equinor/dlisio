@@ -155,8 +155,7 @@ class Frame(BasicObject):
         else:                       index = self.channels[0].name
         return index
 
-    @property
-    def dtype(self):
+    def dtype(self, strict=True):
         """dtype
 
         data-type of each frame, i.e. the sum of channel.dtype of each channel
@@ -252,7 +251,10 @@ class Frame(BasicObject):
             dtype = np.dtype(types)
         except ValueError as exc:
             logging.error(duplerr.format(self.name, exc))
-            raise
+            if strict: raise
+
+            types = mkunique(types)
+            dtype = np.dtype(types)
 
         return dtype
 
@@ -273,17 +275,35 @@ class Frame(BasicObject):
         # variable-lenght unsigned integer (i).
         return 'i' + ''.join([x.fmtstr() for x in self.channels])
 
-    def curves(self):
+    def curves(self, strict=True):
         """All curves belonging to this frame
 
         Get all the curves in this frame as a structured numpy array. The frame
         includes the frame number (FRAMENO), to detect errors such as missing
         entries and out-of-order frames.
 
+        Parameters
+        ----------
+
+        strict : boolean, optional
+            By default (strict=True) curves() raises a ValueError if there are
+            multiple channel with the same values for both name, origin and
+            copynumber. This would be a clear violation of the dlis-spec.
+            Setting strict=False lifts this restriction and dlisio will append
+            numerical values (i.e. 0, 1, 2 ..) to the labels used for
+            column-names in the returned array.
+
         Returns
         -------
         curves : np.ndarray
             curves with dtype = self.dtype
+
+        Raises
+        ------
+
+        ValueError
+            If there multiple channels with identical name, origin, copynumber
+            in Frame.channels. This can be suppressed by passing strict=False
 
         See also
         --------
@@ -379,8 +399,54 @@ class Frame(BasicObject):
         >>> curves = frame.curves()
         >>> pdcurves = pd.DataFrame(curves, index=curves[f.index])
         >>> pdcurves.index.name = f.index
+
+        By default the returned np.ndarray have column-names that reflects the
+        mnemonics of each Channel
+
+        >>> frame.channels
+        [Channel(TDEP), Channel(TIME), Channel(GR)]
+
+        >>> curves = frame.curves()
+        >>> curves.dtype.names
+        ('FRAMENO', 'TDEP', 'TIME', 'GR')
+
+        Sometimes a Frame can contain multiple Channels with the same
+        name/mnemonic, in that case the labels are augmented with the origin and
+        copynumber:
+
+        >>> frame.channels
+        [Channel(TDEP), Channel(TDEP), Channel(GR)]
+
+        >>> curves = frame.curves()
+        >>> curves.dtype.names
+        ('FRAMENO', 'TDEP.0.0', 'TDEP.0.1', 'GR')
+
+        This augmentation is customizable by changing :attr:`dtype_fmt`. See
+        :attr:`dtype`. Some frames have multiple instances of the same channel
+        or mulitple channels where name, origin and copynumber are identical.
+        This is a clear violation of the dlis spec and :func:`curves` will raise
+        an ValueError by default.
+
+        >>> frame.channels
+        [Channel(TDEP), Channel(TDEP), Channel(GR)]
+
+        >>> Frame.curves()
+        ValueError: field 'TDEP.0.0' occurs more than once
+
+        However, :func:`curves` offers an escape-hatch to get the underlying data.
+        By passing strict=False dlisio appends numerical values to the identical
+        channels
+
+        >>> curves = frame.curves(strict=False)
+        >>> curves.dtype.names
+        ('FRAMENO', 'TDEP.0.0(0)', 'TDEP.0.0(1)', 'GR')
         """
-        return curves(self.logicalfile, self, self.dtype, "", self.fmtstr(), "")
+        return curves(self.logicalfile,
+                      self,
+                      self.dtype(strict=strict),
+                      "",
+                      self.fmtstr(),
+                      "")
 
     def fmtstrchannel(self, channel):
         """Generate format-strings for one Frame channel
@@ -448,3 +514,47 @@ class Frame(BasicObject):
             describe_array(buf, channels, width, indent)
         else:
             describe_text(buf, 'Frame has no channels', width, indent)
+
+
+def mkunique(types):
+    """ Append a tail to duplicated labels in types
+
+    Parameters
+    ----------
+
+    types : list(tuple)
+        list of tuples with labels and dtype
+
+    Returns
+    -------
+
+    types : list(tuple)
+        list of tuples with labels and dtype
+
+    Examples
+    --------
+
+    >>> mkunique([('TIME', 'i2'), ('TIME', 'i4')])
+    [('TIME(0)', 'i2'), ('TIME(1)', 'i4')]
+    """
+    from collections import Counter
+
+    tail = '({})'
+    labels = [label for label, _ in types]
+    duplicates = [x for x, count in Counter(labels).items() if count > 1]
+
+    # Update each occurance of duplicated labels. Each set of duplicates
+    # requires its own tail-count, so update the list one label at the time.
+    for duplicate in duplicates:
+        tailcount = 0
+        tmp = []
+        for label, dtype in types:
+            if label != duplicate:
+                tmp.append((label, dtype))
+            else:
+                label     += tail.format(tailcount)
+                tailcount += 1
+                tmp.append((label, dtype))
+        types = tmp
+
+    return types

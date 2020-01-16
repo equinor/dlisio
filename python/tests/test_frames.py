@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 
 import dlisio
-from dlisio.plumbing import linkage
+from dlisio.plumbing import mkunique
+
 from dlisio import core
 
 def test_frame_getitem(DWL206):
@@ -79,7 +80,7 @@ def makeframe():
 def test_duplicated_mnemonics_gets_unique_labels():
     frame = makeframe()
     assert 'ifDDD' == frame.fmtstr()
-    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype.names
+    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype().names
 
 def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     # Getting a buffer from a numpy array adds a :name: field after the label
@@ -96,19 +97,40 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     #
     # https://github.com/equinor/dlisio/pull/97
     frame = makeframe()
-    _ = memoryview(np.zeros(1, dtype = frame.dtype))
+    _ = memoryview(np.zeros(1, dtype = frame.dtype()))
 
-def test_duplicated_channels(assert_log):
-    frame = makeframe()
-    channel = frame.attic['CHANNELS'][0]
-    frame.attic['CHANNELS'] = [channel, channel]
+def test_frame_curves_duplicated_mnemonics(f, assert_log):
+    frame = f.object('FRAME', 'FRAME1')
 
-    with pytest.raises(ValueError):
-        frame.dtype.names
+    frame.channels[1].name       = frame.channels[0].name
+    frame.channels[1].origin     = frame.channels[0].origin
+    frame.channels[1].copynumber = frame.channels[0].copynumber
+
+    with pytest.raises(Exception):
+        _ = frame.curves()
     assert_log("duplicated mnemonics")
 
-    frame.link()
-    assert_log("already belongs to")
+    curves = frame.curves(strict=False)
+    names  = curves.dtype.names
+
+    assert names == ('FRAMENO', 'CHANN1.10.0(0)', 'CHANN1.10.0(1)')
+
+def test_mkunique():
+    types    = [("TIME.0.0"   , "f2"),
+                ("TDEP.0.0"   , "f4"),
+                ("TDEP.0.0"   , "i1"),
+                ("TDEP.0.1"   , "i2"),
+                ("TIME.0.0"   , "i4"),
+                ("TIME.0.0"   , "i4"),
+    ]
+    expected = [("TIME.0.0(0)", "f2"),
+                ("TDEP.0.0(0)", "f4"),
+                ("TDEP.0.0(1)", "i1"),
+                ("TDEP.0.1"   , "i2"),
+                ("TIME.0.0(1)", "i4"),
+                ("TIME.0.0(2)", "i4"),
+    ]
+    assert expected == mkunique(types)
 
 def test_instance_dtype_fmt():
     frame = makeframe()
@@ -117,7 +139,7 @@ def test_instance_dtype_fmt():
     # fmtstr is unchanged
     assert 'ifDDD' == frame.fmtstr()
     expected_names = ('FRAMENO', 'x-TIME 0~0', 'TDEP', 'x-TIME 1~0')
-    assert expected_names == frame.dtype.names
+    assert expected_names == frame.dtype().names
 
 @pytest.mark.parametrize('fmt', [
     ("x-{:d}.{:s}.{:d}"),
@@ -128,7 +150,7 @@ def test_instance_dtype_wrong_fmt(fmt, assert_log):
 
     frame.dtype_fmt = fmt
     with pytest.raises(Exception):
-        frame.dtype.names
+        _ = frame.dtype().names
     assert_log("rich label")
 
 def test_class_dtype_fmt():
@@ -139,7 +161,7 @@ def test_class_dtype_fmt():
         dlisio.plumbing.Frame.dtype_format = 'x-{:s} {:d}~{:d}'
         frame = makeframe()
         expected_names = ('FRAMENO', 'x-TIME 0~0', 'TDEP', 'x-TIME 1~0')
-        assert expected_names == frame.dtype.names
+        assert expected_names == frame.dtype().names
         assert 'ifDDD' == frame.fmtstr()
 
     finally:

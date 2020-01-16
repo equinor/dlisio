@@ -340,7 +340,7 @@ def test_fmtstring(DWL206):
 
 def test_dtype(DWL206):
     frame2000 = DWL206.object('FRAME', '2000T', 2, 0)
-    dtype1 = frame2000.dtype
+    dtype1 = frame2000.dtype()
     assert dtype1 == np.dtype([('FRAMENO', np.int32),
                                ('TIME', np.float32),
                                ('TDEP', np.float32),
