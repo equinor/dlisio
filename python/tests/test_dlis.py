@@ -65,6 +65,9 @@ def g():
     g.indexedobjects["440-TYPE"][ch.fingerprint] = ch
 
     g.record_types = list(g.indexedobjects.keys())
+
+    # Simulate the occurance of multiple Channel sets
+    g.record_types.append('CHANNEL')
     return g
 
 def test_object(g):
