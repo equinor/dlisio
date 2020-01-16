@@ -32,6 +32,10 @@ void map_source( mio::mmap_source& file, const std::string& path ) noexcept (fal
         throw std::invalid_argument( "non-existent or empty file" );
 }
 
+void unmap( mio::mmap_source& file ) noexcept (false) {
+    file.unmap();
+}
+
 long long findsul( mio::mmap_source& file ) noexcept (false) {
     long long offset;
     const long long size = file.size();

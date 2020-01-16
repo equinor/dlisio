@@ -749,10 +749,14 @@ def load(path):
     mmap = core.mmap_source()
     mmap.map(path)
 
-    sulpos = core.findsul(mmap)
-    vrlpos = core.findvrl(mmap, sulpos + 80)
+    try:
+        sulpos = core.findsul(mmap)
+        vrlpos = core.findvrl(mmap, sulpos + 80)
+        tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
+    except:
+        mmap.unmap()
+        raise
 
-    tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
     exi = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     try:
@@ -763,6 +767,7 @@ def load(path):
         stream.close()
     except:
         stream.close()
+        mmap.unmap()
         raise
 
     split_at = find_fileheaders(records, exi)
@@ -782,11 +787,15 @@ def load(path):
                     part['records'], implicits, sul_offset=sulpos)
             batch.append(f)
         except:
+            mmap.unmap()
             stream.close()
             for stream in batch:
                 stream.close()
             raise
 
+    # We can safely unmap the file as we dont rely on memory mapping for the
+    # remaining lifetime of these filehandles
+    mmap.unmap()
     return Batch(batch)
 
 class Batch(tuple):
