@@ -604,10 +604,12 @@ def test_broken_utf8_value(tmpdir, merge):
         'data/chap3/objattr/broken-utf8-value.dlis.part',
     ]
     merge(path, content)
+
+    prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
     with pytest.warns(UnicodeWarning):
         with dlisio.load(path) as (f, *_):
             f.load()
-    prev_encodings = dlisio.get_encodings()
     try:
         dlisio.set_encodings(['koi8_r'])
         with dlisio.load(path) as (f, *_):
