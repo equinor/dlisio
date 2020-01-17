@@ -3,6 +3,8 @@ import logging
 
 import dlisio
 
+dlisio.set_encodings(['latin1'])
+
 @pytest.fixture(scope="module", name="DWL206")
 def DWL206():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
