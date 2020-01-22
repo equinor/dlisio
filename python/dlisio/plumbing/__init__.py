@@ -3,7 +3,7 @@ from .axis import Axis
 from .fileheader import Fileheader
 from .longname import Longname
 from .origin import Origin
-from .frame import Frame
+from .frame import Frame, mkunique
 from .channel import Channel
 from .tool import Tool
 from .zone import Zone
