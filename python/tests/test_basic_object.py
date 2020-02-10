@@ -6,19 +6,19 @@ import dlisio
 from dlisio.plumbing import *
 
 
-def test_basicobject_getitem(f):
+def test_getitem(f):
     obj = f.object('FRAME', 'FRAME1')
 
     assert obj['INDEX-TYPE'] == 'BOREHOLE-DEPTH'
 
-def test_basicobject_getitem_defaultvalue(f):
+def test_getitem_defaultvalue(f):
     obj = f.object('FRAME', 'FRAME2')
 
     # Attribute index_type is absent (from attic), but we stil expect to get a
     # default value
     assert obj['INDEX-TYPE'] is None
 
-def test_basicobject_getitem_unexpected_attr(f):
+def test_getitem_unexpected_attr(f):
     obj = f.object('FRAME', 'FRAME2')
 
     try:
@@ -33,7 +33,7 @@ def test_basicobject_getitem_unexpected_attr(f):
     finally:
         del obj.attic['NEW-ATTR']
 
-def test_basicobject_getitem_noattribute(f):
+def test_getitem_noattribute(f):
     obj = f.object('FRAME', 'FRAME2')
 
     # getitem should raise an KeyError if key not in obj.attic or

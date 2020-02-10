@@ -103,7 +103,7 @@ def test_values_empty(obj):
     assert obj.zones     == []
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
-def test_dimension(obj):
+def test_values_empty_dimension_provided(obj):
     obj.attic = {'VALUES' : [], 'DIMENSION' : [1], 'ZONES' : []}
 
     assert np.array_equal(obj.values, np.empty(0))

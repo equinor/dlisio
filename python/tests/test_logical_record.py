@@ -80,7 +80,7 @@ def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR):
         assert attr == [8.0]
 
 
-def test_attribute_absent(tmpdir, merge_files_oneLR):
+def test_absent_attribute(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'attribute_absent.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -155,7 +155,7 @@ def test_all_attribute_bits(tmpdir, merge_files_oneLR):
         assert attr == [1, 2, 3, 4]
 
 
-def test_same_as_default_no_value(tmpdir, merge_files_oneLR):
+def test_objattr_same_as_default_no_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'same-as-default-but-no-value.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -238,7 +238,7 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
         assert attr == [attr_v]
 
 
-def test_different_repcode_no_value(tmpdir, merge_files_oneLR):
+def test_repcode_different_no_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'different-repcode-no-value.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -255,7 +255,7 @@ def test_different_repcode_no_value(tmpdir, merge_files_oneLR):
     assert "value is not explicitly set" in str(excinfo.value)
 
 
-def test_invalid_repcode_in_template_value(tmpdir, merge_files_oneLR):
+def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -271,7 +271,7 @@ def test_invalid_repcode_in_template_value(tmpdir, merge_files_oneLR):
     assert "unknown representation code" in str(excinfo.value)
 
 
-def test_invalid_repcode_in_template_no_value(tmpdir, merge_files_oneLR):
+def test_repcode_invalid_in_template_no_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -287,7 +287,7 @@ def test_invalid_repcode_in_template_no_value(tmpdir, merge_files_oneLR):
         assert attr == [1, 2, 3, 4]
 
 
-def test_invalid_repcode_in_objects(tmpdir, merge_files_oneLR):
+def test_repcode_invalid_in_objects(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode-object.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -393,7 +393,7 @@ def test_label_bit_not_set_in_template(tmpdir, merge_files_oneLR):
 
 
 @pytest.mark.future_warning_set_type_bit_not_set
-def test_set_type_not_set(tmpdir, merge_files_oneLR):
+def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'set-type-not-set.dlis')
     content = [
         'data/chap3/sul.dlis.part',
@@ -409,7 +409,7 @@ def test_set_type_not_set(tmpdir, merge_files_oneLR):
 
 
 @pytest.mark.future_warning_object_name_bit_not_set
-def test_no_object_name_bit(tmpdir, merge_files_oneLR):
+def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'no-object-name-bit.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -463,12 +463,12 @@ def test_novalue_more_count(tmpdir, merge_files_oneLR):
 # both to physical and logical layers of processing.
 # Hence there is no good place for it
 
-def test_load_fdata_VR_aligned():
+def test_findfdata_VR_aligned():
     with dlisio.load('data/chap3/implicit/fdata-vr-aligned.dlis') as (f, *_):
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0]
 
-def test_load_fdata_many_in_same_VR():
+def test_findfdata_many_in_same_VR():
     with dlisio.load('data/chap3/implicit/fdata-many-in-same-vr.dlis') as (f, *_):
         assert len(f.fdata_index) == 2
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0, 1]
@@ -476,24 +476,24 @@ def test_load_fdata_many_in_same_VR():
         fingerprint = 'T.FRAME-I.'+ident+'-O.1073741823-C.255'
         assert f.fdata_index[fingerprint] == [3]
 
-def test_load_fdata_VR_disaligned():
+def test_findfdata_VR_disaligned():
     with dlisio.load('data/chap3/implicit/fdata-vr-disaligned.dlis') as (f, *_):
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.IFLR-O.35-C.1'] == [0]
 
 @pytest.mark.xfail(strict=True)
-def test_load_fdata_VR_disaligned_in_obname():
+def test_findfdata_VR_disaligned_in_obname():
     with dlisio.load('data/chap3/implicit/fdata-vr-disaligned-in-obname.dlis') as (f, *_):
         assert len(f.fdata_index) == 1
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
 @pytest.mark.xfail(strict=True)
-def test_load_fdata_encrypted():
+def test_findfdata_encrypted():
     with dlisio.load('data/chap3/implicit/fdata-encrypted.dlis') as (f, *_):
         assert len(f.fdata_index) == 0
 
-def test_fdata_bad_ident():
+def test_findfdata_bad_obname():
     with pytest.raises(RuntimeError) as excinfo:
         dlisio.load('data/chap3/implicit/fdata-broken-obname.dlis')
 
@@ -501,7 +501,7 @@ def test_fdata_bad_ident():
 
 
 
-def test_incorect_set_header(tmpdir, merge_files_oneLR):
+def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'unexpected-attribute.dlis')
     content = [
         'data/chap3/sul.dlis.part',

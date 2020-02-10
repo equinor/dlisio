@@ -9,7 +9,7 @@ import os
 
 import dlisio
 
-def test_closed_filehandles(tmpdir):
+def test_filehandles_closed(tmpdir):
     # Check that both the memory mapping and regular filehandle is closed
     # property. This test uses the fact that os.remove fails on windows if the
     # file is in use as a proxy for testing that dlisio dont leak filehandles.
@@ -34,7 +34,7 @@ def test_closed_filehandles(tmpdir):
 
     os.remove(tmp)
 
-def test_close_filehandles_when_load_fails(tmpdir):
+def test_filehandles_closed_when_load_fails(tmpdir):
     # Check that both the memory mapping and regular filehandle is closed
     # property. This test uses the fact that os.remove fails on windows if the
     # file is in use as a proxy for testing that dlisio dont leak filehandles.

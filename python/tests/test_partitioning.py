@@ -29,7 +29,7 @@ def test_partitioning(multifpath):
         assert f3.explicit_indices == [0]
         assert not f3.fdata_index
 
-def test_objects(multifpath):
+def test_objects_ownership(multifpath):
     with dlisio.load(multifpath) as (f1, f2, f3):
         fh2 = f2.object('FILE-HEADER', 'N', 11, 0)
         fh3 = f3.object('FILE-HEADER', 'N', 10, 0)
@@ -49,7 +49,7 @@ def test_objects(multifpath):
         assert fh3.sequencenr == '8'
         assert fh3.id         == 'some logical file'
 
-def test_objects_with_encrypted_records(tmpdir_factory, merge_files_manyLR):
+def test_objects_with_encrypted_records_ownership(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('load').join('same-object.dlis'))
     content = [
         'data/chap4-7/eflr/envelope.dlis.part',
@@ -73,7 +73,7 @@ def test_objects_with_encrypted_records(tmpdir_factory, merge_files_manyLR):
         assert len(f1_channel.dimension) == 3
         assert len(f2_channel.dimension) == 1
 
-def test_link(multifpath):
+def test_linking(multifpath):
     with dlisio.load(multifpath) as (f1, f2, _):
         frame1  = f1.object('FRAME', 'FRAME1', 10, 0)
         frame2  = f2.object('FRAME', 'FRAME1', 10, 0)

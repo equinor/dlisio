@@ -81,14 +81,14 @@ def test_object(g):
     assert channel.copynumber == 1
     assert channel.type       == "CHANNEL"
 
-def test_unknown_object(g):
+def test_object_unknown(g):
     channel = g.object("NONCHANNEL", "UNEFRAME", 0, 0)
     assert channel.name       == "UNEFRAME"
     assert channel.origin     == 0
     assert channel.copynumber == 0
     assert channel.type       == "NONCHANNEL"
 
-def test_nonexisting_object(g):
+def test_object_nonexisting(g):
     with pytest.raises(ValueError) as exc:
         _ = g.object("UNKNOWN_TYPE", "SOME_OBJECT", 0, 0)
     assert "not found" in str(exc.value)
@@ -99,19 +99,19 @@ def test_nonexisting_object(g):
     with pytest.raises(TypeError):
         _ = g.object("WEIRD", "CHANNEL1", "-1", "-1")
 
-def test_solo_object_nameonly(g):
+def test_object_solo_nameonly(g):
     channel = g.object("CHANNEL", "CHANNEL1.V2")
     assert channel.name == "CHANNEL1.V2"
     assert channel.origin == 0
     assert channel.copynumber == 0
     assert channel.type == "CHANNEL"
 
-def test_nonexisting_object_nameonly(g):
+def test_object_nonexisting_nameonly(g):
     with pytest.raises(ValueError) as exc:
         _ = g.object("CHANNEL", "NOTFOUND")
     assert "No objects" in str(exc.value)
 
-def test_too_many_objects_nameonly(g):
+def test_object_many_objects_nameonly(g):
     with pytest.raises(ValueError) as exc:
         _ = g.object("CHANNEL", "CHANNEL1")
     assert "There are multiple" in str(exc.value)
@@ -202,24 +202,24 @@ def test_indexedobjects(f):
     assert len(f.comments)     == 1
     assert len(f.messages)     == 1
 
-def test_initial_load(fpath):
+def test_indexedobjects_initial_load(fpath):
     with dlisio.load(fpath) as (f, *tail):
         # Only fileheader, origin, frame, and channel should be loaded
         assert len(f.indexedobjects) == 4
 
 
-def test_load_all(fpath):
+def test_indexedobjects_load_all(fpath):
     with dlisio.load(fpath) as (f, *_):
         f.load()
         assert len(f.indexedobjects) == 23
 
-def test_unknowns_loading():
+def test_indexedobjects_load_unknowns():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
         assert len(f.indexedobjects) == 4 #FILE-HEADER, ORIGIN, FRAME, CHANNEL
         assert len(f.unknowns)       == 5
         assert len(f.indexedobjects) == 9
 
-def test_objecttype_load(fpath):
+def test_indexedobjects_load_by_typeloading(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
         parameters = f.parameters
@@ -227,14 +227,14 @@ def test_objecttype_load(fpath):
         assert len(parameters) == 3
         assert fp in f.indexedobjects['PARAMETER']
 
-def test_loading_new_objecttype(fpath):
+def test_indexedobjects_load_by_direct_call(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('TOOL', 'TOOL1', 10, 0)
         _ = f.object('TOOL', 'TOOL1', 10, 0)
 
         assert fp in f.indexedobjects['TOOL']
 
-def test_loading_new_objecttype_match(fpath):
+def test_indexedobjects_load_by_match(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('MESSAGE', 'MESSAGE1', 10, 0)
 
@@ -242,7 +242,7 @@ def test_loading_new_objecttype_match(fpath):
 
         assert fp in f.indexedobjects['MESSAGE']
 
-def test_object_load_link(fpath):
+def test_indexedobjects_load_by_link(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
         ch = f.object('CHANNEL', 'CHANN1')

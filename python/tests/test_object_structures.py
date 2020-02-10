@@ -434,7 +434,7 @@ def test_comment(f):
     assert com.text == ['Trust me, this is a very nice comment',
                         "What, you don't believe me?", ':-(']
 
-def test_warn_on_update(fpath, assert_log):
+def test_update_just_warning(fpath, assert_log):
     with dlisio.load(fpath) as _:
         assert_log('contains UPDATE-object')
 

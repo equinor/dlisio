@@ -119,21 +119,21 @@ def test_two_various_fdata_in_one_iflr():
     assert curves[1][2] == "SECOND-VALUE"
     assert curves[1][3] == -89
 
-def test_out_of_order_framenos_one_frame():
+def test_framenos_out_of_order_one_frame():
     fpath = 'data/chap4-7/iflr/out-of-order-framenos-one-frame.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(curves['FRAMENO'], [2, 1])
     assert curves[0][1] == True
     assert curves[1][1] == False
 
-def test_out_of_order_framenos_two_frames():
+def test_framenos_out_of_order_two_frames():
     fpath = 'data/chap4-7/iflr/out-of-order-framenos-two-frames.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(curves['FRAMENO'], [2, 1])
     assert curves[0][1] == True
     assert curves[1][1] == False
 
-def test_out_of_order_frames_two_framenos_multidata():
+def test_framenos_out_of_order_two_frames_multidata():
     fpath = 'data/chap4-7/iflr/out-of-order-framenos-two-frames-multifdata.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(curves['FRAMENO'], [3, 4, 1, 2])
@@ -142,26 +142,26 @@ def test_out_of_order_frames_two_framenos_multidata():
     assert curves[2][1] == False
     assert curves[3][1] == True
 
-def test_missing_numbers_frames():
+def test_framenos_missing_numbers():
     fpath = 'data/chap4-7/iflr/missing-framenos.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(curves['FRAMENO'], [2, 4])
     assert curves[0][1] == True
     assert curves[1][1] == False
 
-def test_duplicate_framenos():
+def test_framenos_duplicated():
     fpath = 'data/chap4-7/iflr/duplicate-framenos.dlis'
     curves = load_curves(fpath)
     assert curves[0][0] == curves[0][1]
     assert curves[0][0] == True
     assert curves[1][1] == False
 
-def test_duplicate_framenos_same_frames():
+def test_framenos_duplicated_same_frame():
     fpath = 'data/chap4-7/iflr/duplicate-framenos-same-frames.dlis'
     curves = load_curves(fpath)
     np.testing.assert_array_equal(curves[0], curves[1])
 
-def test_fdata_dimension():
+def test_dimensions():
     fpath = 'data/chap4-7/iflr/multidimensions-ints-various.dlis'
 
     with dlisio.load(fpath) as (f, *_):
@@ -183,7 +183,7 @@ def test_fdata_dimension():
         np.testing.assert_array_equal(curves[0][6], [[1]])
         np.testing.assert_array_equal(curves[0][7], [1, 2, 3, 4])
 
-def test_fdata_tuple_dimension():
+def test_dimensions_tuple():
     fpath = 'data/chap4-7/iflr/multidimensions-validated.dlis'
 
     with dlisio.load(fpath) as (f, *_):
@@ -196,7 +196,7 @@ def test_fdata_tuple_dimension():
         assert curves[0][1][1] == (43, 0.0625, 0.0625)
         assert curves[0][1][2] == (71, 0.5, 0.5)
 
-def test_fdata_dimensions_in_multifdata():
+def test_dimensions_in_multifdata():
     fpath = 'data/chap4-7/iflr/multidimensions-multifdata.dlis'
 
     with dlisio.load(fpath) as (f, *_):
@@ -208,7 +208,7 @@ def test_fdata_dimensions_in_multifdata():
         np.testing.assert_array_equal(curves[0][1], [[1, 2, 3], [4, 5, 6]])
         np.testing.assert_array_equal(curves[1][1], [[7, 8, 9], [10, 11, 12]])
 
-def test_duplicated_mnemonics_gets_unique_labels():
+def test_duplicated_mnemonics_get_unique_labels():
     frame = makeframe()
     assert 'ifDDD' == frame.fmtstr()
     assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype().names
@@ -230,7 +230,7 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     frame = makeframe()
     _ = memoryview(np.zeros(1, dtype = frame.dtype()))
 
-def test_frame_curves_duplicated_mnemonics(f, assert_log):
+def test_duplicated_signatures(f, assert_log):
     frame = f.object('FRAME', 'FRAME1')
 
     frame.channels[1].name       = frame.channels[0].name
@@ -282,7 +282,7 @@ def test_dtype():
                                       ('TIME.1.0', np.int16),
                                       ])
 
-def test_instance_dtype_fmt():
+def test_dtype_fmt_instance():
     frame = makeframe()
     frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
 
@@ -291,7 +291,7 @@ def test_instance_dtype_fmt():
     expected_names = ('FRAMENO', 'x-TIME 0~0', 'TDEP', 'x-TIME 1~0')
     assert expected_names == frame.dtype().names
 
-def test_class_dtype_fmt():
+def test_dtype_fmt_class():
     original = dlisio.plumbing.Frame.dtype_format
 
     try:
@@ -311,7 +311,7 @@ def test_class_dtype_fmt():
     ("x-{:d}.{:s}.{:d}"),
     ("x-{:s}.{:d}.{:d}.{:d}"),
 ])
-def test_instance_dtype_wrong_fmt(fmt, assert_log):
+def test_dtype_wrong_fmt(fmt, assert_log):
     frame = makeframe()
 
     frame.dtype_fmt = fmt
@@ -335,7 +335,7 @@ def test_channel_curves():
         assert frame_curves['CH22'] == curves22
 
 
-def test_channel_curves_v2():
+def test_channel_fmt():
     ch1 = dlisio.plumbing.Channel()
     ch1.name = 'ch1'
     ch1.origin = 0
@@ -441,11 +441,11 @@ def test_frame_index():
 
     assert frame.index == frame.channels[0].name
 
-def test_frame_noindex(assert_info):
+def test_frame_index_absent(assert_info):
     frame = makeframe()
     assert frame.index == 'FRAMENO'
 
-def test_frame_nochannels_no_index(assert_info):
+def test_frame_index_absent_nochannels(assert_info):
     frame = dlisio.plumbing.Frame()
     frame.attic['INDEX-TYPE'] = ['DECREASING']
 

@@ -58,7 +58,7 @@ def test_padbytes_as_large_as_segment():
     finally:
         f.close()
 
-def test_bad_padbytes():
+def test_padbytes_bad():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/padbytes-bad.dlis')
     assert "bad segment trim" in str(excinfo.value)

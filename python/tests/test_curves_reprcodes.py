@@ -368,20 +368,20 @@ def test_all_reprcodes():
     assert c[26] == True
     assert c[27] == "unit"
 
-def test_big_ascii():
+def test_ascii_big():
     fpath = 'data/chap4-7/iflr/big-ascii.dlis'
     curves = load_curves(fpath)
     assert 'Maecenas vulputate est.' in curves[0][1]
     assert len(curves[0][1]) == 2004
 
 @pytest.mark.skip(reason="SIGSEGV due to reading outside of memory")
-def test_broken_ascii():
+def test_ascii_broken():
     fpath = 'data/chap4-7/iflr/broken-ascii.dlis'
     with pytest.raises(RuntimeError) as exc:
         _ = load_curves(fpath)
     assert "fmtstr would read past end" in str(exc)
 
 @pytest.mark.xfail(strict=True)
-def test_broken_utf8_ascii():
+def test_ascii_broken_utf8():
     fpath = 'data/chap4-7/iflr/broken-utf8-ascii.dlis'
     _ = load_curves(fpath)
