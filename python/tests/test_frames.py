@@ -6,19 +6,40 @@ from dlisio.plumbing import mkunique
 
 from dlisio import core
 
-def test_frame_getitem(DWL206):
-    frame = DWL206.object('FRAME', '2000T', 2, 0)
+def test_curves_values(f):
+    frame = f.object('FRAME', 'FRAME1', 10, 0)
     curves = frame.curves()
 
-    expected = [1, 16677259.0, 852606.0, 2233.0, 852606.0]
+    base = np.array([
+        [[1, 2], [3, 4], [5, 6]],
+        [[7, 8], [9, 10], [11, 12]],
+        [[13, 14], [15, 16], [17, 18]],
+        [[19, 20], [21, 22], [23, 24]]
+    ])
 
-    assert list(curves[0]) == expected
+    val = base + 0
+    np.testing.assert_array_equal(curves['CHANN1'][0], val)
+    np.testing.assert_array_equal(curves[0]['CHANN1'], val)
 
-    assert curves['TIME'][0] == 16677259.0
-    assert curves[0]['TIME'] == 16677259.0
+    val = base + 256
+    np.testing.assert_array_equal(curves['CHANN2'][0], val)
+    np.testing.assert_array_equal(curves[0]['CHANN2'], val)
 
-    assert curves['TDEP'][0] == 852606.0
-    assert curves[0]['TDEP'] == 852606.0
+    val = base + 512
+    np.testing.assert_array_equal(curves['CHANN1'][1], val)
+    np.testing.assert_array_equal(curves[1]['CHANN1'], val)
+
+    val = base + 768
+    np.testing.assert_array_equal(curves['CHANN2'][1], val)
+    np.testing.assert_array_equal(curves[1]['CHANN2'], val)
+
+    val = base + 1024
+    np.testing.assert_array_equal(curves['CHANN1'][2], val)
+    np.testing.assert_array_equal(curves[2]['CHANN1'], val)
+
+    val = base + 1280
+    np.testing.assert_array_equal(curves['CHANN2'][2], val)
+    np.testing.assert_array_equal(curves[2]['CHANN2'], val)
 
 def makeframe():
     frame = dlisio.plumbing.Frame()
@@ -131,6 +152,25 @@ def test_mkunique():
                 ("TIME.0.0(2)", "i4"),
     ]
     assert expected == mkunique(types)
+
+
+def test_channel_order():
+    frame = makeframe()
+
+    ref = [("TIME", 0), ("TDEP", 0), ("TIME", 1)]
+
+    for i, ch in enumerate(frame.channels):
+        assert ch.name   == ref[i][0]
+        assert ch.origin == ref[i][1]
+
+
+def test_dtype():
+    frame = makeframe()
+    assert frame.dtype() == np.dtype([('FRAMENO', np.int32),
+                                      ('TIME.0.0', np.float32),
+                                      ('TDEP', np.int16, (2,)),
+                                      ('TIME.1.0', np.int16),
+                                      ])
 
 def test_instance_dtype_fmt():
     frame = makeframe()

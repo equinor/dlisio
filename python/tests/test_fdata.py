@@ -331,14 +331,6 @@ def test_units_x2():
     assert curves[0][1] == "unit"
     assert curves[1][1] == "unit2"
 
-def test_multiple_fdata_in_frame_has_correct_shape():
-    # to enable more efficient resizing, larger-than-output temporaries can be
-    # useful, but the *final array* must still be exactly as large as the
-    # number-of-frames
-    fpath = 'data/chap4-7/iflr/reprcodes-x2/27-units.dlis'
-    curves = load_curves(fpath)
-    assert curves.shape == (2,)
-
 def test_all_reprcodes():
     fpath = 'data/chap4-7/iflr/all-reprcodes.dlis'
     curves = load_curves(fpath)
@@ -495,6 +487,8 @@ def test_fdata_dimensions_in_multifdata():
     with dlisio.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
         curves = frame.curves()
+
+        assert curves.shape == (2,)
 
         np.testing.assert_array_equal(curves[0][1], [[1, 2, 3], [4, 5, 6]])
         np.testing.assert_array_equal(curves[1][1], [[7, 8, 9], [10, 11, 12]])

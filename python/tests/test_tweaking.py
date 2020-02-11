@@ -29,6 +29,7 @@ class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
         return self['SOME_STATUS']
 
 def test_dynamic_class(f):
+    assert len(f.unknowns) == 2
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
     with pytest.raises(AttributeError):
         assert unknown.value == "VAL1"
@@ -42,15 +43,6 @@ def test_dynamic_class(f):
         assert unknown.list == ["LIST_V1", "LIST_V2"]
         assert unknown.value == "VAL1"
         assert unknown.status == True
-    finally:
-        del f.types['UNKNOWN_SET']
-
-def test_new_type_removed_from_unknowns(f):
-    assert len(f.unknowns) == 2
-    try:
-        f.types['UNKNOWN_SET'] = ActuallyKnown
-        f.load()
-
         assert len(f.unknowns) == 1
     finally:
         del f.types['UNKNOWN_SET']

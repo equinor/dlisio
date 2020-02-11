@@ -226,20 +226,6 @@ def test_link_empty_object(tmpdir_factory, merge_files_manyLR):
         c2 = f.object('CHANNEL', 'EMPTY_SOURCE_2', 10, 0)
         assert c2.source == (0, 0, "", "")
 
-
-def test_curves(fpath):
-    with dlisio.load(fpath) as (_, f2, _):
-        frame = f2.object('FRAME', 'FRAME-INC', 10, 0)
-        curves = frame.curves()
-
-        # Read the first value of the first frame of channel CH01
-        assert curves['INC-CH1'][0] == 150
-        assert curves[0]['INC-CH1'] == 150
-
-        # Read the first value of the second frame of channel CH01
-        assert curves['INC-CH1'][1] == 100
-        assert curves[1]['INC-CH1'] == 100
-
 def test_wellref_coordinates():
     wellref = dlisio.plumbing.wellref.Wellref()
     wellref.attic = {
