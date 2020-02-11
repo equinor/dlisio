@@ -1,25 +1,11 @@
-import pytest
+"""
+Testing objects from Chapter 5 and 6. Tests objects structure and attributes
+"""
+
 from datetime import datetime
 import numpy as np
 
 import dlisio
-
-def test_describe(fpath):
-    # Because the .describe() i.e. returns long descriptive textual string,
-    # they are hard to test. But the very least test that it is callable.
-
-    with dlisio.load(fpath) as batch:
-        _ = batch.describe()
-
-        for f in batch:
-            _ = f.describe()
-
-            for obj in f.match('.*', '.*'):
-                _ = obj.describe(indent='   ', width=70, exclude='e')
-
-def test_warn_on_update(fpath, assert_log):
-    with dlisio.load(fpath) as _:
-        assert_log('contains UPDATE-object')
 
 def test_file_header(f):
     fh = f.object('FILE-HEADER', 'N', 10, 0)
@@ -109,27 +95,6 @@ def test_channel(f):
     assert channel.element_limit          == [11, 15, 10]
     assert channel.attic["ELEMENT-LIMIT"] == [10, 15, 11]
     assert channel.source                 == tool
-
-def test_string_encoding_warns(fpath):
-    prev_encodings = dlisio.get_encodings()
-    try:
-        dlisio.set_encodings([])
-        with pytest.warns(UnicodeWarning):
-            with dlisio.load(fpath) as (f, *_):
-                channel = f.object('CHANNEL', 'CHANN1', 10, 0)
-                assert channel.units == b'custom unit\xb0'
-    finally:
-        dlisio.set_encodings(prev_encodings)
-
-def test_string_latin1_encoding_works(fpath):
-    prev_encodings = dlisio.get_encodings()
-    try:
-        dlisio.set_encodings(['latin1'])
-        with dlisio.load(fpath) as (f, *_):
-            channel = f.object('CHANNEL', 'CHANN1', 10, 0)
-            assert channel.units == "custom unit°"
-    finally:
-        dlisio.set_encodings(prev_encodings)
 
 def test_frame(f):
     channel1 = f.object('CHANNEL', 'CHANN1', 10, 0)
@@ -356,6 +321,34 @@ def test_wellref(f):
     assert wellref.coordinates['latitude']   == 60.75
     assert wellref.coordinates['elevation']  == 0.25
 
+def test_wellref_coordinates():
+    wellref = dlisio.plumbing.wellref.Wellref()
+    wellref.attic = {
+        'COORDINATE-2-VALUE' : [2],
+        'COORDINATE-1-NAME'  : ['longitude'],
+        'COORDINATE-3-NAME'  : ['elevation'],
+        'COORDINATE-1-VALUE' : [1],
+        'COORDINATE-3-VALUE' : [3],
+        'COORDINATE-2-NAME'  : ['latitude'],
+    }
+
+    assert wellref.coordinates['longitude']  == 1
+    assert wellref.coordinates['latitude']   == 2
+    assert wellref.coordinates['elevation']  == 3
+
+    del wellref.attic['COORDINATE-3-VALUE']
+    assert wellref.coordinates['latitude']   == 2
+    assert wellref.coordinates['elevation']  == None
+
+    del wellref.attic['COORDINATE-2-NAME']
+    assert wellref.coordinates['longitude']    == 1
+    assert wellref.coordinates['COORDINATE-2'] == 2
+
+    del wellref.attic['COORDINATE-1-NAME']
+    del wellref.attic['COORDINATE-1-VALUE']
+    assert len(wellref.coordinates) == 3
+    assert wellref.coordinates['COORDINATE-1'] == None
+
 def test_group(f):
     g1    = f.object('GROUP', 'GROUP1', 10, 0)
     param = f.object('PARAMETER', 'PARAM3', 10, 0)
@@ -441,13 +434,16 @@ def test_comment(f):
     assert com.text == ['Trust me, this is a very nice comment',
                         "What, you don't believe me?", ':-(']
 
+def test_warn_on_update(fpath, assert_log):
+    with dlisio.load(fpath) as _:
+        assert_log('contains UPDATE-object')
+
 def test_unknown(f):
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
 
     assert unknown.stash["SOME_LIST"]   == ["LIST_V1", "LIST_V2"]
     assert unknown.stash["SOME_VALUE"]  == ["VAL1"]
     assert unknown.stash["SOME_STATUS"] == [1]
-
 
 def test_incomplete_object(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('load').join('incomplete_object.dlis'))
@@ -468,20 +464,3 @@ def test_incomplete_object(tmpdir_factory, merge_files_manyLR):
         assert channel.element_limit == []
         assert channel.source        == None
 
-
-def test_unexpected_attributes(f):
-    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
-
-    assert c.label                           == "SMTH"
-    assert c.plus_tolerance                  == [] #count 0
-    assert c.minus_tolerance                 == [] #not specified
-
-    #'lnks' instead of 'references'
-    assert c.stash["LNKS"]                   == [18, 32]
-    #spaces are stripped for stash also
-    assert c.stash["MY_PARAM"]               == ["wrong", "W"]
-    # no linkage is performed for stash even for known objects
-    assert c.stash["LINKS_TO_PARAMETERS"]    ==  [(10, 0, "PARAM2"),
-                                                  (10, 0, "PARAMU")]
-    assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
-                                                  (10, 0, "OBJ1"))]

@@ -1,3 +1,7 @@
+"""
+Testing monkey patching done by user (new classes or different
+attributes processing or similar)
+"""
 import pytest
 
 from dlisio.plumbing import valuetypes, linkage
@@ -43,9 +47,11 @@ def test_dynamic_class(f):
         assert unknown.list == ["LIST_V1", "LIST_V2"]
         assert unknown.value == "VAL1"
         assert unknown.status == True
+
         assert len(f.unknowns) == 1
     finally:
         del f.types['UNKNOWN_SET']
+
 
 def test_change_object_type(f):
     try:

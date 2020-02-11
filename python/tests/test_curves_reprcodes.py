@@ -1,3 +1,7 @@
+"""
+Testing that curves methods correctly reads values with various
+representation codes
+"""
 import pytest
 import numpy as np
 from datetime import datetime
@@ -364,17 +368,6 @@ def test_all_reprcodes():
     assert c[26] == True
     assert c[27] == "unit"
 
-def test_channel_curves():
-    fpath = 'data/chap4-7/iflr/all-reprcodes.dlis'
-    with dlisio.load(fpath) as (f, *_):
-        channel = f.object('CHANNEL', 'CH26', 10, 0)
-        curves = channel.curves()
-        assert curves[0] == True
-
-        channel = f.object('CHANNEL', 'CH22', 10, 0)
-        curves = channel.curves()
-        assert curves[0] == 16777217
-
 def test_big_ascii():
     fpath = 'data/chap4-7/iflr/big-ascii.dlis'
     curves = load_curves(fpath)
@@ -392,103 +385,3 @@ def test_broken_ascii():
 def test_broken_utf8_ascii():
     fpath = 'data/chap4-7/iflr/broken-utf8-ascii.dlis'
     _ = load_curves(fpath)
-
-def test_two_various_fdata_in_one_iflr():
-    fpath = 'data/chap4-7/iflr/two-various-fdata-in-one-iflr.dlis'
-
-    curves = load_curves(fpath)
-    assert curves[0][1] == datetime(1971, 3, 21, 18, 4, 14, 386000)
-    assert curves[0][2] == "VALUE"
-    assert curves[0][3] == 89
-    assert curves[1][1] == datetime(1970, 3, 21, 18, 4, 14, 0)
-    assert curves[1][2] == "SECOND-VALUE"
-    assert curves[1][3] == -89
-
-def test_out_of_order_framenos_one_frame():
-    fpath = 'data/chap4-7/iflr/out-of-order-framenos-one-frame.dlis'
-    curves = load_curves(fpath)
-    np.testing.assert_array_equal(curves['FRAMENO'], [2, 1])
-    assert curves[0][1] == True
-    assert curves[1][1] == False
-
-def test_out_of_order_framenos_two_frames():
-    fpath = 'data/chap4-7/iflr/out-of-order-framenos-two-frames.dlis'
-    curves = load_curves(fpath)
-    np.testing.assert_array_equal(curves['FRAMENO'], [2, 1])
-    assert curves[0][1] == True
-    assert curves[1][1] == False
-
-def test_out_of_order_frames_two_framenos_multidata():
-    fpath = 'data/chap4-7/iflr/out-of-order-framenos-two-frames-multifdata.dlis'
-    curves = load_curves(fpath)
-    np.testing.assert_array_equal(curves['FRAMENO'], [3, 4, 1, 2])
-    assert curves[0][1] == True
-    assert curves[1][1] == False
-    assert curves[2][1] == False
-    assert curves[3][1] == True
-
-def test_missing_numbers_frames():
-    fpath = 'data/chap4-7/iflr/missing-framenos.dlis'
-    curves = load_curves(fpath)
-    np.testing.assert_array_equal(curves['FRAMENO'], [2, 4])
-    assert curves[0][1] == True
-    assert curves[1][1] == False
-
-def test_duplicate_framenos():
-    fpath = 'data/chap4-7/iflr/duplicate-framenos.dlis'
-    curves = load_curves(fpath)
-    assert curves[0][0] == curves[0][1]
-    assert curves[0][0] == True
-    assert curves[1][1] == False
-
-def test_duplicate_framenos_same_frames():
-    fpath = 'data/chap4-7/iflr/duplicate-framenos-same-frames.dlis'
-    curves = load_curves(fpath)
-    np.testing.assert_array_equal(curves[0], curves[1])
-
-def test_fdata_dimension():
-    fpath = 'data/chap4-7/iflr/multidimensions-ints-various.dlis'
-
-    with dlisio.load(fpath) as (f, *_):
-        frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
-        curves = frame.curves()
-
-        np.testing.assert_array_equal(curves[0][1], [[1, 2, 3], [4, 5, 6]])
-        np.testing.assert_array_equal(curves[0][2], [[1, 2], [3, 4], [5, 6]])
-
-        arr2 = [
-            [[1, 2],   [3, 4],   [5, 6]],
-            [[7, 8],   [9, 10],  [11, 12]],
-            [[13, 14], [15, 16], [17, 18]],
-            [[19, 20], [21, 22], [23, 24]]
-        ]
-        np.testing.assert_array_equal(curves[0][3], arr2)
-        np.testing.assert_array_equal(curves[0][4], [[1, 2]])
-        np.testing.assert_array_equal(curves[0][5], [[1], [2]])
-        np.testing.assert_array_equal(curves[0][6], [[1]])
-        np.testing.assert_array_equal(curves[0][7], [1, 2, 3, 4])
-
-def test_fdata_tuple_dimension():
-    fpath = 'data/chap4-7/iflr/multidimensions-validated.dlis'
-
-    with dlisio.load(fpath) as (f, *_):
-        frame = f.object('FRAME', 'FRAME-VALIDATE', 10, 0)
-        curves = frame.curves()
-
-        assert curves[0][1].size == 3
-
-        assert curves[0][1][0] == (56, 0.0625, 0.0625)
-        assert curves[0][1][1] == (43, 0.0625, 0.0625)
-        assert curves[0][1][2] == (71, 0.5, 0.5)
-
-def test_fdata_dimensions_in_multifdata():
-    fpath = 'data/chap4-7/iflr/multidimensions-multifdata.dlis'
-
-    with dlisio.load(fpath) as (f, *_):
-        frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
-        curves = frame.curves()
-
-        assert curves.shape == (2,)
-
-        np.testing.assert_array_equal(curves[0][1], [[1, 2, 3], [4, 5, 6]])
-        np.testing.assert_array_equal(curves[1][1], [[7, 8, 9], [10, 11, 12]])
