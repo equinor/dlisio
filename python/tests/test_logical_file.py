@@ -1,3 +1,7 @@
+"""
+Testing Logical file class (also known as dlis)
+"""
+
 import dlisio
 import pytest
 
@@ -9,7 +13,7 @@ from dlisio import core
 
 @pytest.fixture(scope="module")
 def g():
-    s = dlisio.open("tests/test_dlis.py") #any existing file is required
+    s = dlisio.open("tests/test_logical_file.py") #any existing file is required
     g = dlisio.dlis(s, [], [], [])
 
     ch = Channel()
@@ -77,14 +81,14 @@ def test_object(g):
     assert channel.copynumber == 1
     assert channel.type       == "CHANNEL"
 
-def test_unknown_object(g):
+def test_object_unknown(g):
     channel = g.object("NONCHANNEL", "UNEFRAME", 0, 0)
     assert channel.name       == "UNEFRAME"
     assert channel.origin     == 0
     assert channel.copynumber == 0
     assert channel.type       == "NONCHANNEL"
 
-def test_nonexisting_object(g):
+def test_object_nonexisting(g):
     with pytest.raises(ValueError) as exc:
         _ = g.object("UNKNOWN_TYPE", "SOME_OBJECT", 0, 0)
     assert "not found" in str(exc.value)
@@ -95,19 +99,19 @@ def test_nonexisting_object(g):
     with pytest.raises(TypeError):
         _ = g.object("WEIRD", "CHANNEL1", "-1", "-1")
 
-def test_solo_object_nameonly(g):
+def test_object_solo_nameonly(g):
     channel = g.object("CHANNEL", "CHANNEL1.V2")
     assert channel.name == "CHANNEL1.V2"
     assert channel.origin == 0
     assert channel.copynumber == 0
     assert channel.type == "CHANNEL"
 
-def test_nonexisting_object_nameonly(g):
+def test_object_nonexisting_nameonly(g):
     with pytest.raises(ValueError) as exc:
         _ = g.object("CHANNEL", "NOTFOUND")
     assert "No objects" in str(exc.value)
 
-def test_too_many_objects_nameonly(g):
+def test_object_many_objects_nameonly(g):
     with pytest.raises(ValueError) as exc:
         _ = g.object("CHANNEL", "CHANNEL1")
     assert "There are multiple" in str(exc.value)
@@ -175,42 +179,6 @@ def test_match_special_characters(g):
     for ch in channels:
         assert ch in refs
 
-def test_basicobject_getitem_defaultvalue(f):
-    obj = f.object('FRAME', 'FRAME2')
-
-    # Attribute index_type is absent (from attic), but we stil expect to get a
-    # default value
-    assert obj['INDEX-TYPE'] is None
-
-def test_basicobject_getitem_unexpected_attr(f):
-    obj = f.object('FRAME', 'FRAME2')
-
-    try:
-        obj.attic['NEW-ATTR'] = [1]
-
-        # Attributes unknown to dlisio, such as 'NEW-ATTR' should be reachable
-        # through __getitem__
-        assert obj['NEW-ATTR'] == [1]
-
-        # Should also be in stash
-        assert obj.stash['NEW-ATTR'] == [1]
-    finally:
-        del obj.attic['NEW-ATTR']
-
-def test_basicobject_getitem_noattribute(f):
-    obj = f.object('FRAME', 'FRAME2')
-
-    # getitem should raise an KeyError if key not in obj.attic or
-    # obj.attributes
-
-    with pytest.raises(KeyError):
-        _ = obj['DUMMY']
-
-def test_basicobject_getitem(f):
-    obj = f.object('FRAME', 'FRAME1')
-
-    assert obj['INDEX-TYPE'] == 'BOREHOLE-DEPTH'
-
 def test_indexedobjects(f):
     assert f.fileheader.name   == "N"
     assert len(f.origins)      == 2
@@ -234,12 +202,24 @@ def test_indexedobjects(f):
     assert len(f.comments)     == 1
     assert len(f.messages)     == 1
 
-def test_initial_load(fpath):
+def test_indexedobjects_initial_load(fpath):
     with dlisio.load(fpath) as (f, *tail):
         # Only fileheader, origin, frame, and channel should be loaded
         assert len(f.indexedobjects) == 4
 
-def test_objecttype_load(fpath):
+
+def test_indexedobjects_load_all(fpath):
+    with dlisio.load(fpath) as (f, *_):
+        f.load()
+        assert len(f.indexedobjects) == 23
+
+def test_indexedobjects_load_unknowns():
+    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
+        assert len(f.indexedobjects) == 4 #FILE-HEADER, ORIGIN, FRAME, CHANNEL
+        assert len(f.unknowns)       == 5
+        assert len(f.indexedobjects) == 9
+
+def test_indexedobjects_load_by_typeloading(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
         parameters = f.parameters
@@ -247,14 +227,14 @@ def test_objecttype_load(fpath):
         assert len(parameters) == 3
         assert fp in f.indexedobjects['PARAMETER']
 
-def test_loading_new_objecttype(fpath):
+def test_indexedobjects_load_by_direct_call(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('TOOL', 'TOOL1', 10, 0)
         _ = f.object('TOOL', 'TOOL1', 10, 0)
 
         assert fp in f.indexedobjects['TOOL']
 
-def test_loading_new_objecttype_match(fpath):
+def test_indexedobjects_load_by_match(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('MESSAGE', 'MESSAGE1', 10, 0)
 
@@ -262,7 +242,7 @@ def test_loading_new_objecttype_match(fpath):
 
         assert fp in f.indexedobjects['MESSAGE']
 
-def test_object_load_link(fpath):
+def test_indexedobjects_load_by_link(fpath):
     with dlisio.load(fpath) as (f, *tail):
         fp = core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
         ch = f.object('CHANNEL', 'CHANN1')
@@ -271,14 +251,3 @@ def test_object_load_link(fpath):
         _ = ch.long_name
         assert fp in f.indexedobjects['LONG-NAME']
         assert len(f.indexedobjects['LONG-NAME']) == 4
-
-def test_load_all(fpath):
-    with dlisio.load(fpath) as (f, *_):
-        f.load()
-        assert len(f.indexedobjects) == 23
-
-def test_unknowns_loading():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
-        assert len(f.indexedobjects) == 4 #FILE-HEADER, ORIGIN, FRAME, CHANNEL
-        assert len(f.unknowns)       == 5
-        assert len(f.indexedobjects) == 9

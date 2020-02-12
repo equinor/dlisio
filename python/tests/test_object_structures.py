@@ -1,17 +1,11 @@
-import pytest
+"""
+Testing objects from Chapter 5 and 6. Tests objects structure and attributes
+"""
+
 from datetime import datetime
 import numpy as np
 
 import dlisio
-
-def test_dlis_describe(f):
-    # Because the .describe() i.e. returns long descriptive textual string,
-    # they are hard to test. But the very least test that it is callable.
-    _ = f.describe()
-
-def test_warn_on_update(fpath, assert_log):
-    with dlisio.load(fpath) as _:
-        assert_log('contains UPDATE-object')
 
 def test_file_header(f):
     fh = f.object('FILE-HEADER', 'N', 10, 0)
@@ -22,8 +16,6 @@ def test_file_header(f):
     #next two check for value space-stripping
     assert fh.sequencenr == "8"
     assert fh.id         == "some logical file"
-
-    _ = fh.describe(indent='   ', width=70, exclude='e')
 
 def test_origin(f):
     def_origin = f.object('ORIGIN', 'DEFINING_ORIGIN', 10, 0)
@@ -57,16 +49,12 @@ def test_origin(f):
     assert random_origin.file_set_nr == 1042
     assert random_origin.file_nr     == 6
 
-    _ = random_origin.describe(indent='   ', width=70, exclude='e')
-
 def test_axis(f):
     axis = f.object('AXIS', 'AXIS2', 10, 0)
 
     assert axis.axis_id     == 'AX2'
     assert axis.coordinates == ['very near', 'not so far']
     assert axis.spacing     == 'a bit'
-
-    _ = axis.describe(indent='   ', width=70, exclude='e')
 
 def test_longname(f):
     ln  = f.object('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
@@ -86,8 +74,6 @@ def test_longname(f):
     assert ln.conditions      == ['at standard temperature']
     assert ln.standard_symbol == 'SYM'
     assert ln.private_symbol  == 'BOL'
-
-    _ = ln.describe(indent='   ', width=70, exclude='e')
 
 def test_channel(f):
     tool     = f.object('TOOL', 'TOOL1', 10, 0)
@@ -109,42 +95,6 @@ def test_channel(f):
     assert channel.element_limit          == [11, 15, 10]
     assert channel.attic["ELEMENT-LIMIT"] == [10, 15, 11]
     assert channel.source                 == tool
-
-    _ = channel.describe(indent='   ', width=70, exclude='e')
-
-def test_string_encoding_warns(fpath):
-    prev_encodings = dlisio.get_encodings()
-    try:
-        dlisio.set_encodings([])
-        with pytest.warns(UnicodeWarning):
-            with dlisio.load(fpath) as (f, *_):
-                channel = f.object('CHANNEL', 'CHANN1', 10, 0)
-                assert channel.units == b'custom unit\xb0'
-    finally:
-        dlisio.set_encodings(prev_encodings)
-
-def test_string_latin1_encoding_works(fpath):
-    prev_encodings = dlisio.get_encodings()
-    try:
-        dlisio.set_encodings(['latin1'])
-        with dlisio.load(fpath) as (f, *_):
-            channel = f.object('CHANNEL', 'CHANN1', 10, 0)
-            assert channel.units == "custom unit°"
-    finally:
-        dlisio.set_encodings(prev_encodings)
-
-def test_channel_fdata(f):
-    channel = f.object('CHANNEL', 'CHANN1', 10, 0)
-    curves = channel.curves()
-
-    assert list(curves[0][0][0]) == [1, 2]
-    assert list(curves[1][1][1]) == [521, 522]
-    assert list(curves[2][2][2]) == [1041, 1042]
-
-    frame = f.object('FRAME', 'FRAME1', 10, 0)
-    ch1_curves = frame.curves()["CHANN1"]
-
-    assert np.array_equal(curves, ch1_curves)
 
 def test_frame(f):
     channel1 = f.object('CHANNEL', 'CHANN1', 10, 0)
@@ -180,8 +130,6 @@ def test_zone(f):
     assert zone.maximum     == 13398
     assert zone.minimum     == 8603
 
-    _ = zone.describe(indent='   ', width=70, exclude='e')
-
 def test_parameter(f):
     p        = f.object('PARAMETER', 'PARAM3', 10, 0)
     longname = f.object('LONG-NAME', 'PARAM3-LONG', 10, 0)
@@ -213,8 +161,6 @@ def test_parameter(f):
     value = p.values[0]
     assert np.array_equal(value, np.array([101, 120]))
 
-    _ = p.describe(indent='   ', width=70, exclude='e')
-
 def test_equipment(f):
     e = f.object('EQUIPMENT', 'EQUIP1', 10, 0)
     assert e.trademark_name == "some equipment"
@@ -235,8 +181,6 @@ def test_equipment(f):
     assert e.radial_drift   == 130
     assert e.angular_drift  == 41
 
-    _ = e.describe(indent='   ', width=70, exclude='e')
-
 def test_tool(f):
     e        = f.object('EQUIPMENT', 'EQUIP1', 10, 0)
     param1   = f.object('PARAMETER', 'PARAM1', 10, 0)
@@ -254,8 +198,6 @@ def test_tool(f):
     assert tool.parameters               == [param1, None, param2]
     assert len(tool.attic['PARAMETERS']) == 3
 
-    _ = tool.describe(indent='   ', width=70, exclude='e')
-
 def test_message(f):
     mes = f.object('MESSAGE', 'MESSAGE1', 10, 0)
 
@@ -266,8 +208,6 @@ def test_message(f):
     assert mes.radial_drift   == 65093
     assert mes.angular_drift  == 344
     assert mes.text           == ['System says hi!']
-
-    _ = mes.describe(indent='   ', width=70, exclude='e')
 
 def test_measurement(f):
     tool  = f.object('TOOL', 'TOOL1', 10, 0)
@@ -300,8 +240,6 @@ def test_measurement(f):
     assert np.array_equal(m.plus_tolerance  , plus)
     assert np.array_equal(m.minus_tolerance , minus)
 
-    _ = m.describe(indent='   ', width=70, exclude='e')
-
 def test_coefficient(f):
     c = f.object('CALIBRATION-COEFFICIENT', 'COEFF1', 10, 0)
 
@@ -310,8 +248,6 @@ def test_coefficient(f):
     assert c.references      == [18, 32]
     assert c.plus_tolerance  == [1, 1]
     assert c.minus_tolerance == [2, 1]
-
-    _ = c.describe(indent='   ', width=70, exclude='e')
 
 def test_calibration(f):
     param1   = f.object('PARAMETER', 'PARAM1', 10, 0)
@@ -334,8 +270,6 @@ def test_calibration(f):
     assert c.parameters   == [param1, param2, param3]
     assert c.method       == "USELESS"
 
-    _ = c.describe(indent='   ', width=70, exclude='e')
-
 def test_computation(f):
     com     = f.object('COMPUTATION', 'COMPUT2', 10, 0)
     axis2   = f.object('AXIS', 'AXIS2', 10, 0)
@@ -353,8 +287,6 @@ def test_computation(f):
 
     values  = np.array([[140, 99], [144, 172], [202, 52], [109, 120]])
     assert np.array_equal(com.values[0], values)
-
-    _ = com.describe(indent='   ', width=70, exclude='e')
 
 def test_splice(f):
     splice = f.object('SPLICE', 'SPLICE1', 10, 0)
@@ -376,8 +308,6 @@ def test_splice(f):
     assert splice.attic['ZONES'][1].origin     == 10
     assert splice.attic['ZONES'][1].copynumber == 0
 
-    _ = splice.describe(indent='   ', width=70, exclude='e')
-
 def test_wellref(f):
     wellref = f.object('WELL-REFERENCE', 'THE-WELL', 10, 0)
 
@@ -391,7 +321,33 @@ def test_wellref(f):
     assert wellref.coordinates['latitude']   == 60.75
     assert wellref.coordinates['elevation']  == 0.25
 
-    _ = wellref.describe(indent='   ', width=70, exclude='e')
+def test_wellref_coordinates():
+    wellref = dlisio.plumbing.wellref.Wellref()
+    wellref.attic = {
+        'COORDINATE-2-VALUE' : [2],
+        'COORDINATE-1-NAME'  : ['longitude'],
+        'COORDINATE-3-NAME'  : ['elevation'],
+        'COORDINATE-1-VALUE' : [1],
+        'COORDINATE-3-VALUE' : [3],
+        'COORDINATE-2-NAME'  : ['latitude'],
+    }
+
+    assert wellref.coordinates['longitude']  == 1
+    assert wellref.coordinates['latitude']   == 2
+    assert wellref.coordinates['elevation']  == 3
+
+    del wellref.attic['COORDINATE-3-VALUE']
+    assert wellref.coordinates['latitude']   == 2
+    assert wellref.coordinates['elevation']  == None
+
+    del wellref.attic['COORDINATE-2-NAME']
+    assert wellref.coordinates['longitude']    == 1
+    assert wellref.coordinates['COORDINATE-2'] == 2
+
+    del wellref.attic['COORDINATE-1-NAME']
+    del wellref.attic['COORDINATE-1-VALUE']
+    assert len(wellref.coordinates) == 3
+    assert wellref.coordinates['COORDINATE-1'] == None
 
 def test_group(f):
     g1    = f.object('GROUP', 'GROUP1', 10, 0)
@@ -417,8 +373,6 @@ def test_group(f):
     assert g3.groups      == [g1, g2]
     assert g3.objecttype  == 'IGNORE-ME-PLZ'
 
-    _ = g3.describe(indent='   ', width=70, exclude='e')
-
 def test_process(f):
     p1     = f.object('PROCESS', 'PROC1', 10, 0)
     param1 = f.object('PARAMETER', 'PARAM1', 10, 0)
@@ -440,8 +394,6 @@ def test_process(f):
     assert p1.output_computations == [oc1]
     assert p1.parameters          == [param1, param3]
     assert p1.comments            == ["It was", "nicely", "executed", "??"]
-
-    _ = p1.describe(indent='   ', width=70, exclude='e')
 
 def test_path(f):
     p1  = f.object('PATH', 'PATH1', 10, 0)
@@ -476,15 +428,15 @@ def test_path(f):
     assert p2.angular_drift        == 64
     assert p2.vertical_depth       == -119
 
-    _ = p2.describe(indent='   ', width=70, exclude='e')
-
 def test_comment(f):
     com = f.object('COMMENT', 'COMMENT1', 10, 0)
 
     assert com.text == ['Trust me, this is a very nice comment',
                         "What, you don't believe me?", ':-(']
 
-    _ = com.describe(indent='   ', width=70, exclude='e')
+def test_update_just_warning(fpath, assert_log):
+    with dlisio.load(fpath) as _:
+        assert_log('contains UPDATE-object')
 
 def test_unknown(f):
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
@@ -493,21 +445,22 @@ def test_unknown(f):
     assert unknown.stash["SOME_VALUE"]  == ["VAL1"]
     assert unknown.stash["SOME_STATUS"] == [1]
 
-    _ = unknown.describe(indent='   ', width=70, exclude='e')
+def test_incomplete_object(tmpdir_factory, merge_files_manyLR):
+    fpath = str(tmpdir_factory.mktemp('load').join('incomplete_object.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/channel-inc.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
 
-def test_unexpected_attributes(f):
-    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+    with dlisio.load(fpath) as (f, *_):
+        channel = f.object('CHANNEL', 'INC-CH1', 10, 0)
+        assert channel.long_name     == "Incomplete channel1"
+        assert channel.properties    == []
+        assert channel.reprc         == 15
+        assert channel.dimension     == [1]
+        assert channel.axis          == []
+        assert channel.element_limit == []
+        assert channel.source        == None
 
-    assert c.label                           == "SMTH"
-    assert c.plus_tolerance                  == [] #count 0
-    assert c.minus_tolerance                 == [] #not specified
-
-    #'lnks' instead of 'references'
-    assert c.stash["LNKS"]                   == [18, 32]
-    #spaces are stripped for stash also
-    assert c.stash["MY_PARAM"]               == ["wrong", "W"]
-    # no linkage is performed for stash even for known objects
-    assert c.stash["LINKS_TO_PARAMETERS"]    ==  [(10, 0, "PARAM2"),
-                                                  (10, 0, "PARAMU")]
-    assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
-                                                  (10, 0, "OBJ1"))]

@@ -13,8 +13,6 @@ Each subdirectory has its own README with more detailed information.
 ====================================== ========================================
 Files in /data                         Description
 ====================================== ========================================
-3-syntactic-logical-records.DLIS       3 logical records, 1 is encrypted
-
 206_05a-_3_DWL_DWL_WIRE_258276498.DLIS An actual produced file
 
 ====================================== ========================================

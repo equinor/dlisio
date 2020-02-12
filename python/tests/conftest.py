@@ -5,12 +5,6 @@ import dlisio
 
 dlisio.set_encodings(['latin1'])
 
-@pytest.fixture(scope="module", name="DWL206")
-def DWL206():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
-        yield f
-
-
 @pytest.fixture(scope="module")
 def merge_files_oneLR():
     """
@@ -118,6 +112,9 @@ def assert_info(caplog):
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files_manyLR):
+    """
+    Resulted file contains examples of all objects known to dlisio
+    """
     path = str(tmpdir_factory.mktemp('semantic').join('semantic.dlis'))
     content = [
         'data/chap4-7/eflr/envelope.dlis.part',
@@ -156,3 +153,30 @@ def fpath(tmpdir_factory, merge_files_manyLR):
 def f(fpath):
     with dlisio.load(fpath) as (f, *_):
         yield f
+
+
+@pytest.fixture(scope="module")
+def multifpath(tmpdir_factory, merge_files_manyLR):
+    """
+    Resulted file contains several logical files
+    """
+    path = str(tmpdir_factory.mktemp('load').join('manylogfiles.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        # First logical file, does not have FILE-HEADER
+        'data/chap4-7/eflr/origin.dlis.part',
+        'data/chap4-7/eflr/channel.dlis.part',
+        'data/chap4-7/eflr/frame.dlis.part',
+        # Second logical file
+        'data/chap4-7/eflr/file-header2.dlis.part',
+        'data/chap4-7/eflr/origin2.dlis.part',
+        'data/chap4-7/eflr/channel-inc.dlis.part',
+        'data/chap4-7/eflr/frame-inc.dlis.part',
+        'data/chap4-7/eflr/fdata-frame-inc-1.dlis.part',
+        'data/chap4-7/eflr/frame.dlis.part',
+        'data/chap4-7/eflr/fdata-frame-inc-2.dlis.part',
+        # Third logical file, only has a FILE-HEADER
+        'data/chap4-7/eflr/file-header.dlis.part',
+    ]
+    merge_files_manyLR(path, content)
+    return path

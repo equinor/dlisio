@@ -1,3 +1,7 @@
+"""
+Testing monkey patching done by user (new classes or different
+attributes processing or similar)
+"""
 import pytest
 
 from dlisio.plumbing import valuetypes, linkage
@@ -28,7 +32,8 @@ class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
     def status(self):
         return self['SOME_STATUS']
 
-def test_dynamic_class(f):
+def test_type_new(f):
+    assert len(f.unknowns) == 2
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
     with pytest.raises(AttributeError):
         assert unknown.value == "VAL1"
@@ -42,20 +47,13 @@ def test_dynamic_class(f):
         assert unknown.list == ["LIST_V1", "LIST_V2"]
         assert unknown.value == "VAL1"
         assert unknown.status == True
-    finally:
-        del f.types['UNKNOWN_SET']
-
-def test_new_type_removed_from_unknowns(f):
-    assert len(f.unknowns) == 2
-    try:
-        f.types['UNKNOWN_SET'] = ActuallyKnown
-        f.load()
 
         assert len(f.unknowns) == 1
     finally:
         del f.types['UNKNOWN_SET']
 
-def test_change_object_type(f):
+
+def test_type_change(f):
     try:
         # Parse all parameters as if they where Channels
         dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Channel
@@ -83,7 +81,7 @@ def test_change_object_type(f):
         # to not interfere with other tests
         dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Parameter
 
-def test_remove_object_type(f):
+def test_type_removal(f):
     try:
         # Deleting object-type CHANNEL and reload
         del dlisio.dlis.types['CHANNEL']
@@ -109,7 +107,7 @@ def test_remove_object_type(f):
     assert isinstance(obj, dlisio.plumbing.Channel)
     assert obj not in f.unknowns
 
-def test_dynamic_instance_attribute():
+def test_attribute_change_in_instance():
     ch1 = Channel()
     ch1.attic['PROPERTIES'] = [10]
 
@@ -125,7 +123,7 @@ def test_dynamic_instance_attribute():
     # check that other object of the same type is not affected
     assert ch2.properties == [10]
 
-def test_dynamic_class_attribute():
+def test_attribute_change_in_class():
     ch1 = Channel()
     ch1.attic['PROPERTIES'] = [10]
 
@@ -143,7 +141,7 @@ def test_dynamic_class_attribute():
     finally:
         Channel.attributes = original
 
-def test_dynamic_instance_linkage(f, assert_log):
+def test_linkage_change_in_instance(f, assert_log):
     ch1  = f.object('CHANNEL', 'CHANN1')
     ch2  = f.object('CHANNEL', 'CHANN2')
     tool = f.object('TOOL', 'TOOL1')
@@ -166,7 +164,7 @@ def test_dynamic_instance_linkage(f, assert_log):
     finally:
         ch1.linkage = Channel.linkage
 
-def test_dynamic_class_linkage(f, assert_log):
+def test_linkage_change_in_class(f, assert_log):
 
     #Reload file for change to take effect
     f.load()
