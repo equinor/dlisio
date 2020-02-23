@@ -144,15 +144,19 @@ noexcept (false)
             case DLIS_OK: break;
 
             case DLIS_TRUNCATED:
-                throw std::runtime_error( "file truncated" );
+                end=next;
+                break;
+                //throw std::runtime_error( "file truncated" );
 
             case DLIS_INCONSISTENT:
                 throw std::runtime_error( "inconsistensies in record sizes" );
 
             case DLIS_UNEXPECTED_VALUE: {
                 // TODO: interrogate more?
-                const auto msg = "record-length in record {} corrupted";
-                throw std::runtime_error(fmt::format(msg, count));
+                end = next;
+                break;
+                //const auto msg = "record-length in record {} corrupted";
+                //throw std::runtime_error(fmt::format(msg, count));
             }
 
             default: {
@@ -371,7 +375,7 @@ record& stream::at( int i, record& rec ) noexcept (false) {
                 const auto tell2 = this->tells.at(i + 1);
                 const auto at    = this->fs.tellg();
                 const auto str   = fmt::format(msg, i, tell1, at, i+1, tell2);
-                throw std::runtime_error(msg);
+                throw std::runtime_error(str);
             }
 
 
@@ -394,11 +398,19 @@ record& stream::at( int i, record& rec ) noexcept (false) {
         char buffer[ DLIS_VRL_SIZE ];
         this->fs.read( buffer, DLIS_VRL_SIZE );
         const auto err = dlis_vrl( buffer, &len, &version );
-
-        // TODO: for now record closest to VE gets the blame
-        if (err) consistent = false;
-        if (version != 1) consistent = false;
-
+        if (len==0) {
+          // did a tape mark get in the way?
+          char tm_buffer [DLIS_TM_SIZE-DLIS_VRL_SIZE];
+          this->fs.read( tm_buffer, DLIS_TM_SIZE-DLIS_VRL_SIZE);
+          this->fs.read( buffer, DLIS_VRL_SIZE );
+          const auto err2 = dlis_vrl( buffer, &len, &version);
+          if (err2) consistent = false;
+          if (version != 1) consistent = false;
+        } else {
+          // TODO: for now record closest to VE gets the blame
+          if (err) consistent = false;
+          if (version != 1) consistent = false;
+        }
         remaining = len - DLIS_VRL_SIZE;
     }
 }

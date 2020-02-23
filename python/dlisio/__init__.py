@@ -690,7 +690,7 @@ def open(path):
     """
     return core.stream(str(path))
 
-def load(path):
+def load(path, frames=True):
     """ Loads a file and returns one filehandle pr logical file.
 
     The dlis standard have a concept of logical files. A logical file is a
@@ -779,9 +779,12 @@ def load(path):
             stream.reindex(part['tells'], part['residuals'])
 
             implicits = defaultdict(list)
-            for key, val in core.findfdata(mmap,
-                    part['implicits'], part['tells'], part['residuals']):
-                implicits[key].append(val)
+            if frames:
+                for key, val in core.findfdata(mmap, 
+                                               part['implicits'], 
+                                               part['tells'], 
+                                               part['residuals']):
+                    implicits[key].append(val)
 
             f = dlis(stream, part['explicits'],
                     part['records'], implicits, sul_offset=sulpos)

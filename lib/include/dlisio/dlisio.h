@@ -65,6 +65,7 @@ int dlis_find_vrl(const char* from,
                   long long search_limit,
                   long long* offset);
 
+#define DLIS_TM_SIZE 12
 #define DLIS_VRL_SIZE 4
 DLISIO_API
 int dlis_vrl( const char* xs,

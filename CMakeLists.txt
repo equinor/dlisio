@@ -29,6 +29,10 @@ endif()
 # into
 add_custom_target(doc ALL)
 
+if(APPLE)
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+endif(APPLE)
+
 set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(external/endianness)

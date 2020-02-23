@@ -49,7 +49,7 @@ private:
      * with custom offsets, e.g. to account for broken files, this must be
      * disabled and the safety check is gone
      */
-    bool contiguous = true;
+    bool contiguous = false;
 };
 
 

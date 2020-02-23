@@ -914,7 +914,16 @@ int dlis_index_records( const char* begin,
                  * (including itself), so anything less than that means
                  * corrupted data
                  */
-                if (len < 20) return DLIS_UNEXPECTED_VALUE;
+                if (len < 20) {
+                  // Maybe a tape mark got in the way?  Try advancing 12 bytes, per https://github.com/equinor/dlisio/issues/179
+                  const auto err2 = dlis_vrl( ptr+12, &len, &version);
+                  if (err2) return DLIS_INCONSISTENT;
+                  if ( len < 20) {
+                    return DLIS_UNEXPECTED_VALUE;
+                  } else {
+                    ptr += 12;
+                  }
+                }
 
                 remaining = len - DLIS_VRL_SIZE;
                 ptr += DLIS_VRL_SIZE;
