@@ -491,7 +491,13 @@ noexcept (false) {
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
                         dl::ident{ std::string{ name, name + idlen } } };
-        xs.emplace_back(tmp.fingerprint("FRAME"), i);
+        std::string fingerprint = tmp.fingerprint("FRAME");
+        auto ffindex = fingerprint.find((char)0xff);
+        if (ffindex != std::string::npos) {
+          auto msg = "Expect UnicodeDecodeError: at byte {} of {}";
+          throw std::runtime_error(fmt::format(msg,ffindex,fingerprint));
+        }
+        xs.emplace_back(fingerprint, i);
     }
 
     return xs;

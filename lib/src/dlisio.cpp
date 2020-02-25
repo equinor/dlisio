@@ -921,6 +921,9 @@ int dlis_index_records( const char* begin,
                   if ( len < 20) {
                     return DLIS_UNEXPECTED_VALUE;
                   } else {
+                    if ((*count >0) && residuals[-1]==0) {
+                      tells[-1] += 12;
+                    }
                     ptr += 12;
                   }
                 }
