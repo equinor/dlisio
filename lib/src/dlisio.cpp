@@ -916,15 +916,15 @@ int dlis_index_records( const char* begin,
                  */
                 if (len < 20) {
                   // Maybe a tape mark got in the way?  Try advancing 12 bytes, per https://github.com/equinor/dlisio/issues/179
-                  const auto err2 = dlis_vrl( ptr+12, &len, &version);
+                  const auto err2 = dlis_vrl( ptr+DLIS_TM_SIZE, &len, &version);
                   if (err2) return DLIS_INCONSISTENT;
                   if ( len < 20) {
                     return DLIS_UNEXPECTED_VALUE;
                   } else {
                     if ((*count >0) && residuals[-1]==0) {
-                      tells[-1] += 12;
+                      tells[-1] += DLIS_TM_SIZE;
                     }
-                    ptr += 12;
+                    ptr += DLIS_TM_SIZE;
                   }
                 }
 

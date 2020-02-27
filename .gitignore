@@ -4,3 +4,6 @@ python/_skbuild
 python/dlisio.egg-info/*
 python/dist
 python/dlisio/*.so
+python/.venv
+python/__pycache__
+dockcross-manylinux-x64
