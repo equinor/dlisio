@@ -4,8 +4,9 @@ Testing division of one physical file into several logical files
 
 import dlisio
 
-def test_partitioning(multifpath):
-    with dlisio.load(multifpath) as (f1, f2, f3, *tail):
+def test_partitioning():
+    path = 'data/chap4-7/many-logical-files.dlis'
+    with dlisio.load(path) as (f1, f2, f3, *tail):
         assert len(tail) == 0
 
         def getobjects(f):
@@ -29,8 +30,9 @@ def test_partitioning(multifpath):
         assert f3.explicit_indices == [0]
         assert not f3.fdata_index
 
-def test_objects_ownership(multifpath):
-    with dlisio.load(multifpath) as (f1, f2, f3):
+def test_objects_ownership():
+    path = 'data/chap4-7/many-logical-files.dlis'
+    with dlisio.load(path) as (f1, f2, f3):
         fh2 = f2.object('FILE-HEADER', 'N', 11, 0)
         fh3 = f3.object('FILE-HEADER', 'N', 10, 0)
 
@@ -49,32 +51,19 @@ def test_objects_ownership(multifpath):
         assert fh3.sequencenr == '8'
         assert fh3.id         == 'some logical file'
 
-def test_objects_with_encrypted_records_ownership(tmpdir_factory, merge_files_manyLR):
-    fpath = str(tmpdir_factory.mktemp('load').join('same-object.dlis'))
-    content = [
-        'data/chap4-7/eflr/envelope.dlis.part',
-        # First logical file
-        'data/chap4-7/eflr/file-header.dlis.part',
-        'data/chap4-7/eflr/origin.dlis.part',
-        'data/chap4-7/eflr/channel.dlis.part',
-        'data/chap4-7/eflr/axis-encrypted.dlis.part',
-        # Second logical file
-        'data/chap4-7/eflr/file-header2.dlis.part',
-        'data/chap4-7/eflr/origin2.dlis.part',
-        'data/chap4-7/eflr/axis-encrypted.dlis.part',
-        'data/chap4-7/eflr/channel-same-objects.dlis.part',
-    ]
-    merge_files_manyLR(fpath, content)
+def test_objects_with_encrypted_records_ownership():
+    path = 'data/chap4-7/many-logical-files-same-object.dlis'
 
-    with dlisio.load(fpath) as (f1, f2):
+    with dlisio.load(path) as (f1, f2):
         f1_channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
         f2_channel = f2.object('CHANNEL', 'CHANN1', 10, 0)
 
         assert len(f1_channel.dimension) == 3
         assert len(f2_channel.dimension) == 1
 
-def test_linking(multifpath):
-    with dlisio.load(multifpath) as (f1, f2, _):
+def test_linking():
+    path = 'data/chap4-7/many-logical-files.dlis'
+    with dlisio.load(path) as (f1, f2, _):
         frame1  = f1.object('FRAME', 'FRAME1', 10, 0)
         frame2  = f2.object('FRAME', 'FRAME1', 10, 0)
         channel = f1.object('CHANNEL', 'CHANN1', 10, 0)

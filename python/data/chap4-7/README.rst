@@ -133,3 +133,17 @@ first frame number 01, followed by the value.
 All files follow the same structure as in /reprcodes, but there are multiple
 (2) frames in each FDATA. Byte 151 contains first frame number 01, followed by
 value, then frame number 02, then value.
+
+Remaining files
+---------------
+
+================================================ ==================================================
+Filename                                         Description
+================================================ ==================================================
+many-logical-files.dlis                          Contains several logical files, one without file
+                                                 header
+
+many-logical-files-same-object.dlis              Contains 2 logical files with the same objects and
+                                                 encrypted records
+
+================================================ ==================================================

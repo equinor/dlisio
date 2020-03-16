@@ -77,31 +77,33 @@ def test_filehandles_closed_when_load_fails(tmpdir):
     os.remove(extract)
     os.remove(fdata)
 
-def test_context_manager(multifpath):
-    f, *_ = dlisio.load(multifpath)
+def test_context_manager():
+    path = 'data/chap4-7/many-logical-files.dlis'
+    f, *_ = dlisio.load(path)
     _ = f.fileheader
     f.close()
 
-    files = dlisio.load(multifpath)
+    files = dlisio.load(path)
     for f in files:
         _ = f.fileheader
         f.close()
 
-    f, *files = dlisio.load(multifpath)
+    f, *files = dlisio.load(path)
     _ = f.fileheader
     for g in files:
         _ = g.fileheader
         g.close()
 
-def test_context_manager_with(multifpath):
-    with dlisio.load(multifpath) as (f, *_):
+def test_context_manager_with():
+    path = 'data/chap4-7/many-logical-files.dlis'
+    with dlisio.load(path) as (f, *_):
         _ = f.fileheader
 
-    with dlisio.load(multifpath) as files:
+    with dlisio.load(path) as files:
         for f in files:
             _ = f.fileheader
 
-    with dlisio.load(multifpath) as (f, *files):
+    with dlisio.load(path) as (f, *files):
         _ = f.fileheader
         for g in files:
             _ = g.fileheader
