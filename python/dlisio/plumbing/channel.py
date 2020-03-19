@@ -203,7 +203,7 @@ class Channel(BasicObject):
         -------
         curves : np.ndarray
         """
-        return self.frame.curves()[self.name]
+        return np.copy(self.frame.curves()[self.name])
 
     def describe_attr(self, buf, width, indent, exclude):
         describe_description(buf, self.long_name, width, indent, exclude)

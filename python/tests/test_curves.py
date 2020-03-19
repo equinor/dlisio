@@ -73,6 +73,16 @@ def makeframe():
     frame.link()
     return frame
 
+def test_curves_are_copy(f):
+    # All channel.curves() really does is to slice the full frame array
+    # returned by frame.curves(). Make sure the returned slice is a copy not a
+    # view.  Returning a view makes it impossible to free up any memory from
+    # the original array, hence holding on to way more memory than needed.
+
+    channel = f.object('CHANNEL', 'CHANN1')
+    curves = channel.curves()
+    assert curves.flags['OWNDATA']
+
 def test_curves_values(f):
     frame = f.object('FRAME', 'FRAME1', 10, 0)
     curves = frame.curves()
