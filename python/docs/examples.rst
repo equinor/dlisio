@@ -179,6 +179,11 @@ which returns a structured numpy array that support common slicing operations:
     >>> curve[0:5]
     array([852606., 852606., 852606., 852606., 852606.], dtype=float32)
 
+Note that its almost always considerably faster to read curves-data with
+:py:func:`dlisio.plumbing.Frame.curves()`. Please refer to
+:py:func:`dlisio.plumbing.Channel.curves()` for further elaboration on why this
+is.
+
 Access all curves in a frame with :py:func:`dlisio.plumbing.Frame.curves()`.
 The returned structured numpy array can be indexed by Channel mnemonics
 and/or sliced by samples:
