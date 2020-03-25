@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cerrno>
 #include <ciso646>
-#include <fstream>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -9,6 +8,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <mio/mio.hpp>
+#include <lfp/lfp.h>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -16,6 +16,21 @@
 #include <dlisio/ext/io.hpp>
 
 namespace dl {
+
+stream open(const std::string& path, std::int64_t offset) noexcept (false) {
+    auto* file = std::fopen(path.c_str(), "rb");
+    auto* protocol = lfp_cfile(file);
+    if ( protocol == nullptr  )
+        throw io_error("lfp: unable to open lfp protocol cfile");
+
+    auto err = lfp_seek(protocol, offset);
+    switch (err) {
+            case LFP_OK: break;
+            default:
+                throw io_error(lfp_errormsg(protocol));
+        }
+    return stream(protocol);
+}
 
 void stream_offsets::resize( std::size_t n ) noexcept (false) {
     this->tells.resize( n );
@@ -188,25 +203,6 @@ bool record::isencrypted() const noexcept (true) {
     return this->attributes & DLIS_SEGATTR_ENCRYPT;
 }
 
-stream::stream( const std::string& path ) noexcept (false)
-{
-    this->fs.exceptions( fs.exceptions()
-                       | std::ios::eofbit
-                       | std::ios::failbit
-                       );
-
-    this->fs.open( path, std::ios::binary | std::ios::in );
-
-    if (!this->fs.good())
-        throw fmt::system_error(errno, "cannot to open file '{}'", path);
-}
-
-record stream::at( int i ) noexcept (false) {
-    record r;
-    r.data.reserve( 8192 );
-    return this->at( i, r );
-}
-
 namespace {
 
 bool consumed_record( long long tell,
@@ -274,133 +270,8 @@ noexcept (false) {
 
 }
 
-/*
- * store attributes in a string to use the short-string optimisation if
- * available. Just before commit, these are checked for consistency, i.e.
- * that segments don't report inconsistent information on encryption and
- * formatting.
- */
-template < typename T >
-using shortvec = std::basic_string< T >;
-
-record& stream::at( int i, record& rec ) noexcept (false) {
-
-    auto tell = this->tells.at( i );
-    auto remaining = this->residuals.at( i );
-
-    shortvec< std::uint8_t > attributes;
-    shortvec< int > types;
-    bool consistent = true;
-
-    this->fs.seekg( tell );
-
-    rec.data.clear();
-
-    while (true) {
-        while (remaining > 0) {
-            int len, type;
-            std::uint8_t attrs;
-            char buffer[ DLIS_LRSH_SIZE ];
-            this->fs.read( buffer, DLIS_LRSH_SIZE );
-            const auto err = dlis_lrsh( buffer, &len, &attrs, &type );
-
-            remaining -= len;
-            len -= DLIS_LRSH_SIZE;
-
-            if (err) consistent = false;
-            attributes.push_back( attrs );
-            types.push_back( type );
-
-            if (remaining < 0) {
-                /*
-                 * mismatch between visisble-record-length and segment length.
-                 * For now, just throw, but this could be reduced to a warning
-                 * with guide on which one to believe
-                 */
-
-                const auto vrl_len = remaining + len;
-                const auto cur_tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
-                const auto msg = "visible record/segment inconsistency: "
-                                 "segment (which is {}) "
-                                 ">= visible (which is {}) "
-                                 "in record {} (at tell {})"
-                ;
-                const auto str = fmt::format(msg, len, vrl_len, i, cur_tell);
-                throw std::runtime_error(str);
-            }
-
-            const auto prevsize = rec.data.size();
-            rec.data.resize( prevsize + len );
-            this->fs.read( rec.data.data() + prevsize, len );
-
-            /*
-             * chop off trailing length and checksum for now
-             * TODO: verify integrity by checking trailing length
-             * TODO: calculate checksum
-             */
-            const auto* fst = rec.data.data() + prevsize;
-            trim_segment(attrs, fst, len, rec.data);
-
-            /*if the whole segment is getting trimmed, it's unclear if
-              successor attribute should be erased or not.
-              For now ignoring. Suspecting issue will never occur as
-              whole "too many padbytes" problem might be caused by encryption
-            */
-
-            const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
-            if (has_successor) continue;
-
-            /* read last segment - check consistency and wrap up */
-            if (this->contiguous and not consumed_record( this->fs.tellg(),
-                                                          this->tells,
-                                                          i )) {
-                /*
-                 * If this happens something is VERY wrong. Every new record
-                 * should start just after the previous, unless bytes have been
-                 * purposely skipped, because the file was otherwise broken.
-                 * This probably comes from consistent, but lying, length
-                 * attributes
-                 */
-                const auto msg = "non-contiguous record: "
-                                 "#{} (at tell {}) "
-                                 "ends prematurely at {}, "
-                                 "not at #{} (at tell {})"
-                ;
-
-                const auto tell1 = this->tells.at(i);
-                const auto tell2 = this->tells.at(i + 1);
-                const auto at    = this->fs.tellg();
-                const auto str   = fmt::format(msg, i, tell1, at, i+1, tell2);
-                throw std::runtime_error(msg);
-            }
-
-
-            /*
-             * The record type only cares about encryption and formatting, so only
-             * extract those for checking consistency. Nothing else is interesting to
-             * users, as it only describes how to read this specific segment
-             */
-            static const auto fmtenc = DLIS_SEGATTR_EXFMTLR | DLIS_SEGATTR_ENCRYPT;
-            rec.attributes = attributes.front() & fmtenc;
-            rec.type = types.front();
-
-            rec.consistent = consistent;
-            if (not attr_consistent( attributes )) rec.consistent = false;
-            if (not type_consistent( types ))      rec.consistent = false;
-            return rec;
-        }
-
-        int len, version;
-        char buffer[ DLIS_VRL_SIZE ];
-        this->fs.read( buffer, DLIS_VRL_SIZE );
-        const auto err = dlis_vrl( buffer, &len, &version );
-
-        // TODO: for now record closest to VE gets the blame
-        if (err) consistent = false;
-        if (version != 1) consistent = false;
-
-        remaining = len - DLIS_VRL_SIZE;
-    }
+stream::stream( lfp_protocol* f ) noexcept (false){
+    this->f = f;
 }
 
 void stream::reindex( const std::vector< long long >& tells,
@@ -425,22 +296,182 @@ void stream::reindex( const std::vector< long long >& tells,
 }
 
 void stream::close() {
-    this->fs.close();
+    lfp_close(this->f);
 }
 
-void stream::read( char* dst, long long offset, int n ) {
-    if (n < 0) {
-        const auto msg = "expected n (which is {}) >= 0";
-        throw std::invalid_argument(fmt::format(msg, n));
+void stream::seek( std::int64_t offset ) noexcept (false) {
+    const auto err = lfp_seek(this->f, offset);
+    switch (err) {
+        case LFP_OK:
+            break;
+        case LFP_INVALID_ARGS:
+        case LFP_NOTIMPLEMENTED:
+        default:
+            throw std::runtime_error(lfp_errormsg( this->f ));
     }
+}
 
-    if (offset < 0) {
-        const auto msg = "expected offset (which is {}) >= 0";
-        throw std::invalid_argument(fmt::format(msg, offset));
+std::int64_t stream::tell() const noexcept (true) {
+    std::int64_t tell;
+    lfp_tell(this->f, &tell);
+    return tell;
+}
+
+std::int64_t stream::read( char* dst, int n )
+noexcept (false) {
+    std::int64_t nread = -1;
+    const auto err = lfp_readinto(this->f, dst, n, &nread);
+    switch (err) {
+        case LFP_OK:
+        case LFP_EOF:
+            break;
+        case LFP_OKINCOMPLETE:
+        case LFP_UNEXPECTED_EOF:
+        default:
+            throw std::runtime_error(lfp_errormsg(this->f));
     }
+    return nread;
+}
 
-    this->fs.seekg( offset );
-    this->fs.read( dst, n );
+record stream::at( int i ) noexcept (false) {
+    record r;
+    r.data.reserve( 8192 );
+    return this->at( i, r );
+}
+
+/*
+ * store attributes in a string to use the short-string optimisation if
+ * available. Just before commit, these are checked for consistency, i.e.
+ * that segments don't report inconsistent information on encryption and
+ * formatting.
+ */
+template < typename T >
+using shortvec = std::basic_string< T >;
+
+record& stream::at( int i, record& rec ) noexcept (false) {
+
+    auto tell = this->tells.at( i );
+    auto remaining = this->residuals.at( i );
+
+    shortvec< std::uint8_t > attributes;
+    shortvec< int > types;
+    bool consistent = true;
+
+    rec.data.clear();
+    this->seek(tell);
+
+    while (true) {
+        while (remaining > 0) {
+            int len, type;
+            std::uint8_t attrs;
+            char buffer[ DLIS_LRSH_SIZE ];
+            auto nread = this->read( buffer, DLIS_LRSH_SIZE );
+            if ( nread < DLIS_LRSH_SIZE )
+                throw std::runtime_error("stream.at: unable to read LRSH");
+
+            const auto err = dlis_lrsh( buffer, &len, &attrs, &type );
+
+            remaining -= len;
+            len -= DLIS_LRSH_SIZE;
+
+            if (err) consistent = false;
+            attributes.push_back( attrs );
+            types.push_back( type );
+
+            if (remaining < 0) {
+                /*
+                 * mismatch between visisble-record-length and segment length.
+                 * For now, just throw, but this could be reduced to a warning
+                 * with guide on which one to believe
+                 */
+
+                const auto vrl_len = remaining + len;
+                const auto cur_tell = this->tell() - DLIS_LRSH_SIZE;
+                const auto msg = "visible record/segment inconsistency: "
+                                 "segment (which is {}) "
+                                 ">= visible (which is {}) "
+                                 "in record {} (at tell {})"
+                ;
+                const auto str = fmt::format(msg, len, vrl_len, i, cur_tell);
+                throw std::runtime_error(str);
+            }
+
+            const auto prevsize = rec.data.size();
+            rec.data.resize( prevsize + len );
+            nread = this->read( rec.data.data() + prevsize, len );
+            if ( nread < len )
+                throw std::runtime_error("stream.at: unable to read full LRS");
+
+            /*
+             * chop off trailing length and checksum for now
+             * TODO: verify integrity by checking trailing length
+             * TODO: calculate checksum
+             */
+            const auto* fst = rec.data.data() + prevsize;
+            trim_segment(attrs, fst, len, rec.data);
+
+            /*if the whole segment is getting trimmed, it's unclear if
+              successor attribute should be erased or not.
+              For now ignoring. Suspecting issue will never occur as
+              whole "too many padbytes" problem might be caused by encryption
+            */
+
+            const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
+            if (has_successor) continue;
+
+            /* read last segment - check consistency and wrap up */
+            if (this->contiguous and not consumed_record( this->tell(),
+                                                          this->tells,
+                                                          i )) {
+                /*
+                 * If this happens something is VERY wrong. Every new record
+                 * should start just after the previous, unless bytes have been
+                 * purposely skipped, because the file was otherwise broken.
+                 * This probably comes from consistent, but lying, length
+                 * attributes
+                 */
+                const auto msg = "non-contiguous record: "
+                                 "#{} (at tell {}) "
+                                 "ends prematurely at {}, "
+                                 "not at #{} (at tell {})"
+                ;
+
+                const auto tell1 = this->tells.at(i);
+                const auto tell2 = this->tells.at(i + 1);
+                const auto at    = this->tell();
+                const auto str   = fmt::format(msg, i, tell1, at, i+1, tell2);
+                throw std::runtime_error(msg);
+            }
+
+
+            /*
+             * The record type only cares about encryption and formatting, so only
+             * extract those for checking consistency. Nothing else is interesting to
+             * users, as it only describes how to read this specific segment
+             */
+            static const auto fmtenc = DLIS_SEGATTR_EXFMTLR | DLIS_SEGATTR_ENCRYPT;
+            rec.attributes = attributes.front() & fmtenc;
+            rec.type = types.front();
+
+            rec.consistent = consistent;
+            if (not attr_consistent( attributes )) rec.consistent = false;
+            if (not type_consistent( types ))      rec.consistent = false;
+            return rec;
+        }
+
+        int len, version;
+        char buffer[ DLIS_VRL_SIZE ];
+        auto nread = this->read( buffer, DLIS_VRL_SIZE );
+        if ( nread < DLIS_VRL_SIZE )
+            throw std::runtime_error("stream.at: Unable to read full VR");
+        const auto err = dlis_vrl( buffer, &len, &version );
+
+        // TODO: for now record closest to VE gets the blame
+        if (err) consistent = false;
+        if (version != 1) consistent = false;
+
+        remaining = len - DLIS_VRL_SIZE;
+    }
 }
 
 std::vector< std::pair< std::string, int > >

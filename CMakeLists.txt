@@ -37,6 +37,8 @@ add_subdirectory(external/mpark)
 add_subdirectory(external/mio)
 add_subdirectory(external/fmt)
 
+find_package(lfp REQUIRED)
+
 if (NOT TARGET fmt)
     find_package(fmt REQUIRED)
 endif ()

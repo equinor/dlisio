@@ -49,6 +49,7 @@ target_link_libraries(dlisio-extension
            mpark::variant
            mio
            endianness
+           lfp::lfp
 
     PRIVATE fmt-header-only
 )

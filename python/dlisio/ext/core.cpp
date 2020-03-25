@@ -699,12 +699,14 @@ PYBIND11_MODULE(core, m) {
             if( p ) std::rethrow_exception( p );
         } catch( const dl::not_implemented& e ) {
             PyErr_SetString( PyExc_NotImplementedError, e.what() );
-        } catch( const io_error& e ) {
+        } catch( const dl::io_error& e ) {
             PyErr_SetString( PyExc_IOError, e.what() );
-        } catch( const eof_error& e ) {
+        } catch( const dl::eof_error& e ) {
             PyErr_SetString( PyExc_EOFError, e.what() );
         }
     });
+
+    m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
 
     m.def( "storage_label", storage_label );
     m.def("fingerprint", fingerprint);
@@ -882,7 +884,6 @@ PYBIND11_MODULE(core, m) {
     ;
 
     py::class_< dl::stream >( m, "stream" )
-        .def( py::init< const std::string& >() )
         .def( "reindex", &dl::stream::reindex )
         .def( "__getitem__", [](dl::stream& o, int i) { return o.at(i); })
         .def( "close", &dl::stream::close )
@@ -896,8 +897,8 @@ PYBIND11_MODULE(core, m) {
                 ;
                 throw std::invalid_argument( msg );
             }
-
-            s.read( static_cast< char* >( info.ptr ), off, n );
+            s.seek( off );
+            s.read( static_cast< char* >( info.ptr ), n );
             return b;
         })
         .def( "extract", [](dl::stream& s,

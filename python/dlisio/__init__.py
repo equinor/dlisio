@@ -690,7 +690,7 @@ def open(path):
     --------
     dlisio.load
     """
-    return core.stream(str(path))
+    return core.open(str(path))
 
 def load(path):
     """ Loads a file and returns one filehandle pr logical file.
