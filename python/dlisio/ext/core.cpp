@@ -962,13 +962,6 @@ PYBIND11_MODULE(core, m) {
         return py::make_tuple( ofs.tells, ofs.residuals, ofs.explicits );
     });
 
-    m.def( "marks", [] ( const std::string& path ) {
-        mio::mmap_source file;
-        dl::map_source( file, path );
-        auto marks = dl::findoffsets( file, 80 );
-        return py::make_tuple( marks.residuals, marks.tells );
-    });
-
     m.def("set_encodings", set_encodings);
     m.def("get_encodings", get_encodings);
 }
