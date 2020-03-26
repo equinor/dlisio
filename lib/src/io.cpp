@@ -51,11 +51,14 @@ void unmap( mio::mmap_source& file ) noexcept (false) {
     file.unmap();
 }
 
-long long findsul( mio::mmap_source& file ) noexcept (false) {
+long long findsul( stream& file ) noexcept (false) {
     long long offset;
-    const long long size = file.size();
-    const long long search_limit = (std::min)(200LL, size);
-    const auto err = dlis_find_sul(file.data(), search_limit, &offset);
+
+    char buffer[ 200 ];
+    file.seek(0);
+    auto bytes_read = file.read(buffer, 200);
+
+    const auto err = dlis_find_sul(buffer, bytes_read, &offset);
 
     switch (err) {
         case DLIS_OK:
@@ -63,7 +66,7 @@ long long findsul( mio::mmap_source& file ) noexcept (false) {
 
         case DLIS_NOTFOUND: {
             auto msg = "searched {} bytes, but could not find storage label";
-            throw dl::not_found(fmt::format(msg, search_limit));
+            throw dl::not_found(fmt::format(msg, bytes_read));
         }
 
         case DLIS_INCONSISTENT: {
@@ -77,23 +80,18 @@ long long findsul( mio::mmap_source& file ) noexcept (false) {
     }
 }
 
-long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
+long long findvrl( stream& file, long long from ) noexcept (false) {
     if (from < 0) {
         const auto msg = "expected from (which is {}) >= 0";
         throw std::out_of_range(fmt::format(msg, from));
     }
 
-    if (std::size_t(from) > file.size()) {
-        const auto msg = "expected from (which is {}) "
-                         "<= file.size() (which is {})"
-        ;
-        throw std::out_of_range(fmt::format(msg, from, file.size()));
-    }
-
     long long offset;
-    const long long size = file.size();
-    const long long search_limit = (std::min)(200LL, size - from);
-    const auto err = dlis_find_vrl(file.data() + from, search_limit, &offset);
+
+    char buffer[ 200 ];
+    file.seek(from);
+    auto bytes_read = file.read(buffer, 200);
+    const auto err = dlis_find_vrl(buffer, bytes_read, &offset);
 
     // TODO: error messages could maybe be pulled from core library
     switch (err) {
@@ -104,7 +102,7 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
             const auto msg = "searched {} bytes, but could not find "
                              "visible record envelope pattern [0xFF 0x01]"
             ;
-            throw dl::not_found(fmt::format(msg, search_limit));
+            throw dl::not_found(fmt::format(msg, bytes_read));
         }
 
         case DLIS_INCONSISTENT: {

@@ -85,8 +85,8 @@ stream open(const std::string&, std::int64_t) noexcept (false);
 void map_source( mio::mmap_source&, const std::string& ) noexcept (false);
 void unmap( mio::mmap_source& ) noexcept (false);
 
-long long findsul( mio::mmap_source& file ) noexcept (false);
-long long findvrl( mio::mmap_source& path, long long from ) noexcept (false);
+long long findsul(stream&) noexcept (false);
+long long findvrl(stream&, long long) noexcept (false);
 
 stream_offsets findoffsets( mio::mmap_source& path,
                             long long from )

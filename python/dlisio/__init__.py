@@ -751,20 +751,20 @@ def load(path):
     mmap = core.mmap_source()
     mmap.map(path)
 
+    stream = open(path)
     try:
-        sulpos = core.findsul(mmap)
-        vrlpos = core.findvrl(mmap, sulpos + 80)
+        sulpos = core.findsul(stream)
+        vrlpos = core.findvrl(stream, sulpos + 80)
         tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
     except:
+        stream.close()
         mmap.unmap()
         raise
 
     exi = [i for i, explicit in enumerate(explicits) if explicit != 0]
 
     try:
-        stream = open(path)
         stream.reindex(tells, residuals)
-
         records = stream.extract(exi)
         stream.close()
     except:
