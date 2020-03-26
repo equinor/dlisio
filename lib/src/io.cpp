@@ -7,7 +7,6 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <mio/mio.hpp>
 #include <lfp/lfp.h>
 #include <lfp/rp66.h>
 
@@ -43,19 +42,6 @@ stream open_rp66(const stream& f) noexcept (false) {
     }
 
     return stream(protocol);
-}
-
-void map_source( mio::mmap_source& file, const std::string& path ) noexcept (false) {
-    std::error_code syserror;
-    file.map( path, 0, mio::map_entire_file, syserror );
-    if (syserror) throw std::system_error( syserror );
-
-    if (file.size() == 0)
-        throw std::invalid_argument( "non-existent or empty file" );
-}
-
-void unmap( mio::mmap_source& file ) noexcept (false) {
-    file.unmap();
 }
 
 long long findsul( stream& file ) noexcept (false) {

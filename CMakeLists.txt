@@ -34,7 +34,6 @@ set(CMAKE_CXX_STANDARD 11)
 add_subdirectory(external/endianness)
 add_subdirectory(external/catch2)
 add_subdirectory(external/mpark)
-add_subdirectory(external/mio)
 add_subdirectory(external/fmt)
 
 find_package(lfp REQUIRED)

@@ -6,7 +6,6 @@
 #include <tuple>
 #include <vector>
 
-#include <mio/mio.hpp>
 #include <lfp/lfp.h>
 
 #include <dlisio/ext/types.hpp>
@@ -63,9 +62,6 @@ struct stream_offsets {
 
 stream open(const std::string&, std::int64_t) noexcept (false);
 stream open_rp66(const stream&) noexcept (false);
-
-void map_source( mio::mmap_source&, const std::string& ) noexcept (false);
-void unmap( mio::mmap_source& ) noexcept (false);
 
 long long findsul(stream&) noexcept (false);
 long long findvrl(stream&, long long) noexcept (false);

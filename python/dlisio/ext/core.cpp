@@ -949,12 +949,6 @@ PYBIND11_MODULE(core, m) {
         return objects;
     });
 
-    py::class_< mio::mmap_source >( m, "mmap_source" )
-        .def( py::init<>() )
-        .def( "map",   dl::map_source )
-        .def( "unmap", dl::unmap )
-    ;
-
     m.def( "findsul", dl::findsul );
     m.def( "findvrl", dl::findvrl );
     m.def("findfdata", dl::findfdata);

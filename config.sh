@@ -47,11 +47,9 @@ function pre_build {
     if [ -n "$IS_OSX" ]; then
         sudo make install;
         sudo cp -r ../external/mpark/mpark /usr/local/include;
-        sudo cp -r ../external/mio/mio     /usr/local/include;
     else
         make install;
         cp -r ../external/mpark/mpark /usr/local/include;
-        cp -r ../external/mio/mio /usr/local/include;
     fi
 
     popd

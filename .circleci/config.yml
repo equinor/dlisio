@@ -70,7 +70,6 @@ commands:
             make
             sudo make install
             sudo ldconfig /usr/local/lib
-            echo "export mio_DIR=$PWD/external/mio" >> $BASH_ENV
             echo "export mpark_DIR=$PWD/external/mpark" >> $BASH_ENV
       - run:
           name: install python dependencies
