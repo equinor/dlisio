@@ -53,13 +53,11 @@ def test_remove_empties():
     assert clean == ref
 
 def test_record_attributes():
-    stream = dlisio.open('data/chap2/3lr-in-vr-one-encrypted.dlis')
-    tells = [80, 116, 148]
-    residuals = [0, 64, 32]
-    # for the test pretend all 3 records are explicit
-    explicits = [0, 1, 2]
-    stream.reindex(tells, residuals)
-    recs = stream.extract(explicits)
+    stream = core.open('data/chap2/3lr-in-vr-one-encrypted.dlis', zero=80)
+    stream = core.open_rp66(stream)
+    explicits = [0, 32, 64]
+    recs = core.extract(stream, explicits)
+
     buffer = bytearray(1)
 
     assert len(recs) == 3
@@ -70,23 +68,20 @@ def test_record_attributes():
     assert recs[0].consistent
     checked_byte = np.array(recs[0])[1]
     assert checked_byte == 4
-    stream.get(buffer, tells[0] + 9, 1)
+    stream.get(buffer, explicits[0] + 5, 1)
     assert checked_byte == buffer[0]
 
     assert recs[1].type == 2
     assert recs[1].explicit
     assert not recs[1].encrypted
-    assert recs[1].consistent
-    stream.get(buffer, tells[1] + 5, 1)
+    stream.get(buffer, explicits[1] + 5, 1)
     assert np.array(recs[1])[1] == buffer[0]
 
     # last record ignored as encrypted
-    rec3 = stream[2]
-    assert rec3.type == 3
-    assert not rec3.explicit
-    assert rec3.encrypted
-    assert rec3.consistent
-    assert np.array(rec3)[1] == 8
+    assert recs[2].type == 3
+    assert not recs[2].explicit
+    assert recs[2].encrypted
+    assert np.array(recs[2])[1] == 8
 
     stream.close()
 

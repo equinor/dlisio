@@ -41,46 +41,28 @@ class stream {
 public:
     explicit stream( lfp_protocol* p ) noexcept (false);
 
-    record  at( int i ) noexcept (false);
-    record& at( int i, record& ) noexcept (false);
-
-    void reindex( const std::vector< long long >&,
-                  const std::vector< int >& )
-        noexcept (false);
-
     void close();
+    int eof() const noexcept (true);
+    lfp_protocol* protocol() const noexcept (true);
 
     void seek( std::int64_t offset ) noexcept (false);
     std::int64_t tell() const noexcept(true);
+    std::int64_t absolute_tell() const noexcept(false);
 
     std::int64_t read( char* dst, int n ) noexcept (false);
 
 private:
     lfp_protocol* f;
-    std::vector< long long > tells;
-    std::vector< int > residuals;
-
-    /*
-     * if this is true, there are no gaps inbetween tells, i.e. the file
-     * pointer should be at the next tell after reading. When stream is indexed
-     * with custom offsets, e.g. to account for broken files, this must be
-     * disabled and the safety check is gone
-     */
-    bool contiguous = true;
 };
 
 
 struct stream_offsets {
-    /*see dlis_index_records. only change is tells.
-    tells here mean positive distance from the beginning of the file*/
-    std::vector< long long > tells;
-    std::vector< int > residuals;
-    std::vector< int > explicits;
-
-    void resize( std::size_t ) noexcept (false);
+    std::vector< long long > explicits;
+    std::vector< long long > implicits;
 };
 
 stream open(const std::string&, std::int64_t) noexcept (false);
+stream open_rp66(const stream&) noexcept (false);
 
 void map_source( mio::mmap_source&, const std::string& ) noexcept (false);
 void unmap( mio::mmap_source& ) noexcept (false);
@@ -88,16 +70,13 @@ void unmap( mio::mmap_source& ) noexcept (false);
 long long findsul(stream&) noexcept (false);
 long long findvrl(stream&, long long) noexcept (false);
 
-stream_offsets findoffsets( mio::mmap_source& path,
-                            long long from )
-noexcept (false);
+record extract(stream&, long long) noexcept (false);
+record& extract(stream&, long long, long long, record&) noexcept (false);
 
-std::vector< std::pair< std::string, int > >
-findfdata(mio::mmap_source& file,
-          const std::vector< int >& candidates,
-          const std::vector< long long >& tells,
-          const std::vector< int >& residuals)
-noexcept (false);
+stream_offsets findoffsets(dl::stream&) noexcept (false);
+
+std::vector< std::pair< std::string, long long > >
+findfdata(dl::stream&, const std::vector< long long >&) noexcept (false);
 
 }
 

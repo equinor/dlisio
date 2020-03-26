@@ -329,7 +329,7 @@ py::object read_fdata(const char* pre_fmt,
                       const char* fmt,
                       const char* post_fmt,
                       dl::stream& file,
-                      const std::vector< int >& indices,
+                      const std::vector< long long >& indices,
                       std::size_t itemsize,
                       py::object alloc)
 noexcept (false) {
@@ -392,11 +392,10 @@ noexcept (false) {
     assert(std::string(pre_fmt) == "");
     assert(std::string(post_fmt) == "");
 
-    dl::record record;
     int frames = 0;
     for (auto i : indices) {
         /* get record */
-        file.at(i, record);
+        auto record = dl::extract(file, i);
 
         if (record.isencrypted()) {
             throw dl::not_implemented("encrypted FDATA record");
@@ -707,6 +706,7 @@ PYBIND11_MODULE(core, m) {
     });
 
     m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
+    m.def("open_rp66", &dl::open_rp66);
 
     m.def( "storage_label", storage_label );
     m.def("fingerprint", fingerprint);
@@ -884,8 +884,9 @@ PYBIND11_MODULE(core, m) {
     ;
 
     py::class_< dl::stream >( m, "stream" )
-        .def( "reindex", &dl::stream::reindex )
-        .def( "__getitem__", [](dl::stream& o, int i) { return o.at(i); })
+        .def_property_readonly("absolute_tell", &dl::stream::absolute_tell)
+        .def("seek", &dl::stream::seek)
+        .def("eof", &dl::stream::eof)
         .def( "close", &dl::stream::close )
         .def( "get", []( dl::stream& s, py::buffer b, long long off, int n ) {
             auto info = b.request();
@@ -901,17 +902,18 @@ PYBIND11_MODULE(core, m) {
             s.read( static_cast< char* >( info.ptr ), n );
             return b;
         })
-        .def( "extract", [](dl::stream& s,
-                            const std::vector< std::size_t >& indices) {
-            std::vector< dl::record > recs;
-            recs.reserve( indices.size() );
-            for (auto i : indices) {
-                auto rec = s.at( i );
-                recs.push_back( std::move( rec ) );
-            }
-            return recs;
-        })
     ;
+
+    m.def( "extract", [](dl::stream& s,
+                        const std::vector< long long >& tells) {
+        std::vector< dl::record > recs;
+        recs.reserve( tells.size() );
+        for (auto tell : tells) {
+            auto rec = dl::extract(s, tell);
+            recs.push_back( std::move( rec ) );
+        }
+        return recs;
+    });
 
     m.def( "parse_set_types", [](const std::vector< dl::record >& recs ) {
         /*
@@ -957,9 +959,9 @@ PYBIND11_MODULE(core, m) {
     m.def( "findvrl", dl::findvrl );
     m.def("findfdata", dl::findfdata);
 
-    m.def( "findoffsets", []( mio::mmap_source& file, long long from ) {
-        const auto ofs = dl::findoffsets( file, from );
-        return py::make_tuple( ofs.tells, ofs.residuals, ofs.explicits );
+    m.def( "findoffsets", []( dl::stream& file ) {
+        const auto ofs = dl::findoffsets( file );
+        return py::make_tuple( ofs.explicits, ofs.implicits );
     });
 
     m.def("set_encodings", set_encodings);
