@@ -182,12 +182,30 @@ def test_sul_error_values():
 
 
 def test_load_pre_sul_garbage():
+    d = {
+        'sequence': 1,
+        'version': '1.0',
+        'maxlen': 8192,
+        'layout': 'record',
+        'id': 'Default Storage Set                                         ',
+    }
     with dlisio.load('data/chap2/pre-sul-garbage.dlis') as (f,):
-        assert f.storage_label() == f.storage_label()
-        assert f.sul_offset == 12
+        assert f.storage_label() == d
 
 
 def test_load_pre_vrl_garbage():
+    d = {
+        'sequence': 1,
+        'version': '1.0',
+        'maxlen': 8192,
+        'layout': 'record',
+        'id': 'Default Storage Set                                         ',
+    }
     with dlisio.load('data/chap2/pre-sul-pre-vrl-garbage.dlis') as (f,):
-        assert f.storage_label() == f.storage_label()
-        assert f.sul_offset == 12
+        assert f.storage_label() == d
+
+@pytest.mark.skip(reason='no support for files without sul')
+def test_load_missing_sul():
+    with dlisio.load('data/chap2/missing-sul.dlis') as files:
+        for f in files:
+            assert f.storage_label() is None

@@ -215,11 +215,11 @@ class dlis(object):
        to link the content of attributes to other objects.
     """
 
-    def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
+    def __init__(self, stream, explicits, attic, implicits, sul=None):
         self.file = stream
         self.explicit_indices = explicits
         self.attic = attic
-        self.sul_offset = sul_offset
+        self.sul = sul
         self.fdata_index = implicits
 
         self.indexedobjects = defaultdict(dict)
@@ -669,8 +669,11 @@ class dlis(object):
 
         This method is mainly intended for internal use.
         """
-        blob = self.file.get(bytearray(80), self.sul_offset, 80)
-        return core.storage_label(blob)
+        if not self.sul:
+            logging.warning('file has no storage unit label')
+            return None
+        return core.storage_label(self.sul)
+
 
 def open(path):
     """ Open a file
@@ -755,6 +758,7 @@ def load(path):
     try:
         sulpos = core.findsul(stream)
         vrlpos = core.findvrl(stream, sulpos + 80)
+        sul = stream.get(bytearray(80), sulpos, 80)
         tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
     except:
         stream.close()
@@ -786,7 +790,7 @@ def load(path):
                 implicits[key].append(val)
 
             f = dlis(stream, part['explicits'],
-                    part['records'], implicits, sul_offset=sulpos)
+                    part['records'], implicits, sul=sul)
             batch.append(f)
         except:
             mmap.unmap()
