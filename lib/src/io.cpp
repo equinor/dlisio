@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include <lfp/lfp.h>
 #include <lfp/rp66.h>
+#include <lfp/tapeimage.h>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -41,6 +42,17 @@ stream open_rp66(const stream& f) noexcept (false) {
             throw io_error("lfp: unable to apply rp66 protocol");
     }
 
+    return stream(protocol);
+}
+
+stream open_tapeimage(const stream& f) noexcept (false) {
+    auto* protocol = lfp_tapeimage_open(f.protocol());
+    if ( protocol == nullptr ) {
+        if ( lfp_eof(f.protocol()) )
+            throw eof_error("lfp: cannot open file past eof");
+        else
+            throw io_error("lfp: unable to apply tapeimage protocol");
+    }
     return stream(protocol);
 }
 
@@ -106,6 +118,29 @@ long long findvrl( stream& file, long long from ) noexcept (false) {
 
         default:
             throw std::runtime_error("dlis_find_vrl: unknown error");
+    }
+}
+
+bool hastapemark(stream& file) noexcept (false) {
+    constexpr int TAPEMARK_SIZE = 12;
+    file.seek(0);
+
+    char buffer[ TAPEMARK_SIZE ];
+    auto bytes_read = file.read(buffer, TAPEMARK_SIZE);
+    if (bytes_read < TAPEMARK_SIZE)
+        throw std::runtime_error("hastapemark: unable to read full tapemark");
+
+    const auto err = dlis_tapemark(buffer, TAPEMARK_SIZE);
+
+    switch (err) {
+        case DLIS_OK:
+            return true;
+
+        case DLIS_NOTFOUND:
+            return false;
+
+        default:
+            throw std::runtime_error("dlis_tapemark: unknown error");
     }
 }
 

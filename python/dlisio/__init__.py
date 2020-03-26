@@ -753,6 +753,7 @@ def load(path):
     stream = open(path)
 
     sulsize = 80
+    tifsize = 12
 
     try:
         offset = core.findsul(stream)
@@ -762,11 +763,14 @@ def load(path):
         stream.close()
         raise
 
+    tapemarks = core.hastapemark(stream)
     offset = core.findvrl(stream, offset)
 
-    def rewind(offset):
+    def rewind(offset, tif):
         """Rewind offset to make sure not to miss VRL when calling findvrl"""
-        return offset - 4
+        offset -= 4
+        if tif: offset -= 12
+        return offset
 
     # Layered File Protocol does not currently offer support for re-opening
     # files at the current position, nor is it able to precisly report the
@@ -783,11 +787,13 @@ def load(path):
     #     > ... Visible Records cannot intersect more than one Logical File.
     lfs = []
     while True:
+        if tapemarks: offset -= tifsize
         stream.seek(offset)
+        if tapemarks: stream = core.open_tif(stream)
         stream = core.open_rp66(stream)
 
         explicits, implicits = core.findoffsets(stream)
-        hint = rewind(stream.absolute_tell)
+        hint = rewind(stream.absolute_tell, tapemarks)
 
         records = core.extract(stream, explicits)
         fdata_index = defaultdict(list)

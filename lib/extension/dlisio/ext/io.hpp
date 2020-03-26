@@ -62,9 +62,11 @@ struct stream_offsets {
 
 stream open(const std::string&, std::int64_t) noexcept (false);
 stream open_rp66(const stream&) noexcept (false);
+stream open_tapeimage(const stream&) noexcept (false);
 
 long long findsul(stream&) noexcept (false);
 long long findvrl(stream&, long long) noexcept (false);
+bool hastapemark(stream&) noexcept (false);
 
 record extract(stream&, long long) noexcept (false);
 record& extract(stream&, long long, long long, record&) noexcept (false);

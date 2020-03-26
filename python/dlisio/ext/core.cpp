@@ -707,6 +707,7 @@ PYBIND11_MODULE(core, m) {
 
     m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
     m.def("open_rp66", &dl::open_rp66);
+    m.def("open_tif", &dl::open_tapeimage);
 
     m.def( "storage_label", storage_label );
     m.def("fingerprint", fingerprint);
@@ -951,6 +952,7 @@ PYBIND11_MODULE(core, m) {
 
     m.def( "findsul", dl::findsul );
     m.def( "findvrl", dl::findvrl );
+    m.def( "hastapemark", dl::hastapemark );
     m.def("findfdata", dl::findfdata);
 
     m.def( "findoffsets", []( dl::stream& file ) {
