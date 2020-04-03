@@ -113,8 +113,6 @@ def test_absent_attribute_in_template(tmpdir, merge_files_oneLR):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
-
-
 @pytest.mark.future_test_attributes
 def test_global_default_attribute(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'global-default-attribute.dlis')
@@ -237,24 +235,6 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
         #assert attr.reprc == attr_reprc
         assert attr == [attr_v]
 
-
-def test_repcode_different_no_value(tmpdir, merge_files_oneLR):
-    path = os.path.join(str(tmpdir), 'different-repcode-no-value.dlis')
-    content = [
-        'data/chap3/start.dlis.part',
-        'data/chap3/template/default.dlis.part',
-        'data/chap3/object/object.dlis.part',
-        'data/chap3/objattr/csingle-novalue.dlis.part'
-    ]
-    merge_files_oneLR(path, content)
-
-    with dlisio.load(path) as (f, *_):
-        with pytest.raises(RuntimeError) as excinfo:
-            # Load all objects
-            f.load()
-    assert "value is not explicitly set" in str(excinfo.value)
-
-
 def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode.dlis')
     content = [
@@ -302,6 +282,20 @@ def test_repcode_invalid_in_objects(tmpdir, merge_files_oneLR):
             f.load()
     assert "unknown representation code" in str(excinfo.value)
 
+@pytest.mark.future_warning_repcode_different_no_value
+def test_repcode_different_no_value(tmpdir, merge_files_oneLR):
+    path = os.path.join(str(tmpdir), 'different-repcode-no-value.dlis')
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/csingle-novalue.dlis.part'
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *_):
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        assert obj.attic['DEFAULT_ATTRIBUTE'] == [0j, 0j]
 
 @pytest.mark.future_test_attributes
 def test_count0_novalue(tmpdir, merge_files_oneLR):
