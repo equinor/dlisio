@@ -67,8 +67,7 @@ def test_record_attributes():
     assert recs[0].type == 1
     assert not recs[0].explicit
     assert not recs[0].encrypted
-    # due to error in VE version
-    assert not recs[0].consistent
+    assert recs[0].consistent
     checked_byte = np.array(recs[0])[1]
     assert checked_byte == 4
     stream.get(buffer, tells[0] + 9, 1)
