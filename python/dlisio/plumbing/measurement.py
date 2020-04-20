@@ -44,13 +44,6 @@ class Measurement(BasicObject):
         Measurable quantity of the calibration standard used to produce the
         sample
 
-    samples
-    max_deviation
-    std_deviation
-    reference
-    plus_tolerance
-    minus_tolerance
-
     See also
     --------
 

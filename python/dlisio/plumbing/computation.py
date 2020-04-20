@@ -43,8 +43,6 @@ class Computation(BasicObject):
     source
         The immediate source of the Computation
 
-    values
-
     See also
     --------
 
