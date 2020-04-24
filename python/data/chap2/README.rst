@@ -52,8 +52,13 @@ small.dlis                          Test file smaller than 4kB
 too-small-record.dlis               Visible record is smaller than the minimum
                                     requirement (20Bytes)
 
-truncated.dlis                      Mismatch between visible record length and
-                                    remaining bytes
+truncated-in-lrsh.dlis              File is truncated in the LRSH
+
+truncated-in-second-lr.dlis         Mismatch between visible record length and
+                                    remaining bytes. Second LR truncated
+
+truncated-on-lrs.dlis               LRS expects successor, but none comes. File
+                                    is truncated
 
 wrong-lrhs.dlis                     Mismatch between logical record segment
                                     length and remaining bytes in visible

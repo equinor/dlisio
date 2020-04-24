@@ -87,9 +87,19 @@ def test_broken_vr():
         _ = dlisio.load('data/chap2/incomplete-vr.dlis')
     assert "file may be corrupted" in str(excinfo.value)
 
-def test_truncated():
+def test_truncated_in_second_lr():
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load('data/chap2/truncated.dlis')
+        _ = dlisio.load('data/chap2/truncated-in-second-lr.dlis')
+    assert "file truncated" in str(excinfo.value)
+
+def test_truncated_in_lrsh():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-in-lrsh.dlis')
+    assert "file truncated" in str(excinfo.value)
+
+def test_truncated_on_lrs():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-on-lrs.dlis')
     assert "file truncated" in str(excinfo.value)
 
 def test_too_small_record():
