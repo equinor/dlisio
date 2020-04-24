@@ -235,6 +235,19 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
         #assert attr.reprc == attr_reprc
         assert attr == [attr_v]
 
+def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
+    path = os.path.join(str(tmpdir), 'invalid_dtime.dlis')
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/repcode/invalid-dtime.dlis.part',
+        'data/chap3/object/object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *tail):
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        assert obj.attic['DTIME']
+
 def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode.dlis')
     content = [
