@@ -22,6 +22,10 @@ File                                Description
 7K-file.dlis                        Testing that files between 4 and 8 kB are
                                     read correctly.
 
+attrs-inconsistency-type-pred.dlis  First implicit lrs expects successor, but
+                                    what follows is an explicit lrs with no
+                                    predecessor
+
 incomplete-sul.dlis                 Incomplete storage unit label
 
 incomplete-vr.dlis                  Incomplete visible record
@@ -65,6 +69,7 @@ truncated-on-lrs.dlis               LRS expects successor, but none comes. File
 
 wrong-lrhs.dlis                     Mismatch between logical record segment
                                     length and remaining bytes in visible
-                                    record
+                                    record (LRSH length is bigger than VR
+                                    length)
 
 =================================== ===========================================

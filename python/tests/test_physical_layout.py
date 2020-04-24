@@ -33,6 +33,14 @@ def test_vrl_and_lrsh_mismatch():
         _ = dlisio.load('data/chap2/wrong-lrhs.dlis')
     assert "visible record/segment inconsistency" in str(excinfo.value)
 
+@pytest.mark.xfail(reason="We do not fail when attributes are inconsistent "
+                          "between lrs of same lr, but maybe we should",
+                   strict=True)
+def test_lrs_atributes_inconsistency():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/attrs-inconsistency-type-pred.dlis')
+    assert "inconsistency" in str(excinfo.value)
+
 def test_padbytes_as_large_as_record():
     # 180-byte long explicit record with padding, and padbytes are set to 180
     # (leaving the resulting len(data) == 0)
