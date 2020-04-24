@@ -20,6 +20,33 @@ start.dlis.part              SUL + all the VR and LRSH bytesiBytes 50 and 51
 /reprcode                    Object attribute of various representation codes
 ============================ =================================================
 
+*implicit* folder contains full files.
+
+====================================== ========================================
+Files in /implicit                     Description
+====================================== ========================================
+fdata-broken-obname.dlis               File is truncated in the obname of fdata
+                                       record
+
+fdata-encrypted.dlis                   Fdata record is encrypted
+
+fdata-many-in-same-vr.dlis             Several fdata segments in same vr,
+                                       including fdata with obname of min and
+                                       max length
+
+fdtata-non-0-type.dlis                 Contains implicit record of non-0 type
+
+fdata-vr-aligned.dlis                  Simple fdata aligned with Visible Record
+                                       border
+
+fdata-vr-disaligned-in-obname.dlis     Fdata obname is interrupted by Visible
+                                       Record border
+
+fdata-vr-disaligned.dlis               Fdata which is interrupted by Visible
+                                       Record in the middle of data
+====================================== ========================================
+
+
 Creating a valid .dlis-file
 ---------------------------
 

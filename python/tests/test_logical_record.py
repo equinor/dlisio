@@ -464,11 +464,19 @@ def test_findfdata_VR_aligned():
 
 def test_findfdata_many_in_same_VR():
     with dlisio.load('data/chap3/implicit/fdata-many-in-same-vr.dlis') as (f, *_):
-        assert len(f.fdata_index) == 2
+        assert len(f.fdata_index) == 3
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0, 1]
+
+        fingerprint = 'T.FRAME-I.-O.3-C.1'
+        assert f.fdata_index[fingerprint] == [3]
+
         ident = '3'*255
         fingerprint = 'T.FRAME-I.'+ident+'-O.1073741823-C.255'
-        assert f.fdata_index[fingerprint] == [3]
+        assert f.fdata_index[fingerprint] == [4]
+
+def test_findfdata_non_0_type():
+    with dlisio.load('data/chap3/implicit/fdata-non-0-type.dlis') as (f, *_):
+        assert len(f.fdata_index) == 0
 
 def test_findfdata_VR_disaligned():
     with dlisio.load('data/chap3/implicit/fdata-vr-disaligned.dlis') as (f, *_):
