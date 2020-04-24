@@ -54,6 +54,9 @@ too-small-record.dlis               Visible record is smaller than the minimum
 
 truncated-in-lrsh.dlis              File is truncated in the LRSH
 
+truncated-on-full-lr.dlis           File is truncated on a complete LR, but not
+                                    VR
+
 truncated-in-second-lr.dlis         Mismatch between visible record length and
                                     remaining bytes. Second LR truncated
 

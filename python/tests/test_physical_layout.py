@@ -102,6 +102,14 @@ def test_truncated_on_lrs():
         _ = dlisio.load('data/chap2/truncated-on-lrs.dlis')
     assert "file truncated" in str(excinfo.value)
 
+@pytest.mark.xfail(reason="For now we do not consider files ending on "
+                          "full LR to be truncated, but this will change",
+                   strict=True)
+def test_truncated_on_full_lr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-on-full-lr.dlis')
+    assert "file truncated" in str(excinfo.value)
+
 def test_too_small_record():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/too-small-record.dlis')
