@@ -297,6 +297,7 @@ class dlis(object):
             self.t = t
 
         def __get__(self, instance, owner):
+            if instance is None: return None
             return instance[self.t].values()
 
     @property
