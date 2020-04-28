@@ -344,6 +344,10 @@ def test_channel_curves():
         frame_curves = load_curves(fpath)
         assert frame_curves['CH22'] == curves22
 
+def test_channel_without_frame(assert_info):
+    channel = dlisio.plumbing.Channel()
+    assert channel.curves() == None
+    assert_info('no recorded curve-data')
 
 def test_channel_fmt():
     ch1 = dlisio.plumbing.Channel()

@@ -168,7 +168,7 @@ class Channel(BasicObject):
         Returns
         -------
 
-        curves : np.ndarray
+        curves : np.ndarray or None
 
         See also
         --------
@@ -216,7 +216,12 @@ class Channel(BasicObject):
         >>> curve[0][1][2]
         6
         """
-        return np.copy(self.frame.curves()[self.name])
+        if self._frame is not None:
+            return np.copy(self.frame.curves()[self.name])
+
+        msg = 'There is no recorded curve-data for {}'
+        logging.info(msg.format(self))
+        return None
 
     def describe_attr(self, buf, width, indent, exclude):
         describe_description(buf, self.long_name, width, indent, exclude)
