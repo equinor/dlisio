@@ -91,7 +91,12 @@ class Channel(BasicObject):
 
     @property
     def frame(self):
-        return lookup(self, obname('FRAME'), self._frame)
+        if self._frame is not None:
+            return lookup(self, obname('FRAME'), self._frame)
+
+        msg = '{} does not belong to any Frame'
+        logging.info(msg.format(self))
+        return None
 
     @property
     def long_name(self):

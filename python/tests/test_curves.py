@@ -349,6 +349,9 @@ def test_channel_without_frame(assert_info):
     assert channel.curves() == None
     assert_info('no recorded curve-data')
 
+    assert channel.frame == None
+    assert_info('does not belong')
+
 def test_channel_fmt():
     ch1 = dlisio.plumbing.Channel()
     ch1.name = 'ch1'
