@@ -36,14 +36,24 @@ fdata-many-in-same-vr.dlis             Several fdata segments in same vr,
 
 fdtata-non-0-type.dlis                 Contains implicit record of non-0 type
 
+fdata-vr-aligned-padding.dlis          Simple fdata aligned with Visible Record
+                                       border but with present padbytes
+
 fdata-vr-aligned.dlis                  Simple fdata aligned with Visible Record
                                        border
+
+fdata-vr-disaligned-checksum.dlis      Fdata is interrupted by Visible Record
+                                       right after obname and lrs has checksum
 
 fdata-vr-disaligned-in-obname.dlis     Fdata obname is interrupted by Visible
                                        Record border
 
 fdata-vr-disaligned.dlis               Fdata which is interrupted by Visible
                                        Record in the middle of data
+
+fdata-vr-obname-trailing.dlis          Fdata obname is interrupted by Visible
+                                       Record border with just 1 byte to go and
+                                       lrs has trailing length of 2 bytes
 ====================================== ========================================
 
 

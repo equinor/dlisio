@@ -481,6 +481,12 @@ def test_findfdata_VR_aligned():
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0]
 
+def test_findfdata_VR_aligned_padding():
+    path = 'data/chap3/implicit/fdata-vr-aligned-padding.dlis'
+    with dlisio.load(path) as (f, *_):
+        assert len(f.fdata_index) == 1
+        assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0]
+
 def test_findfdata_many_in_same_VR():
     with dlisio.load('data/chap3/implicit/fdata-many-in-same-vr.dlis') as (f, *_):
         assert len(f.fdata_index) == 3
@@ -502,9 +508,27 @@ def test_findfdata_VR_disaligned():
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.IFLR-O.35-C.1'] == [0]
 
-@pytest.mark.xfail(strict=True)
+def test_findfdata_VR_disaligned_after_obname():
+    path = 'data/chap3/implicit/fdata-vr-disaligned-checksum.dlis'
+    with dlisio.load(path) as (f, *_):
+        assert len(f.fdata_index) == 1
+        name = 'FRAME-OBNAME-INTERRUPTED-BY-VR!'
+        assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
+
+@pytest.mark.xfail(reason="bug, findfdata considers obame to be uninterrupted",
+                   strict=True)
 def test_findfdata_VR_disaligned_in_obname():
-    with dlisio.load('data/chap3/implicit/fdata-vr-disaligned-in-obname.dlis') as (f, *_):
+    path = 'data/chap3/implicit/fdata-vr-disaligned-in-obname.dlis'
+    with dlisio.load(path) as (f, *_):
+        assert len(f.fdata_index) == 1
+        name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
+        assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
+
+@pytest.mark.xfail(reason="bug, findfdata considers obame to be uninterrupted",
+                   strict=True)
+def test_findfdata_VR_disaligned_in_obname_trailing_length_in_lrs():
+    path = 'data/chap3/implicit/fdata-vr-obname-trailing.dlis'
+    with dlisio.load(path) as (f, *_):
         assert len(f.fdata_index) == 1
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
