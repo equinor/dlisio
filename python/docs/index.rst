@@ -32,6 +32,7 @@ Standard (DLIS)`.
    :maxdepth: 3
 
    segmentation
+   metadata
    curves
 
 .. toctree::
