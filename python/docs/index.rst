@@ -17,6 +17,12 @@ Standard (DLIS)`.
 
    about
    rp66v1
+
+.. toctree::
+   :caption: Data organization
+   :name: Data organization
+   :maxdepth: 3
+
    segmentation
    curves
 
