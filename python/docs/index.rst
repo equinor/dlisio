@@ -16,7 +16,14 @@ Standard (DLIS)`.
    :maxdepth: 2
 
    about
+
+.. toctree::
+   :caption: RP66
+   :name: rp66
+   :maxdepth: 2
+
    rp66v1
+   vendors
 
 .. toctree::
    :caption: Data organization
@@ -35,7 +42,6 @@ Standard (DLIS)`.
 
 .. toctree::
    examples
-   vendors
    changelog
 
 Indices and tables
