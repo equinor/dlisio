@@ -16,6 +16,7 @@ Standard (DLIS)`.
    :maxdepth: 2
 
    about
+   changelog
 
 .. toctree::
    :caption: RP66
@@ -42,7 +43,6 @@ Standard (DLIS)`.
 
 .. toctree::
    examples
-   changelog
 
 Indices and tables
 ==================
