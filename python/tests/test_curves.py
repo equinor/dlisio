@@ -362,6 +362,16 @@ def test_channel_curves():
         frame_curves = load_curves(fpath)
         assert frame_curves['CH22'] == curves22
 
+def test_channel_curves_duplicated_mnemonics(f):
+    frame = f.object('FRAME', 'FRAME1')
+    frame.channels[1].name = frame.channels[0].name
+    frame.channels[1].copynumber = frame.channels[0].copynumber+ 1
+
+    ch = frame.channels[0]
+    curve = ch.curves()
+
+    np.testing.assert_array_equal(curve, frame.curves()[ch.fingerprint])
+
 def test_channel_without_frame(assert_info):
     channel = dlisio.plumbing.Channel()
     assert channel.curves() == None

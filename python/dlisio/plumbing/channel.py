@@ -222,7 +222,7 @@ class Channel(BasicObject):
         6
         """
         if self._frame is not None:
-            return np.copy(self.frame.curves()[self.name])
+            return np.copy(self.frame.curves()[self.fingerprint])
 
         msg = 'There is no recorded curve-data for {}'
         logging.info(msg.format(self))
