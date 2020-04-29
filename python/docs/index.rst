@@ -15,7 +15,10 @@ Standard (DLIS)`.
 .. toctree::
    :maxdepth: 2
 
-   intro
+   about
+   rp66v1
+   segmentation
+   curves
 
 .. toctree::
    :caption: The Library
