@@ -42,6 +42,10 @@ Standard (DLIS)`.
    dlisio
 
 .. toctree::
+   :caption: Examples
+   :name: Examples
+   :maxdepth: 3
+
    examples
 
 Indices and tables
