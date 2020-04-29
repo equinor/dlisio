@@ -35,8 +35,8 @@ Standard (DLIS)`.
    curves
 
 .. toctree::
-   :caption: The Library
-   :name: The Library
+   :caption: API Reference
+   :name: apiref
    :maxdepth: 3
 
    dlisio
