@@ -167,7 +167,7 @@ class Frame(BasicObject):
         enriched with origin and copynumber.
 
         Consider a frame with the channels mnemonics [('TIME', 0, 0), ('TDEP',
-        0, 0), ('TIME, 1, 0)]. The dtype names for this frame would be
+        0, 0), ('TIME, 1, 0)]: dtype.names for this frame would be
         ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0').
 
         Duplicated mnemonics are formatted by the dtype_fmt attribute. To use a
@@ -179,6 +179,9 @@ class Frame(BasicObject):
         in the mnemonic itself, and a consistent way of parsing origin and
         copynumber are needed.
 
+        In addition to the customizable dtype.names, ch.fingerprint is always
+        used as field title, which serves as an alias for the name.
+
         Returns
         -------
         dtype : np.dtype
@@ -187,19 +190,20 @@ class Frame(BasicObject):
         --------
         A frame with two TIME channels:
 
-        >>> frame.dtype()
-        dtype([('FRAMENO', '<i4'), ('TIME.0.0', '<f4'),
-               ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
+        >>> dtype = frame.dtype()
+        >>> dtype.names
+        dtype([('FRAMENO', '<i4'),
+               (('T.CHANNEL-I.TIME-O.0-C.0','TIME.0.0'), '<f4'),
+               (('T.CHANNEL-I.TDEP-O.0-C.0','TDEP'), '<i2'),
+               (('T.CHANNEL-I.TIME-O.1-C.0','TIME.1.0'), '<i2')])
 
         Override instance-specific mnemonic formatting
 
-        >>> frame.dtype()
-        dtype([(FRAMENO', '<i4'), ('TIME.0.0', '<f4'),
-              ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
+        >>> frame.dtype().names
+        (FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0')
         >>> frame.dtype_fmt = '{:s}-{:d}-{:d}'
         >>> frame.dtype()
-        dtype([(FRAMENO', 'i4'), ('TIME-0-0', '<f4'),
-               ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
+        (FRAMENO','TIME-0-0', 'TDEP','TIME-1-0')
         """
         seen = {}
         types = [('FRAMENO', 'i4')]
@@ -210,7 +214,7 @@ class Frame(BasicObject):
 
         fmtlabel = self.dtype_fmt.format
         for i, ch in enumerate(self.channels, start = 1):
-            current = (ch.name, ch.dtype)
+            current = ((ch.fingerprint, ch.name), ch.dtype)
 
             # first time for this label, register it as "seen before"
             if ch.name not in seen:
@@ -225,7 +229,7 @@ class Frame(BasicObject):
                 logging.debug(info(ch.name, ch.origin, ch.copynumber))
                 raise
 
-            types.append((label, ch.dtype))
+            types.append(((ch.fingerprint, label), ch.dtype))
 
             # the first-seen curve with this name has already been updated
             if seen[ch.name] is None:
@@ -242,7 +246,7 @@ class Frame(BasicObject):
 
             # update the previous label with this name, and mark (with None)
             # for not needing update again
-            types[prev_index] = (label, prev.dtype)
+            types[prev_index] = ((prev.fingerprint, label), prev.dtype)
             seen[ch.name] = None
 
         try:
@@ -546,13 +550,14 @@ def mkunique(types):
     for duplicate in duplicates:
         tailcount = 0
         tmp = []
-        for label, dtype in types:
-            if label != duplicate:
-                tmp.append((label, dtype))
-            else:
-                label     += tail.format(tailcount)
+        for name, dtype in types:
+            if name == duplicate:
+                field, label = name
+                field += tail.format(tailcount)
+                label += tail.format(tailcount)
                 tailcount += 1
-                tmp.append((label, dtype))
+                name = (field, label)
+            tmp.append((name, dtype))
         types = tmp
 
     return types

@@ -221,7 +221,19 @@ def test_dimensions_in_multifdata():
 def test_duplicated_mnemonics_get_unique_labels():
     frame = makeframe()
     assert 'ifDDD' == frame.fmtstr()
-    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype().names
+    dtype = frame.dtype()
+
+    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == dtype.names
+
+    fields = [
+        'FRAMENO',
+        frame.channels[0].fingerprint,
+        frame.channels[1].fingerprint,
+        frame.channels[2].fingerprint,
+    ]
+
+    assert all(x in dtype.fields for x in fields)
+
 
 def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     # Getting a buffer from a numpy array adds a :name: field after the label
@@ -257,19 +269,21 @@ def test_duplicated_signatures(f, assert_log):
     assert names == ('FRAMENO', 'CHANN1.10.0(0)', 'CHANN1.10.0(1)')
 
 def test_mkunique():
-    types    = [("TIME.0.0"   , "f2"),
-                ("TDEP.0.0"   , "f4"),
-                ("TDEP.0.0"   , "i1"),
-                ("TDEP.0.1"   , "i2"),
-                ("TIME.0.0"   , "i4"),
-                ("TIME.0.0"   , "i4"),
+    types = [
+        (("T.CHANNEL-I.TIME-O.0-C.0", "TIME.0.0"), "f2"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0", "TDEP.0.0"), "f4"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0", "TDEP.0.0"), "i1"),
+        (("T.CHANNEL-I.TDEP-O.0-C.1", "TDEP.0.1"), "i2"),
+        (("T.CHANNEL-I.TIME-O.0-C.0", "TIME.0.0"), "i4"),
+        (("T.CHANNEL-I.TIME-O.0-C.0", "TIME.0.0"), "i4"),
     ]
-    expected = [("TIME.0.0(0)", "f2"),
-                ("TDEP.0.0(0)", "f4"),
-                ("TDEP.0.0(1)", "i1"),
-                ("TDEP.0.1"   , "i2"),
-                ("TIME.0.0(1)", "i4"),
-                ("TIME.0.0(2)", "i4"),
+    expected = [
+        (("T.CHANNEL-I.TIME-O.0-C.0(0)", "TIME.0.0(0)"), "f2"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0(0)", "TDEP.0.0(0)"), "f4"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0(1)", "TDEP.0.0(1)"), "i1"),
+        (("T.CHANNEL-I.TDEP-O.0-C.1"   , "TDEP.0.1"   ), "i2"),
+        (("T.CHANNEL-I.TIME-O.0-C.0(1)", "TIME.0.0(1)"), "i4"),
+        (("T.CHANNEL-I.TIME-O.0-C.0(2)", "TIME.0.0(2)"), "i4"),
     ]
     assert expected == mkunique(types)
 
@@ -286,11 +300,15 @@ def test_channel_order():
 
 def test_dtype():
     frame = makeframe()
-    assert frame.dtype() == np.dtype([('FRAMENO', np.int32),
-                                      ('TIME.0.0', np.float32),
-                                      ('TDEP', np.int16, (2,)),
-                                      ('TIME.1.0', np.int16),
-                                      ])
+
+    dtype = np.dtype([
+        ('FRAMENO', np.int32),
+        ((frame.channels[0].fingerprint, 'TIME.0.0'), np.float32),
+        ((frame.channels[1].fingerprint, 'TDEP'), np.int16, (2,)),
+        ((frame.channels[2].fingerprint, 'TIME.1.0'), np.int16),
+    ])
+
+    assert frame.dtype() == dtype
 
 def test_dtype_fmt_instance():
     frame = makeframe()
