@@ -88,10 +88,6 @@ This enables quick and easy mathematical operations on the data you care about.
 
 Please refer to :py:class:`dlisio.plumbing.Channel` and :py:class:`dlisio.plumbing.Frame`
 
-Strings and encodings
-=====================
-See :func:`dlisio.set_encodings`.
-
 .. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
 .. [2] POSC, https://www.energistics.org/
 .. [3] Numpy, structured arrays, https://docs.scipy.org/doc/numpy-1.16.0/user/basics.rec.html
