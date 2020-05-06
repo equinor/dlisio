@@ -140,6 +140,9 @@ Remaining files
 ================================================ ==================================================
 Filename                                         Description
 ================================================ ==================================================
+invalid-date-in-origin.dlis                      Simple file which contains invalid creation time
+                                                 attribute in origin
+
 many-logical-files.dlis                          Contains several logical files, one without file
                                                  header
 

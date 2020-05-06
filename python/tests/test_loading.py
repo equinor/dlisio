@@ -108,3 +108,12 @@ def test_context_manager_with():
         for g in files:
             _ = g.fileheader
 
+@pytest.mark.xfail(strict=False)
+def test_invalid_attribute_in_load():
+    # Error in one attribute shouldn't prevent whole file from loading
+    # This is based on common enough error in creation time property in
+    # origin.
+    # It loads just fine on python 3.5, but fails in higher versions
+    path = 'data/chap4-7/invalid-date-in-origin.dlis'
+    with dlisio.load(path):
+        pass

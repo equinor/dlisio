@@ -33,6 +33,14 @@ def test_vrl_and_lrsh_mismatch():
         _ = dlisio.load('data/chap2/wrong-lrhs.dlis')
     assert "visible record/segment inconsistency" in str(excinfo.value)
 
+@pytest.mark.xfail(reason="We do not fail when attributes are inconsistent "
+                          "between lrs of same lr, but maybe we should",
+                   strict=True)
+def test_lrs_atributes_inconsistency():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/attrs-inconsistency-type-pred.dlis')
+    assert "inconsistency" in str(excinfo.value)
+
 def test_padbytes_as_large_as_record():
     # 180-byte long explicit record with padding, and padbytes are set to 180
     # (leaving the resulting len(data) == 0)
@@ -87,9 +95,27 @@ def test_broken_vr():
         _ = dlisio.load('data/chap2/incomplete-vr.dlis')
     assert "file may be corrupted" in str(excinfo.value)
 
-def test_truncated():
+def test_truncated_in_second_lr():
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load('data/chap2/truncated.dlis')
+        _ = dlisio.load('data/chap2/truncated-in-second-lr.dlis')
+    assert "file truncated" in str(excinfo.value)
+
+def test_truncated_in_lrsh():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-in-lrsh.dlis')
+    assert "file truncated" in str(excinfo.value)
+
+def test_truncated_on_lrs():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-on-lrs.dlis')
+    assert "file truncated" in str(excinfo.value)
+
+@pytest.mark.xfail(reason="For now we do not consider files ending on "
+                          "full LR to be truncated, but this will change",
+                   strict=True)
+def test_truncated_on_full_lr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-on-full-lr.dlis')
     assert "file truncated" in str(excinfo.value)
 
 def test_too_small_record():

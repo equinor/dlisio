@@ -22,6 +22,10 @@ File                                Description
 7K-file.dlis                        Testing that files between 4 and 8 kB are
                                     read correctly.
 
+attrs-inconsistency-type-pred.dlis  First implicit lrs expects successor, but
+                                    what follows is an explicit lrs with no
+                                    predecessor
+
 incomplete-sul.dlis                 Incomplete storage unit label
 
 incomplete-vr.dlis                  Incomplete visible record
@@ -52,11 +56,20 @@ small.dlis                          Test file smaller than 4kB
 too-small-record.dlis               Visible record is smaller than the minimum
                                     requirement (20Bytes)
 
-truncated.dlis                      Mismatch between visible record length and
-                                    remaining bytes
+truncated-in-lrsh.dlis              File is truncated in the LRSH
+
+truncated-on-full-lr.dlis           File is truncated on a complete LR, but not
+                                    VR
+
+truncated-in-second-lr.dlis         Mismatch between visible record length and
+                                    remaining bytes. Second LR truncated
+
+truncated-on-lrs.dlis               LRS expects successor, but none comes. File
+                                    is truncated
 
 wrong-lrhs.dlis                     Mismatch between logical record segment
                                     length and remaining bytes in visible
-                                    record
+                                    record (LRSH length is bigger than VR
+                                    length)
 
 =================================== ===========================================
