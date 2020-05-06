@@ -143,6 +143,8 @@ jobs:
   cppcheck:
     docker:
       - image: ubuntu:latest
+    environment:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
       - install_build_deps:
