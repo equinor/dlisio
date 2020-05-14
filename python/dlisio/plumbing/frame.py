@@ -403,8 +403,8 @@ class Frame(BasicObject):
         DataFrame
 
         >>> curves = frame.curves()
-        >>> pdcurves = pd.DataFrame(curves, index=curves[f.index])
-        >>> pdcurves.index.name = f.index
+        >>> pdcurves = pd.DataFrame(curves, index=curves[frame.index])
+        >>> pdcurves.index.name = frame.index
 
         By default the returned np.ndarray have column-names that reflects the
         mnemonics of each Channel
