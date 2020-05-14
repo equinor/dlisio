@@ -165,6 +165,16 @@ class Channel(BasicObject):
         """
         Returns a numpy ndarray with the curves-values.
 
+        Returns
+        -------
+
+        curves : np.ndarray
+
+        See also
+        --------
+
+        Frame.curves() : Read all the curves in a Frame in one go
+
         Notes
         -----
 
@@ -205,15 +215,6 @@ class Channel(BasicObject):
 
         >>> curve[0][1][2]
         6
-
-        See also
-        --------
-
-        Frame.curves() : Read all the curves in a Frame in one go
-
-        Returns
-        -------
-        curves : np.ndarray
         """
         return np.copy(self.frame.curves()[self.name])
 
