@@ -198,7 +198,8 @@ and/or sliced by samples:
 Note that double brackets are needed in order to access muliple channels at
 once.
 
-If you prefer to work with pandas over numpy, the conversion is trivial:
+As long as the frame only contains channels with scalar samples, it can be
+trivially converted to a pandas DataFrame:
 
 .. code-block:: python
 

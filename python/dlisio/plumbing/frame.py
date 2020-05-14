@@ -395,6 +395,10 @@ class Frame(BasicObject):
         >>> import pandas as pd
         >>> curves = pd.DataFrame(frame.curves())
 
+        Note that pandas (and CSV) *only* supports scalar sample values. I.e.
+        frames containing one or more channels that have none-scalar sample
+        values cannot be converted to pandas.DataFrame or CSV directly.
+
         If the Frame contains an index Channel, use that as index in the
         DataFrame
 
