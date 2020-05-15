@@ -6,7 +6,7 @@ Interchange Standard (DLIS) v1. Version 2 exists, and has been around for
 quite a while, but it is our understanding that most dlis files out there are
 still version 1. Hence dlisio's focus is put on version 1 [1]_, for now.
 
-dlisio is an attempt at abstracting away a lot of the pain of dlis and give
+dlisio attempts to abstract away a lot of the pain of dlis and gives
 access to the data in a simple and easy-to-use manner. It gives the user the
 ability to work with dlis-files without having to know the details of the
 standard itself. Its main focus is making the data accessible while putting

@@ -5,8 +5,8 @@ The dlis standard distinguishes between physical files and logical files. A
 physical file would be a .dlis file. A logical file, on the other hand, is a
 collection of data that are logically connected. Typically this can be all
 measurements and metadata gathered at one run. A physical file may contain
-multiple logical files, where each logical file is completely independent of
-the other logical files::
+multiple logical files, where each logical file is independent of the other
+logical files::
 
                             physical file (.dlis)
             --------------------------------------------------------
