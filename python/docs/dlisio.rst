@@ -1,9 +1,12 @@
+Strings and encodings
+=====================
+.. autofunction:: dlisio.set_encodings
+.. autofunction:: dlisio.get_encodings
+
 Open and Load
 =============
 .. autofunction:: dlisio.load
 .. autofunction:: dlisio.open
-.. autofunction:: dlisio.set_encodings
-.. autofunction:: dlisio.get_encodings
 
 Logical files
 =============

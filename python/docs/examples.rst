@@ -2,7 +2,7 @@ A quick guide
 =============
 
 This is a quick guide to get you started with dlisio. Note that all classes and
-functions are more thoroughly documented under :ref:`The Library`. Please refer
+functions are more thoroughly documented under :ref:`apiref`. Please refer
 there for more information about them.
 
 The same documentation is also available directly in your favorite python
