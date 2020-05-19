@@ -187,17 +187,17 @@ class Frame(BasicObject):
         --------
         A frame with two TIME channels:
 
-        >>> frame.dtype
+        >>> frame.dtype()
         dtype([('FRAMENO', '<i4'), ('TIME.0.0', '<f4'),
                ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
 
         Override instance-specific mnemonic formatting
 
-        >>> frame.dtype
+        >>> frame.dtype()
         dtype([(FRAMENO', '<i4'), ('TIME.0.0', '<f4'),
               ('TDEP', '<i2'), ('TIME.1.0', '<i2')])
         >>> frame.dtype_fmt = '{:s}-{:d}-{:d}'
-        >>> frame.dtype
+        >>> frame.dtype()
         dtype([(FRAMENO', 'i4'), ('TIME-0-0', '<f4'),
                ('TDEP', '<i2'), ('TIME-1-0', '<i2')])
         """
