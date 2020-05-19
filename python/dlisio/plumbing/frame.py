@@ -210,8 +210,6 @@ class Frame(BasicObject):
 
         fmtlabel = self.dtype_fmt.format
         for i, ch in enumerate(self.channels, start = 1):
-            # current has to be a list (or something mutable at least), because
-            # it have to be updated on multiple labes
             current = (ch.name, ch.dtype)
 
             # first time for this label, register it as "seen before"
