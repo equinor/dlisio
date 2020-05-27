@@ -24,6 +24,27 @@ commands:
             <<#parameters.sudo >> sudo <</parameters.sudo >> apt-get update
             <<#parameters.sudo >> sudo <</parameters.sudo >> apt-get install \
             -y cmake g++ python3 python3-pip git << parameters.extra >>
+      - run:
+          name: install fmtlib
+          command: |
+            git clone https://github.com/fmtlib/fmt.git
+            mkdir fmt/build
+            cd fmt/build
+            cmake ..
+            make
+            <<#parameters.sudo >> sudo <</parameters.sudo >> make install
+      - run:
+          name: install layered-file-protocol
+          command: |
+            git clone https://github.com/equinor/layered-file-protocols.git
+            mkdir layered-file-protocols/build
+            cd layered-file-protocols/build
+            cmake -DBUILD_SHARED_LIBS=ON \
+                  -DLFP_FMT_HEADER_ONLY=ON \
+                  -DBUILD_TESTING=OFF \
+                  -DCMAKE_BUILD_TYPE=Release ..
+            make
+            <<#parameters.sudo >> sudo <</parameters.sudo >> make install
 
   python_build:
     parameters:
