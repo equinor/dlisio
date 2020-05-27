@@ -75,7 +75,7 @@ def test_padbytes_encrypted():
 def test_notdlis():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/nondlis.txt')
-    assert "could not find storage label" in str(excinfo.value)
+    assert "could not find visible record envelope" in str(excinfo.value)
 
 def test_old_vrs():
     with pytest.raises(RuntimeError) as excinfo:
@@ -83,9 +83,11 @@ def test_old_vrs():
     assert "could not find visible record" in str(excinfo.value)
 
 def test_broken_sul():
-    with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load('data/chap2/incomplete-sul.dlis')
-    assert "file may be corrupted" in str(excinfo.value)
+    with dlisio.load('data/chap2/incomplete-sul.dlis') as (f,):
+        obj = f.object('RANDOM_SET3', 'RANDOM_OBJECT3')
+        assert obj['RANDOM_ATTRIBUTE3'] == [3]
+
+        assert f.storage_label() is None
 
 def test_broken_vr():
     with pytest.raises(RuntimeError) as excinfo:
@@ -198,7 +200,6 @@ def test_load_pre_vrl_garbage():
     with dlisio.load('data/chap2/pre-sul-pre-vrl-garbage.dlis') as (f,):
         assert f.storage_label() == d
 
-@pytest.mark.skip(reason='no support for files without sul')
 def test_load_missing_sul():
     with dlisio.load('data/chap2/missing-sul.dlis') as files:
         for f in files:

@@ -36,12 +36,10 @@ def test_template_7():
     fpath = 'data/tif/templates/7.dlis'
     assure_load(fpath)
 
-@pytest.mark.xfail
 def test_template_8():
     fpath = 'data/tif/templates/8.dlis'
     assure_load(fpath)
 
-@pytest.mark.xfail
 def test_template_9():
     fpath = 'data/tif/templates/9.dlis'
     assure_load(fpath)

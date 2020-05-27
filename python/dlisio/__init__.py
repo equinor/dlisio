@@ -760,8 +760,8 @@ def load(path):
         sul = stream.get(bytearray(sulsize), offset, sulsize)
         offset += sulsize
     except:
-        stream.close()
-        raise
+        offset = 0
+        sul = None
 
     tapemarks = core.hastapemark(stream)
     offset = core.findvrl(stream, offset)
