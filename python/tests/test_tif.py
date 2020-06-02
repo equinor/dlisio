@@ -91,3 +91,21 @@ def test_layout_fdata_disaligned():
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
         assert len(curves) == 1
+
+def test_layout_truncated_in_data():
+    fpath = 'data/tif/layout/truncated-in-data.dlis'
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load(fpath)
+    assert "unexpected EOF" in str(excinfo.value)
+
+def test_layout_truncated_in_header():
+    fpath = 'data/tif/layout/truncated-in-header.dlis'
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load(fpath)
+    assert "unexpected EOF" in str(excinfo.value)
+
+def test_layout_truncated_after_header():
+    fpath = 'data/tif/layout/truncated-after-header.dlis'
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load(fpath)
+    assert "unexpected EOF" in str(excinfo.value)

@@ -72,18 +72,25 @@ Layout
 TM can happen in different position according to EFLR and IFLR. Files represent
 various situations like that.
 
-======================= ======================================================
-Filename                Description
-======================= ======================================================
-fdata-aligned.dlis      FDATA is present, but VR happens before it.
+=========================== ==================================================
+Filename                    Description
+=========================== ==================================================
+fdata-aligned.dlis          FDATA is present, but VR happens before it.
 
-fdata-disaligned.dlis   FDATA is present, new VR happens in the middle of record
+fdata-disaligned.dlis       FDATA is present, new VR happens in the middle of
+                            record
 
-FF01.dlis               TM contains FF01 bytes. Note that it spoils even length
-                        requirement of the VR
+FF01.dlis                   TM contains FF01 bytes. Note that it spoils even
+                            length requirement of the VR
 
-LR-aligned.dlis         LR is aligned with VR borders.
+LR-aligned.dlis             LR is aligned with VR borders.
 
-LR-disaligned.dlis      LR is not aligned with VR borders.
+LR-disaligned.dlis          LR is not aligned with VR borders.
 
-======================= ======================================================
+truncated-after-header.dlis File is truncated right after TIF header
+
+truncated-in-data.dlis      File is truncated in the middle of data
+
+truncated-in-header.dlis    File is truncated inside TIF header
+
+=========================== ==================================================
