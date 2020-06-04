@@ -490,14 +490,14 @@ def test_findfdata_VR_aligned_padding():
 def test_findfdata_many_in_same_VR():
     with dlisio.load('data/chap3/implicit/fdata-many-in-same-vr.dlis') as (f, *_):
         assert len(f.fdata_index) == 3
-        assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0, 1]
+        assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0, 48]
 
         fingerprint = 'T.FRAME-I.-O.3-C.1'
-        assert f.fdata_index[fingerprint] == [3]
+        assert f.fdata_index[fingerprint] == [144]
 
         ident = '3'*255
         fingerprint = 'T.FRAME-I.'+ident+'-O.1073741823-C.255'
-        assert f.fdata_index[fingerprint] == [4]
+        assert f.fdata_index[fingerprint] == [192]
 
 def test_findfdata_non_0_type():
     with dlisio.load('data/chap3/implicit/fdata-non-0-type.dlis') as (f, *_):
@@ -515,8 +515,6 @@ def test_findfdata_VR_disaligned_after_obname():
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR!'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
-@pytest.mark.xfail(reason="bug, findfdata considers obame to be uninterrupted",
-                   strict=True)
 def test_findfdata_VR_disaligned_in_obname():
     path = 'data/chap3/implicit/fdata-vr-disaligned-in-obname.dlis'
     with dlisio.load(path) as (f, *_):
@@ -524,8 +522,6 @@ def test_findfdata_VR_disaligned_in_obname():
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
-@pytest.mark.xfail(reason="bug, findfdata considers obame to be uninterrupted",
-                   strict=True)
 def test_findfdata_VR_disaligned_in_obname_trailing_length_in_lrs():
     path = 'data/chap3/implicit/fdata-vr-obname-trailing.dlis'
     with dlisio.load(path) as (f, *_):
@@ -533,18 +529,17 @@ def test_findfdata_VR_disaligned_in_obname_trailing_length_in_lrs():
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
-@pytest.mark.xfail(strict=True)
 def test_findfdata_encrypted():
     with dlisio.load('data/chap3/implicit/fdata-encrypted.dlis') as (f, *_):
         assert len(f.fdata_index) == 0
 
 def test_findfdata_bad_obname():
     with pytest.raises(RuntimeError) as excinfo:
-        dlisio.load('data/chap3/implicit/fdata-broken-obname.dlis')
+        _ = dlisio.load('data/chap3/implicit/fdata-broken-obname.dlis')
 
-    assert "fdata obname" in str(excinfo.value)
-
-
+    # Obname is truncated by LRS-length, which in itself is fine as long as it
+    # continues on the next LRS. However, in this case there are no new LRS.
+    assert 'File corrupted. Error on reading fdata obname' in str(excinfo.value)
 
 def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'unexpected-attribute.dlis')

@@ -1,14 +1,15 @@
 #include <algorithm>
 #include <cerrno>
 #include <ciso646>
-#include <fstream>
 #include <string>
 #include <system_error>
 #include <vector>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <mio/mio.hpp>
+#include <lfp/lfp.h>
+#include <lfp/rp66.h>
+#include <lfp/tapeimage.h>
 
 #include <dlisio/dlisio.h>
 #include <dlisio/types.h>
@@ -17,30 +18,52 @@
 
 namespace dl {
 
-void stream_offsets::resize( std::size_t n ) noexcept (false) {
-    this->tells.resize( n );
-    this->residuals.resize( n );
-    this->explicits.resize( n );
+stream open(const std::string& path, std::int64_t offset) noexcept (false) {
+    auto* file = std::fopen(path.c_str(), "rb");
+    auto* protocol = lfp_cfile(file);
+    if ( protocol == nullptr  )
+        throw io_error("lfp: unable to open lfp protocol cfile");
+
+    auto err = lfp_seek(protocol, offset);
+    switch (err) {
+            case LFP_OK: break;
+            default:
+                throw io_error(lfp_errormsg(protocol));
+        }
+    return stream(protocol);
 }
 
-void map_source( mio::mmap_source& file, const std::string& path ) noexcept (false) {
-    std::error_code syserror;
-    file.map( path, 0, mio::map_entire_file, syserror );
-    if (syserror) throw std::system_error( syserror );
+stream open_rp66(const stream& f) noexcept (false) {
+    auto* protocol = lfp_rp66_open(f.protocol());
+    if ( protocol == nullptr ) {
+        if ( lfp_eof(f.protocol()) )
+            throw eof_error("lfp: cannot open file past eof");
+        else
+            throw io_error("lfp: unable to apply rp66 protocol");
+    }
 
-    if (file.size() == 0)
-        throw std::invalid_argument( "non-existent or empty file" );
+    return stream(protocol);
 }
 
-void unmap( mio::mmap_source& file ) noexcept (false) {
-    file.unmap();
+stream open_tapeimage(const stream& f) noexcept (false) {
+    auto* protocol = lfp_tapeimage_open(f.protocol());
+    if ( protocol == nullptr ) {
+        if ( lfp_eof(f.protocol()) )
+            throw eof_error("lfp: cannot open file past eof");
+        else
+            throw io_error("lfp: unable to apply tapeimage protocol");
+    }
+    return stream(protocol);
 }
 
-long long findsul( mio::mmap_source& file ) noexcept (false) {
+long long findsul( stream& file ) noexcept (false) {
     long long offset;
-    const long long size = file.size();
-    const long long search_limit = (std::min)(200LL, size);
-    const auto err = dlis_find_sul(file.data(), search_limit, &offset);
+
+    char buffer[ 200 ];
+    file.seek(0);
+    auto bytes_read = file.read(buffer, 200);
+
+    const auto err = dlis_find_sul(buffer, bytes_read, &offset);
 
     switch (err) {
         case DLIS_OK:
@@ -48,7 +71,7 @@ long long findsul( mio::mmap_source& file ) noexcept (false) {
 
         case DLIS_NOTFOUND: {
             auto msg = "searched {} bytes, but could not find storage label";
-            throw dl::not_found(fmt::format(msg, search_limit));
+            throw dl::not_found(fmt::format(msg, bytes_read));
         }
 
         case DLIS_INCONSISTENT: {
@@ -62,23 +85,18 @@ long long findsul( mio::mmap_source& file ) noexcept (false) {
     }
 }
 
-long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
+long long findvrl( stream& file, long long from ) noexcept (false) {
     if (from < 0) {
         const auto msg = "expected from (which is {}) >= 0";
         throw std::out_of_range(fmt::format(msg, from));
     }
 
-    if (std::size_t(from) > file.size()) {
-        const auto msg = "expected from (which is {}) "
-                         "<= file.size() (which is {})"
-        ;
-        throw std::out_of_range(fmt::format(msg, from, file.size()));
-    }
-
     long long offset;
-    const long long size = file.size();
-    const long long search_limit = (std::min)(200LL, size - from);
-    const auto err = dlis_find_vrl(file.data() + from, search_limit, &offset);
+
+    char buffer[ 200 ];
+    file.seek(from);
+    auto bytes_read = file.read(buffer, 200);
+    const auto err = dlis_find_vrl(buffer, bytes_read, &offset);
 
     // TODO: error messages could maybe be pulled from core library
     switch (err) {
@@ -89,7 +107,7 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
             const auto msg = "searched {} bytes, but could not find "
                              "visible record envelope pattern [0xFF 0x01]"
             ;
-            throw dl::not_found(fmt::format(msg, search_limit));
+            throw dl::not_found(fmt::format(msg, bytes_read));
         }
 
         case DLIS_INCONSISTENT: {
@@ -103,81 +121,27 @@ long long findvrl( mio::mmap_source& file, long long from ) noexcept (false) {
     }
 }
 
-stream_offsets findoffsets( mio::mmap_source& file, long long from )
-noexcept (false)
-{
-    const auto* begin = file.data() + from;
-    const auto* end = file.data() + file.size();
+bool hastapemark(stream& file) noexcept (false) {
+    constexpr int TAPEMARK_SIZE = 12;
+    file.seek(0);
 
-    constexpr std::size_t min_alloc_size = 2;
-    constexpr auto resize_factor = 1.5;
-    constexpr auto min_new_size = std::size_t(min_alloc_size * resize_factor);
-    static_assert(min_new_size > min_alloc_size,
-                                   "resize should always make size bigger");
+    char buffer[ TAPEMARK_SIZE ];
+    auto bytes_read = file.read(buffer, TAPEMARK_SIZE);
+    if (bytes_read < TAPEMARK_SIZE)
+        throw std::runtime_error("hastapemark: unable to read full tapemark");
 
-    // by default, assume ~4K per record on average. This should be fairly few
-    // reallocations, without overshooting too much
-    std::size_t alloc_size = std::max(file.size() / 4096, min_alloc_size);
+    const auto err = dlis_tapemark(buffer, TAPEMARK_SIZE);
 
-    stream_offsets ofs;
-    ofs.resize( alloc_size );
-    auto& tells     = ofs.tells;
-    auto& residuals = ofs.residuals;
-    auto& explicits = ofs.explicits;
+    switch (err) {
+        case DLIS_OK:
+            return true;
 
-    const char* next;
-    int count = 0;
-    int initial_residual = 0;
+        case DLIS_NOTFOUND:
+            return false;
 
-    while (true) {
-        int err = dlis_index_records( begin,
-                                      end,
-                                      alloc_size,
-                                      &initial_residual,
-                                      &next,
-                                      &count,
-                                      count + tells.data(),
-                                      count + residuals.data(),
-                                      count + explicits.data() );
-
-        switch (err) {
-            case DLIS_OK: break;
-
-            case DLIS_TRUNCATED:
-                throw std::runtime_error( "file truncated" );
-
-            case DLIS_INCONSISTENT:
-                throw std::runtime_error( "inconsistensies in record sizes" );
-
-            case DLIS_UNEXPECTED_VALUE: {
-                // TODO: interrogate more?
-                const auto msg = "record-length in record {} corrupted";
-                throw std::runtime_error(fmt::format(msg, count));
-            }
-
-            default: {
-                const auto msg = "dlis_index_records: unknown error {}";
-                throw std::runtime_error(fmt::format(msg, err));
-            }
-        }
-
-        if (next == end) break;
-
-        const auto prev_size = tells.size();
-        ofs.resize( prev_size * resize_factor );
-
-
-        /* size of the now trailing newly-allocated area */
-        alloc_size = tells.size() - prev_size;
-        begin = next;
+        default:
+            throw std::runtime_error("dlis_tapemark: unknown error");
     }
-
-    ofs.resize( count );
-
-    const auto dist = file.size();
-    std::transform(tells.begin(), tells.end(), tells.begin(),
-            [ dist ]( long long t ) -> long long { return t += dist; } );
-    return ofs;
 }
 
 bool record::isexplicit() const noexcept (true) {
@@ -188,38 +152,7 @@ bool record::isencrypted() const noexcept (true) {
     return this->attributes & DLIS_SEGATTR_ENCRYPT;
 }
 
-stream::stream( const std::string& path ) noexcept (false)
-{
-    this->fs.exceptions( fs.exceptions()
-                       | std::ios::eofbit
-                       | std::ios::failbit
-                       );
-
-    this->fs.open( path, std::ios::binary | std::ios::in );
-
-    if (!this->fs.good())
-        throw fmt::system_error(errno, "cannot to open file '{}'", path);
-}
-
-record stream::at( int i ) noexcept (false) {
-    record r;
-    r.data.reserve( 8192 );
-    return this->at( i, r );
-}
-
 namespace {
-
-bool consumed_record( long long tell,
-                      const std::vector< long long >& tells,
-                      int i ) noexcept (true) {
-    /*
-     * this was the last record, so have no idea how to determine that
-     * everything is properly consumed. Always true
-     */
-    if (std::size_t(i) == tells.size() - 1) return true;
-
-    return tell == tells[ i + 1 ];
-}
 
 template < typename T >
 bool attr_consistent( const T& ) noexcept (true) {
@@ -274,6 +207,83 @@ noexcept (false) {
 
 }
 
+stream::stream( lfp_protocol* f ) noexcept (false){
+    this->f = f;
+}
+
+void stream::close() {
+    lfp_close(this->f);
+}
+
+lfp_protocol* stream::protocol() const noexcept (true) {
+    return this->f;
+}
+
+int stream::eof() const noexcept (true) {
+    return lfp_eof(this->f);
+}
+
+void stream::seek( std::int64_t offset ) noexcept (false) {
+    const auto err = lfp_seek(this->f, offset);
+    switch (err) {
+        case LFP_OK:
+            break;
+        case LFP_INVALID_ARGS:
+        case LFP_NOTIMPLEMENTED:
+        default:
+            throw std::runtime_error(lfp_errormsg( this->f ));
+    }
+}
+
+std::int64_t stream::tell() const noexcept (true) {
+    std::int64_t tell;
+    lfp_tell(this->f, &tell);
+    return tell;
+}
+
+std::int64_t stream::absolute_tell() const noexcept (false) {
+    auto* outer = this->f;
+    lfp_protocol* inner;
+
+    while (true) {
+        auto err = lfp_peek(outer, &inner);
+        switch (err) {
+            case LFP_OK:
+                break;
+            case LFP_LEAF_PROTOCOL:
+                /*
+                 * lfp_peek is not implemented for LEAF protocols
+                 *
+                 * We use this fact as an implicit check that we have reached the
+                 * inner-most protocol.
+                 */
+                std::int64_t tell;
+                lfp_tell(outer, &tell);
+                return tell;
+            case LFP_IOERROR:
+            default:
+                throw std::runtime_error(lfp_errormsg(outer));
+        }
+        outer = inner;
+    }
+}
+
+std::int64_t stream::read( char* dst, int n )
+noexcept (false) {
+    std::int64_t nread = -1;
+    const auto err = lfp_readinto(this->f, dst, n, &nread);
+    switch (err) {
+        case LFP_OK:
+        case LFP_EOF:
+            break;
+        case LFP_OKINCOMPLETE:
+        case LFP_UNEXPECTED_EOF:
+        default:
+            throw std::runtime_error(lfp_errormsg(this->f));
+    }
+    return nread;
+}
+
 /*
  * store attributes in a string to use the short-string optimisation if
  * available. Just before commit, these are checked for consistency, i.e.
@@ -283,205 +293,171 @@ noexcept (false) {
 template < typename T >
 using shortvec = std::basic_string< T >;
 
-record& stream::at( int i, record& rec ) noexcept (false) {
 
-    auto tell = this->tells.at( i );
-    auto remaining = this->residuals.at( i );
+record extract(stream& file, long long tell) noexcept (false) {
+    record rec;
+    rec.data.reserve( 8192 );
+    auto nbytes = std::numeric_limits< std::int64_t >::max();
+    return extract(file, tell, nbytes, rec);
+}
 
+record& extract(stream& file, long long tell, long long bytes, record& rec) noexcept (false) {
     shortvec< std::uint8_t > attributes;
     shortvec< int > types;
     bool consistent = true;
 
-    this->fs.seekg( tell );
-
     rec.data.clear();
+    file.seek(tell);
 
     while (true) {
-        while (remaining > 0) {
-            int len, type;
-            std::uint8_t attrs;
-            char buffer[ DLIS_LRSH_SIZE ];
-            this->fs.read( buffer, DLIS_LRSH_SIZE );
-            const auto err = dlis_lrsh( buffer, &len, &attrs, &type );
+        char buffer[ DLIS_LRSH_SIZE ];
+        auto nread = file.read( buffer, DLIS_LRSH_SIZE );
+        if ( nread < DLIS_LRSH_SIZE )
+            throw std::runtime_error("extract: unable to read LRSH, file truncated");
 
-            remaining -= len;
-            len -= DLIS_LRSH_SIZE;
+        int len, type;
+        std::uint8_t attrs;
+        dlis_lrsh( buffer, &len, &attrs, &type );
 
-            if (err) consistent = false;
-            attributes.push_back( attrs );
-            types.push_back( type );
+        len -= DLIS_LRSH_SIZE;
 
-            if (remaining < 0) {
-                /*
-                 * mismatch between visisble-record-length and segment length.
-                 * For now, just throw, but this could be reduced to a warning
-                 * with guide on which one to believe
-                 */
+        attributes.push_back( attrs );
+        types.push_back( type );
 
-                const auto vrl_len = remaining + len;
-                const auto cur_tell = std::int64_t(this->fs.tellg()) - DLIS_LRSH_SIZE;
-                const auto msg = "visible record/segment inconsistency: "
-                                 "segment (which is {}) "
-                                 ">= visible (which is {}) "
-                                 "in record {} (at tell {})"
-                ;
-                const auto str = fmt::format(msg, len, vrl_len, i, cur_tell);
-                throw std::runtime_error(str);
-            }
+        const long long prevsize = rec.data.size();
+        const auto remaining = bytes - prevsize;
 
-            const auto prevsize = rec.data.size();
-            rec.data.resize( prevsize + len );
-            this->fs.read( rec.data.data() + prevsize, len );
+        auto to_read = len;
+        /*
+         * If the remaining bytes-to-read is less than the full LRS, we
+         * can get away with reading a partial LRS as long as there is no
+         * padding, checksum or trailing length.
+         */
+        if ( not (attrs & DLIS_SEGATTR_PADDING) and
+             not (attrs & DLIS_SEGATTR_TRAILEN) and
+             not (attrs & DLIS_SEGATTR_CHCKSUM) and
+             remaining < len ) {
 
-            /*
-             * chop off trailing length and checksum for now
-             * TODO: verify integrity by checking trailing length
-             * TODO: calculate checksum
-             */
-            const auto* fst = rec.data.data() + prevsize;
-            trim_segment(attrs, fst, len, rec.data);
-
-            /*if the whole segment is getting trimmed, it's unclear if
-              successor attribute should be erased or not.
-              For now ignoring. Suspecting issue will never occur as
-              whole "too many padbytes" problem might be caused by encryption
-            */
-
-            const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
-            if (has_successor) continue;
-
-            /* read last segment - check consistency and wrap up */
-            if (this->contiguous and not consumed_record( this->fs.tellg(),
-                                                          this->tells,
-                                                          i )) {
-                /*
-                 * If this happens something is VERY wrong. Every new record
-                 * should start just after the previous, unless bytes have been
-                 * purposely skipped, because the file was otherwise broken.
-                 * This probably comes from consistent, but lying, length
-                 * attributes
-                 */
-                const auto msg = "non-contiguous record: "
-                                 "#{} (at tell {}) "
-                                 "ends prematurely at {}, "
-                                 "not at #{} (at tell {})"
-                ;
-
-                const auto tell1 = this->tells.at(i);
-                const auto tell2 = this->tells.at(i + 1);
-                const auto at    = this->fs.tellg();
-                const auto str   = fmt::format(msg, i, tell1, at, i+1, tell2);
-                throw std::runtime_error(msg);
-            }
-
-
-            /*
-             * The record type only cares about encryption and formatting, so only
-             * extract those for checking consistency. Nothing else is interesting to
-             * users, as it only describes how to read this specific segment
-             */
-            static const auto fmtenc = DLIS_SEGATTR_EXFMTLR | DLIS_SEGATTR_ENCRYPT;
-            rec.attributes = attributes.front() & fmtenc;
-            rec.type = types.front();
-
-            rec.consistent = consistent;
-            if (not attr_consistent( attributes )) rec.consistent = false;
-            if (not type_consistent( types ))      rec.consistent = false;
-            return rec;
+            to_read = remaining;
         }
 
-        int len, version;
-        char buffer[ DLIS_VRL_SIZE ];
-        this->fs.read( buffer, DLIS_VRL_SIZE );
-        const auto err = dlis_vrl( buffer, &len, &version );
+        rec.data.resize( prevsize + to_read );
 
-        // TODO: for now record closest to VE gets the blame
-        if (err) consistent = false;
-        if (version != 1) consistent = false;
+        nread = file.read(rec.data.data() + prevsize, to_read);
+        if ( nread < to_read )
+            throw std::runtime_error("extract: unable to read LRS, file truncated");
 
-        remaining = len - DLIS_VRL_SIZE;
+        /*
+         * chop off trailing length and checksum for now
+         * TODO: verify integrity by checking trailing length
+         * TODO: calculate checksum
+         */
+
+        const auto* fst = rec.data.data() + prevsize;
+        trim_segment(attrs, fst, len, rec.data);
+
+        /* if the whole segment is getting trimmed, it's unclear if successor
+         * attribute should be erased or not.  For now ignoring.  Suspecting
+         * issue will never occur as whole "too many padbytes" problem might be
+         * caused by encryption
+         */
+
+        const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
+        const long long bytes_left = bytes - rec.data.size();
+        if (has_successor and bytes_left > 0) continue;
+
+        /*
+         * The record type only cares about encryption and formatting, so only
+         * extract those for checking consistency. Nothing else is interesting
+         * to users, as it only describes how to read this specific segment
+         */
+        static const auto fmtenc = DLIS_SEGATTR_EXFMTLR | DLIS_SEGATTR_ENCRYPT;
+        rec.attributes = attributes.front() & fmtenc;
+        rec.type = types.front();
+
+        rec.consistent = consistent;
+        if (not attr_consistent( attributes )) rec.consistent = false;
+        if (not type_consistent( types ))      rec.consistent = false;
+        if (bytes_left < 0) rec.data.resize(bytes);
+        return rec;
     }
 }
 
-void stream::reindex( const std::vector< long long >& tells,
-                      const std::vector< int >& residuals ) noexcept (false) {
-    if (tells.empty())
-        throw std::invalid_argument( "tells must be non-empty" );
+stream_offsets findoffsets( dl::stream& file) noexcept (false) {
+    stream_offsets ofs;
 
-    if (residuals.empty())
-        throw std::invalid_argument( "residuals must be non-empty" );
+    std::int64_t offset = 0;
+    char buffer[ DLIS_LRSH_SIZE ];
 
-    if (tells.size() != residuals.size()) {
-        const auto msg = "reindex requires tells.size() which is {}) "
-                         "== residuals.size() (which is {})"
-        ;
-        const auto str = fmt::format(msg, tells.size(), residuals.size());
-        throw std::invalid_argument(str);
+    int len = 0;
+    while (true) {
+        file.seek(offset);
+        file.read(buffer, DLIS_LRSH_SIZE);
+        if (file.eof())
+            break;
+
+        int type;
+        std::uint8_t attrs;
+        dlis_lrsh( buffer, &len, &attrs, &type );
+
+        int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
+        if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
+            if (isexplicit and type == 0 and ofs.explicits.size()) {
+                /*
+                 * Wrap up when we encounter a EFLR of type FILE-HEADER that is
+                 * NOT the first Logical Record. More precisely we expect the
+                 * _first_ LR we encounter to be a FILE-HEADER. We gather up
+                 * this LR and all successive LR's until we encounter another
+                 * FILE-HEADER.
+                 */
+                file.seek( offset );
+                break;
+            }
+            if (isexplicit) ofs.explicits.push_back( offset );
+            /*
+             * Consider doing fdata-indexing on the fly as we are now at the
+             * correct offset to read the OBNAME. That would mean we only need
+             * to traverse the file a single time to index it. Additionally it
+             * would make the caller code from python way nicer.
+             */
+            else            ofs.implicits.push_back( offset );
+        }
+        offset += len;
     }
-
-    // TODO: assert all-positive etc.
-    this->tells = tells;
-    this->residuals = residuals;
+    return ofs;
 }
 
-void stream::close() {
-    this->fs.close();
-}
-
-void stream::read( char* dst, long long offset, int n ) {
-    if (n < 0) {
-        const auto msg = "expected n (which is {}) >= 0";
-        throw std::invalid_argument(fmt::format(msg, n));
-    }
-
-    if (offset < 0) {
-        const auto msg = "expected offset (which is {}) >= 0";
-        throw std::invalid_argument(fmt::format(msg, offset));
-    }
-
-    this->fs.seekg( offset );
-    this->fs.read( dst, n );
-}
-
-std::vector< std::pair< std::string, int > >
-findfdata(mio::mmap_source& file,
-          const std::vector< int >& candidates,
-          const std::vector< long long >& tells,
-          const std::vector< int >& residuals)
+std::vector< std::pair< std::string, long long > >
+findfdata(dl::stream& file, const std::vector< long long >& tells)
 noexcept (false) {
+    std::vector< std::pair< std::string, long long > > xs;
 
-    const auto* ptr = file.data();
-    const auto* end = file.data() + file.size();
-    std::vector< std::pair< std::string, int > > xs;
+    constexpr std::size_t OBNAME_SIZE_MAX = 262;
 
-    char name[256] = {};
+    record rec;
+    rec.data.reserve( OBNAME_SIZE_MAX );
 
-    for (auto i : candidates) {
-        const auto tell = tells[i];
-        const auto resi = residuals[i];
-        int offset = resi == 0 ? 8 : 4;
+    for (auto tell : tells) {
+        extract(file, tell, OBNAME_SIZE_MAX, rec);
+        if (rec.isencrypted()) continue;
+        if (rec.type != 0) continue;
 
-        // read LRSH type-field
-        // 0 == FDATA
-        if (*(ptr + tell + offset - 1) != 0) continue;
+        int32_t origin;
+        uint8_t copy;
+        int32_t idlen;
+        char id[ 256 ];
+        const char* cur = dlis_obname(rec.data.data(), &origin, &copy, &idlen, id);
 
-
-        std::int32_t origin;
-        std::uint8_t copy;
-        std::int32_t idlen;
-        auto cur = dlis_obname(ptr + tell + offset, &origin, &copy, &idlen, name);
-        if (std::distance( cur, end ) < 0)
-        {
+        std::size_t obname_size = cur - rec.data.data();
+        if (obname_size > rec.data.size()) {
             auto msg = "File corrupted. Error on reading fdata obname";
             throw std::runtime_error(msg);
         }
-
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
-                        dl::ident{ std::string{ name, name + idlen } } };
-        xs.emplace_back(tmp.fingerprint("FRAME"), i);
+                        dl::ident{ std::string{ id, id + idlen } } };
+        xs.emplace_back(tmp.fingerprint("FRAME"), tell);
     }
-
     return xs;
 }
 

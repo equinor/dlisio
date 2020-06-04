@@ -10,6 +10,31 @@ function pre_build {
 
     python -m pip install "cmake<3.14" pybind11 scikit-build
 
+    # On linux multibuild runs in a container, only copying with it the root
+    # directory of the repo. Thus, the system installed layered-file-protocols
+    # (and fmtlib) is no longer available and must be re-installed in the
+    # container.
+    if [ -z "$IS_OSX" ]; then
+        pushd fmt/build;
+        rm -rf *;
+        cmake ..;
+        make;
+        make install;
+        popd;
+    fi
+
+    if [ -z "$IS_OSX" ]; then
+        pushd layered-file-protocols/build;
+        rm -rf *;
+        cmake -DBUILD_SHARED_LIBS=ON \
+            -DLFP_FMT_HEADER_ONLY=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=OFF ..;
+        make;
+        make install;
+        popd;
+    fi
+
     mkdir build-centos5
     pushd build-centos5
 
@@ -22,11 +47,9 @@ function pre_build {
     if [ -n "$IS_OSX" ]; then
         sudo make install;
         sudo cp -r ../external/mpark/mpark /usr/local/include;
-        sudo cp -r ../external/mio/mio     /usr/local/include;
     else
         make install;
         cp -r ../external/mpark/mpark /usr/local/include;
-        cp -r ../external/mio/mio /usr/local/include;
     fi
 
     popd

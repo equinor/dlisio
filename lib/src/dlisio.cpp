@@ -324,6 +324,43 @@ int dlis_find_vrl(const char* from,
 }
 
 /*
+ * hexdump -vn 12 tif
+ * 0000000 00 00 00 00 00 00 00 00 5c 00 00 00
+ *
+ * Tapemarks are 12 byte long, constituted by three integers:
+ * Type (0 or 1)                4
+ * Offset of previous tapemark  4
+ * Offset of next tapemark      4
+ */
+
+int dlis_tapemark(const char* buffer, int size) {
+    if (size < 12)
+        return DLIS_INVALID_ARGS;
+
+    std::uint32_t type;
+    std::uint32_t prev;
+    std::uint32_t next;
+
+    #ifdef HOST_BIG_ENDIAN
+        std::reverse(buffer + 0, buffer + 4);
+        std::reverse(buffer + 4, buffer + 8);
+        std::reverse(buffer + 8, buffer + 12);
+    #endif
+
+    std::memcpy(&type, buffer + 0, 4);
+    std::memcpy(&prev, buffer + 4, 4);
+    std::memcpy(&next, buffer + 8, 4);
+
+    if(not (type == 0 or type == 1))
+        return DLIS_NOTFOUND;
+
+    if(next <= prev)
+        return DLIS_NOTFOUND;
+
+    return DLIS_OK;
+}
+
+/*
  * hexdump -vn 4 -s 80 dlis
  * 0000050 0020 01ff
  *
@@ -363,7 +400,6 @@ int dlis_vrl( const char* xs,
     *version = major;
     return DLIS_OK;
 }
-
 
 /*
  * hexdump -vn 4 -s 84 dlis
@@ -867,94 +903,6 @@ int dlis_pack_size(const char* fmt, int* src, int* dst) {
             default:
                 return DLIS_INVALID_ARGS;
         }
-    }
-}
-
-int dlis_index_records( const char* begin,
-                        const char* end,
-                        std::size_t allocsize,
-                        int* initial_residual,
-                        const char** next,
-                        int* count,
-                        long long* tells,
-                        int* residuals,
-                        int* explicits ) {
-
-    if (begin >= end) return DLIS_INVALID_ARGS;
-
-    int remaining = *initial_residual;
-    auto* ptr = begin;
-    if (next) *next = begin;
-
-    while (true) {
-        if (ptr == end)     return DLIS_OK;
-        if (allocsize == 0) return DLIS_OK;
-
-        --allocsize;
-        *tells++ = ptr - end;
-        *residuals++ = remaining;
-
-        int isexplicit = 0;
-
-        while (true) {
-            if (remaining == 0) {
-                /* Read VRL */
-
-                if (end - DLIS_VRL_SIZE < ptr) return DLIS_TRUNCATED;
-
-                int len, version;
-                const auto err = dlis_vrl( ptr, &len, &version );
-
-                if (err) return DLIS_INCONSISTENT;
-
-                /*
-                 * 2.3.6.4 Minimum Visible Record Length
-                 * Since record segments must be at least 16 bytes, the
-                 * effective minimum length for a visible record is 20 bytes
-                 * (including itself), so anything less than that means
-                 * corrupted data
-                 */
-                if (len < 20) return DLIS_UNEXPECTED_VALUE;
-
-                remaining = len - DLIS_VRL_SIZE;
-                ptr += DLIS_VRL_SIZE;
-            }
-
-            /* read LRSH */
-            if (end - DLIS_LRSH_SIZE < ptr) return DLIS_TRUNCATED;
-
-            int len, type;
-            std::uint8_t attrs;
-            const auto err = dlis_lrsh( ptr, &len, &attrs, &type );
-            if (err) return DLIS_INCONSISTENT;
-
-            if (end - len < ptr) return DLIS_TRUNCATED;
-
-            if (len < 16) return DLIS_UNEXPECTED_VALUE;
-
-            ptr += len;
-            remaining -= len;
-
-            // TODO: handle situation where explicit bits are not the same for every segment
-            isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
-
-            if (not (attrs & DLIS_SEGATTR_SUCCSEG))
-                break;
-        }
-
-        /*
-         * It's only a full record is read and considered "committed". While
-         * tells and residuals are updated, this is to be considered an
-         * implementation detail, and the values are deemed unreliable until
-         * also count is updated.
-         *
-         * TODO: does it affect performance writing these out in the loop?
-         * maybe write on return only
-         */
-        if (next) *next = ptr;
-        if (explicits) *explicits++ = isexplicit;
-        *initial_residual = remaining;
-        *count += 1;
     }
 }
 

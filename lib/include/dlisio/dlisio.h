@@ -65,6 +65,11 @@ int dlis_find_vrl(const char* from,
                   long long search_limit,
                   long long* offset);
 
+/*
+ * Check if the 12 next bytes looks like a tapemark.
+ */
+int dlis_tapemark(const char* buffer, int size);
+
 #define DLIS_VRL_SIZE 4
 DLISIO_API
 int dlis_vrl( const char* xs,
@@ -379,138 +384,6 @@ enum dlis_segment_attribute {
     DLIS_SEGATTR_TRAILEN = 1 << 1,
     DLIS_SEGATTR_PADDING = 1 << 0,
 };
-
-/*
- * Find offsets of logical records
- *
- * Finding the offsets where logical segments start is not quite straight
- * forward, because logical records aren't required to align with visible
- * record envelopes. Additionally, there's no requirement that visible records
- * nor logical records are of equal length. Furthermore, there are files out
- * there with millions of logical records.
- *
- * This function finds the start of logical records [1], and outputs:
- * 1. the (negative) distance from end to record
- * 2. the bytes *remaining* in this visible record
- * 3. if this record is explicitly formatted or not
- *
- * Because it's unknown how many records there are in a file (or even a section
- * of a file), pre-allocation of output arrays is impractical. Instead, it is
- * designed to be "resumable" - when allocated output arrays are exhausted, the
- * function returns (with DLIS_OK), and more space can be allocated (or
- * something else altogether). If invoked again with the same initial_residual,
- * end, and count, and next as the new begin, the effect will be the same as if
- * the larger allocation was given to the original call.
- *
- * It records the (record - end) negative distance, because it makes "fixing"
- * the offsets (i.e. making them 0-offset from start-of-file) easier with
- * multiple invocations. It also allows begin to change, which is more natural
- * than the one-beyond-last. For a reference, see examples.
- *
- * Using begin/end pairs of pointers allows this function to find positions of
- * logical records from the middle of files and sequences, and leaves actual
- * reading from file/disk to the caller. This is particularly useful with
- * memory mapped files, as it would be an efficient code path to quickly
- * indexing a new file.
- *
- * No arrays are compressed, i.e. the tells[0], residuals[0] and explicits[0]
- * all describe the same logical record.
- *
- * Records are read until either:
- * 1. the end-of-file is reached (given by end)
- * 2. allocsize records are read
- *
- * Both are considered success, and return DLIS_OK. If end-of-file is reached
- * => next == end
- *
- * For every recorded record, count is incremented. Count *must* be initialised
- * before calling this function. Count is *not* reset between invocations.
- *
- * Arguments
- * ---------
- * begin: start of memory area
- * end: one-beyond memory area
- * allocsize: upper bound on the number of records read for this invocation.
- *            Should be the same as the size allocated in tells/residuals/explicits.
- * initial_residual: number of still-to-process bytes in the last seen visible envelope.
- *                   If called from the start of the file (past the storage unit
- *                   label) this should be 0. Upon return, this will be the
- *                   remaining bytes of the current VR at the end of the
- *                   previously-read record, i.e. the value needed to resume.
- * next: the first byte past the end. For successive invocations, this points
- *       to the first, un-read record.
- * count: number of processed logical records.
- *        Incremented for every logical record - this is the actual size of output arrays
- * tells: distance (<=0) from end of the file [end param] to the
- *        1) start of logical record OR
- *        2) start of visible envelope if LR alligns with VE boundaries
- * residuals: bytes remaining for processing in the last encountered visible record.
- *            For LR alligning with VE boundaries value is 0 (not VE size)
- * explicits: if record is explicit
- *
- * next and explicits are optional, and can be NULL. However, unless deciding
- * information is sourced elsewhere, it will now be impossible to distinguish
- * some cases
- *
- * When non-ok error codes are returned, all outputs are updated to the last
- * good known value. This allows manual investigation of issues, before the
- * mapping is resumed. When encountering broken files or minor protocol
- * violations, this enables skipping bits and resuming interpretation.
- *
- * Return value
- * ------------
- *  DLIS_OK: when all records in [begin, end) are read, or when reading the
- *           next record would overflow allocsize. To determine which one,
- *           check the value of next. If next == end, all records are read.
- *  DLIS_TRUNCATED: end was reached before full logical record was read
- *  DLIS_INVALID_ARGS: begin is same as end
- *  DLIS_INCONSISTENT: error on reading headers was thrown by internal function
- *  DLIS_UNEXPECTED_VALUE: VR length < 20 bytes or LRS length < 16
- *
- *
- * Examples
- * --------
- *
- * count = 0;
- * initial_residual = 0;
- * begin = file.begin + 80; // start-of-file + SUL
- * while (true) {
- *     err = dlis_record_offset( begin,
- *                               end,
- *                               allocsize,
- *                               &initial_residual,
- *                               &next,
- *                               &count,
- *                               count + tells,
- *                               count + residuals,
- *                               count + explicits );
- *
- *     if (err != DLIS_OK) exit(EXIT_FAILURE);
- *     if (next == end) break;
- *
- *     reallocate(allocsize, &tells, &residuals, &explicits);
- *     begin = next;
- * }
- *
- * size_t filesize = file.end - file.begin + 80;
- * for (int i = 0; i < count; ++i)
- *     tells[i] += filesize;
- *
- * Evident from this example, only tells needs to be updated. count,
- * initial_residual, and begin/next are designed to carry between calls.
- *
- * [1] not segments
- */
-DLISIO_API
-int dlis_index_records( const char* begin,
-                        const char* end,
-                        size_t allocsize,
-                        int* initial_residual,
-                        const char** next,
-                        int* count,
-                        long long* tells,
-                        int* residuals,
-                        int* explicits );
 
 /*
  * Compute a fingerprint, a string-like representation of an object reference.

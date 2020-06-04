@@ -215,11 +215,11 @@ class dlis(object):
        to link the content of attributes to other objects.
     """
 
-    def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
+    def __init__(self, stream, explicits, attic, implicits, sul=None):
         self.file = stream
         self.explicit_indices = explicits
         self.attic = attic
-        self.sul_offset = sul_offset
+        self.sul = sul
         self.fdata_index = implicits
 
         self.indexedobjects = defaultdict(dict)
@@ -669,8 +669,11 @@ class dlis(object):
 
         This method is mainly intended for internal use.
         """
-        blob = self.file.get(bytearray(80), self.sul_offset, 80)
-        return core.storage_label(blob)
+        if not self.sul:
+            logging.warning('file has no storage unit label')
+            return None
+        return core.storage_label(self.sul)
+
 
 def open(path):
     """ Open a file
@@ -690,7 +693,7 @@ def open(path):
     --------
     dlisio.load
     """
-    return core.stream(str(path))
+    return core.open(str(path))
 
 def load(path):
     """ Loads a file and returns one filehandle pr logical file.
@@ -747,58 +750,67 @@ def load(path):
     dlis : tuple(dlisio.dlis)
     """
     path = str(path)
+    stream = open(path)
 
-    mmap = core.mmap_source()
-    mmap.map(path)
-
-    try:
-        sulpos = core.findsul(mmap)
-        vrlpos = core.findvrl(mmap, sulpos + 80)
-        tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
-    except:
-        mmap.unmap()
-        raise
-
-    exi = [i for i, explicit in enumerate(explicits) if explicit != 0]
+    sulsize = 80
+    tifsize = 12
 
     try:
-        stream = open(path)
-        stream.reindex(tells, residuals)
-
-        records = stream.extract(exi)
-        stream.close()
+        offset = core.findsul(stream)
+        sul = stream.get(bytearray(sulsize), offset, sulsize)
+        offset += sulsize
     except:
-        stream.close()
-        mmap.unmap()
-        raise
+        offset = 0
+        sul = None
 
-    split_at = find_fileheaders(records, exi)
+    tapemarks = core.hastapemark(stream)
+    offset = core.findvrl(stream, offset)
 
-    batch = []
-    for part in partition(records, explicits, tells, residuals, split_at):
+    def rewind(offset, tif):
+        """Rewind offset to make sure not to miss VRL when calling findvrl"""
+        offset -= 4
+        if tif: offset -= 12
+        return offset
+
+    # Layered File Protocol does not currently offer support for re-opening
+    # files at the current position, nor is it able to precisly report the
+    # underlying tell. Therefore, dlisio has to manually search for the
+    # VRL to determine the right offset in which to open the new filehandle
+    # at.
+    #
+    # Logical files are partitioned by core.findoffsets and it's required
+    # [1] that new logical files always start on a new Visible Record.
+    # Hence, dlisio takes the (approximate) tell at the end of each Logical
+    # File and searches for the VRL to get the exact tell.
+    #
+    # [1] rp66v1, 2.3.6 Record Structure Requirements:
+    #     > ... Visible Records cannot intersect more than one Logical File.
+    lfs = []
+    while True:
+        if tapemarks: offset -= tifsize
+        stream.seek(offset)
+        if tapemarks: stream = core.open_tif(stream)
+        stream = core.open_rp66(stream)
+
+        explicits, implicits = core.findoffsets(stream)
+        hint = rewind(stream.absolute_tell, tapemarks)
+
+        records = core.extract(stream, explicits)
+        fdata_index = defaultdict(list)
+        for key, val in core.findfdata(stream, implicits):
+            fdata_index[key].append(val)
+
+        lf = dlis(stream, explicits, records, fdata_index, sul)
+        lfs.append(lf)
+
         try:
-            stream = open(path)
-            stream.reindex(part['tells'], part['residuals'])
-
-            implicits = defaultdict(list)
-            for key, val in core.findfdata(mmap,
-                    part['implicits'], part['tells'], part['residuals']):
-                implicits[key].append(val)
-
-            f = dlis(stream, part['explicits'],
-                    part['records'], implicits, sul_offset=sulpos)
-            batch.append(f)
-        except:
-            mmap.unmap()
-            stream.close()
-            for stream in batch:
-                stream.close()
+            stream = core.open(path)
+            offset = core.findvrl(stream, hint)
+        except RuntimeError:
+            if stream.eof(): break
             raise
 
-    # We can safely unmap the file as we dont rely on memory mapping for the
-    # remaining lifetime of these filehandles
-    mmap.unmap()
-    return Batch(batch)
+    return Batch(lfs)
 
 class Batch(tuple):
     def __enter__(self):
@@ -830,74 +842,3 @@ class Batch(tuple):
 
         return plumbing.Summary(info=buf.getvalue())
 
-
-def find_fileheaders(records, exi):
-    # Logical files start whenever a FILE-HEADER is encountered. When a logical
-    # file spans multiple physical files, the FILE-HEADER is not repeated.
-    # This means that the first record may not be a FILE-HEADER. In that case
-    # dlisio still creates a logical file, but warns that this logical file
-    # might be segmented, hence missing data.
-    msg =  'First logical file does not contain a fileheader. '
-    msg += 'The logical file might be segmented into multiple physical files '
-    msg += 'and data can be missing.'
-
-    pivots = []
-
-    # There is only indirectly formated logical records in the physical file.
-    # The logical file might be segmented.
-    if not records:
-        pivots.append(0)
-
-    for i, rec in enumerate(records):
-        # The first metadata record is not a file-header. The logical file
-        # might be segmented.
-        #TODO: This logic will change when support for multiple physical files
-        # in a storage set is added
-        if i == 0 and rec.type != 0:
-            logging.warning(msg)
-            pivots.append(exi[i])
-
-        if rec.type == 0:
-            pivots.append(exi[i])
-
-    return pivots
-
-def partition(records, explicits, tells, residuals, pivots):
-    """
-    Splits records, explicits, implicits, tells and residuals into
-    partitions (Logical Files) based on the pivots
-
-    Returns
-    -------
-
-    partitions : list(dict)
-    """
-
-    def split_at(lst, pivot):
-        head = lst[:pivot]
-        tail = lst[pivot:]
-        return head, tail
-
-    partitions = []
-
-    for pivot in reversed(pivots):
-        tells    , part_tells = split_at(tells, pivot)
-        residuals, part_res   = split_at(residuals, pivot)
-        explicits, part_ex    = split_at(explicits, pivot)
-
-        part_ex   = [i for i, x in enumerate(part_ex) if x != 0]
-        implicits = [x for x in range(len(part_tells)) if x not in part_ex]
-
-        records, part_recs = split_at(records, -len(part_ex))
-
-        part = {
-            'records'   : part_recs,
-            'explicits' : part_ex,
-            'tells'     : part_tells,
-            'residuals' : part_res,
-            'implicits' : implicits
-        }
-        partitions.append(part)
-
-    for par in reversed(partitions):
-        yield par

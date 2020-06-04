@@ -21,11 +21,11 @@ def test_partitioning():
 
         key = dlisio.core.fingerprint('FRAME', 'FRAME-INC', 10, 0)
 
-        assert f1.explicit_indices == [0, 1, 2]
+        assert f1.explicit_indices == [0, 596, 910]
         assert not f1.fdata_index
 
-        assert f2.explicit_indices == [0, 1, 2, 3, 5]
-        assert f2.fdata_index[key] == [4, 6]
+        assert f2.explicit_indices == [0, 124, 638, 766, 844]
+        assert f2.fdata_index[key] == [824, 1060]
 
         assert f3.explicit_indices == [0]
         assert not f3.fdata_index

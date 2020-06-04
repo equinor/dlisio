@@ -47,8 +47,8 @@ target_compile_options(dlisio-extension
 target_link_libraries(dlisio-extension
     PUBLIC dlisio
            mpark::variant
-           mio
            endianness
+           lfp::lfp
 
     PRIVATE fmt-header-only
 )
@@ -67,7 +67,6 @@ export(
         dlisio
         dlisio-extension
         variant
-        mio
         fmt-header-only
         endianness
     FILE
@@ -90,7 +89,6 @@ add_executable(testsuite test/testsuite.cpp
                          test/types.cpp
                          test/sul.cpp
                          test/pack.cpp
-                         test/index-records.cpp
 )
 target_link_libraries(testsuite dlisio dlisio-extension catch2)
 add_test(NAME core COMMAND testsuite)
