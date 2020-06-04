@@ -44,6 +44,11 @@ target_compile_options(dlisio-extension
     BEFORE
     PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
 )
+target_compile_definitions(dlisio
+    PRIVATE
+    $<$<BOOL:${BIG_ENDIAN}>:HOST_BIG_ENDIAN>
+    $<$<NOT:$<BOOL:${BIG_ENDIAN}>>:HOST_LITTLE_ENDIAN>
+)
 target_link_libraries(dlisio-extension
     PUBLIC dlisio
            mpark::variant

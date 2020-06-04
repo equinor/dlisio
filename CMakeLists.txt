@@ -4,6 +4,7 @@ project(dlisio LANGUAGES C CXX)
 include(CheckIncludeFile)
 include(CTest)
 include(GNUInstallDirs)
+include(TestBigEndian)
 
 option(BUILD_PYTHON "Build Python extension" ON)
 option(BUILD_DOC    "Build documentation"    OFF)
@@ -30,6 +31,8 @@ endif()
 add_custom_target(doc ALL)
 
 set(CMAKE_CXX_STANDARD 11)
+
+test_big_endian(BIG_ENDIAN)
 
 add_subdirectory(external/endianness)
 add_subdirectory(external/catch2)
