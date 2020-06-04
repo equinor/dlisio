@@ -6,7 +6,7 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
-0.1.16_ - 2010.01.16
+0.1.16_ - 2020.01.16
 --------------------
 * Fixes a bug were ``dlisio.load()`` did not properly close the memory mapping to
   the file when loading failed.
