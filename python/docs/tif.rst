@@ -1,7 +1,7 @@
 Tape Image Format (TIF)
 =======================
 
-From version 0.1.17 dlisio supports Tape Image Format (TIF) files. TIF is a
+From version 0.2.0 dlisio supports Tape Image Format (TIF) files. TIF is a
 file format used to wrap other file formats, like DLIS, such that the file can be
 read by tape readers. A TIF'd DLIS-file is simply a regular DLIS-file plus some
 extra information that tape readers rely on in order to read the file. This

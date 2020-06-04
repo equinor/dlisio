@@ -6,7 +6,35 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
-0.1.16_ - 2010.01.16
+0.2.0_ - 2020.06.04
+-------------------
+* dlisio can now read files wrapped in Tape Image Format (tif).
+* dlisio can now read files that do not contain a Storage Unit Label.
+* The numpy array returned by ``frame.curves()`` can now be indexed with
+  fingerprints in addition to the normal mnemonic indexing. Fingerprints are a
+  more reliable indexing method as these are required to be unique by the
+  standard, unlike mnemonics. This should mainly be of interest to automation
+  pipelines where reliable indexing is key.
+* dlisio can now read frames with duplicated channels. This behavior is
+  explicitly forbidden by the spec. However, it is frequently violated. By
+  default, ``frame.curves()`` still fails, but this can now be bypassed with
+  ``strict=False``.
+* dlisio no longer accepts files where the last Visible Record is truncated, but
+  the last Logical Record is intact. Support for such truncated files was
+  never intended in the first place, but happened to work.
+* ``Channel.curves()`` fails more gracefully when there is no recorded curve
+  data.
+* The documentation has been revamped and new sections focusing on
+  understanding the content and structure of dlis-files are added.
+* Fixes a bug that caused ``channel.curves()`` to use too much memory.
+* Fixes a bug that causes ``dlisio.load()`` to fail if the file contained
+  encrypted fdata record(s).
+* Fixes a bug that caused ``dlisio.load()`` to fail if the obname of a fdata
+  record spanned multiple Visible Records.
+* Fixes a bug that re-read unknown objects from disk even if they were cached
+  from previous reads.
+
+0.1.16_ - 2020.01.16
 --------------------
 * Fixes a bug were ``dlisio.load()`` did not properly close the memory mapping to
   the file when loading failed.
@@ -110,6 +138,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.2.0: https://github.com/equinor/dlisio/compare/v0.1.16...v0.2.0
 .. _0.1.16: https://github.com/equinor/dlisio/compare/v0.1.15...v0.1.16
 .. _0.1.15: https://github.com/equinor/dlisio/compare/v0.1.14...v0.1.15
 .. _0.1.14: https://github.com/equinor/dlisio/compare/v0.1.13...v0.1.14
