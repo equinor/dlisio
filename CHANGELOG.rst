@@ -6,6 +6,12 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.2.1_ - 2020.06.05
+-------------------
+* Fixes a bug in the build script that creates the macos wheels. The lfp
+  library was not properly included, resulting in an import error when
+  importing dlisio.
+
 0.2.0_ - 2020.06.04
 -------------------
 * dlisio can now read files wrapped in Tape Image Format (tif).
@@ -138,6 +144,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.2.1: https://github.com/equinor/dlisio/compare/v0.2.0...v0.2.1
 .. _0.2.0: https://github.com/equinor/dlisio/compare/v0.1.16...v0.2.0
 .. _0.1.16: https://github.com/equinor/dlisio/compare/v0.1.15...v0.1.16
 .. _0.1.15: https://github.com/equinor/dlisio/compare/v0.1.14...v0.1.15

@@ -77,6 +77,7 @@ before_install:
     - cmake -DBUILD_SHARED_LIBS=ON
             -DLFP_FMT_HEADER_ONLY=ON
             -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib
             -DBUILD_TESTING=OFF ..
     - make
     - sudo make install
