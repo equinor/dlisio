@@ -9,6 +9,32 @@ import os
 
 import dlisio
 
+def test_filehandles_closed(tmpdir):
+    # Check that we don't leak open filehandles
+    #
+    # This test uses the fact that os.remove fails on windows if the file is in
+    # use as a proxy for testing that dlisio dont leak filehandles.  From the
+    # python docs [1]:
+    #
+    #   On Windows, attempting to remove a file that is in use causes an
+    #   exception to be raised; on Unix, the directory entry is removed but the
+    #   storage allocated to the file is not made available until the original
+    #   file is no longer in use.
+    #
+    # On linux on the other hand, os.remove does not fail even if there are
+    # open filehandles, hence this test only makes sence on Windows.
+    #
+    # [1] https://docs.python.org/3/library/os.html
+
+    # Copy the test file to a tmpdir in order to make this test reliable.
+    tmp = str(tmpdir.join('206_05a-_3_DWL_DWL_WIRE_258276498.DLIS'))
+    shutil.copyfile('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS', tmp)
+
+    with dlisio.load(tmp) as _:
+        pass
+
+    os.remove(tmp)
+
 def test_context_manager():
     path = 'data/chap4-7/many-logical-files.dlis'
     f, *_ = dlisio.load(path)
