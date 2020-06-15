@@ -337,19 +337,22 @@ int dlis_tapemark(const char* buffer, int size) {
     if (size < 12)
         return DLIS_INVALID_ARGS;
 
+    unsigned char tapemark[ 12 ];
+    std::memcpy(tapemark, buffer, 12);
+
     std::uint32_t type;
     std::uint32_t prev;
     std::uint32_t next;
 
     #ifdef HOST_BIG_ENDIAN
-        std::reverse(buffer + 0, buffer + 4);
-        std::reverse(buffer + 4, buffer + 8);
-        std::reverse(buffer + 8, buffer + 12);
+        std::reverse(tapemark + 0, tapemark + 4);
+        std::reverse(tapemark + 4, tapemark + 8);
+        std::reverse(tapemark + 8, tapemark + 12);
     #endif
 
-    std::memcpy(&type, buffer + 0, 4);
-    std::memcpy(&prev, buffer + 4, 4);
-    std::memcpy(&next, buffer + 8, 4);
+    std::memcpy(&type, tapemark + 0, 4);
+    std::memcpy(&prev, tapemark + 4, 4);
+    std::memcpy(&next, tapemark + 8, 4);
 
     if(not (type == 0 or type == 1))
         return DLIS_NOTFOUND;
