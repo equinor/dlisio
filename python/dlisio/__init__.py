@@ -807,7 +807,9 @@ def load(path):
             stream = core.open(path)
             offset = core.findvrl(stream, hint)
         except RuntimeError:
-            if stream.eof(): break
+            if stream.eof():
+                stream.close()
+                break
             raise
 
     return Batch(lfs)
