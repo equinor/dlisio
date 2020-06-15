@@ -6,6 +6,10 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.2.2_ - 2020.06.15
+-------------------
+* Fixes a bug in ``dlisio.load()`` that caused it to leak a open file handle.
+
 0.2.1_ - 2020.06.05
 -------------------
 * Fixes a bug in the build script that creates the macos wheels. The lfp
@@ -144,6 +148,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.2.2: https://github.com/equinor/dlisio/compare/v0.2.1...v0.2.2
 .. _0.2.1: https://github.com/equinor/dlisio/compare/v0.2.0...v0.2.1
 .. _0.2.0: https://github.com/equinor/dlisio/compare/v0.1.16...v0.2.0
 .. _0.1.16: https://github.com/equinor/dlisio/compare/v0.1.15...v0.1.16
