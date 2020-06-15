@@ -134,6 +134,11 @@ def test_context_manager_with():
         for g in files:
             _ = g.fileheader
 
+def test_load_nonexisting_file():
+    with pytest.raises(OSError) as exc:
+        _ = dlisio.load("this_file_does_not_exist.dlis")
+    assert "this_file_does_not_exist.dlis : No such file" in str(exc.value)
+
 @pytest.mark.xfail(strict=False)
 def test_invalid_attribute_in_load():
     # Error in one attribute shouldn't prevent whole file from loading
