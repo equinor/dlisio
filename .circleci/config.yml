@@ -117,6 +117,53 @@ commands:
             ctest --output-on-failure
 
 jobs:
+
+  bigendian:
+    machine:
+      image: ubuntu-1604:201903-01 #is docker 18.09, so should contain buildKit
+    resource_class: large
+    parameters:
+      setup_image_path:
+        type: string
+        default: ~/project/artifacts/dlisio_bigendian_setup.tar
+      setup_image_name:
+        type: string
+        default: ci_dlisio_bigendian_setup
+    steps:
+      - checkout
+      - pull_submodules
+      - run:
+          name: Setup
+          command: |
+            mkdir -p "$(dirname << parameters.setup_image_path >>)"
+            # the core functionality allowing us to build on whatever architecture
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - restore_cache:
+          key: vers1-setup-image-{{ checksum "~/project/.circleci/images/setup/Dockerfile" }}
+      - run:
+          name: Assure setup image loaded locally
+          command: |
+            if [ ! -f << parameters.setup_image_path >> ]; then
+               echo "Local docker setup image not found. Recreating"
+               cp ~/project/.circleci/images/setup/Dockerfile ~/project/Dockerfile
+               export DOCKER_BUILDKIT=1
+               docker build -t << parameters.setup_image_name >> --progress plain .
+               docker save << parameters.setup_image_name >> > << parameters.setup_image_path >>
+            else
+               echo "Local docker setup image found. Loading"
+               docker load -i << parameters.setup_image_path >>
+            fi
+      - save_cache:
+          key: vers1-setup-image-{{ checksum "~/project/.circleci/images/setup/Dockerfile" }}
+          paths:
+            << parameters.setup_image_path >>
+      - run:
+          name: Build the image
+          command: |
+            cp ~/project/.circleci/images/build/Dockerfile ~/project/Dockerfile
+            export DOCKER_BUILDKIT=1
+            docker build -t dlisio --progress plain --build-arg image=<< parameters.setup_image_name >>  .
+
   gcc:
     docker:
       - image: debian:stable
@@ -217,3 +264,6 @@ workflows:
       - python-35
       - python-36
       - python-37
+  arch:
+    jobs:
+      - bigendian
