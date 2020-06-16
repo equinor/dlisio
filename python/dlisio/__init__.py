@@ -749,22 +749,9 @@ def load(path):
 
     dlis : tuple(dlisio.dlis)
     """
-    path = str(path)
-    stream = open(path)
-
     sulsize = 80
     tifsize = 12
-
-    try:
-        offset = core.findsul(stream)
-        sul = stream.get(bytearray(sulsize), offset, sulsize)
-        offset += sulsize
-    except:
-        offset = 0
-        sul = None
-
-    tapemarks = core.hastapemark(stream)
-    offset = core.findvrl(stream, offset)
+    lfs = []
 
     def rewind(offset, tif):
         """Rewind offset to make sure not to miss VRL when calling findvrl"""
@@ -772,47 +759,65 @@ def load(path):
         if tif: offset -= 12
         return offset
 
-    # Layered File Protocol does not currently offer support for re-opening
-    # files at the current position, nor is it able to precisly report the
-    # underlying tell. Therefore, dlisio has to manually search for the
-    # VRL to determine the right offset in which to open the new filehandle
-    # at.
-    #
-    # Logical files are partitioned by core.findoffsets and it's required
-    # [1] that new logical files always start on a new Visible Record.
-    # Hence, dlisio takes the (approximate) tell at the end of each Logical
-    # File and searches for the VRL to get the exact tell.
-    #
-    # [1] rp66v1, 2.3.6 Record Structure Requirements:
-    #     > ... Visible Records cannot intersect more than one Logical File.
-    lfs = []
-    while True:
-        if tapemarks: offset -= tifsize
-        stream.seek(offset)
-        if tapemarks: stream = core.open_tif(stream)
-        stream = core.open_rp66(stream)
+    path = str(path)
+    stream = open(path)
+    try:
+        offset = core.findsul(stream)
+        sul = stream.get(bytearray(sulsize), offset, sulsize)
+        offset += sulsize
+    except:
+        offset = 0
+        sul = None
+    try:
+        tapemarks = core.hastapemark(stream)
+        offset = core.findvrl(stream, offset)
 
-        explicits, implicits = core.findoffsets(stream)
-        hint = rewind(stream.absolute_tell, tapemarks)
+        # Layered File Protocol does not currently offer support for re-opening
+        # files at the current position, nor is it able to precisly report the
+        # underlying tell. Therefore, dlisio has to manually search for the
+        # VRL to determine the right offset in which to open the new filehandle
+        # at.
+        #
+        # Logical files are partitioned by core.findoffsets and it's required
+        # [1] that new logical files always start on a new Visible Record.
+        # Hence, dlisio takes the (approximate) tell at the end of each Logical
+        # File and searches for the VRL to get the exact tell.
+        #
+        # [1] rp66v1, 2.3.6 Record Structure Requirements:
+        #     > ... Visible Records cannot intersect more than one Logical File.
+        while True:
+            if tapemarks: offset -= tifsize
+            stream.seek(offset)
+            if tapemarks: stream = core.open_tif(stream)
+            stream = core.open_rp66(stream)
 
-        records = core.extract(stream, explicits)
-        fdata_index = defaultdict(list)
-        for key, val in core.findfdata(stream, implicits):
-            fdata_index[key].append(val)
+            explicits, implicits = core.findoffsets(stream)
+            hint = rewind(stream.absolute_tell, tapemarks)
 
-        lf = dlis(stream, explicits, records, fdata_index, sul)
-        lfs.append(lf)
+            records = core.extract(stream, explicits)
+            fdata_index = defaultdict(list)
+            for key, val in core.findfdata(stream, implicits):
+                fdata_index[key].append(val)
 
-        try:
-            stream = core.open(path)
-            offset = core.findvrl(stream, hint)
-        except RuntimeError:
-            if stream.eof():
-                stream.close()
-                break
-            raise
+            lf = dlis(stream, explicits, records, fdata_index, sul)
+            lfs.append(lf)
 
-    return Batch(lfs)
+            try:
+                stream = core.open(path)
+                offset = core.findvrl(stream, hint)
+            except RuntimeError:
+                if stream.eof():
+                    stream.close()
+                    break
+                raise
+
+        return Batch(lfs)
+    except:
+        stream.close()
+        for f in lfs:
+            f.close()
+        raise
+
 
 class Batch(tuple):
     def __enter__(self):
