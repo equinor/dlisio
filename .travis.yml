@@ -33,6 +33,9 @@ matrix:
         - python: 3.7
           dist: xenial
           sudo: true
+        - python: 3.8
+          dist: xenial
+          sudo: true
         - os: linux
           compiler: clang
           env:
@@ -58,6 +61,12 @@ matrix:
           python: 3.7
           env:
             - MB_PYTHON_VERSION=3.7
+            - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          language: generic
+          python: 3.8
+          env:
+            - MB_PYTHON_VERSION=3.8
             - MACOSX_DEPLOYMENT_TARGET=10.9
 
 before_install:

@@ -20,6 +20,8 @@ environment:
           PYTHON_VERSION: 36
         - PYTHON: C:\Python37
           PYTHON_VERSION: 37
+        - PYTHON: C:\Python38
+          PYTHON_VERSION: 38
 
 matrix:
     fast_finish: true

@@ -199,6 +199,13 @@ jobs:
       - python_build:
           docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
 
+  python-38:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - python_build:
+          docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
+
 workflows:
   version: 2
   build:
@@ -217,3 +224,4 @@ workflows:
       - python-35
       - python-36
       - python-37
+      - python-38
