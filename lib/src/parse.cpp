@@ -845,6 +845,7 @@ noexcept (false)
 }
 
 object_vector parse_objects( const object_template& tmpl,
+                             const dl::ident type,
                              const char* cur,
                              const char* end ) noexcept (false) {
 
@@ -859,6 +860,7 @@ object_vector parse_objects( const object_template& tmpl,
         cur += DLIS_DESCRIPTOR_SIZE;
 
         auto current = default_object;
+        current.type = type;
         if (object_flags.name) cur = cast( cur, current.object_name );
 
         for (const auto& template_attr : tmpl) {
@@ -998,7 +1000,7 @@ object_set parse_objects( const char* cur, const char* end ) {
     if (std::distance( cur, end ) == 0)
          return set;
 
-    set.objects = parse_objects( set.tmpl, cur, end );
+    set.objects = parse_objects( set.tmpl, set.type, cur, end );
     return set;
 }
 
