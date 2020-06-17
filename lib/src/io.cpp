@@ -445,6 +445,7 @@ noexcept (false) {
         extract(file, tell, OBNAME_SIZE_MAX, rec);
         if (rec.isencrypted()) continue;
         if (rec.type != 0) continue;
+        if (rec.data.size() == 0) continue;
 
         int32_t origin;
         uint8_t copy;
