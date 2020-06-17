@@ -17,7 +17,7 @@ function pre_build {
     if [ -z "$IS_OSX" ]; then
         pushd fmt/build;
         rm -rf *;
-        cmake ..;
+        cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..;
         make;
         make install;
         popd;

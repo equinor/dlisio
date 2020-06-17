@@ -67,7 +67,7 @@ before_install:
     - git clone https://github.com/fmtlib/fmt.git
     - mkdir fmt/build
     - pushd fmt/build
-    - cmake ..
+    - cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
     - make
     - sudo make install
     - popd

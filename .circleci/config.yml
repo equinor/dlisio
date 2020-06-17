@@ -30,7 +30,7 @@ commands:
             git clone https://github.com/fmtlib/fmt.git
             mkdir fmt/build
             cd fmt/build
-            cmake ..
+            cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
             make
             <<#parameters.sudo >> sudo <</parameters.sudo >> make install
       - run:
