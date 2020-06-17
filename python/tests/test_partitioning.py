@@ -21,13 +21,14 @@ def test_partitioning():
 
         key = dlisio.core.fingerprint('FRAME', 'FRAME-INC', 10, 0)
 
-        assert f1.explicit_indices == [0, 596, 910]
+        assert f1.record_types == ['ORIGIN', 'CHANNEL', 'FRAME']
         assert not f1.fdata_index
 
-        assert f2.explicit_indices == [0, 124, 638, 766, 844]
+        assert f2.record_types == ['FILE-HEADER', 'ORIGIN', 'CHANNEL',
+                                   'FRAME', 'FRAME']
         assert f2.fdata_index[key] == [824, 1060]
 
-        assert f3.explicit_indices == [0]
+        assert f3.record_types == ['FILE-HEADER']
         assert not f3.fdata_index
 
 def test_objects_ownership():
