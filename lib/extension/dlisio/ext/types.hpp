@@ -459,6 +459,7 @@ struct basic_object {
     bool operator != (const basic_object&) const noexcept (true);
 
     dl::obname object_name;
+    dl::ident type;
     std::vector< object_attribute > attributes;
 };
 
