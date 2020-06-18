@@ -20,6 +20,10 @@ namespace dl {
 
 stream open(const std::string& path, std::int64_t offset) noexcept (false) {
     auto* file = std::fopen(path.c_str(), "rb");
+    if (!file) {
+        auto msg = "unable to open file for path {} : {}";
+        throw dl::io_error(fmt::format(msg, path, strerror(errno)));
+    }
     auto* protocol = lfp_cfile(file);
     if ( protocol == nullptr  )
         throw io_error("lfp: unable to open lfp protocol cfile");
@@ -441,6 +445,7 @@ noexcept (false) {
         extract(file, tell, OBNAME_SIZE_MAX, rec);
         if (rec.isencrypted()) continue;
         if (rec.type != 0) continue;
+        if (rec.data.size() == 0) continue;
 
         int32_t origin;
         uint8_t copy;

@@ -215,12 +215,11 @@ class dlis(object):
        to link the content of attributes to other objects.
     """
 
-    def __init__(self, stream, explicits, attic, implicits, sul=None):
+    def __init__(self, stream, attic, fdata_index, sul=None):
         self.file = stream
-        self.explicit_indices = explicits
         self.attic = attic
         self.sul = sul
-        self.fdata_index = implicits
+        self.fdata_index = fdata_index
 
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
@@ -799,7 +798,7 @@ def load(path):
             for key, val in core.findfdata(stream, implicits):
                 fdata_index[key].append(val)
 
-            lf = dlis(stream, explicits, records, fdata_index, sul)
+            lf = dlis(stream, records, fdata_index, sul)
             lfs.append(lf)
 
             try:

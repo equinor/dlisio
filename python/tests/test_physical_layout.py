@@ -43,25 +43,22 @@ def test_lrs_atributes_inconsistency():
     assert "inconsistency" in str(excinfo.value)
 
 def test_padbytes_as_large_as_record():
-    # 180-byte long explicit record with padding, and padbytes are set to 180
-    # (leaving the resulting len(data) == 0)
-    f = dlisio.open('data/chap2/padbytes-large-as-record.dlis')
-    try:
-        rec = core.extract(f, [0])[0]
-        assert rec.explicit
-        assert len(memoryview(rec)) == 0
-    finally:
-        f.close()
+    path = 'data/chap2/padbytes-large-as-record.dlis'
+    with dlisio.load(path) as (f,):
+        assert len(f.attic) == 0
+        assert len(f.fdata_index) == 0
 
-def test_padbytes_as_large_as_segment():
-    # 180-byte long explicit record with padding, and padbytes are set to 176
-    # record is expected to not be present
-    f = dlisio.open('data/chap2/padbytes-large-as-segment-body.dlis')
-    try:
-        rec = core.extract(f, [0])[0]
-        assert len(memoryview(rec)) == 0
-    finally:
-        f.close()
+def test_padbytes_as_large_as_segment_explicit():
+    path = 'data/chap2/padbytes-large-as-seg-explict.dlis'
+    with dlisio.load(path) as (f,):
+        assert len(f.attic) == 0
+        assert len(f.fdata_index) == 0
+
+def test_padbytes_as_large_as_segment_implicit():
+    path = 'data/chap2/padbytes-large-as-seg-implicit.dlis'
+    with dlisio.load(path) as (f,):
+        assert len(f.attic) == 0
+        assert len(f.fdata_index) == 0
 
 def test_padbytes_bad():
     with pytest.raises(RuntimeError) as excinfo:

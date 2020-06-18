@@ -911,7 +911,9 @@ PYBIND11_MODULE(core, m) {
         recs.reserve( tells.size() );
         for (auto tell : tells) {
             auto rec = dl::extract(s, tell);
-            recs.push_back( std::move( rec ) );
+            if (rec.data.size() > 0) {
+                recs.push_back( std::move( rec ) );
+            }
         }
         return recs;
     });

@@ -46,5 +46,4 @@ if (NOT TARGET fmt)
 endif ()
 
 add_subdirectory(lib)
-add_subdirectory(bin)
 add_subdirectory(python)

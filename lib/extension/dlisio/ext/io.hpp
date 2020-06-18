@@ -12,11 +12,20 @@
 
 namespace dl {
 
-struct eof_error : public std::runtime_error {
+
+/*
+ * Explicitly make the custom exceptions visible, otherwise they can be
+ * considered different symbols in parse.cpp and in the python extension,
+ * making exception translation impossible.
+ *
+ * https://github.com/pybind/pybind11/issues/1272
+ */
+
+struct DLISIO_API eof_error : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
-struct io_error : public std::runtime_error {
+struct DLISIO_API io_error : public std::runtime_error {
     using std::runtime_error::runtime_error;
     explicit io_error( int no ) : runtime_error( std::strerror( no ) ) {}
 };

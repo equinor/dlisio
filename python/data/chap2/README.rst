@@ -43,8 +43,11 @@ padbytes-encrypted.dlis             Explicitly formatted logical record with
 
 padbytes-large-as-record.dlis       padbytes length == logical record length
 
-padbytes-large-as-segment-body.dlis padbytes length == logical record segment
-                                    length
+padbytes-large-as-seg-explicit.dlis padbytes length == logical record segment
+                                    length, explict record
+
+padbytes-large-as-seg-implicit.dlis padbytes length == logical record segment
+                                    length, implicit record
 
 pre-sul-garbage.dlis                Garbage before the storage unit label
 
