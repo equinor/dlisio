@@ -342,9 +342,14 @@ int dlis_tapemark(const char* buffer, int size) {
     std::uint32_t next;
 
     #ifdef HOST_BIG_ENDIAN
-        std::reverse(buffer + 0, buffer + 4);
-        std::reverse(buffer + 4, buffer + 8);
-        std::reverse(buffer + 8, buffer + 12);
+        char tmp[ 12 ];
+        std::memcpy(tmp, buffer, 12);
+
+        std::reverse(tmp + 0, tmp + 4);
+        std::reverse(tmp + 4, tmp + 8);
+        std::reverse(tmp + 8, tmp + 12);
+
+        buffer = tmp;
     #endif
 
     std::memcpy(&type, buffer + 0, 4);
