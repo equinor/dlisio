@@ -1,0 +1,74 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
+
+commands:
+            
+  hexrun:
+    steps:
+      - checkout
+      - run:
+          name: hex original
+          command: |
+            xxd hexcheck/original.part
+      - run:
+          name: hex 1 byte
+          command: |
+            xxd hexcheck/1byte.part
+      - run:
+          name: hex 2 bytes
+          command: |
+            xxd hexcheck/2bytes.part
+      - run:
+          name: hex 3 bytes CORRECT
+          command: |
+            xxd hexcheck/3bytes.part
+      - run:
+          name: hex 1 and 5
+          command: |
+            xxd hexcheck/1and5.part
+      - run:
+          name: hex 2 and 3
+          command: |
+            xxd hexcheck/2and3.part
+      - run:
+          name: hex 2 and 4 CORRECT
+          command: |
+            xxd hexcheck/2and4.part
+      - run:
+          name: hex 10a
+          command: |
+            xxd hexcheck/10a.part            
+      - run:
+          name: local checkout
+          command: |
+            git clone https://github.com/equinor/dlisio.git
+            xxd dlisio/python/data/chap3/objattr/csingle-novalue.dlis.part
+            
+jobs:
+  hexwindows:
+    executor:
+      name: win/default
+      shell: bash.exe
+    steps:
+      - hexrun
+
+  hexlinux:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - run:
+          name: install xxd
+          command: |
+            sudo apt-get update
+            sudo apt-get install \
+            -y xxd
+      - hexrun
+
+workflows:
+  version: 2
+  hexstuff:
+    jobs:
+      - hexwindows
+      - hexlinux 
