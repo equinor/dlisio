@@ -7,6 +7,10 @@ commands:
             
   hexrun:
     steps:
+      - run:
+          name: global git newline fix
+          command: |
+            git config --global core.autocrlf false
       - checkout
       - run:
           name: hex original
