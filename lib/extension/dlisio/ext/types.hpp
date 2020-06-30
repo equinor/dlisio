@@ -498,11 +498,25 @@ const char* parse_set_component( const char*,
  * Bodies. Rather, it contains the position of a Logical Record within a file,
  * the Logical Record Segment Header attributes - and code (logical record
  * type).
+ *
+ * consistency indicates if the header information code and attributes are
+ * consistent across all Logical Record Segment Headers.
+ *
+ * I.e. code should hold the same value in all lrsh. While all the bits in
+ * attributes should be the same across all lrsh, with exception of the
+ * predecessor and successor bits which should have the following structure:
+ *
+ *      lrsh    predecessor     successor
+ *      0           0               1
+ *      1           1               1
+ *      ..
+ *      n           1               0
  */
 struct index_entry {
     long long    tell;
     std::uint8_t code;       // Logical Record Type - Appendix A
     std::uint8_t attributes;
+    bool         consistent;
 
     bool isexplicit()  const noexcept (true);
     bool isencrypted() const noexcept (true);

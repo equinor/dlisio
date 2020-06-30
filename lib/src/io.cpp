@@ -397,44 +397,68 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
 
 dl::stream_offsets findoffsets(dl::stream& file) noexcept (false) {
     dl::stream_offsets idx;
+    shortvec< std::uint8_t > attributes;
+    shortvec< int > types;
+    bool consistent = true;
 
-    std::int64_t offset = 0;
+    std::int64_t offset_segment = 0;
+    std::int64_t offset_record  = offset_segment;
     char buffer[ DLIS_LRSH_SIZE ];
 
     int len = 0;
     while (true) {
-        file.seek(offset);
+        file.seek(offset_segment);
         file.read(buffer, DLIS_LRSH_SIZE);
-        if (file.eof())
+        if (file.eof()) {
+            // TODO: check attributes and types -> should be empty
             break;
+        }
 
         int type;
         std::uint8_t attrs;
         dlis_lrsh( buffer, &len, &attrs, &type );
 
+        attributes.push_back( attrs );
+        types.push_back( type );
+
         int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
+
+        // Start of a new record
         if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
             if (isexplicit and type == 0 and idx.explicits.size()) {
                 /*
                  * Wrap up when we encounter a EFLR of type FILE-HEADER that is
-                 * NOT the first Logical Record. More precisely we expect the
+                 * NOT the first Logical offset_record. More precisely we expect the
                  * _first_ LR we encounter to be a FILE-HEADER. We gather up
                  * this LR and all successive LR's until we encounter another
                  * FILE-HEADER.
                  */
-                file.seek( offset );
+                file.seek( offset_segment );
                 break;
             }
+            offset_record = offset_segment;
+        }
 
+        offset_segment += len;
+
+        // We reached the last LRS in the current LR - check consistency and
+        // add to index
+        if (not (attrs & DLIS_SEGATTR_SUCCSEG)) {
             index_entry entry;
-            entry.tell       = offset;
-            entry.code       = type;
-            entry.attributes = attrs;
+            entry.tell       = offset_record;
+            entry.code       = types.front();
+            entry.attributes = attributes.front();
+            entry.consistent = consistent;
+
+            if (not attr_consistent( attributes )) entry.consistent = false;
+            if (not type_consistent( types ))      entry.consistent = false;
 
             if (entry.isexplicit()) idx.explicits.push_back(entry);
             else                    idx.implicits.push_back(entry);
+
+            attributes.clear();
+            types.clear();
         }
-        offset += len;
     }
     return idx;
 }
