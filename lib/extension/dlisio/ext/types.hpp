@@ -492,6 +492,22 @@ const char* parse_set_component( const char*,
                                  ident*,
                                  int* ) noexcept (false);
 
+/** index_entry - The whereabouts of a Logical Record
+ *
+ * index_entry does not contain the data from the Logical Record Segment
+ * Bodies. Rather, it contains the position of a Logical Record within a file,
+ * the Logical Record Segment Header attributes - and code (logical record
+ * type).
+ */
+struct index_entry {
+    long long    tell;
+    std::uint8_t code;       // Logical Record Type - Appendix A
+    std::uint8_t attributes;
+
+    bool isexplicit()  const noexcept (true);
+    bool isencrypted() const noexcept (true);
+};
+
 }
 
 #endif //DLISIO_EXT_TYPES_HPP

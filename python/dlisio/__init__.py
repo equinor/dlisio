@@ -793,9 +793,9 @@ def load(path):
             explicits, implicits = core.findoffsets(stream)
             hint = rewind(stream.absolute_tell, tapemarks)
 
-            records = core.extract(stream, explicits)
+            records = core.extract(stream, [x.tell for x in explicits])
             fdata_index = defaultdict(list)
-            for key, val in core.findfdata(stream, implicits):
+            for key, val in core.findfdata(stream, [x.tell for x in implicits]):
                 fdata_index[key].append(val)
 
             lf = dlis(stream, records, fdata_index, sul)

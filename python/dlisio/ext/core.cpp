@@ -884,6 +884,13 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
+    py::class_< dl::index_entry >( m, "index_entry")
+        .def_property_readonly( "explicit",  &dl::index_entry::isexplicit )
+        .def_property_readonly( "encrypted", &dl::index_entry::isencrypted )
+        .def_readonly( "code", &dl::index_entry::code )
+        .def_readonly( "tell", &dl::index_entry::tell )
+    ;
+
     py::class_< dl::stream >( m, "stream" )
         .def_property_readonly("absolute_tell", &dl::stream::absolute_tell)
         .def("seek", &dl::stream::seek)

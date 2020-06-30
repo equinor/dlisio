@@ -156,6 +156,14 @@ bool record::isencrypted() const noexcept (true) {
     return this->attributes & DLIS_SEGATTR_ENCRYPT;
 }
 
+bool index_entry::isexplicit() const noexcept (true) {
+    return this->attributes & DLIS_SEGATTR_EXFMTLR;
+}
+
+bool index_entry::isencrypted() const noexcept (true) {
+    return this->attributes & DLIS_SEGATTR_ENCRYPT;
+}
+
 namespace {
 
 template < typename T >
@@ -387,8 +395,8 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
     }
 }
 
-stream_offsets findoffsets( dl::stream& file) noexcept (false) {
-    stream_offsets ofs;
+dl::stream_offsets findoffsets(dl::stream& file) noexcept (false) {
+    dl::stream_offsets idx;
 
     std::int64_t offset = 0;
     char buffer[ DLIS_LRSH_SIZE ];
@@ -406,7 +414,7 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
 
         int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
         if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
-            if (isexplicit and type == 0 and ofs.explicits.size()) {
+            if (isexplicit and type == 0 and idx.explicits.size()) {
                 /*
                  * Wrap up when we encounter a EFLR of type FILE-HEADER that is
                  * NOT the first Logical Record. More precisely we expect the
@@ -417,18 +425,18 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
                 file.seek( offset );
                 break;
             }
-            if (isexplicit) ofs.explicits.push_back( offset );
-            /*
-             * Consider doing fdata-indexing on the fly as we are now at the
-             * correct offset to read the OBNAME. That would mean we only need
-             * to traverse the file a single time to index it. Additionally it
-             * would make the caller code from python way nicer.
-             */
-            else            ofs.implicits.push_back( offset );
+
+            index_entry entry;
+            entry.tell       = offset;
+            entry.code       = type;
+            entry.attributes = attrs;
+
+            if (entry.isexplicit()) idx.explicits.push_back(entry);
+            else                    idx.implicits.push_back(entry);
         }
         offset += len;
     }
-    return ofs;
+    return idx;
 }
 
 std::vector< std::pair< std::string, long long > >
