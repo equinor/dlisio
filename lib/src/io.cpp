@@ -390,7 +390,9 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
 stream_offsets findoffsets( dl::stream& file) noexcept (false) {
     stream_offsets ofs;
 
+    ofs.stopped_early = false;
     std::int64_t offset = 0;
+    std::int64_t last_offset = 0;
     char buffer[ DLIS_LRSH_SIZE ];
 
     int len = 0;
@@ -403,6 +405,12 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
         int type;
         std::uint8_t attrs;
         dlis_lrsh( buffer, &len, &attrs, &type );
+
+        if (len==0) {
+	  ofs.stopped_early = true;
+	  file.seek(last_offset);
+	  break;
+	}
 
         int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
         if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
@@ -426,6 +434,7 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
              */
             else            ofs.implicits.push_back( offset );
         }
+	last_offset = offset;
         offset += len;
     }
     return ofs;

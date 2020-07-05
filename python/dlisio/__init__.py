@@ -790,7 +790,9 @@ def load(path):
             if tapemarks: stream = core.open_tif(stream)
             stream = core.open_rp66(stream)
 
-            explicits, implicits = core.findoffsets(stream)
+            explicits, implicits, stopped_early = core.findoffsets(stream)
+            if stopped_early: logging.warning("logical file scan encountered bad record, stopping early")
+                
             hint = rewind(stream.absolute_tell, tapemarks)
 
             records = core.extract(stream, explicits)
@@ -801,14 +803,18 @@ def load(path):
             lf = dlis(stream, records, fdata_index, sul)
             lfs.append(lf)
 
-            try:
-                stream = core.open(path)
-                offset = core.findvrl(stream, hint)
-            except RuntimeError:
-                if stream.eof():
-                    stream.close()
-                    break
-                raise
+            if stopped_early:
+                stream.close()
+                break
+            else:
+                try:
+                    stream = core.open(path)
+                    offset = core.findvrl(stream, hint)
+                except RuntimeError:
+                    if stream.eof():
+                        stream.close()
+                        break
+                    raise
 
         return Batch(lfs)
     except:
