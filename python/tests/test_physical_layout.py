@@ -116,6 +116,17 @@ def test_too_small_record():
         obj = f.object('VALID-SET', 'VALID-OBJ')
         assert obj['PARAM'] == ['PARAM-VALUE']
 
+def test_zeroed_in_1st_lr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/zeroed-in-1st-lr.dlis')
+    assert "Too short logical record" in str(excinfo.value)
+
+def test_zeroed_in_2nd_lr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/zeroed-in-2nd-lr.dlis')
+    # message propagated from lfp
+    assert "Incorrect format version" in str(excinfo.value)
+
 def test_sul():
     label = ''.join([
                 '   1',
