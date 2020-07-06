@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  win: circleci/windows@2.2.0
+
 commands:
   pull_submodules:
     steps:
@@ -206,6 +209,175 @@ jobs:
       - python_build:
           docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
 
+  windows_build:
+    executor:
+      name: win/default
+      shell: powershell.exe
+    parameters:
+      python:
+        description: python version
+        type: string
+      platform:
+        description: x86 or x64
+        type: enum
+        enum: ["x86", "x64"]
+        # machine is 64-bit, but script attempts not to rely on it by default
+    steps:
+      - run:
+          name: explicitly disable autocrlf
+          # CircleCI doesn't disable autocrlf by default, so we need to do it ourselves
+          # if not executed, our binary files will be changed and tests will fail
+          command: |
+            git config --global core.autocrlf false
+      - checkout
+      - restore_cache:
+          key: vers3-cmake
+      - run:
+          name: install cmake
+          command: |
+            if (!(Test-Path "C:\Program Files\CMake")){
+              choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' --no-progress
+            } else {
+              [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\CMake\bin",  `
+                                                    [EnvironmentVariableTarget]::Machine)
+            }
+            refreshenv
+      - save_cache:
+          key: vers3-cmake
+          paths:
+            - C:\Program Files\CMake
+      - restore_cache:
+          key: vers3-fmt-<< parameters.platform >>
+      - run:
+          name: install fmtlib
+          command: |
+            if (!(Test-Path "C:/Program Files (x86)/FMT")){
+              git clone https://github.com/fmtlib/fmt.git
+              mkdir fmt/build
+              cd fmt/build
+              if('<< parameters.platform >>' -eq 'x86') {
+                $platform = 'Win32'
+              } else {
+                $platform = 'x64'
+              }
+              cmake -DFMT_TEST=OFF `
+                    -DFMT_DOC=OFF `
+                    -DCMAKE_BUILD_TYPE=Release `
+                    -A $platform `
+                    ..
+              cmake --build . --config Release --target install
+            }
+      - save_cache:
+          key: vers3-fmt-<< parameters.platform >>
+          paths:
+            - C:/Program Files (x86)/FMT
+      - run:
+          name: install layered-file-protocol
+          command: |
+            git clone https://github.com/equinor/layered-file-protocols.git
+            mkdir layered-file-protocols/build
+            cd layered-file-protocols/build
+            if('<< parameters.platform >>' -eq 'x86') {
+              $platform = 'Win32'
+            } else {
+              $platform = 'x64'
+            }
+            cmake -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
+                  -DLFP_FMT_HEADER_ONLY=ON `
+                  -DBUILD_TESTING=OFF `
+                  -DCMAKE_BUILD_TYPE=Release `
+                  -A $platform `
+                  ..
+            cmake --build . --config Release --target install
+      - pull_submodules
+      - restore_cache:
+          key: vers3-miniconda-<< parameters.python >>-<< parameters.platform >>
+      - run:
+          name: create python version with miniconda
+          command: |
+            conda init powershell
+            conda env list
+            if (!(Test-Path "C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>")){
+              if('<< parameters.platform >>' -eq 'x86') {
+                $Env:CONDA_FORCE_32BIT = 1
+              }
+              conda create -y -n py-<< parameters.python >>-<< parameters.platform >> python=<< parameters.python >>
+            }
+      - run:
+          name: install python dependencies
+          command: |
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            python -m pip install --upgrade pip
+            python -m pip install --upgrade setuptools
+            python -m pip install -r python/requirements-dev.txt
+      - save_cache:
+          key: vers3-miniconda-<< parameters.python >>-<< parameters.platform >>
+          paths:
+            - C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>
+      - run:
+          name: install core
+          environment:
+            lfp_DIR: "C:/Program Files (x86)/layered-file-protocols/share/lfp/cmake"
+          command: |
+            mkdir build
+            cd build
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            $pversion = (python --version | Out-String).trim()
+            $pmode = (python -c "import struct;print(struct.calcsize('P') * 8)" | Out-String).trim()
+            echo "active python is $pversion ; executing in $pmode -bit mode"
+            if('<< parameters.platform >>' -eq 'x86') {
+              $platform = 'Win32'
+            } else {
+              $platform = 'x64'
+            }
+            cmake -G "Visual Studio 16 2019" `
+                  -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
+                  -DCMAKE_BUILD_TYPE=Release `
+                  -A $platform `
+                  ..
+            cmake --build . --target install --config Release
+      - run:
+          name: build python
+          command: |
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            cd python
+            python setup.py bdist_wheel -G "Visual Studio 16 2019"
+      - persist_to_workspace:
+          root: C:/Users/circleci/project/python
+          paths:
+            - dist/*
+
+  deploy:
+    docker:
+      - image: circleci/python:3.7
+    # parameters are not used, here only to create correct build-deployment matrix
+    parameters:
+      python:
+        description: python version
+        type: string
+      platform:
+        description: x86 or x64
+        type: enum
+        enum: ["x86", "x64"]
+    steps:
+      - run:
+          name: do not run deploy command, but report that it was called
+          command: |
+             echo "deployment for now is done in appveyor"
+#       - run:
+#           name: install twine
+#           command: |
+#              pip install twine
+#       - attach_workspace:
+#           at: deploy
+#       - run:
+#           name: deploy to repo
+#           command: |
+#             cd deploy
+#             # TWINE_REPOSITORY and TWINE_USERNAME and TWINE_PASSWORD
+#             # should be defined as CirceCI project environment variables
+#             twine upload --skip-existing dist/*
+
 workflows:
   version: 2
   build:
@@ -225,3 +397,29 @@ workflows:
       - python-36
       - python-37
       - python-38
+
+  windows:
+    jobs:
+      - windows_build:
+          name: build-python-<< matrix.python >>-win-<< matrix.platform >>
+          matrix:
+            parameters:
+              python: ["3.5", "3.6", "3.7", "3.8"]
+              platform: ["x86", "x64"]
+          # filters on the "build" jobs are not accidental, CircleCI needs them
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          name: deploy-python-<< matrix.python >>-win-<< matrix.platform >>
+          matrix:
+            parameters:
+              python: ["3.5", "3.6", "3.7", "3.8"]
+              platform: ["x86", "x64"]
+          requires:
+            - build-python-<< matrix.python >>-win-<< matrix.platform >>
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
