@@ -68,6 +68,16 @@ matrix:
           env:
             - MB_PYTHON_VERSION=3.8
             - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: linux
+          arch: s390x
+          name: bigendian
+          language: generic
+          before_install: skip
+          install: skip
+          before_script: skip
+          deploy:
+          script:
+            - docker build -t dlisio -f .travis/bigendian/Dockerfile .
 
 before_install:
     - eval "${MATRIX_EVAL}"
