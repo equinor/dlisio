@@ -804,8 +804,7 @@ def load(path):
             lfs.append(lf)
 
             if stopped_early:
-                stream.close()
-                break
+                return Batch(lfs, is_corrupted=True)
             else:
                 try:
                     stream = core.open(path)
@@ -817,7 +816,8 @@ def load(path):
                     raise
 
         return Batch(lfs)
-    except:
+    except Exception as e:
+        print("Exception: ",e)
         stream.close()
         for f in lfs:
             f.close()
@@ -825,6 +825,16 @@ def load(path):
 
 
 class Batch(tuple):
+    def __init__(self, *args, **kwargs):
+        corrupted = kwargs.pop('is_corrupted',False);
+        self._is_corrupted=corrupted
+        super().__init__()
+
+    @property
+    def is_corrupted(self):
+        return self._is_corrupted
+    
+
     def __enter__(self):
         return self
 
