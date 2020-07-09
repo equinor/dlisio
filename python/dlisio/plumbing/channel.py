@@ -86,16 +86,28 @@ class Channel(BasicObject):
 
     def __init__(self, obj = None, name = None, lf=None):
         super().__init__(obj, name = name, type = 'CHANNEL', lf=lf)
-        # The numpy data type of the sample array
-        self._frame        = None
 
     @property
     def frame(self):
-        if self._frame is not None:
-            return lookup(self.logicalfile, obname('FRAME'), self._frame)
+        if self.logicalfile is None:
+            msg = 'Unable to lookup frame, {} has no logical file'
+            logging.info(msg.format(self))
+            return None
 
-        msg = '{} does not belong to any Frame'
-        logging.info(msg.format(self))
+        # Find the frame(s) that are claiming ownership over this channel
+        frames = findframe(self.fingerprint, self.logicalfile)
+
+        if len(frames) == 1:
+            return lookup(self.logicalfile, obname('FRAME'), frames[0])
+
+        if len(frames) == 0:
+            msg = '{} does not belong to any Frame'
+            logging.info(msg.format(self))
+
+        if len(frames) > 1:
+            msg = '{} belong to multiple frames. Candidates are {}'
+            logging.info(msg.format(self, frames))
+
         return None
 
     @property
@@ -221,7 +233,7 @@ class Channel(BasicObject):
         >>> curve[0][1][2]
         6
         """
-        if self._frame is not None:
+        if self.frame is not None:
             return np.copy(self.frame.curves()[self.fingerprint])
 
         msg = 'There is no recorded curve-data for {}'

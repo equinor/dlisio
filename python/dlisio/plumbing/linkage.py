@@ -35,3 +35,13 @@ def isreference(val):
     return (isinstance (val, core.obname) or
             isinstance (val, core.objref) or
             isinstance (val, core.attref))
+
+def findframe(fp, logical_file):
+    """Find all frames containing the channel"""
+    frames = []
+    for frame in logical_file.frames:
+        for channel in frame.channels:
+            if channel.fingerprint != fp: continue
+            frames.append(frame.attic.name)
+
+    return frames

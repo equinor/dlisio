@@ -325,6 +325,9 @@ def test_channel_without_frame(assert_info):
         assert channel.frame == None
         assert_info('does not belong')
 
+    assert channel.curves() == None
+    assert_info('no recorded curve-data')
+
 def test_channel_fmt():
     with dlisio.load("data/chap4-7/frame-channels.dlis") as (f, *_):
         frame = f.object("FRAME", "VARIOUS")
