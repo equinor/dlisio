@@ -123,8 +123,11 @@ class Frame(BasicObject):
 
     @property
     def encrypted(self):
-        if 'ENCRYPTED' in self.attic: return True
-        else:                         return False
+        try:
+            _ = self.attic['ENCRYPTED']
+            return True
+        except KeyError:
+            return False
 
     @property
     def index_min(self):

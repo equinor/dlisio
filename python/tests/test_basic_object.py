@@ -19,19 +19,13 @@ def test_getitem_defaultvalue(f):
     assert obj['INDEX-TYPE'] is None
 
 def test_getitem_unexpected_attr(f):
-    obj = f.object('FRAME', 'FRAME2')
+    obj = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD')
+    # Attributes unknown to dlisio, such as 'NEW-ATTR' should be reachable
+    # through __getitem__
+    assert obj['LNKS'] == [18, 32]
 
-    try:
-        obj.attic['NEW-ATTR'] = [1]
-
-        # Attributes unknown to dlisio, such as 'NEW-ATTR' should be reachable
-        # through __getitem__
-        assert obj['NEW-ATTR'] == [1]
-
-        # Should also be in stash
-        assert obj.stash['NEW-ATTR'] == [1]
-    finally:
-        del obj.attic['NEW-ATTR']
+    # Should also be in stash
+    assert obj.stash['LNKS'] == [18, 32]
 
 def test_getitem_noattribute(f):
     obj = f.object('FRAME', 'FRAME2')

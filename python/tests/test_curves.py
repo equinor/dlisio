@@ -341,9 +341,6 @@ def test_channel_no_dimension(assert_log):
             ch.fmtstr()
         assert "channel.dimension is invalid" in str(exc.value)
 
-        ch.attic['DIMENSION'] = [1]
-        assert ch.fmtstr() == "L"
-
 def test_frame_index():
     with dlisio.load("data/chap4-7/frame-channels.dlis") as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")

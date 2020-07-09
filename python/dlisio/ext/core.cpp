@@ -816,24 +816,35 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
+    py::class_< dl::basic_object >( m, "basic_object" )
+        .def_readonly("type", &dl::basic_object::type)
+        .def_readonly("name", &dl::basic_object::object_name)
+        .def( "__len__", []( const dl::basic_object& o ) {
+            return o.attributes.size();
+        })
+        .def( "__eq__", &dl::basic_object::operator == )
+        .def( "__ne__", &dl::basic_object::operator != )
+        .def( "__getitem__", []( dl::basic_object& o, const std::string& key ) {
+            try { return o.at(key).value; }
+            catch (const std::out_of_range& e) { throw py::key_error( e.what() ); }
+        })
+        .def( "__repr__", []( const dl::basic_object& o ) {
+            return "dlisio.core.basic_object(name={})"_s
+                    .format(o.object_name);
+        })
+        .def( "keys", []( const dl::basic_object& o ){
+            std::vector< dl::ident > keys;
+            for ( auto attr : o.attributes ) {
+                keys.push_back( attr.label );
+            }
+            return keys;
+        })
+    ;
+
     py::class_< dl::object_set >( m, "object_set" )
         .def_readonly( "type",    &dl::object_set::type )
         .def_readonly( "name",    &dl::object_set::name )
-        .def_property_readonly("objects",
-        [](const dl::object_set& object_set) {
-            py::dict objects;
-            for (const auto& object : object_set.objects) {
-                py::dict obj;
-                for (const auto& attr : object.attributes) {
-                    auto label = py::str(dl::decay(attr.label));
-                    // TODO: need units? So far they're not used
-                    obj[label] = dl::decay(attr.value);
-                }
-                const auto& name = dl::decay(object.object_name);
-                objects[py::cast(name)] = obj;
-            }
-            return objects;
-        })
+        .def_readonly( "objects", &dl::object_set::objects )
     ;
 
     py::enum_< dl::representation_code >( m, "reprc" )

@@ -622,13 +622,13 @@ class dlis(object):
 
         for os in sets:
             # TODO: handle replacement sets
-            for name, o in os.objects.items():
+            for o in os.objects:
                 try:
-                    obj = self.types[os.type](o, name = name, lf = self)
+                    obj = self.types[os.type](o, name = o.name, lf = self)
                 except KeyError:
                     obj = plumbing.Unknown(
                         o,
-                        name = name,
+                        name = o.name,
                         type = os.type,
                         lf = self
                     )
