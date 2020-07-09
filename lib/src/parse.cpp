@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <ciso646>
 
 #include <fmt/core.h>
 
@@ -674,6 +675,7 @@ bool basic_object::operator != (const basic_object& o) const noexcept (true) {
     return !(*this == o);
 }
 
+
 const char* parse_template( const char* cur,
                             const char* end,
                             object_template& out ) noexcept (false) {
@@ -989,19 +991,48 @@ const char* parse_set_component( const char* cur,
     return cur;
 }
 
-object_set parse_objects( const char* cur, const char* end ) {
-    object_set set;
-    cur = parse_set_component( cur, end, &set.type, &set.name, &set.role);
-    cur = parse_template( cur, end, set.tmpl );
+object_set::object_set(std::vector< char > b) noexcept (false)  {
+        parse_set_component(b.data(),
+                            b.data() + b.size(),
+                            &this->type,
+                            &this->name,
+                            &this->role);
+        this->buffer = std::move(b);
+}
 
-    /*
-    Return if set has no objects
-    */
+void object_set::parse() noexcept (false) {
+    if (this->isparsed()) return;
+
+    const char* beg = this->buffer.data();
+    const char* end = beg + this->buffer.size();
+
+    /* Skip past the set component as it's already been read and parsed */
+    auto cur = parse_set_component(beg, end, nullptr, nullptr, nullptr);
+
+    object_template tmpl;
+    cur = parse_template(cur, end, tmpl);
+
+    // There are no objects in the set
     if (std::distance( cur, end ) == 0)
-         return set;
+        return;
 
-    set.objects = parse_objects( set.tmpl, set.type, cur, end );
-    return set;
+    auto objs = parse_objects(tmpl, this->type, cur, end);
+
+    this->tmpl = tmpl;
+    this->objs = objs;
+
+    this->parsed = true;
+}
+
+bool object_set::isparsed() const noexcept (true) {
+    return this->parsed;
+}
+
+dl::object_vector& object_set::objects() noexcept (false) {
+    if (not this->isparsed())
+        this->parse();
+
+    return this->objs;
 }
 
 }

@@ -622,7 +622,7 @@ class dlis(object):
 
         for os in sets:
             # TODO: handle replacement sets
-            for o in os.objects:
+            for o in os.objects():
                 try:
                     obj = self.types[os.type](o, name = o.name, lf = self)
                 except KeyError:

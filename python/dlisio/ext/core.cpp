@@ -690,6 +690,8 @@ noexcept (false) {
 
 }
 
+PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
+
 PYBIND11_MODULE(core, m) {
     PyDateTime_IMPORT;
 
@@ -704,6 +706,8 @@ PYBIND11_MODULE(core, m) {
             PyErr_SetString( PyExc_EOFError, e.what() );
         }
     });
+
+    py::bind_vector<std::vector< dl::object_set >>(m, "list(object_set)");
 
     m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
     m.def("open_rp66", &dl::open_rp66);
@@ -842,9 +846,9 @@ PYBIND11_MODULE(core, m) {
     ;
 
     py::class_< dl::object_set >( m, "object_set" )
-        .def_readonly( "type",    &dl::object_set::type )
-        .def_readonly( "name",    &dl::object_set::name )
-        .def_readonly( "objects", &dl::object_set::objects )
+        .def_readonly( "type", &dl::object_set::type )
+        .def_readonly( "name", &dl::object_set::name )
+        .def( "objects", &dl::object_set::objects )
     ;
 
     py::enum_< dl::representation_code >( m, "reprc" )
@@ -963,9 +967,8 @@ PYBIND11_MODULE(core, m) {
         std::vector< dl::object_set > objects;
         for (const auto& rec : recs) {
             if (rec.isencrypted()) continue;
-            auto begin = rec.data.data();
-            auto end = begin + rec.data.size();
-            objects.push_back( dl::parse_objects( begin, end ) );
+            if (rec.data.size() == 0) continue;
+            objects.push_back( dl::object_set( rec.data ) );
         }
         return objects;
     });
