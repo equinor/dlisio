@@ -473,21 +473,54 @@ struct basic_object {
     std::vector< object_attribute > attributes;
 };
 
-/*
- * The object set, after parsing, is an (unordered?) collection of objects. In
- * parsing, more information is added through creating custom types, but the
- * fundamental restriction is one type per set.
+/* Object set
  *
- * The variant-of-vectors is wells suited for this
+ * The object SET, as defined by rp66v1 chapter 3.2.1 is a series of objects -
+ * all derived from the same object template, all of the same type.
+ *
+ * Due to the variable sized data in the SET and OBJECTs within it, there is
+ * no easy way of randomly accessing specific objects. Making an index to
+ * achieve random access would require a full parse too, so there is really no
+ * good way of parsing single objects. Hence the entire set is parsed and
+ * cached in one go.
+ *
+ * However, parsing a lot of sets is expensive and often unnecessary. To avoid
+ * the upfront cost of parsing, object_set is a self parsing type. I.e.  it is
+ * initialized with a buffer of raw bytes making up the set - which is
+ * comparably much cheaper to extract than the actual parsing. The parsing is
+ * considered an implementation detail of the class and will be postponed until
+ * the first outside query for objects.
+ *
+ * Typical object queries will revolve around the type of object - hence
+ * parsing the set type (and name) independently of the rest of the set makes
+ * sense.
+ *
+ * Caching the raw bytes on the object also makes it independent of IO.
+ *
+ * Encrypted Records:
+ *
+ * encrypted records cannot be parsed by dlisio without being decrypted first.
+ * As object_set does its parsing itself, it _will_ fail on construction if
+ * given an encrypted record.
  */
 using object_vector = std::vector< basic_object >;
 
 struct object_set {
+public:
+    explicit object_set( dl::record ) noexcept (false);
+
     int role; // TODO: enum class?
     dl::ident type;
     dl::ident name;
+
+    dl::object_vector& objects() noexcept (false);
+private:
+    dl::record          record;
+    dl::object_vector   objs;
     dl::object_template tmpl;
-    dl::object_vector objects;
+
+    void parse() noexcept (false);
+    bool parsed = false;
 };
 
 const char* parse_template( const char* begin,

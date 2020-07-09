@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <ciso646>
 
 #include <fmt/core.h>
 
@@ -674,6 +675,7 @@ bool basic_object::operator != (const basic_object& o) const noexcept (true) {
     return !(*this == o);
 }
 
+
 const char* parse_template( const char* cur,
                             const char* end,
                             object_template& out ) noexcept (false) {
@@ -989,19 +991,40 @@ const char* parse_set_component( const char* cur,
     return cur;
 }
 
-object_set parse_objects( const char* cur, const char* end ) {
-    object_set set;
-    cur = parse_set_component( cur, end, &set.type, &set.name, &set.role);
-    cur = parse_template( cur, end, set.tmpl );
+object_set::object_set(dl::record rec) noexcept (false)  {
+        parse_set_component(rec.data.data(),
+                            rec.data.data() + rec.data.size(),
+                            &this->type,
+                            &this->name,
+                            &this->role);
+        this->record = std::move(rec);
+}
 
-    /*
-    Return if set has no objects
-    */
-    if (std::distance( cur, end ) == 0)
-         return set;
+void object_set::parse() noexcept (false) {
+    if (this->parsed) return;
 
-    set.objects = parse_objects( set.tmpl, set.type, cur, end );
-    return set;
+    const char* beg = this->record.data.data();
+    const char* end = beg + this->record.data.size();
+
+    /* Skip past the set component as it's already been read and parsed */
+    auto cur = parse_set_component(beg, end, nullptr, nullptr, nullptr);
+
+    object_template tmpl;
+    cur = parse_template(cur, end, tmpl);
+
+    //TODO parse_object should return empty list when there are no objects
+    if (std::distance( cur, end ) > 0) {
+        auto objs = parse_objects(tmpl, this->type, cur, end);
+        this->objs = objs;
+    }
+
+    this->tmpl = tmpl;
+    this->parsed = true;
+}
+
+dl::object_vector& object_set::objects() noexcept (false) {
+    this->parse();
+    return this->objs;
 }
 
 }
