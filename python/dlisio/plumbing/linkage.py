@@ -35,3 +35,4 @@ def isreference(val):
     return (isinstance (val, core.obname) or
             isinstance (val, core.objref) or
             isinstance (val, core.attref))
+

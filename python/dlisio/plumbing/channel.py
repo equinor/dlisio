@@ -86,16 +86,38 @@ class Channel(BasicObject):
 
     def __init__(self, obj = None, name = None, lf=None):
         super().__init__(obj, name = name, type = 'CHANNEL', lf=lf)
-        # The numpy data type of the sample array
-        self._frame        = None
 
     @property
     def frame(self):
-        if self._frame is not None:
-            return lookup(self.logicalfile, obname('FRAME'), self._frame)
+        if self.logicalfile is None:
+            msg = 'Unable to lookup frame, {} has no logical file'
+            logging.info(msg.format(self))
+            return None
 
-        msg = '{} does not belong to any Frame'
-        logging.info(msg.format(self))
+        # Find the frame(s) that are claiming ownership over this channel
+        frames = []
+        for frame in self.logicalfile.frames:
+            for channel in frame.channels:
+                if channel.attic.name != self.attic.name: continue
+
+                # Only add the channel once if it is referenced multiple times
+                # in the same frame. This is spec violation, but not
+                # necessarily an issue. This function is far to general to
+                # deal with it, so let it slide.
+                if frame not in frames:
+                    frames.append(frame)
+
+        if len(frames) == 1:
+            return frames[0]
+
+        if len(frames) == 0:
+            msg = '{} does not belong to any Frame'
+            logging.info(msg.format(self))
+
+        if len(frames) > 1:
+            msg = '{} belongs to multiple frames. Candidates are {}'
+            logging.info(msg.format(self, frames))
+
         return None
 
     @property
@@ -221,7 +243,7 @@ class Channel(BasicObject):
         >>> curve[0][1][2]
         6
         """
-        if self._frame is not None:
+        if self.frame is not None:
             return np.copy(self.frame.curves()[self.fingerprint])
 
         msg = 'There is no recorded curve-data for {}'

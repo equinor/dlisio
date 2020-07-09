@@ -479,22 +479,6 @@ class Frame(BasicObject):
 
         return pre_fmt, ch_fmt, post_fmt
 
-    def link(self):
-        # Reference from a Channel to the Frame it belongs to is not explicitly
-        # present in file. However it is very convenient that Channels are
-        # aware of their parent frame. Without a this reference present in the
-        # file, its the Frame's responsibility to update all it's Channel with
-        # a reference back to itself.
-        for ch in self.channels:
-            try:
-                if ch._frame:
-                    msg = '{} already belongs to {}, ownership given to {}'
-                    logging.warning(msg.format(ch, ch.frame, self))
-                ch._frame = core.obname(self.origin, self.copynumber, self.name)
-            except AttributeError:
-                #happens if ch has been parsed as other type
-                pass
-
     def describe_attr(self, buf, width=80, indent='', exclude=''):
         if len(self.channels) > 0:
             if self.index_type is not None:

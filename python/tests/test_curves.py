@@ -341,11 +341,35 @@ def test_channel_without_frame(assert_info, tmpdir_factory, merge_files_manyLR):
         assert channel.frame == None
         assert_info('does not belong')
 
-def test_channel_in_multiple_frames(assert_log):
+def test_channels_with_same_id(assert_info):
+    # Test that the following channels and frames are linked correctly
+    #
+    # T.FRAME-I.FRAME_SAME1-O.0-C.0' -> T.CHANNEL-I.SAME-O.0-C.1'
+    # T.FRAME-I.FRAME_SAME2-O.0-C.0' -> T.CHANNEL-I.SAME-O.0-C.2'
+    fpath = "data/chap4-7/eflr/frames-and-channels/2-channels-same-content-diff-copynr.dlis"
+    with dlisio.load(fpath) as (f, *_):
+        ch1 = f.object('CHANNEL', 'SAME', 0, 1)
+        ch2 = f.object('CHANNEL', 'SAME', 0, 2)
+        fr1 = f.object('FRAME', 'FRAME_SAME1')
+        fr2 = f.object('FRAME', 'FRAME_SAME2')
+
+        assert ch1.frame == fr1
+        assert ch2.frame == fr2
+
+def test_channel_in_multiple_frames(assert_info):
     fpath = "data/chap4-7/eflr/frames-and-channels/1-channel-2-frames.dlis"
     with dlisio.load(fpath) as (f, *_):
-        _ = f.object("CHANNEL", "DUPL")
-        assert_log("Channel(DUPL) already belongs to")
+        ch = f.object("CHANNEL", "DUPL")
+        _  = ch.frame
+        assert_info("Channel(DUPL) belongs to multiple")
+
+def test_channel_duplicated_in_frame(assert_info):
+    fpath = "data/chap4-7/eflr/frames-and-channels/duplicated.dlis"
+    with dlisio.load(fpath) as (f, *_):
+        fr = f.object("FRAME", "DUPLICATED")
+        ch = f.object("CHANNEL", "DUPL")
+
+        assert ch.frame == fr
 
 def test_channel_fmt():
     fpath = "data/chap4-7/eflr/frames-and-channels/various.dlis"

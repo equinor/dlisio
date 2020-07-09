@@ -651,13 +651,6 @@ class dlis(object):
         self.indexedobjects = indexedobjects
         self.problematic    = problematic
 
-        if 'FRAME' not in [x.type for x in sets]: return self
-
-        # Frame objects need the additional step of updating its Channels with
-        # a reference back to itself. See Frame.link()
-        for obj in self.indexedobjects['FRAME'].values():
-            obj.link()
-
         return self
 
     def storage_label(self):
