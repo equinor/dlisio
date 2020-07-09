@@ -46,7 +46,8 @@ def test_broken_utf8_value(tmpdir, merge_files_oneLR):
     dlisio.set_encodings([])
     with pytest.warns(UnicodeWarning):
         with dlisio.load(path) as (f, *_):
-            f.load()
+            obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT')
+            _ = obj['DEFAULT_ATTRIBUTE']
     try:
         dlisio.set_encodings(['koi8_r'])
         with dlisio.load(path) as (f, *_):

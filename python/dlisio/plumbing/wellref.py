@@ -94,8 +94,16 @@ class Wellref(BasicObject):
         value = 'COORDINATE-{}-VALUE'
 
         for i in range(1, 4):
-            key = self.attic.get(name.format(i), [custom_label.format(i)])[0]
-            val = self.attic.get(value.format(i), [None])[0]
+            try:
+                key = self.attic[name.format(i)][0]
+            except KeyError:
+                key = custom_label.format(i)
+
+            try:
+                val = self.attic[value.format(i)][0]
+            except KeyError:
+                val = None
+
             coordinates[key] = val
         return coordinates
 

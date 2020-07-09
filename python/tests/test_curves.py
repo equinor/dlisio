@@ -365,9 +365,6 @@ def test_channel_no_dimension(assert_log, tmpdir_factory, merge_files_manyLR):
             ch.fmtstr()
         assert "channel.dimension is invalid" in str(exc.value)
 
-        ch.attic['DIMENSION'] = [1]
-        assert ch.fmtstr() == "L"
-
 def test_frame_index():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
     with dlisio.load(fpath) as (f, *_):

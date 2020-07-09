@@ -196,7 +196,7 @@ class BasicObject():
         Returns a default value for missing attributes. I.e. attributes defined
         in :attr:`attributes` but are not in :attr:`attic`.
         """
-        if key not in self.attributes and key not in self.attic:
+        if key not in self.attributes and key not in self.attic.keys():
             raise KeyError("'{}'".format(key))
 
         try:
@@ -253,9 +253,9 @@ class BasicObject():
             all attributes not defined in :attr:`attributes`
         """
         stash = {
-            key : value
-            for key, value
-            in self.attic.items()
+            key : self.attic[key]
+            for key
+            in self.attic.keys()
             if key not in self.attributes
         }
 
