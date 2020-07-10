@@ -453,8 +453,9 @@ dl::stream_offsets findoffsets(dl::stream& file) noexcept (false) {
             if (not attr_consistent( attributes )) entry.consistent = false;
             if (not type_consistent( types ))      entry.consistent = false;
 
-            if (entry.isexplicit()) idx.explicits.push_back(entry);
-            else                    idx.implicits.push_back(entry);
+            if      (entry.isencrypted()) idx.encrypted.push_back(entry);
+            else if (entry.isexplicit())  idx.explicits.push_back(entry);
+            else                          idx.implicits.push_back(entry);
 
             attributes.clear();
             types.clear();

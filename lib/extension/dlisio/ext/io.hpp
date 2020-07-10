@@ -67,6 +67,7 @@ private:
 struct stream_offsets {
     std::vector< index_entry > explicits;
     std::vector< index_entry > implicits;
+    std::vector< index_entry > encrypted;
 };
 
 stream open(const std::string&, std::int64_t) noexcept (false);

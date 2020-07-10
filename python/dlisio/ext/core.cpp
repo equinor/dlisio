@@ -980,7 +980,7 @@ PYBIND11_MODULE(core, m) {
 
     m.def( "findoffsets", []( dl::stream& file ) {
         const auto ofs = dl::findoffsets( file );
-        return py::make_tuple( ofs.explicits, ofs.implicits );
+        return py::make_tuple( ofs.explicits, ofs.implicits, ofs.encrypted );
     });
 
     m.def("set_encodings", set_encodings);

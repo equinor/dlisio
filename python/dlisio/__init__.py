@@ -215,11 +215,12 @@ class dlis(object):
        to link the content of attributes to other objects.
     """
 
-    def __init__(self, stream, attic, fdata_index, sul=None):
+    def __init__(self, stream, attic, fdata_index, encrypted, sul=None):
         self.file = stream
         self.attic = attic
         self.sul = sul
         self.fdata_index = fdata_index
+        self.encrypted = encrypted
 
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
@@ -783,7 +784,7 @@ def load(path):
             if tapemarks: stream = core.open_tif(stream)
             stream = core.open_rp66(stream)
 
-            explicits, implicits = core.findoffsets(stream)
+            explicits, implicits, encrypted = core.findoffsets(stream)
             hint = rewind(stream.absolute_tell, tapemarks)
 
             records = core.extract(stream, [x.tell for x in explicits])
@@ -791,7 +792,7 @@ def load(path):
             for key, val in core.findfdata(stream, [x.tell for x in implicits]):
                 fdata_index[key].append(val)
 
-            lf = dlis(stream, records, fdata_index, sul)
+            lf = dlis(stream, records, fdata_index, encrypted, sul)
             lfs.append(lf)
 
             try:
