@@ -505,6 +505,7 @@ public:
     void parse() noexcept (false);
     bool isparsed() const noexcept (true);
 
+    dl::basic_object& at(const dl::obname&) noexcept (false);
     dl::object_vector& objects() noexcept (false);
 private:
     std::vector< char > buffer;

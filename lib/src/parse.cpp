@@ -1035,4 +1035,23 @@ dl::object_vector& object_set::objects() noexcept (false) {
     return this->objs;
 }
 
+dl::basic_object& object_set::at(const dl::obname& key) noexcept (false) {
+    auto eq = [&key]( const dl::basic_object& obj ) {
+        return dl::decay( obj.object_name ) == key;
+    };
+
+    auto objects = this->objects();
+    // TODO; handle duplications
+    auto itr = std::find_if( objects.begin(),
+                             objects.end(),
+                             eq );
+
+    if (itr == objects.end()) {
+        const auto msg = "object_set.at: No object with fingerprint {} in set";
+        const auto fp = key.fingerprint( dl::decay(this->type) ) ;
+        throw std::out_of_range( fmt::format(msg, fp));
+    }
+    return *itr;
+}
+
 }
