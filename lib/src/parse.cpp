@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <ciso646>
+#include <regex>
 
 #include <fmt/core.h>
 
@@ -1052,6 +1053,50 @@ dl::basic_object& object_set::at(const dl::obname& key) noexcept (false) {
         throw std::out_of_range( fmt::format(msg, fp));
     }
     return *itr;
+}
+
+dl::basic_object& pool::at(const dl::ident& type, const dl::obname& name)
+noexcept (false) {
+    // TODO A more clever search
+    dl::basic_object tmp;
+    for (auto& eflr : this->eflrs) {
+        if (eflr.type != type) continue;
+
+        /* There might be multiple EFLR's with the correct type, so ignore
+         * index error while there are still more eflr's to check.
+         */
+        try {
+            // TODO handle duplications
+            return eflr.at(name);
+        } catch (const std::out_of_range&) {}
+    }
+
+    const auto msg = "pool.at: No object with fingerprint {}";
+    const auto fp = name.fingerprint( dl::decay(type) ) ;
+    throw std::out_of_range( fmt::format(msg, fp));
+}
+
+dl::basic_object& pool::at(const dl::objref& id ) noexcept (false) {
+    return this->at(id.type, id.name);
+}
+
+object_vector pool::match( const std::string& type,
+                           const std::string& name )
+noexcept (false) {
+    std::regex re_type(type, std::regex_constants::icase);
+    std::regex re_name(type, std::regex_constants::icase);
+
+    object_vector objs;
+    for (auto& eflr : this->eflrs) {
+        if (not std::regex_match(dl::decay(eflr.type), re_type)) continue;
+
+        for (const auto& obj : eflr.objects()) {
+            const auto id = dl::decay(obj.object_name.id);
+            if (not std::regex_match(id, re_name)) continue;
+            objs.push_back(obj);
+        }
+    }
+    return objs;
 }
 
 }

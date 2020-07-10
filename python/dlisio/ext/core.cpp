@@ -851,6 +851,10 @@ PYBIND11_MODULE(core, m) {
         .def( "objects", &dl::object_set::objects )
     ;
 
+    py::class_< dl::pool >( m, "logical_file" )
+        .def( "match", &dl::pool::match )
+    ;
+
     py::enum_< dl::representation_code >( m, "reprc" )
         .value( "fshort", dl::representation_code::fshort )
         .value( "fsingl", dl::representation_code::fsingl )

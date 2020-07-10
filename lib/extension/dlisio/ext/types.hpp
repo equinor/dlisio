@@ -515,6 +515,20 @@ private:
     bool parsed = false;
 };
 
+/* A queryable pool of metadata objects */
+class pool {
+public:
+    explicit pool( std::vector< dl::object_set > e ) : eflrs(std::move(e)) {};
+
+    object_vector match(const std::string& type,
+                        const std::string& name);
+
+    dl::basic_object& at(const dl::ident&, const dl::obname&) noexcept (false);
+    dl::basic_object& at(const dl::objref&) noexcept(false);
+private:
+    std::vector< dl::object_set > eflrs;
+};
+
 const char* parse_template( const char* begin,
                             const char* end,
                             object_template& ) noexcept (false);
