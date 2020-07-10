@@ -991,6 +991,12 @@ const char* parse_set_component( const char* cur,
     return cur;
 }
 
+bool exactmatcher::match(const dl::ident& pattern, const dl::ident& candidate)
+const noexcept (false) {
+    return pattern == candidate;
+}
+
+
 object_set::object_set(dl::record rec) noexcept (false)  {
         parse_set_component(rec.data.data(),
                             rec.data.data() + rec.data.size(),
@@ -1025,6 +1031,46 @@ void object_set::parse() noexcept (false) {
 dl::object_vector& object_set::objects() noexcept (false) {
     this->parse();
     return this->objs;
+}
+
+std::vector< dl::ident > pool::types() const noexcept (true) {
+    std::vector< dl::ident > types;
+    for (const auto& eflr : this->eflrs) {
+        types.push_back( eflr.type );
+    }
+    return types;
+}
+
+object_vector pool::get(const std::string& type,
+                        const std::string& name,
+                        const dl::matcher& m)
+noexcept (false) {
+    object_vector objs;
+
+    for (auto& eflr : this->eflrs) {
+        if (not m.match(dl::ident{type}, eflr.type)) continue;
+
+        for (const auto& obj : eflr.objects()) {
+            if (not m.match(dl::ident{name}, obj.object_name.id)) continue;
+
+            objs.push_back(obj);
+        }
+    }
+    return objs;
+}
+
+object_vector pool::get(const std::string& type,
+                        const dl::matcher& m)
+noexcept (false) {
+    object_vector objs;
+
+    for (auto& eflr : this->eflrs) {
+        if (not m.match(dl::ident{type}, eflr.type)) continue;
+
+        auto tmp = eflr.objects();
+        objs.insert(objs.end(), tmp.begin(), tmp.end());
+    }
+    return objs;
 }
 
 }

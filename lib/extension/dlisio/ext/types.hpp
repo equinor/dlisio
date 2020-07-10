@@ -523,6 +523,36 @@ private:
     bool parsed = false;
 };
 
+struct matcher {
+    virtual bool match(const dl::ident& pattern, const dl::ident& candidate)
+        const noexcept (false) = 0;
+
+    virtual ~matcher() = default;
+};
+
+struct exactmatcher : public matcher {
+    bool match(const dl::ident& pattern, const dl::ident& candidate)
+        const noexcept (false) override;
+};
+
+/* A queryable pool of metadata objects */
+class pool {
+public:
+    explicit pool( std::vector< dl::object_set > e ) : eflrs(std::move(e)) {};
+
+    std::vector< dl::ident > types() const noexcept (true);
+
+    object_vector get(const std::string& type,
+                      const std::string& name,
+                      const dl::matcher& matcher) noexcept (false);
+
+    object_vector get(const std::string& type,
+                      const dl::matcher& matcher) noexcept (false);
+
+private:
+    std::vector< dl::object_set > eflrs;
+};
+
 const char* parse_template( const char* begin,
                             const char* end,
                             object_template& ) noexcept (false);

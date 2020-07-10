@@ -851,6 +851,20 @@ PYBIND11_MODULE(core, m) {
         .def( "objects", &dl::object_set::objects )
     ;
 
+    py::class_< dl::pool >( m, "pool" )
+        .def(py::init< std::vector< dl::object_set> >())
+        .def_property_readonly( "types", &dl::pool::types )
+        .def( "get", (dl::object_vector (dl::pool::*) (
+            const std::string&,
+            const std::string&,
+            const dl::matcher&
+        )) &dl::pool::get )
+        .def( "get", (dl::object_vector (dl::pool::*) (
+            const std::string&,
+            const dl::matcher&
+        )) &dl::pool::get )
+    ;
+
     py::enum_< dl::representation_code >( m, "reprc" )
         .value( "fshort", dl::representation_code::fshort )
         .value( "fsingl", dl::representation_code::fsingl )
@@ -977,4 +991,8 @@ PYBIND11_MODULE(core, m) {
 
     m.def("set_encodings", set_encodings);
     m.def("get_encodings", get_encodings);
+
+    py::class_< dl::exactmatcher >( m, "exactmatcher" )
+        .def(py::init<>())
+    ;
 }
