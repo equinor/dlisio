@@ -1017,6 +1017,18 @@ PYBIND11_MODULE(core, m) {
         return py::make_tuple( ofs.explicits, ofs.implicits, ofs.encrypted );
     });
 
+    m.def( "metadata_pool", []( dl::stream& s,
+                                const std::vector< dl::index_entry >& index ) {
+        std::vector< dl::object_set > tmp;
+        for (const auto& eflr : index) {
+            if (eflr.isencrypted()) continue;
+            auto rec = dl::extract(s, eflr.tell);
+            if (rec.data.size() == 0) continue;
+            tmp.push_back( dl::object_set( rec.data ) );
+        }
+        return dl::pool{ std::move(tmp) };
+    });
+
     m.def("set_encodings", set_encodings);
     m.def("get_encodings", get_encodings);
 

@@ -555,7 +555,6 @@ def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
         dlisio.load(path)
     assert "expected SET" in str(excinfo.value)
 
-
 def test_unexpected_set_in_object(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'unexpected-set-in-object.dlis')
     content = [
@@ -631,9 +630,7 @@ def test_cut_before_object(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
     with dlisio.load(path) as (f,):
-        objects = {}
-        for v in f.indexedobjects.values():
-            objects.update(v)
+        objects = f.match('.*', '.*')
         assert len(objects) == 0
 
 

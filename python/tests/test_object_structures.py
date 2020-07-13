@@ -5,6 +5,7 @@ Testing objects from Chapter 5 and 6. Tests objects structure and attributes
 from datetime import datetime
 import numpy as np
 
+import pytest
 import dlisio
 
 def test_file_header(f):

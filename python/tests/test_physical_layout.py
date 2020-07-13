@@ -45,19 +45,19 @@ def test_lrs_atributes_inconsistency():
 def test_padbytes_as_large_as_record():
     path = 'data/chap2/padbytes-large-as-record.dlis'
     with dlisio.load(path) as (f,):
-        assert len(f.attic) == 0
+        assert len(f.match('.*', '.*')) == 0
         assert len(f.fdata_index) == 0
 
 def test_padbytes_as_large_as_segment_explicit():
     path = 'data/chap2/padbytes-large-as-seg-explict.dlis'
     with dlisio.load(path) as (f,):
-        assert len(f.attic) == 0
+        assert len(f.match('.*', '.*')) == 0
         assert len(f.fdata_index) == 0
 
 def test_padbytes_as_large_as_segment_implicit():
     path = 'data/chap2/padbytes-large-as-seg-implicit.dlis'
     with dlisio.load(path) as (f,):
-        assert len(f.attic) == 0
+        assert len(f.match('.*', '.*')) == 0
         assert len(f.fdata_index) == 0
 
 def test_padbytes_bad():
