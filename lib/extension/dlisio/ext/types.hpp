@@ -520,6 +520,8 @@ class pool {
 public:
     explicit pool( std::vector< dl::object_set > e ) : eflrs(std::move(e)) {};
 
+    std::vector< dl::ident > types() const noexcept (false);
+
     object_vector match(const std::string& type,
                         const std::string& name);
 

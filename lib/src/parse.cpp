@@ -1055,6 +1055,14 @@ dl::basic_object& object_set::at(const dl::obname& key) noexcept (false) {
     return *itr;
 }
 
+std::vector< dl::ident > pool::types() const noexcept (false) {
+    std::vector< dl::ident > types;
+    for (auto eflr : this->eflrs) {
+        types.push_back( eflr.type );
+    }
+    return types;
+}
+
 dl::basic_object& pool::at(const dl::ident& type, const dl::obname& name)
 noexcept (false) {
     // TODO A more clever search

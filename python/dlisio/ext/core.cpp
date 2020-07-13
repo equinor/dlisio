@@ -852,6 +852,7 @@ PYBIND11_MODULE(core, m) {
     ;
 
     py::class_< dl::pool >( m, "logical_file" )
+        .def_property_readonly( "types", &dl::pool::types )
         .def( "match", &dl::pool::match )
     ;
 
