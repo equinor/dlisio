@@ -221,6 +221,12 @@ class BasicObject():
 
         return parsevalue(value, parse_as)
 
+    def __eq__(self, rhs):
+        try:
+            return self.attic == rhs.attic
+        except AttributeError:
+            return False
+
     @property
     def fingerprint(self):
         """ Object fingerprint

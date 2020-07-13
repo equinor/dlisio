@@ -33,8 +33,8 @@ def test_object_nonexisting(f):
     with pytest.raises(ValueError):
         _ = f.object("CHANNEL", "CHANN1", 11, 0)
 
-    with pytest.raises(TypeError):
-        _ = f.object("WEIRD", "CHANN1", "-1", "-1")
+    with pytest.raises(ValueError):
+        _ = f.object("CHANNEL", "CHANN1", "-1", "-1")
 
 def test_object_solo_nameonly(f):
     channel = f.object("CHANNEL", "CHANN2")
@@ -61,6 +61,45 @@ def test_object_many_objects_nameonly(tmpdir_factory, merge_files_manyLR):
         with pytest.raises(ValueError) as exc:
             _ = f.object("CHANNEL", "MATCH1")
         assert "There are multiple" in str(exc.value)
+
+def test_object_ducplicated_object(tmpdir_factory, merge_files_manyLR):
+    # Spec violation: Two objects with the same signature AND identical content
+    fpath = str(tmpdir_factory.mktemp('lf').join('same-id.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.127-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.127-C.0.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
+    with dlisio.load(fpath) as (f, *_):
+        ch = f.object("CHANNEL", "MATCH1")
+
+        assert ch.name       == "MATCH1"
+        assert ch.origin     == 127
+        assert ch.copynumber == 0
+
+        assert ch == f.object("CHANNEL", "MATCH1", 127, 0)
+
+def test_object_same_signature_diff_content(tmpdir_factory, merge_files_manyLR):
+    # Spec violation: Two objects with the same signature BUT different content
+    fpath = str(tmpdir_factory.mktemp('lf').join('same-id.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/channel.dlis.part',
+        'data/chap4-7/eflr/channel-same-objects.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
+
+    with dlisio.load(fpath) as (f, *_):
+        with pytest.raises(ValueError) as exc:
+            _ = f.object("CHANNEL", "CHANN1", 10, 0)
+        assert "There are multiple" in str(exc.value)
+
+        # They can still be reached through match
+        chs = f.match("CHANN1", "CHANNEL")
+        assert len(chs) == 2
 
 def test_match(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('lf').join('match.dlis'))
@@ -156,7 +195,7 @@ def test_match_special_characters(tmpdir_factory, merge_files_manyLR):
         for ch in channels:
             assert ch in refs
 
-def test_indexedobjects(f):
+def test_dlis_types(f):
     assert f.fileheader.name   == "N"
     assert len(f.origins)      == 2
     assert len(f.axes)         == 3
@@ -179,52 +218,21 @@ def test_indexedobjects(f):
     assert len(f.comments)     == 1
     assert len(f.messages)     == 1
 
-def test_indexedobjects_initial_load(fpath):
-    with dlisio.load(fpath) as (f, *tail):
-        # Only fileheader, origin, frame, and channel should be loaded
-        assert len(f.indexedobjects) == 4
-
-
-def test_indexedobjects_load_all(fpath):
-    with dlisio.load(fpath) as (f, *_):
-        f.load()
-        assert len(f.indexedobjects) == 23
-
-def test_indexedobjects_load_unknowns():
+def test_load_unknowns():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
-        assert len(f.indexedobjects) == 4 #FILE-HEADER, ORIGIN, FRAME, CHANNEL
-        assert len(f.unknowns)       == 5
-        assert len(f.indexedobjects) == 9
+        assert len(f.unknowns) == 5
 
-def test_indexedobjects_load_by_typeloading(fpath):
-    with dlisio.load(fpath) as (f, *tail):
-        fp = core.fingerprint('PARAMETER', 'PARAM1', 10, 0)
-        parameters = f.parameters
+def test_unknowns_multiple_sets(tmpdir_factory, merge_files_manyLR):
+    # Multiple sets of the same type are loaded correctly. All objects are
+    # unique.
+    fpath = str(tmpdir_factory.mktemp('lf').join('two-ch-sets.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/unknown.dlis.part',
+        'data/chap4-7/eflr/unknown2.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
 
-        assert len(parameters) == 3
-        assert fp in f.indexedobjects['PARAMETER']
-
-def test_indexedobjects_load_by_direct_call(fpath):
-    with dlisio.load(fpath) as (f, *tail):
-        fp = core.fingerprint('TOOL', 'TOOL1', 10, 0)
-        _ = f.object('TOOL', 'TOOL1', 10, 0)
-
-        assert fp in f.indexedobjects['TOOL']
-
-def test_indexedobjects_load_by_match(fpath):
-    with dlisio.load(fpath) as (f, *tail):
-        fp = core.fingerprint('MESSAGE', 'MESSAGE1', 10, 0)
-
-        _ = list(f.match('.*' , type='MESSAGE'))
-
-        assert fp in f.indexedobjects['MESSAGE']
-
-def test_indexedobjects_load_by_link(fpath):
-    with dlisio.load(fpath) as (f, *tail):
-        fp = core.fingerprint('LONG-NAME', 'CHANN1-LONG-NAME', 10, 0)
-        ch = f.object('CHANNEL', 'CHANN1')
-
-        # Accessing long-name should trigger loading of all long-names
-        _ = ch.long_name
-        assert fp in f.indexedobjects['LONG-NAME']
-        assert len(f.indexedobjects['LONG-NAME']) == 4
+    with dlisio.load(fpath) as (f, *_):
+        assert len(f.unknowns['UNKNOWN_SET']) == 2
