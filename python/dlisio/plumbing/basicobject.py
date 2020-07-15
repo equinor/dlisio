@@ -215,7 +215,7 @@ class BasicObject():
 
         if key in self.linkage and isreference(rp66value[0]):
             reftype = self.linkage[key]
-            value = [lookup(self, reftype, v) for v in rp66value]
+            value = [lookup(self.logicalfile, reftype, v) for v in rp66value]
         else:
             value = [v.strip() if isinstance(v, str) else v for v in rp66value]
 

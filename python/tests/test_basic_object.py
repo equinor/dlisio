@@ -55,7 +55,7 @@ def test_lookup():
     ch.logicalfile = lf
 
     value = dlisio.core.obname(10, 2, 'channel')
-    res = lookup(ch, linkage.obname('CHANNEL'), value)
+    res = lookup(lf, linkage.obname('CHANNEL'), value)
 
     assert res == other
 
@@ -71,15 +71,6 @@ def test_lookup_value_should_be_objref(assert_log):
 
     assert res is None
     assert_log('Unable to create object-reference')
-
-def test_lookup_no_logicalfile(assert_log):
-    value = dlisio.core.obname(10, 2, 'channel')
-    ch = Channel() #channel without reference to a logical file
-
-    res = lookup(ch, linkage.obname('CHANNEL'), value)
-
-    assert res is None
-    assert_log('has no logical file')
 
 def test_lookup_no_such_object(assert_log):
     value = dlisio.core.obname(10, 2, 'channel')
