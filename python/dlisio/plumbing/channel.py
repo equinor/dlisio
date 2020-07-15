@@ -92,7 +92,7 @@ class Channel(BasicObject):
     @property
     def frame(self):
         if self._frame is not None:
-            return lookup(self, obname('FRAME'), self._frame)
+            return lookup(self.logicalfile, obname('FRAME'), self._frame)
 
         msg = '{} does not belong to any Frame'
         logging.info(msg.format(self))
