@@ -42,41 +42,28 @@ def test_getitem_noattribute(f):
     with pytest.raises(KeyError):
         _ = obj['DUMMY']
 
-def test_lookup():
-    other = Channel()
-    other.name = 'channel'
-    other.origin = 10
-    other.copynumber = 2
+def test_lookup(f):
+    value = dlisio.core.obname(10, 0, 'CHANN2')
+    res = lookup(f, linkage.obname('CHANNEL'), value)
 
-    lf = dlisio.dlis(None, [], [], [])
-    lf.indexedobjects['CHANNEL'] = {other.fingerprint : other}
+    assert res.long_name == "CHANN2-LONG-NAME"
 
-    ch = Channel()
-    ch.logicalfile = lf
-
-    value = dlisio.core.obname(10, 2, 'channel')
-    res = lookup(lf, linkage.obname('CHANNEL'), value)
-
-    assert res == other
-
-def test_lookup_value_not_a_ref(assert_log):
-    res = lookup(None, linkage.objref, 0)
+def test_lookup_value_not_a_ref(f, assert_log):
+    res = lookup(f, linkage.objref, 0)
 
     assert res is None
     assert_log('Unable to create object-reference')
 
-def test_lookup_value_should_be_objref(assert_log):
+def test_lookup_value_should_be_objref(f, assert_log):
     value = dlisio.core.obname(10, 2, 'channel')
-    res = lookup(None, linkage.objref, value)
+    res = lookup(f, linkage.objref, value)
 
     assert res is None
     assert_log('Unable to create object-reference')
 
-def test_lookup_no_such_object(assert_log):
+def test_lookup_no_such_object(f, assert_log):
     value = dlisio.core.obname(10, 2, 'channel')
-    ch = Channel()
-    ch.logicalfile = dlisio.dlis(None, [], [], [])
-    res = lookup(ch, linkage.obname('CHANNEL'), value)
+    res = lookup(f, linkage.obname('CHANNEL'), value)
 
     assert res is None
     assert_log('not in logical file')

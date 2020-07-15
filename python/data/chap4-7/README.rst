@@ -140,6 +140,9 @@ Remaining files
 ================================================ ==================================================
 Filename                                         Description
 ================================================ ==================================================
+frame-channels.dlis                              Contains frames with channels with specific
+                                                 repcodes and signatures for curves testing
+
 invalid-date-in-origin.dlis                      Simple file which contains invalid creation time
                                                  attribute in origin
 
@@ -150,5 +153,8 @@ many-logical-files-error-in-last.dlis            Contains several logical files,
 
 many-logical-files-same-object.dlis              Contains 2 logical files with the same objects and
                                                  encrypted records
+
+match.dlis                                       Various combinations of objects to test match
+                                                 functions as they require specific name patterns
 
 ================================================ ==================================================
