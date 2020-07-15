@@ -717,6 +717,22 @@ public:
     }
 };
 
+void report( const std::vector< std::error_code >& codes,
+             const std::string& context ) noexcept (false) {
+
+    py::module logging = py::module::import("logging");
+    using level = dl::parsing_severity;
+    for (const auto& code : codes) {
+        const std::string msg = context + ": " + code.message();
+
+        if      (code == level::debug)   logging.attr("debug")(msg);
+        else if (code == level::info)    logging.attr("info")(msg);
+        else if (code == level::warning) logging.attr("warning")(msg);
+        /* default to logging.warning for now - should never get her anyway*/
+        else logging.attr("warning")(msg);
+    };
+}
+
 }
 
 PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
@@ -858,8 +874,25 @@ PYBIND11_MODULE(core, m) {
         .def( "__eq__", &dl::basic_object::operator == )
         .def( "__ne__", &dl::basic_object::operator != )
         .def( "__getitem__", []( dl::basic_object& o, const std::string& key ) {
-            try { return o.at(key).value; }
-            catch (const std::out_of_range& e) { throw py::key_error( e.what() ); }
+            dl::object_attribute attr;
+            try {
+                attr = o.at(key);
+            } catch (const std::out_of_range& e) {
+                throw py::key_error( e.what() );
+            }
+
+            if (attr.info.size()) {
+                const auto msg = o.object_name.fingerprint(dl::decay( o.type ))
+                               + "-A."
+                               + dl::decay( attr.label );
+
+                std::vector< std::error_code > codes( attr.info.begin(),
+                                                      attr.info.end() );
+
+                report(codes, msg);
+            }
+
+            return attr.value;
         })
         .def( "__repr__", []( const dl::basic_object& o ) {
             return "dlisio.core.basic_object(name={})"_s

@@ -68,6 +68,60 @@ enum class representation_code : std::uint8_t {
     undef  = DLIS_UNDEF,
 };
 
+/* Parsing info
+ *
+ * These enum values are intended to be set _on_ the parsed objects created by
+ * dlisio's parsing routines. The values indicate how the object was parsed and
+ * potential inconsistencies, _recoverable_ errors or other relevant information found by
+ * the parsing routine.
+ *
+ * The enum values can be implicitly converted into std::error_code, which
+ * preserve the original value and offers a human readable description of the
+ * error.
+ *
+ * Each value is associated with a severity degree.
+ *
+ * Example:
+ *
+ *  std::error_code code = dl::parsing_info:invar;
+ *  if ( code == dl::parsing_severity::debug )
+ *      std::cout << err.message();
+ *
+ * Output:
+ *  "attr.invariant != 0"
+ *
+ */
+enum class parsing_info {
+    /* info  */ absent_value   = 1,  // attr.count == 0 means absent value
+    /* warn  */ dlisio_default = 2,  // Value defaulted by dlisio
+    /* debug */ attr_invar     = 3,  // attr.invariant != 0
+    /* debug */ attr_label     = 4,  // attr.label != 0
+    /* debug */ noval_count    = 5,  // attr.count > 0, !attr.value
+    /* debug */ reprc_ne       = 6,  // attr.reprc != tmpl.reprc
+    /* debug */ count_eq       = 7,  // attr.count == tmpl.count
+    /* debug */ count_lt       = 8,  // attr.count < tmpl.count
+    /* debug */ count_gt       = 9,  // attr.count > tmpl.count
+    /* debug */ nodefault      = 10, // no tmpl.value
+    /* warn  */ reprc_invalid  = 11, // unknown attr.reprc
+};
+
+/* Construct an std::error_code object from dl::parsing_info. std::error_code's
+ * constructor uses augment-dependent lookup [1] to find and execute this
+ * function. This makes it possible for us to tell the constructor how to
+ * cast from dl::parsing_info.
+ *
+ * [1] https://en.wikipedia.org/wiki/Argument-dependent_name_lookup
+ */
+std::error_code make_error_code(parsing_info);
+
+enum class parsing_severity {
+    info    = 1, // Confirmation that things are working as expected
+    debug   = 2, // Information that may be interesting when debugging
+    warning = 3, // Information that may be interesting to anyone
+};
+
+std::error_condition make_error_condition(parsing_severity);
+
 /*
  * It's _very_ often necessary to access the raw underlying type of the strong
  * type aliases for comparisons, literals, or conversions. dl::decay inspects
@@ -392,6 +446,24 @@ using value_vector = mpark::variant<
 
 /*
  * The structure of an attribute as described in 3.2.2.1
+ *
+ * Error handling:
+ *
+ * Due to the intricate structure of a dlis-file, dlisio typically over-parse
+ * when a certain pieces of information is queried. This would typically makes
+ * any warnings or errors issued from the parsing routines pre-mature and might
+ * result in the query failing due to an error in some (from a
+ * user-perspective) unrelated data.
+ *
+ * To combat this, the result of parsing routines (and the state of the
+ * parsed object) is communicated through error_codes set on the object.
+ *
+ *      It is the consumers responsibility of checking the state of the
+ *      object before using it's content.
+ *
+ * object_attribute.errcodes contains a list of enumerated values from
+ * dl::parsing_info. These can be implicitly translated into std::error_code
+ * objects which offers human readable descriptions of the error(s).
  */
 struct object_attribute {
     dl::ident           label = {};
@@ -401,6 +473,8 @@ struct object_attribute {
     dl::units           units = {};
     dl::value_vector    value = {};
     bool invariant            = false;
+
+    std::vector< dl::parsing_info > info;
 
     bool operator == (const object_attribute& ) const noexcept (true);
 };
@@ -585,6 +659,19 @@ struct index_entry {
     bool isencrypted() const noexcept (true);
 };
 
+}
+
+namespace std {
+    /* Register parsing_info for implicit conversion to std::error_code */
+    template <>
+    struct is_error_code_enum<dl::parsing_info>
+        : public true_type {};
+
+    /* Register parsing_severity for implicit conversion to std::error_condition
+     */
+    template <>
+    struct is_error_condition_enum<dl::parsing_severity>
+        : public true_type {};
 }
 
 #endif //DLISIO_EXT_TYPES_HPP

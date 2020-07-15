@@ -110,6 +110,13 @@ def assert_info(caplog):
         assert any([message_id in r.message for r in caplog.records])
     return assert_message
 
+@pytest.fixture
+def assert_debug(caplog):
+    caplog.set_level(logging.DEBUG)
+    def assert_message(message_id):
+        assert any([message_id in r.message for r in caplog.records])
+    return assert_message
+
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files_manyLR):
     """

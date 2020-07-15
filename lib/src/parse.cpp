@@ -12,6 +12,109 @@
 
 namespace {
 
+struct parsing_info_cat : std::error_category {
+    const char* name() const noexcept (true) override;
+    std::string message(int ev) const override;
+};
+
+struct parsing_sev_cat : std::error_category {
+    const char* name() const noexcept (true) override;
+    std::string message(int ev) const override;
+
+    bool equivalent( const std::error_code& code, int condition)
+    const noexcept (true) override;
+};
+
+const char* parsing_info_cat::name() const noexcept (true) {
+  return "parsing info";
+}
+
+std::string parsing_info_cat::message(int ev) const
+{
+    using attr = dl::parsing_info;
+    switch (static_cast<attr>(ev)) {
+        case attr::absent_value:
+            return "attr.count==0, value is undefined";
+        case attr::dlisio_default:
+            return "value is defaulted by dlisio, see debug info";
+        case attr::attr_invar:
+            return "attr.invariant != 0, ignoring";
+        case attr::attr_label:
+            return "attr.label != 0, ignoring";
+        case attr::noval_count:
+            return "!attr.value, attr.count > 0";
+        case attr::reprc_ne:
+            return "attr.reprc != templ.reprc";
+        case attr::count_eq:
+            return "attr.count == tmpl.count, using tmpl.value";
+        case attr::count_lt:
+            return "attr.count < tmpl.count, using tmpl.value";
+        case attr::count_gt:
+            return "attr.count > tmpl.count, using tmpl.value";
+        case attr::nodefault:
+            return "!tmpl.value, using empty value with type attr.reprc";
+        case attr::reprc_invalid:
+            return "attr.reprc invalid, using monostate as value";
+        default:
+            return "unrecognised parsing infocode";
+  }
+}
+
+const char* parsing_sev_cat::name() const noexcept (true) {
+    return "Parsing info severity";
+}
+
+std::string parsing_sev_cat::message(int ev) const {
+    switch (static_cast< dl::parsing_severity >(ev)) {
+        case dl::parsing_severity::info:
+            return "Confirmation that things are working as expected";
+        case dl::parsing_severity::debug:
+            return "Information that may be interesting when debugging";
+        case dl::parsing_severity::warning:
+        default:
+            return "unrecognised severity code";
+    }
+}
+
+bool parsing_sev_cat::equivalent( const std::error_code& code, int condition )
+const noexcept (true) {
+    using attr = dl::parsing_info;
+    switch ( static_cast< dl::parsing_severity >(condition) ){
+        case dl::parsing_severity::info:
+            return code == attr::absent_value;
+
+        case dl::parsing_severity::warning:
+            return code == attr::dlisio_default
+                || code == attr::reprc_invalid;
+
+        case dl::parsing_severity::debug:
+            return code == attr::attr_invar
+                || code == attr::attr_label
+                || code == attr::noval_count
+                || code == attr::reprc_ne
+                || code == attr::count_eq
+                || code == attr::count_lt
+                || code == attr::count_gt
+                || code == attr::nodefault;
+        default:
+            return false;
+    }
+}
+
+/* The identity of an category is determined by it's address. Following the
+ * example set by the standard we provide a function that always returns a
+ * reference to the same object.
+ */
+const std::error_category& parsing_info_category() {
+    static parsing_info_cat instance;
+    return instance;
+}
+
+const std::error_category& parsing_severity_category() {
+    static parsing_sev_cat instance;
+    return instance;
+}
+
 void user_warning( const std::string& ) noexcept (true) {
     // TODO:
 }
@@ -566,6 +669,14 @@ noexcept (true) {
 
 namespace dl {
 
+std::error_code make_error_code(parsing_info e) {
+ return std::error_code( static_cast<int>(e), parsing_info_category());
+}
+
+std::error_condition make_error_condition(parsing_severity e) {
+ return std::error_condition( static_cast<int>(e), parsing_severity_category() );
+}
+
 bool object_attribute::operator == (const object_attribute& o)
 const noexcept (true) {
     return this->label == o.label
@@ -776,7 +887,8 @@ struct shrink {
 
 void patch_missing_value( dl::value_vector& value,
                           std::size_t count,
-                          dl::representation_code reprc )
+                          dl::representation_code reprc,
+                          std::vector< dl::parsing_info >& info)
 noexcept (false)
 {
     /*
@@ -786,11 +898,15 @@ noexcept (false)
     if (!mpark::holds_alternative< mpark::monostate >(value)) {
         const auto size = mpark::visit( len(), value );
         /* same size, so return */
-        if (size == count) return;
+        if (size == count) {
+            info.push_back(dl::parsing_info::count_eq);
+            return;
+        }
 
         /* smaller, shrink and all is fine */
         if (size > count) {
             mpark::visit( shrink( count ), value );
+            info.push_back(dl::parsing_info::count_lt);
             return;
         }
 
@@ -799,6 +915,7 @@ noexcept (false)
          * exception and consider what to do when a file actually uses this
          * behaviour
          */
+        //TODO use dl::parsing_info::count_gt instead of throw
         const auto msg = "object attribute without no explicit value, but "
                          "count (which is {}) > size (which is {})"
         ;
@@ -814,6 +931,7 @@ noexcept (false)
      * making this switch work in the general case
      */
 
+    info.push_back(dl::parsing_info::nodefault);
     using rpc = dl::representation_code;
     switch (reprc) {
         case rpc::fshort: reset< dl::fshort >(value).resize(count); return;
@@ -844,10 +962,8 @@ noexcept (false)
         case rpc::status: reset< dl::status >(value).resize(count); return;
         case rpc::units:  reset< dl::units  >(value).resize(count); return;
         default: {
-            const auto msg = "unable to patch attribute with no value: "
-                             "unknown representation code {}";
-            const auto code = static_cast< int >(reprc);
-            throw std::runtime_error(fmt::format(msg, code));
+            info.push_back(dl::parsing_info::reprc_invalid);
+            value = mpark::monostate{};
         }
     }
 }
@@ -901,12 +1017,11 @@ object_vector parse_objects( const object_template& tmpl,
                  * Assume this is a mistake, assume it was a regular
                  * non-invariant attribute
                  */
-                user_warning("ATTRIB:invariant in attribute, "
-                             "but should only be in template");
+                attr.info.push_back(dl::parsing_info::attr_invar);
             }
 
             if (flags.label) {
-                user_warning( "ATTRIB:label set, but must be null");
+                attr.info.push_back(dl::parsing_info::attr_label);
             }
 
             if (flags.count) cur = cast( cur, attr.count );
@@ -927,6 +1042,7 @@ object_vector parse_objects( const object_template& tmpl,
              */
             if (count == 0) {
                 attr.value = mpark::monostate{};
+                attr.info.push_back(dl::parsing_info::absent_value);
             } else if (!flags.value) {
                 /*
                  * Count is non-zero, but there's no value for this attribute.
@@ -939,16 +1055,17 @@ object_vector parse_objects( const object_template& tmpl,
                  * TODO: in the future it's possible to allow promotion between
                  * certain codes (ident -> ascii), but is no need for now
                  */
-
+                attr.info.push_back(dl::parsing_info::noval_count);
                 if (flags.reprc && attr.reprc != template_attr.reprc) {
-                    const auto msg = "count ({}) isn't 0 and representation "
-                        "code ({}) changed, but value is not explicitly set";
-                    const auto code = static_cast< int >(attr.reprc);
-                    user_warning(fmt::format(msg, count, code));
                     attr.value = mpark::monostate{};
+                    attr.info.push_back(dl::parsing_info::reprc_ne);
                 }
 
-                patch_missing_value( attr.value, count, attr.reprc );
+                patch_missing_value( attr.value,
+                                     count,
+                                     attr.reprc,
+                                     attr.info );
+                attr.info.push_back(dl::parsing_info::dlisio_default);
             }
 
             current.set(attr);
