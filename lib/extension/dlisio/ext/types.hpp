@@ -103,6 +103,7 @@ enum class parsing_info {
     /* debug */ count_gt       = 9,  // attr.count > tmpl.count
     /* debug */ nodefault      = 10, // no tmpl.value
     /* warn  */ reprc_invalid  = 11, // unknown attr.reprc
+    /* info  */ invariant      = 12, // Invariant attribute
 };
 
 /* Construct an std::error_code object from dl::parsing_info. std::error_code's
@@ -472,7 +473,6 @@ struct object_attribute {
     representation_code reprc = representation_code::ident;
     dl::units           units = {};
     dl::value_vector    value = {};
-    bool invariant            = false;
 
     std::vector< dl::parsing_info > info;
 

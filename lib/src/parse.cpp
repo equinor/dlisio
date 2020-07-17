@@ -35,6 +35,8 @@ std::string parsing_info_cat::message(int ev) const
     switch (static_cast<attr>(ev)) {
         case attr::absent_value:
             return "attr.count==0, value is undefined";
+        case attr::invariant:
+            return "Invariant attribute, using default value from template";
         case attr::dlisio_default:
             return "value is defaulted by dlisio, see debug info";
         case attr::attr_invar:
@@ -81,7 +83,8 @@ const noexcept (true) {
     using attr = dl::parsing_info;
     switch ( static_cast< dl::parsing_severity >(condition) ){
         case dl::parsing_severity::info:
-            return code == attr::absent_value;
+            return code == attr::absent_value
+                || code == attr::invariant;
 
         case dl::parsing_severity::warning:
             return code == attr::dlisio_default
@@ -837,7 +840,8 @@ const char* parse_template( const char* cur,
         if (flags.value) cur = elements( cur, attr.count,
                                               attr.reprc,
                                               attr.value );
-        attr.invariant = flags.invariant;
+        if (flags.invariant)
+            attr.info.push_back(dl::parsing_info::invariant);
 
         tmp.push_back( std::move( attr ) );
 
@@ -988,7 +992,11 @@ object_vector parse_objects( const object_template& tmpl,
         if (object_flags.name) cur = cast( cur, current.object_name );
 
         for (const auto& template_attr : tmpl) {
-            if (template_attr.invariant) continue;
+            auto invariant = std::find( template_attr.info.begin(),
+                                        template_attr.info.end(),
+                                        dl::parsing_info::invariant )
+                           != template_attr.info.end();
+            if (invariant) continue;
             if (cur == end) break;
 
             const auto flags = parse_attribute_descriptor( cur );

@@ -45,7 +45,7 @@ def test_default_attribute_cut(tmpdir, merge_files_oneLR):
         assert obj.attic['DEFAULT_ATTRIBUTE']
 
 @pytest.mark.future_test_attributes
-def test_invariant_attribute(tmpdir, merge_files_oneLR):
+def test_invariant_attribute(tmpdir, merge_files_oneLR, assert_info):
     path = os.path.join(str(tmpdir), 'invariant_attribute.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -61,6 +61,8 @@ def test_invariant_attribute(tmpdir, merge_files_oneLR):
         #assert attr.reprc == dlisio.core.reprc.status
         #assert attr.units == 'invariant units'
         assert attr == [False, False, True]
+
+    assert_info('Invariant attribute')
 
 def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR, assert_debug):
     path = os.path.join(str(tmpdir), 'invariant-attribute-in-object.dlis')
