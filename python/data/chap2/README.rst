@@ -75,4 +75,10 @@ wrong-lrhs.dlis                     Mismatch between logical record segment
                                     record (LRSH length is bigger than VR
                                     length)
 
+zeroed-in-1st-lr.dlis               VR is expected to contain over 1 LR. Data is
+                                    zeroed from middle of 1st LR
+
+zeroed-in-2nd-lr.dlis               VR contains 2 LRs. Data is zeroed in the
+                                    middle of 2nd LR
+
 =================================== ===========================================

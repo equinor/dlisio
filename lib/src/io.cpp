@@ -403,6 +403,11 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
         int type;
         std::uint8_t attrs;
         dlis_lrsh( buffer, &len, &attrs, &type );
+        if (len < 4) {
+            auto msg = "Too short logical record. Length can't be less than 4, "
+                       "but was {}";
+            throw std::runtime_error(fmt::format(msg, len));
+        }
 
         int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
         if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
