@@ -2,9 +2,10 @@ Digital Log Interchange Standard (DLIS)
 =======================================
 
 dlis is a binary file format for well logs, developed by Schlumberger in the
-late 80's and published by the American Petroleum Institute (API) in 1991. It
-is now the Petroleum Open Standards Consortium (POSC) [1]_ that has the
-stewardship.
+late 80's and published by the American Petroleum Institute (API) in 1991. In
+1998 the stewardship was handed off to Petrotechnical Open Software Corporation
+(POSC), now known as energistics [1]_
+
 
 When developing dlis standard, the main emphasis was put on easy writing. The
 files are structured in such a way that data can be written directly while
