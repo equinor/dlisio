@@ -1,3 +1,5 @@
+import os
+
 from . import core
 from .file import physicalfile, logicalfile
 from .errors import ErrorHandler
@@ -95,6 +97,8 @@ def load(path, error_handler = None):
         return offset
 
     path = str(path)
+    if not os.path.isfile(path):
+        raise OSError("'{}' is not an existing regular file".format(path))
     stream = open(path)
     try:
         offset = core.findsul(stream)
