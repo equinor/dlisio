@@ -688,6 +688,35 @@ noexcept (false) {
     return dstobj;
 }
 
+/** trampoline helper class for dl::matcher bindings
+ *
+ * Creating the binding code for a abstract c++ class that we want do derive
+ * new classes from in python requires some extra boilerplate code in the form
+ * of this "trampoline" class [1].
+ *
+ * This class helps redirect virtual calls back to python and is *not* intended
+ * to be used for anything other than creating valid bindings for dl::matcher.
+ *
+ * [1] https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtual-functions-in-python
+ */
+class Pymatcher : public dl::matcher {
+public:
+    /* Inherit the constructor */
+    using dl::matcher::matcher;
+
+    /* Trampoline (need one for each virtual function) */
+    bool match(const dl::ident& pattern, const dl::ident& candidate)
+    noexcept(false) override {
+        PYBIND11_OVERLOAD_PURE(
+            bool,           /* Return type */
+            dl::matcher,    /* Parent class */
+            match,          /* Name of function in C++ (must match Python name) */
+            pattern,        /* Argument(s) */
+            candidate
+        );
+    }
+};
+
 }
 
 PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
@@ -990,4 +1019,14 @@ PYBIND11_MODULE(core, m) {
 
     m.def("set_encodings", set_encodings);
     m.def("get_encodings", get_encodings);
+
+    py::class_< dl::matcher, Pymatcher >( m, "matcher")
+        .def(py::init<>())
+        .def("match", &dl::matcher::match)
+    ;
+
+    py::class_< dl::exactmatch, dl::matcher >( m, "exactmatch" )
+        .def(py::init<>())
+        .def("match", &dl::exactmatch::match)
+    ;
 }

@@ -515,6 +515,17 @@ private:
     bool parsed = false;
 };
 
+struct matcher {
+    virtual bool match(const dl::ident& pattern, const dl::ident& candidate)
+    noexcept (false) = 0;
+    virtual ~matcher() = default;
+};
+
+struct exactmatch : public matcher {
+    bool match(const dl::ident& pattern, const dl::ident& candidate)
+    noexcept (false) override;
+};
+
 /* A queryable pool of metadata objects */
 class pool {
 public:
@@ -523,7 +534,8 @@ public:
     std::vector< dl::ident > types() const noexcept (false);
 
     object_vector match(const std::string& type,
-                        const std::string& name);
+                        const std::string& name,
+                        dl::matcher& matcher);
 
     dl::basic_object& at(const dl::ident&, const dl::obname&) noexcept (false);
     dl::basic_object& at(const dl::objref&) noexcept(false);

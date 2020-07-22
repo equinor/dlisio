@@ -4,7 +4,6 @@
 #include <cstring>
 #include <string>
 #include <ciso646>
-#include <regex>
 
 #include <fmt/core.h>
 
@@ -992,6 +991,12 @@ const char* parse_set_component( const char* cur,
     return cur;
 }
 
+bool exactmatch::match(const dl::ident& pattern, const dl::ident& candidate)
+noexcept (false) {
+    return pattern == candidate;
+}
+
+
 object_set::object_set(std::vector< char > b) noexcept (false)  {
         parse_set_component(b.data(),
                             b.data() + b.size(),
@@ -1089,18 +1094,17 @@ dl::basic_object& pool::at(const dl::objref& id ) noexcept (false) {
 }
 
 object_vector pool::match( const std::string& type,
-                           const std::string& name )
+                           const std::string& name,
+                           dl::matcher& m)
 noexcept (false) {
-    std::regex re_type(type, std::regex_constants::icase);
-    std::regex re_name(type, std::regex_constants::icase);
-
     object_vector objs;
+
     for (auto& eflr : this->eflrs) {
-        if (not std::regex_match(dl::decay(eflr.type), re_type)) continue;
+        if (not m.match(dl::ident{type}, eflr.type)) continue;
 
         for (const auto& obj : eflr.objects()) {
-            const auto id = dl::decay(obj.object_name.id);
-            if (not std::regex_match(id, re_name)) continue;
+            if (not m.match(dl::ident{name}, obj.object_name.id)) continue;
+
             objs.push_back(obj);
         }
     }
