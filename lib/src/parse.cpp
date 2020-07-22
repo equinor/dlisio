@@ -541,6 +541,12 @@ struct variant_equal {
         return false;
     }
 
+    bool operator () (mpark::monostate,
+                      mpark::monostate)
+    const noexcept (true) {
+        return true;
+    }
+
     template < typename T >
     bool operator () (const std::vector< T >& lhs,
                       const std::vector< T >& rhs)
