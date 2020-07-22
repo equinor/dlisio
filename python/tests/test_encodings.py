@@ -58,7 +58,6 @@ def test_broken_utf8_value(tmpdir, merge_files_oneLR):
     finally:
         dlisio.set_encodings(prev_encodings)
 
-@pytest.mark.skip(reason="not warn on warning and sigabrt on second")
 def test_broken_utf8_obname_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'broken_utf8_obname_value.dlis')
     content = [
@@ -68,20 +67,24 @@ def test_broken_utf8_obname_value(tmpdir, merge_files_oneLR):
         'data/chap3/objattr/broken-utf8-obname-value.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with pytest.warns(UnicodeWarning):
-        with dlisio.load(path):
-            pass
+
     prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
+
     try:
+        f, = dlisio.load(path)
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        obname = obj['DEFAULT_ATTRIBUTE'][0]
+
+        with pytest.warns(UnicodeWarning):
+            _ = obname.id
+
         dlisio.set_encodings(['koi8_r'])
-        with dlisio.load(path) as (f, *_):
-            obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-            obname = (2, 2, 'КОТ')
-            assert obj.attic['DEFAULT_ATTRIBUTE'] == [obname]
+        assert obname.id == 'КОТ'
     finally:
         dlisio.set_encodings(prev_encodings)
+        f.close()
 
-@pytest.mark.xfail(strict=True, reason="fingerprint error on no encoding")
 def test_broken_utf8_object_name(tmpdir, merge_files_oneLR):
     #some actual files have obname which fails with utf-8 codec
     path = os.path.join(str(tmpdir), 'broken_utf8_object_name.dlis')
@@ -91,18 +94,24 @@ def test_broken_utf8_object_name(tmpdir, merge_files_oneLR):
         'data/chap3/object/broken-utf8-object.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with pytest.warns(UnicodeWarning):
-        with dlisio.load(path):
-            pass
+
     prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
+
     try:
+        f, = dlisio.load(path)
+        with pytest.warns(UnicodeWarning):
+            _ = f.match('.*', 'VERY_MUCH_TESTY_SET')
+
         dlisio.set_encodings(['koi8_r'])
-        with dlisio.load(path) as (f, *_):
-            _ = f.object('VERY_MUCH_TESTY_SET', 'КАДР', 12, 4)
+
+        objs = f.match('.*', 'VERY_MUCH_TESTY_SET')
+        [obj] = [x for x in objs]
+        assert obj.name == 'КАДР'
     finally:
         dlisio.set_encodings(prev_encodings)
+        f.close()
 
-@pytest.mark.xfail(strict=True, reason="could not allocate string object")
 def test_broken_utf8_label(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'broken_utf8_label.dlis')
     content = [
@@ -111,19 +120,23 @@ def test_broken_utf8_label(tmpdir, merge_files_oneLR):
         'data/chap3/object/object.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with pytest.warns(UnicodeWarning):
-        with dlisio.load(path):
-            pass
+
     prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
+
     try:
+        f, = dlisio.load(path)
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+
+        with pytest.warns(UnicodeWarning):
+            _  = obj.attic.keys()
+
         dlisio.set_encodings(['koi8_r'])
-        with dlisio.load(path) as (f, *_):
-            obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-            assert obj.attic['ДОХЛЫЙ-ПАРАМЕТР'] == ['Have a nice day!']
+        assert 'ДОХЛЫЙ-ПАРАМЕТР' in obj.attic.keys()
     finally:
+        f.close()
         dlisio.set_encodings(prev_encodings)
 
-@pytest.mark.xfail(strict=True, reason="fingerprint error on no encoding")
 @pytest.mark.future_test_set_names
 def test_broken_utf8_set(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'broken_utf8_set.dlis')
@@ -134,16 +147,20 @@ def test_broken_utf8_set(tmpdir, merge_files_oneLR):
         'data/chap3/object/object.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with pytest.warns(UnicodeWarning):
-        with dlisio.load(path) as (f, *_):
-            f.load()
+
     prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
+
     try:
+        f, = dlisio.load(path)
+        with pytest.warns(UnicodeWarning):
+            _ = f.object_pool.types
+
         dlisio.set_encodings(['koi8_r'])
-        with dlisio.load(path) as (f, *_):
-            _ = f.object('СЕТ_КИРИЛЛИЦЕЙ', 'OBJECT', 1, 1)
-            #assert set_name == 'МЕНЯ.ЗОВУТ.СЕТ'
+        assert 'СЕТ_КИРИЛЛИЦЕЙ' in f.object_pool.types
+        #assert set_name == 'МЕНЯ.ЗОВУТ.СЕТ'
     finally:
         dlisio.set_encodings(prev_encodings)
+        f.close()
 
 
