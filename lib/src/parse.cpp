@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <ciso646>
+#include <system_error>
 
 #include <fmt/core.h>
 

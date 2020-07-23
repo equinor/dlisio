@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <vector>
 #include <limits>
+#include <system_error>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>

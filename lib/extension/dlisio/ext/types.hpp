@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <system_error>
 
 #include <mpark/variant.hpp>
 
