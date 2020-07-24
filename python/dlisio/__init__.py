@@ -252,7 +252,7 @@ class dlis(object):
         objects : dict
             all objects of type 'type'
         """
-        objs = self.metadata.match('^{}$'.format(type), '.*', self.matcher)
+        objs = self.metadata.match(type, core.exactmatch())
         return { x.fingerprint : x for x in self.promote(objs) }
 
     def __enter__(self):

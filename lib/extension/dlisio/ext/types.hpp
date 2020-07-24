@@ -612,6 +612,9 @@ public:
                         const std::string& name,
                         const dl::matcher& matcher);
 
+    object_vector match(const std::string& type,
+                        const dl::matcher& matcher) noexcept (false);
+
     dl::basic_object& at(const dl::ident&, const dl::obname&) noexcept (false);
     dl::basic_object& at(const dl::objref&) noexcept(false);
 private:

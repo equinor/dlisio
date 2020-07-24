@@ -1244,4 +1244,17 @@ noexcept (false) {
     return objs;
 }
 
+object_vector pool::match( const std::string& type,
+                           const dl::matcher& m)
+noexcept (false) {
+    object_vector objs;
+
+    for (auto& eflr : this->eflrs) {
+        if (not m.match(dl::ident{type}, eflr.type)) continue;
+            auto tmp = eflr.objects();
+            objs.insert(objs.end(), tmp.begin(), tmp.end());
+    }
+    return objs;
+}
+
 }

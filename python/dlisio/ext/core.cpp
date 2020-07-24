@@ -918,7 +918,15 @@ PYBIND11_MODULE(core, m) {
 
     py::class_< dl::pool >( m, "logical_file" )
         .def_property_readonly( "types", &dl::pool::types )
-        .def( "match", &dl::pool::match )
+        .def( "match", (dl::object_vector (dl::pool::*) (
+            const std::string&,
+            const std::string&,
+            const dl::matcher&
+        )) &dl::pool::match )
+        .def( "match", (dl::object_vector (dl::pool::*) (
+            const std::string&,
+            const dl::matcher&
+        )) &dl::pool::match )
     ;
 
     py::enum_< dl::representation_code >( m, "reprc" )
