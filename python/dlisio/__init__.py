@@ -687,9 +687,7 @@ def load(path):
             hint = rewind(stream.absolute_tell, tapemarks)
 
             metadata = core.metadata_pool(stream, explicits)
-            fdata_index = defaultdict(list)
-            for key, val in core.findfdata(stream, implicits):
-                fdata_index[key].append(val)
+            fdata_index = core.findfdata(stream, implicits)
 
             lf = dlis(stream, metadata, fdata_index, encrypted, sul)
             lfs.append(lf)

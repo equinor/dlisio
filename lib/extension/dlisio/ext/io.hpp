@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <map>
 
 #include <lfp/lfp.h>
 
@@ -83,7 +84,7 @@ record& extract(stream&, long long, long long, record&) noexcept (false);
 
 dl::stream_offsets findoffsets(dl::stream&) noexcept (false);
 
-std::vector< std::pair< std::string, long long > >
+std::map< std::string, std::vector< long long > >
 findfdata(dl::stream&, const std::vector< index_entry >&) noexcept (false);
 
 }

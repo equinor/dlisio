@@ -4,6 +4,7 @@
 #include <string>
 #include <system_error>
 #include <vector>
+#include <map>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -464,10 +465,10 @@ dl::stream_offsets findoffsets(dl::stream& file) noexcept (false) {
     return idx;
 }
 
-std::vector< std::pair< std::string, long long > >
+std::map< std::string, std::vector< long long > >
 findfdata(dl::stream& file, const std::vector< index_entry >& index)
 noexcept (false) {
-    std::vector< std::pair< std::string, long long > > xs;
+    std::map< std::string, std::vector< long long > > xs;
 
     constexpr std::size_t OBNAME_SIZE_MAX = 262;
 
@@ -494,7 +495,19 @@ noexcept (false) {
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
                         dl::ident{ std::string{ id, id + idlen } } };
-        xs.emplace_back(tmp.fingerprint("FRAME"), iflr.tell);
+        std::string fp = tmp.fingerprint("FRAME");
+
+        /* Although index.size() often is fairly large, the number of
+         * unique frames are typically just an handful. Hence the repeated
+         * calls to find() are not so bad as it might seem at first glace.
+         */
+        const auto itr = xs.find(fp);
+        if (itr == xs.end()) {
+            xs.insert( { fp, { iflr.tell } });
+        }
+        else {
+            itr->second.push_back( iflr.tell );
+        }
     }
     return xs;
 }
