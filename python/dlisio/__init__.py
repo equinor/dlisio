@@ -688,7 +688,7 @@ def load(path):
 
             metadata = core.metadata_pool(stream, explicits)
             fdata_index = defaultdict(list)
-            for key, val in core.findfdata(stream, [x.tell for x in implicits]):
+            for key, val in core.findfdata(stream, implicits):
                 fdata_index[key].append(val)
 
             lf = dlis(stream, metadata, fdata_index, encrypted, sul)

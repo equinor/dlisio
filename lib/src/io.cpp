@@ -465,7 +465,7 @@ dl::stream_offsets findoffsets(dl::stream& file) noexcept (false) {
 }
 
 std::vector< std::pair< std::string, long long > >
-findfdata(dl::stream& file, const std::vector< long long >& tells)
+findfdata(dl::stream& file, const std::vector< index_entry >& index)
 noexcept (false) {
     std::vector< std::pair< std::string, long long > > xs;
 
@@ -474,8 +474,8 @@ noexcept (false) {
     record rec;
     rec.data.reserve( OBNAME_SIZE_MAX );
 
-    for (auto tell : tells) {
-        extract(file, tell, OBNAME_SIZE_MAX, rec);
+    for (auto iflr : index) {
+        extract(file, iflr.tell, OBNAME_SIZE_MAX, rec);
         if (rec.isencrypted()) continue;
         if (rec.type != 0) continue;
         if (rec.data.size() == 0) continue;
@@ -494,7 +494,7 @@ noexcept (false) {
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
                         dl::ident{ std::string{ id, id + idlen } } };
-        xs.emplace_back(tmp.fingerprint("FRAME"), tell);
+        xs.emplace_back(tmp.fingerprint("FRAME"), iflr.tell);
     }
     return xs;
 }

@@ -84,7 +84,7 @@ record& extract(stream&, long long, long long, record&) noexcept (false);
 dl::stream_offsets findoffsets(dl::stream&) noexcept (false);
 
 std::vector< std::pair< std::string, long long > >
-findfdata(dl::stream&, const std::vector< long long >&) noexcept (false);
+findfdata(dl::stream&, const std::vector< index_entry >&) noexcept (false);
 
 }
 
