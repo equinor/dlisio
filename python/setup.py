@@ -77,6 +77,10 @@ skbuild.setup(
         # Need to force the generator to be Unix makefiles?
         '-G','Unix Makefiles',
 
+        '-Ddlisio_DIR='+src('../build/lib'),
+        '-Dmio_DIR='+src('../build/external/mio'),
+        '-Dmpark_DIR='+src('../build/external/mpark'),
+
         # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
         # everything not OS X. We depend on C++11, which makes our minimum
         # supported OS X release 10.9
