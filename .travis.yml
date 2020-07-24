@@ -33,6 +33,9 @@ matrix:
         - python: 3.7
           dist: xenial
           sudo: true
+        - python: 3.8
+          dist: xenial
+          sudo: true
         - os: linux
           compiler: clang
           env:
@@ -59,11 +62,35 @@ matrix:
           env:
             - MB_PYTHON_VERSION=3.7
             - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          language: generic
+          python: 3.8
+          env:
+            - MB_PYTHON_VERSION=3.8
+            - MACOSX_DEPLOYMENT_TARGET=10.9
 
 before_install:
     - eval "${MATRIX_EVAL}"
     - unset -f pushd
     - unset -f popd
+    - git clone https://github.com/fmtlib/fmt.git
+    - mkdir fmt/build
+    - pushd fmt/build
+    - cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
+    - make
+    - sudo make install
+    - popd
+    - git clone https://github.com/equinor/layered-file-protocols.git
+    - mkdir layered-file-protocols/build
+    - pushd layered-file-protocols/build
+    - cmake -DBUILD_SHARED_LIBS=ON
+            -DLFP_FMT_HEADER_ONLY=ON
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib
+            -DBUILD_TESTING=OFF ..
+    - make
+    - sudo make install
+    - popd
     - git clone https://github.com/matthew-brett/multibuild
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh

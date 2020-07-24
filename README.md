@@ -56,6 +56,7 @@ To develop dlisio, or to build a particular revision from source, you need:
 * [fmtlib](http://fmtlib.net/) tested mainly with 5.3.0
 * [pybind11](https://github.com/pybind/pybind11) version 2.3 or greater
 * [setuptools](https://pypi.python.org/pypi/setuptools) version 28 or greater
+* [layered-file-protocols](https://github.com/equinor/layered-file-protocols)
 * python packages pytest, pytest-runner, and numpy
 
 If you do not have pybind11 installed on your system, the easiest way to get a
@@ -66,6 +67,19 @@ either:
 
 * `git clone --recursive https://github.com/equinor/dlisio`
 * `git submodule update --init external/fmt`
+
+layered-file-protocols has to be installed from source if you don't already
+have it on your system:
+
+```bash
+git clone https://github.com/equinor/layered-file-protocols.git
+mkdir layered-file-protocols/build
+cd layered-file-protocols/build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+-DLFP_FMT_HEADER_ONLY=ON
+make
+make install
+```
 
 To then build and install dlisio:
 

@@ -35,9 +35,6 @@ class Parameter(BasicObject):
     zones : list(Zone)
         Mutually disjoint intervals where the parameter values is constant
 
-    values
-
-
     See also
     --------
 

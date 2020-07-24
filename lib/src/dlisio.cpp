@@ -324,6 +324,48 @@ int dlis_find_vrl(const char* from,
 }
 
 /*
+ * hexdump -vn 12 tif
+ * 0000000 00 00 00 00 00 00 00 00 5c 00 00 00
+ *
+ * Tapemarks are 12 byte long, constituted by three integers:
+ * Type (0 or 1)                4
+ * Offset of previous tapemark  4
+ * Offset of next tapemark      4
+ */
+
+int dlis_tapemark(const char* buffer, int size) {
+    if (size < 12)
+        return DLIS_INVALID_ARGS;
+
+    std::uint32_t type;
+    std::uint32_t prev;
+    std::uint32_t next;
+
+    #ifdef HOST_BIG_ENDIAN
+        char tmp[ 12 ];
+        std::memcpy(tmp, buffer, 12);
+
+        std::reverse(tmp + 0, tmp + 4);
+        std::reverse(tmp + 4, tmp + 8);
+        std::reverse(tmp + 8, tmp + 12);
+
+        buffer = tmp;
+    #endif
+
+    std::memcpy(&type, buffer + 0, 4);
+    std::memcpy(&prev, buffer + 4, 4);
+    std::memcpy(&next, buffer + 8, 4);
+
+    if(not (type == 0 or type == 1))
+        return DLIS_NOTFOUND;
+
+    if(next <= prev)
+        return DLIS_NOTFOUND;
+
+    return DLIS_OK;
+}
+
+/*
  * hexdump -vn 4 -s 80 dlis
  * 0000050 0020 01ff
  *
@@ -363,7 +405,6 @@ int dlis_vrl( const char* xs,
     *version = major;
     return DLIS_OK;
 }
-
 
 /*
  * hexdump -vn 4 -s 84 dlis

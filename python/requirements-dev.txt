@@ -8,5 +8,4 @@ pytest-runner
 pybind11
 hypothesis
 sphinx
-m2r
 scikit-build

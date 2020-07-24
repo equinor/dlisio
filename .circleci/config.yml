@@ -24,6 +24,27 @@ commands:
             <<#parameters.sudo >> sudo <</parameters.sudo >> apt-get update
             <<#parameters.sudo >> sudo <</parameters.sudo >> apt-get install \
             -y cmake g++ python3 python3-pip git << parameters.extra >>
+      - run:
+          name: install fmtlib
+          command: |
+            git clone https://github.com/fmtlib/fmt.git
+            mkdir fmt/build
+            cd fmt/build
+            cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
+            make
+            <<#parameters.sudo >> sudo <</parameters.sudo >> make install
+      - run:
+          name: install layered-file-protocol
+          command: |
+            git clone https://github.com/equinor/layered-file-protocols.git
+            mkdir layered-file-protocols/build
+            cd layered-file-protocols/build
+            cmake -DBUILD_SHARED_LIBS=ON \
+                  -DLFP_FMT_HEADER_ONLY=ON \
+                  -DBUILD_TESTING=OFF \
+                  -DCMAKE_BUILD_TYPE=Release ..
+            make
+            <<#parameters.sudo >> sudo <</parameters.sudo >> make install
 
   python_build:
     parameters:
@@ -49,7 +70,6 @@ commands:
             make
             sudo make install
             sudo ldconfig /usr/local/lib
-            echo "export mio_DIR=$PWD/external/mio" >> $BASH_ENV
             echo "export mpark_DIR=$PWD/external/mpark" >> $BASH_ENV
       - run:
           name: install python dependencies
@@ -143,6 +163,8 @@ jobs:
   cppcheck:
     docker:
       - image: ubuntu:latest
+    environment:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
       - install_build_deps:
@@ -177,6 +199,13 @@ jobs:
       - python_build:
           docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
 
+  python-38:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - python_build:
+          docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
+
 workflows:
   version: 2
   build:
@@ -195,3 +224,4 @@ workflows:
       - python-35
       - python-36
       - python-37
+      - python-38

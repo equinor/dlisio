@@ -91,7 +91,12 @@ class Channel(BasicObject):
 
     @property
     def frame(self):
-        return lookup(self, obname('FRAME'), self._frame)
+        if self._frame is not None:
+            return lookup(self, obname('FRAME'), self._frame)
+
+        msg = '{} does not belong to any Frame'
+        logging.info(msg.format(self))
+        return None
 
     @property
     def long_name(self):
@@ -165,6 +170,28 @@ class Channel(BasicObject):
         """
         Returns a numpy ndarray with the curves-values.
 
+        Returns
+        -------
+
+        curves : np.ndarray or None
+
+        See also
+        --------
+
+        Frame.curves() : Read all the curves in a Frame in one go
+
+        Notes
+        -----
+
+        This method should only be used if there is only *one* channel of
+        interest in a particular frame.
+
+        Due to the memory-layout of dlis-files, reading a single channel from
+        disk and reading the entire frame is almost equally fast. That means
+        reading channels from the same frame one-by-one with this method is
+        _way_ slower than reading the entire frame with :func:`Frame.curves()`
+        and then indexing on the channels-of-interest.
+
         Examples
         --------
 
@@ -193,17 +220,13 @@ class Channel(BasicObject):
 
         >>> curve[0][1][2]
         6
-
-        See also
-        --------
-
-        Frame.curves() : Read all the curves in a Frame in one go
-
-        Returns
-        -------
-        curves : np.ndarray
         """
-        return self.frame.curves()[self.name]
+        if self._frame is not None:
+            return np.copy(self.frame.curves()[self.fingerprint])
+
+        msg = 'There is no recorded curve-data for {}'
+        logging.info(msg.format(self))
+        return None
 
     def describe_attr(self, buf, width, indent, exclude):
         describe_description(buf, self.long_name, width, indent, exclude)

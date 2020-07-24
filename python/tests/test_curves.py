@@ -73,6 +73,16 @@ def makeframe():
     frame.link()
     return frame
 
+def test_curves_are_copy(f):
+    # All channel.curves() really does is to slice the full frame array
+    # returned by frame.curves(). Make sure the returned slice is a copy not a
+    # view.  Returning a view makes it impossible to free up any memory from
+    # the original array, hence holding on to way more memory than needed.
+
+    channel = f.object('CHANNEL', 'CHANN1')
+    curves = channel.curves()
+    assert curves.flags['OWNDATA']
+
 def test_curves_values(f):
     frame = f.object('FRAME', 'FRAME1', 10, 0)
     curves = frame.curves()
@@ -211,7 +221,19 @@ def test_dimensions_in_multifdata():
 def test_duplicated_mnemonics_get_unique_labels():
     frame = makeframe()
     assert 'ifDDD' == frame.fmtstr()
-    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == frame.dtype().names
+    dtype = frame.dtype()
+
+    assert ('FRAMENO', 'TIME.0.0', 'TDEP', 'TIME.1.0') == dtype.names
+
+    fields = [
+        'FRAMENO',
+        frame.channels[0].fingerprint,
+        frame.channels[1].fingerprint,
+        frame.channels[2].fingerprint,
+    ]
+
+    assert all(x in dtype.fields for x in fields)
+
 
 def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     # Getting a buffer from a numpy array adds a :name: field after the label
@@ -247,19 +269,21 @@ def test_duplicated_signatures(f, assert_log):
     assert names == ('FRAMENO', 'CHANN1.10.0(0)', 'CHANN1.10.0(1)')
 
 def test_mkunique():
-    types    = [("TIME.0.0"   , "f2"),
-                ("TDEP.0.0"   , "f4"),
-                ("TDEP.0.0"   , "i1"),
-                ("TDEP.0.1"   , "i2"),
-                ("TIME.0.0"   , "i4"),
-                ("TIME.0.0"   , "i4"),
+    types = [
+        (("T.CHANNEL-I.TIME-O.0-C.0", "TIME.0.0"), "f2"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0", "TDEP.0.0"), "f4"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0", "TDEP.0.0"), "i1"),
+        (("T.CHANNEL-I.TDEP-O.0-C.1", "TDEP.0.1"), "i2"),
+        (("T.CHANNEL-I.TIME-O.0-C.0", "TIME.0.0"), "i4"),
+        (("T.CHANNEL-I.TIME-O.0-C.0", "TIME.0.0"), "i4"),
     ]
-    expected = [("TIME.0.0(0)", "f2"),
-                ("TDEP.0.0(0)", "f4"),
-                ("TDEP.0.0(1)", "i1"),
-                ("TDEP.0.1"   , "i2"),
-                ("TIME.0.0(1)", "i4"),
-                ("TIME.0.0(2)", "i4"),
+    expected = [
+        (("T.CHANNEL-I.TIME-O.0-C.0(0)", "TIME.0.0(0)"), "f2"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0(0)", "TDEP.0.0(0)"), "f4"),
+        (("T.CHANNEL-I.TDEP-O.0-C.0(1)", "TDEP.0.0(1)"), "i1"),
+        (("T.CHANNEL-I.TDEP-O.0-C.1"   , "TDEP.0.1"   ), "i2"),
+        (("T.CHANNEL-I.TIME-O.0-C.0(1)", "TIME.0.0(1)"), "i4"),
+        (("T.CHANNEL-I.TIME-O.0-C.0(2)", "TIME.0.0(2)"), "i4"),
     ]
     assert expected == mkunique(types)
 
@@ -276,11 +300,15 @@ def test_channel_order():
 
 def test_dtype():
     frame = makeframe()
-    assert frame.dtype() == np.dtype([('FRAMENO', np.int32),
-                                      ('TIME.0.0', np.float32),
-                                      ('TDEP', np.int16, (2,)),
-                                      ('TIME.1.0', np.int16),
-                                      ])
+
+    dtype = np.dtype([
+        ('FRAMENO', np.int32),
+        ((frame.channels[0].fingerprint, 'TIME.0.0'), np.float32),
+        ((frame.channels[1].fingerprint, 'TDEP'), np.int16, (2,)),
+        ((frame.channels[2].fingerprint, 'TIME.1.0'), np.int16),
+    ])
+
+    assert frame.dtype() == dtype
 
 def test_dtype_fmt_instance():
     frame = makeframe()
@@ -334,6 +362,23 @@ def test_channel_curves():
         frame_curves = load_curves(fpath)
         assert frame_curves['CH22'] == curves22
 
+def test_channel_curves_duplicated_mnemonics(f):
+    frame = f.object('FRAME', 'FRAME1')
+    frame.channels[1].name = frame.channels[0].name
+    frame.channels[1].copynumber = frame.channels[0].copynumber+ 1
+
+    ch = frame.channels[0]
+    curve = ch.curves()
+
+    np.testing.assert_array_equal(curve, frame.curves()[ch.fingerprint])
+
+def test_channel_without_frame(assert_info):
+    channel = dlisio.plumbing.Channel()
+    assert channel.curves() == None
+    assert_info('no recorded curve-data')
+
+    assert channel.frame == None
+    assert_info('does not belong')
 
 def test_channel_fmt():
     ch1 = dlisio.plumbing.Channel()

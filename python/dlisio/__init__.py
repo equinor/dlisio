@@ -215,12 +215,11 @@ class dlis(object):
        to link the content of attributes to other objects.
     """
 
-    def __init__(self, stream, explicits, attic, implicits, sul_offset = 80):
+    def __init__(self, stream, attic, fdata_index, sul=None):
         self.file = stream
-        self.explicit_indices = explicits
         self.attic = attic
-        self.sul_offset = sul_offset
-        self.fdata_index = implicits
+        self.sul = sul
+        self.fdata_index = fdata_index
 
         self.indexedobjects = defaultdict(dict)
         self.problematic = []
@@ -297,6 +296,7 @@ class dlis(object):
             self.t = t
 
         def __get__(self, instance, owner):
+            if instance is None: return None
             return instance[self.t].values()
 
     @property
@@ -361,11 +361,12 @@ class dlis(object):
             A defaultdict index by object-type
 
         """
-        recs = [rec
-            for rec, t
-            in zip(self.attic, self.record_types)
-            if (t not in self.types and not rec.encrypted)
+        recs = [rec for rec, t in zip(self.attic, self.record_types)
+            if  t not in self.types
+            and not rec.encrypted
+            and t not in self.indexedobjects
         ]
+
         self.load(recs, reload=False)
 
         unknowns = defaultdict(list)
@@ -667,8 +668,11 @@ class dlis(object):
 
         This method is mainly intended for internal use.
         """
-        blob = self.file.get(bytearray(80), self.sul_offset, 80)
-        return core.storage_label(blob)
+        if not self.sul:
+            logging.warning('file has no storage unit label')
+            return None
+        return core.storage_label(self.sul)
+
 
 def open(path):
     """ Open a file
@@ -688,7 +692,7 @@ def open(path):
     --------
     dlisio.load
     """
-    return core.stream(str(path))
+    return core.open(str(path))
 
 def load(path, frames=True):
     """ Loads a file and returns one filehandle pr logical file.
@@ -744,30 +748,79 @@ def load(path, frames=True):
 
     dlis : tuple(dlisio.dlis)
     """
+    sulsize = 80
+    tifsize = 12
+    lfs = []
+
+    def rewind(offset, tif):
+        """Rewind offset to make sure not to miss VRL when calling findvrl"""
+        offset -= 4
+        if tif: offset -= 12
+        return offset
+
     path = str(path)
-
-    mmap = core.mmap_source()
-    mmap.map(path)
-
+    stream = open(path)
     try:
-        sulpos = core.findsul(mmap)
-        vrlpos = core.findvrl(mmap, sulpos + 80)
-        tells, residuals, explicits = core.findoffsets(mmap, vrlpos)
+        offset = core.findsul(stream)
+        sul = stream.get(bytearray(sulsize), offset, sulsize)
+        offset += sulsize
     except:
-        mmap.unmap()
-        raise
-
-    exi = [i for i, explicit in enumerate(explicits) if explicit != 0]
-
+        offset = 0
+        sul = None
     try:
-        stream = open(path)
-        stream.reindex(tells, residuals)
+        tapemarks = core.hastapemark(stream)
+        offset = core.findvrl(stream, offset)
 
-        records = stream.extract(exi)
+        # Layered File Protocol does not currently offer support for re-opening
+        # files at the current position, nor is it able to precisly report the
+        # underlying tell. Therefore, dlisio has to manually search for the
+        # VRL to determine the right offset in which to open the new filehandle
+        # at.
+        #
+        # Logical files are partitioned by core.findoffsets and it's required
+        # [1] that new logical files always start on a new Visible Record.
+        # Hence, dlisio takes the (approximate) tell at the end of each Logical
+        # File and searches for the VRL to get the exact tell.
+        #
+        # [1] rp66v1, 2.3.6 Record Structure Requirements:
+        #     > ... Visible Records cannot intersect more than one Logical File.
+        while True:
+            if tapemarks: offset -= tifsize
+            stream.seek(offset)
+            if tapemarks: stream = core.open_tif(stream)
+            stream = core.open_rp66(stream)
+
+            explicits, implicits, stopped_early = core.findoffsets(stream)
+            if stopped_early: logging.warning("logical file scan encountered bad record, stopping early")
+                
+            hint = rewind(stream.absolute_tell, tapemarks)
+
+            records = core.extract(stream, explicits)
+            fdata_index = defaultdict(list)
+            for key, val in core.findfdata(stream, implicits):
+                fdata_index[key].append(val)
+
+            lf = dlis(stream, records, fdata_index, sul)
+            lfs.append(lf)
+
+            if stopped_early:
+                return Batch(lfs, is_corrupted=True)
+            else:
+                try:
+                    stream = core.open(path)
+                    offset = core.findvrl(stream, hint)
+                except RuntimeError:
+                    if stream.eof():
+                        stream.close()
+                        break
+                    raise
+
+        return Batch(lfs)
+    except Exception as e:
+        print("Exception: ",e)
         stream.close()
-    except:
-        stream.close()
-        mmap.unmap()
+        for f in lfs:
+            f.close()
         raise
 
     split_at = find_fileheaders(records, exi)
@@ -802,6 +855,16 @@ def load(path, frames=True):
     return Batch(batch)
 
 class Batch(tuple):
+    def __init__(self, *args, **kwargs):
+        corrupted = kwargs.pop('is_corrupted',False);
+        self._is_corrupted=corrupted
+        super().__init__()
+
+    @property
+    def is_corrupted(self):
+        return self._is_corrupted
+    
+
     def __enter__(self):
         return self
 
@@ -831,74 +894,3 @@ class Batch(tuple):
 
         return plumbing.Summary(info=buf.getvalue())
 
-
-def find_fileheaders(records, exi):
-    # Logical files start whenever a FILE-HEADER is encountered. When a logical
-    # file spans multiple physical files, the FILE-HEADER is not repeated.
-    # This means that the first record may not be a FILE-HEADER. In that case
-    # dlisio still creates a logical file, but warns that this logical file
-    # might be segmented, hence missing data.
-    msg =  'First logical file does not contain a fileheader. '
-    msg += 'The logical file might be segmented into multiple physical files '
-    msg += 'and data can be missing.'
-
-    pivots = []
-
-    # There is only indirectly formated logical records in the physical file.
-    # The logical file might be segmented.
-    if not records:
-        pivots.append(0)
-
-    for i, rec in enumerate(records):
-        # The first metadata record is not a file-header. The logical file
-        # might be segmented.
-        #TODO: This logic will change when support for multiple physical files
-        # in a storage set is added
-        if i == 0 and rec.type != 0:
-            logging.warning(msg)
-            pivots.append(exi[i])
-
-        if rec.type == 0:
-            pivots.append(exi[i])
-
-    return pivots
-
-def partition(records, explicits, tells, residuals, pivots):
-    """
-    Splits records, explicits, implicits, tells and residuals into
-    partitions (Logical Files) based on the pivots
-
-    Returns
-    -------
-
-    partitions : list(dict)
-    """
-
-    def split_at(lst, pivot):
-        head = lst[:pivot]
-        tail = lst[pivot:]
-        return head, tail
-
-    partitions = []
-
-    for pivot in reversed(pivots):
-        tells    , part_tells = split_at(tells, pivot)
-        residuals, part_res   = split_at(residuals, pivot)
-        explicits, part_ex    = split_at(explicits, pivot)
-
-        part_ex   = [i for i, x in enumerate(part_ex) if x != 0]
-        implicits = [x for x in range(len(part_tells)) if x not in part_ex]
-
-        records, part_recs = split_at(records, -len(part_ex))
-
-        part = {
-            'records'   : part_recs,
-            'explicits' : part_ex,
-            'tells'     : part_tells,
-            'residuals' : part_res,
-            'implicits' : implicits
-        }
-        partitions.append(part)
-
-    for par in reversed(partitions):
-        yield par

@@ -4,6 +4,7 @@ project(dlisio LANGUAGES C CXX)
 include(CheckIncludeFile)
 include(CTest)
 include(GNUInstallDirs)
+include(TestBigEndian)
 
 option(BUILD_PYTHON "Build Python extension" ON)
 option(BUILD_DOC    "Build documentation"    OFF)
@@ -35,16 +36,18 @@ endif(APPLE)
 
 set(CMAKE_CXX_STANDARD 11)
 
+test_big_endian(BIG_ENDIAN)
+
 add_subdirectory(external/endianness)
 add_subdirectory(external/catch2)
 add_subdirectory(external/mpark)
-add_subdirectory(external/mio)
 add_subdirectory(external/fmt)
+
+find_package(lfp REQUIRED)
 
 if (NOT TARGET fmt)
     find_package(fmt REQUIRED)
 endif ()
 
 add_subdirectory(lib)
-add_subdirectory(bin)
 add_subdirectory(python)

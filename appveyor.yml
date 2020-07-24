@@ -20,6 +20,8 @@ environment:
           PYTHON_VERSION: 36
         - PYTHON: C:\Python37
           PYTHON_VERSION: 37
+        - PYTHON: C:\Python38
+          PYTHON_VERSION: 38
 
 matrix:
     fast_finish: true
@@ -43,6 +45,21 @@ before_build:
     - IF "%platform%" == "x64" set generator="Visual Studio 14 2015 Win64"
     - git submodule update --init --recursive
     - git fetch --tags
+    - vcpkg integrate install
+    - vcpkg install fmt:%platform%-windows
+    - git clone https://github.com/equinor/layered-file-protocols.git
+    - ps: mkdir layered-file-protocols/build
+    - ps: pushd layered-file-protocols/build
+    - cmake -G %generator%
+            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc"
+            -DLFP_FMT_HEADER_ONLY=ON
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+    - cmake --build .  --config %configuration% --target install
+    - set install-dir=C:/Program Files
+    - IF "%platform%" == "x86" set install-dir=C:/Program Files (x86)
+    - set lfp_DIR=%install-dir%/layered-file-protocols/share/lfp/cmake
+    - ps: popd
 
 build_script:
     - ps: |

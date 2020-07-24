@@ -2,7 +2,7 @@ A quick guide
 =============
 
 This is a quick guide to get you started with dlisio. Note that all classes and
-functions are more thoroughly documented under :ref:`The Library`. Please refer
+functions are more thoroughly documented under :ref:`apiref`. Please refer
 there for more information about them.
 
 The same documentation is also available directly in your favorite python
@@ -179,6 +179,11 @@ which returns a structured numpy array that support common slicing operations:
     >>> curve[0:5]
     array([852606., 852606., 852606., 852606., 852606.], dtype=float32)
 
+Note that its almost always considerably faster to read curves-data with
+:py:func:`dlisio.plumbing.Frame.curves()`. Please refer to
+:py:func:`dlisio.plumbing.Channel.curves()` for further elaboration on why this
+is.
+
 Access all curves in a frame with :py:func:`dlisio.plumbing.Frame.curves()`.
 The returned structured numpy array can be indexed by Channel mnemonics
 and/or sliced by samples:
@@ -193,7 +198,8 @@ and/or sliced by samples:
 Note that double brackets are needed in order to access muliple channels at
 once.
 
-If you prefer to work with pandas over numpy, the conversion is trivial:
+As long as the frame only contains channels with scalar samples, it can be
+trivially converted to a pandas DataFrame:
 
 .. code-block:: python
 

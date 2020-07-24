@@ -934,7 +934,8 @@ object_vector parse_objects( const object_template& tmpl,
                     const auto msg = "count ({}) isn't 0 and representation "
                         "code ({}) changed, but value is not explicitly set";
                     const auto code = static_cast< int >(attr.reprc);
-                    throw std::runtime_error(fmt::format(msg, count, code));
+                    user_warning(fmt::format(msg, count, code));
+                    attr.value = mpark::monostate{};
                 }
 
                 patch_missing_value( attr.value, count, attr.reprc );

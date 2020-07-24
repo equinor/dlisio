@@ -15,19 +15,40 @@ Standard (DLIS)`.
 .. toctree::
    :maxdepth: 2
 
-   intro
+   about
+   changelog
 
 .. toctree::
-   :caption: The Library
-   :name: The Library
+   :caption: RP66
+   :name: rp66
+   :maxdepth: 2
+
+   rp66v1
+   tif
+   vendors
+
+.. toctree::
+   :caption: Data organization
+   :name: Data organization
+   :maxdepth: 3
+
+   segmentation
+   metadata
+   curves
+
+.. toctree::
+   :caption: API Reference
+   :name: apiref
    :maxdepth: 3
 
    dlisio
 
 .. toctree::
+   :caption: Examples
+   :name: Examples
+   :maxdepth: 3
+
    examples
-   vendors
-   changelog
 
 Indices and tables
 ==================

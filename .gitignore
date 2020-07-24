@@ -7,3 +7,5 @@ python/dlisio/*.so
 python/.venv
 python/__pycache__
 dockcross-manylinux-x64
+requirements.txt
+test/
