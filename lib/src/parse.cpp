@@ -687,6 +687,7 @@ const noexcept (true) {
         && this->count == o.count
         && this->reprc == o.reprc
         && this->units == o.units
+        && this->info  == o.info
         // invariant doesn't matter for attribute equality,
         // so ignore it
         && value_variant_eq(this->value, o.value);
