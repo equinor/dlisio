@@ -2,11 +2,12 @@
 #define DLISIO_PYTHON_IO_HPP
 
 #include <array>
+#include <fstream>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include <lfp/lfp.h>
+#include <mio/mio.hpp>
 
 #include <dlisio/ext/types.hpp>
 

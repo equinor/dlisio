@@ -7,8 +7,8 @@ RUN wget https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz && tar xf cmake-3.12.
 WORKDIR /work/cmake-3.12.3
 RUN ./bootstrap --prefix=/usr/local && make && make install
 WORKDIR /work
-COPY . ./dlisio
-#RUN git clone https://github.com/ejschoen/dlisio.git && cd dlisio && git checkout master && git submodule update --init external/fmt && git submodule update --init external/mpark 
+#COPY . ./dlisio
+RUN git clone https://github.com/ejschoen/dlisio.git && cd dlisio && git checkout master && git submodule update --init external/fmt && git submodule update --init external/mpark 
 RUN git clone https://github.com/fmtlib/fmt.git
 RUN git clone https://github.com/equinor/layered-file-protocols.git
 RUN pip install pybind11 scikit-build numpy chardet 
