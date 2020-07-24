@@ -737,6 +737,7 @@ void report( const std::vector< std::error_code >& codes,
 }
 
 PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
+PYBIND11_MAKE_OPAQUE( std::vector< dl::index_entry > )
 
 PYBIND11_MODULE(core, m) {
     PyDateTime_IMPORT;
@@ -754,6 +755,7 @@ PYBIND11_MODULE(core, m) {
     });
 
     py::bind_vector<std::vector< dl::object_set >>(m, "list(object_set)");
+    py::bind_vector<std::vector< dl::index_entry >>(m, "list(index_entry)");
 
     m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
     m.def("open_rp66", &dl::open_rp66);
