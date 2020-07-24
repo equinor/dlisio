@@ -707,7 +707,7 @@ public:
 
     /* Trampoline (need one for each virtual function) */
     bool match(const dl::ident& pattern, const dl::ident& candidate)
-    noexcept(false) override {
+    const noexcept(false) override {
         PYBIND11_OVERLOAD_PURE(
             bool,           /* Return type */
             dl::matcher,    /* Parent class */

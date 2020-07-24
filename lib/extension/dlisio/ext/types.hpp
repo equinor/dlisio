@@ -592,13 +592,13 @@ private:
 
 struct matcher {
     virtual bool match(const dl::ident& pattern, const dl::ident& candidate)
-    noexcept (false) = 0;
+    const noexcept (false) = 0;
     virtual ~matcher() = default;
 };
 
 struct exactmatch : public matcher {
     bool match(const dl::ident& pattern, const dl::ident& candidate)
-    noexcept (false) override;
+    const noexcept (false)  override;
 };
 
 /* A queryable pool of metadata objects */
@@ -610,7 +610,7 @@ public:
 
     object_vector match(const std::string& type,
                         const std::string& name,
-                        dl::matcher& matcher);
+                        const dl::matcher& matcher);
 
     dl::basic_object& at(const dl::ident&, const dl::obname&) noexcept (false);
     dl::basic_object& at(const dl::objref&) noexcept(false);

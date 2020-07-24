@@ -1124,7 +1124,7 @@ const char* parse_set_component( const char* cur,
 }
 
 bool exactmatch::match(const dl::ident& pattern, const dl::ident& candidate)
-noexcept (false) {
+const noexcept (false) {
     return pattern == candidate;
 }
 
@@ -1227,7 +1227,7 @@ dl::basic_object& pool::at(const dl::objref& id ) noexcept (false) {
 
 object_vector pool::match( const std::string& type,
                            const std::string& name,
-                           dl::matcher& m)
+                           const dl::matcher& m)
 noexcept (false) {
     object_vector objs;
 
