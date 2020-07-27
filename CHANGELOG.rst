@@ -6,6 +6,11 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.2.4_ - 2020.07.27
+-------------------
+* fixes a bug in ``dl::findoffsets`` that caused an infinite loop for certain
+  broken files.
+
 0.2.3_ - 2020.06.19
 -------------------
 * Fixes a bug in ``dlisio.load()`` that caused it to leak open file handles when
@@ -158,6 +163,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.2.4: https://github.com/equinor/dlisio/compare/v0.2.3...v0.2.4
 .. _0.2.3: https://github.com/equinor/dlisio/compare/v0.2.2...v0.2.3
 .. _0.2.2: https://github.com/equinor/dlisio/compare/v0.2.1...v0.2.2
 .. _0.2.1: https://github.com/equinor/dlisio/compare/v0.2.0...v0.2.1
