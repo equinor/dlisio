@@ -682,10 +682,9 @@ bool basic_object::operator != (const basic_object& o) const noexcept (true) {
 }
 
 
-const char* parse_template( const char* cur,
-                            const char* end,
-                            object_template& out ) noexcept (false) {
+const char* object_set::parse_template(const char* cur) noexcept (false) {
     object_template tmp;
+    const char* end = this->record.data.data() + this->record.data.size();
 
     while (true) {
         if (cur >= end)
@@ -693,7 +692,7 @@ const char* parse_template( const char* cur,
 
         const auto flags = parse_attribute_descriptor( cur );
         if (flags.object) {
-            swap( tmp, out );
+            swap( tmp, this->tmpl );
             return cur;
         }
 
@@ -732,7 +731,7 @@ const char* parse_template( const char* cur,
 
         if (cur == end){
             debug_warning("Set contains no objects");
-            swap( tmp, out );
+            swap( tmp, this->tmpl );
             return cur;
         }
     }
@@ -852,16 +851,16 @@ noexcept (false)
     }
 }
 
-object_vector parse_objects( const object_template& tmpl,
-                             const dl::ident type,
-                             const char* cur,
-                             const char* end ) noexcept (false) {
+}
 
+const char* object_set::parse_objects(const char* cur) noexcept (false) {
+
+    const char* end = this->record.data.data() + this->record.data.size();
     object_vector objs;
     const auto default_object = defaulted_object( tmpl );
 
-    while (true) {
-        if (std::distance( cur, end ) <= 0)
+    while (cur != end) {
+        if (std::distance( cur, end ) < 0)
             throw std::out_of_range( "unexpected end-of-record" );
 
         auto object_flags = parse_object_descriptor( cur );
@@ -955,20 +954,15 @@ object_vector parse_objects( const object_template& tmpl,
         }
 
         objs.push_back( std::move( current ) );
-
-        if (cur == end) break;
     }
 
-    return objs;
+    this->objs = objs;
+    return cur;
 }
 
-}
+const char* object_set::parse_set_component(const char* cur) noexcept (false) {
 
-const char* parse_set_component( const char* cur,
-                                 const char* end,
-                                 dl::ident* type,
-                                 dl::ident* name,
-                                 int* role) {
+    const char* end = this->record.data.data() + this->record.data.size();
     if (std::distance( cur, end ) <= 0)
         throw std::out_of_range( "eflr must be non-empty" );
 
@@ -991,40 +985,26 @@ const char* parse_set_component( const char* cur,
     if (flags.type) cur = cast( cur, tmp_type );
     if (flags.name) cur = cast( cur, tmp_name );
 
-    if (type) *type = tmp_type;
-    if (name) *name = tmp_name;
-    if (role) *role = tmp_role;
+    this->type = tmp_type;
+    this->name = tmp_name;
+    this->role = tmp_role;
     return cur;
 }
 
 object_set::object_set(dl::record rec) noexcept (false)  {
-        parse_set_component(rec.data.data(),
-                            rec.data.data() + rec.data.size(),
-                            &this->type,
-                            &this->name,
-                            &this->role);
         this->record = std::move(rec);
+        parse_set_component(this->record.data.data());
 }
 
 void object_set::parse() noexcept (false) {
     if (this->parsed) return;
 
-    const char* beg = this->record.data.data();
-    const char* end = beg + this->record.data.size();
+    const char* cur = this->record.data.data();
+    /* As cursor value is not stored, read data again to get the position */
+    cur = parse_set_component(cur);
+    cur = parse_template(cur);
+          parse_objects(cur);
 
-    /* Skip past the set component as it's already been read and parsed */
-    auto cur = parse_set_component(beg, end, nullptr, nullptr, nullptr);
-
-    object_template tmpl;
-    cur = parse_template(cur, end, tmpl);
-
-    //TODO parse_object should return empty list when there are no objects
-    if (std::distance( cur, end ) > 0) {
-        auto objs = parse_objects(tmpl, this->type, cur, end);
-        this->objs = objs;
-    }
-
-    this->tmpl = tmpl;
     this->parsed = true;
 }
 

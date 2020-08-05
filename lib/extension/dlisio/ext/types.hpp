@@ -521,6 +521,10 @@ private:
 
     void parse() noexcept (false);
     bool parsed = false;
+
+    const char* parse_set_component(const char* cur) noexcept (false);
+    const char* parse_template(const char* cur) noexcept (false);
+    const char* parse_objects(const char* cur) noexcept (false);
 };
 
 struct matcher {
@@ -547,18 +551,6 @@ public:
 private:
     std::vector< dl::object_set > eflrs;
 };
-
-const char* parse_template( const char* begin,
-                            const char* end,
-                            object_template& ) noexcept (false);
-
-
-object_set parse_objects( const char*, const char* ) noexcept (false);
-const char* parse_set_component( const char*,
-                                 const char*,
-                                 ident*,
-                                 ident*,
-                                 int* ) noexcept (false);
 
 }
 
