@@ -105,9 +105,10 @@ def test_filehandles_closed_when_load_fails(tmpdir):
 
 def test_context_manager():
     path = 'data/chap4-7/many-logical-files.dlis'
-    f, *_ = dlisio.load(path)
+    batch = dlisio.load(path)
+    f, *_ = batch
     _ = f.fileheader
-    f.close()
+    batch.close()
 
     files = dlisio.load(path)
     for f in files:
@@ -116,6 +117,7 @@ def test_context_manager():
 
     f, *files = dlisio.load(path)
     _ = f.fileheader
+    f.close()
     for g in files:
         _ = g.fileheader
         g.close()
