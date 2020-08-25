@@ -30,16 +30,6 @@ struct DLISIO_API io_error : public std::runtime_error {
     explicit io_error( int no ) : runtime_error( std::strerror( no ) ) {}
 };
 
-struct record {
-    bool isexplicit()  const noexcept (true);
-    bool isencrypted() const noexcept (true);
-
-    int type;
-    std::uint8_t attributes;
-    bool consistent;
-    std::vector< char > data;
-};
-
 /* Stream - wrapper for lfp_protocol
  *
  * The main purpose of stream is to handle lfp return codes in a manner that
@@ -77,8 +67,8 @@ long long findsul(stream&) noexcept (false);
 long long findvrl(stream&, long long) noexcept (false);
 bool hastapemark(stream&) noexcept (false);
 
-record extract(stream&, long long) noexcept (false);
-record& extract(stream&, long long, long long, record&) noexcept (false);
+dl::record extract(stream&, long long) noexcept (false);
+dl::record& extract(stream&, long long, long long, dl::record&) noexcept (false);
 
 stream_offsets findoffsets(dl::stream&) noexcept (false);
 

@@ -390,6 +390,16 @@ using value_vector = mpark::variant<
     std::vector< units  >
 >;
 
+struct record {
+    bool isexplicit()  const noexcept (true);
+    bool isencrypted() const noexcept (true);
+
+    int type;
+    std::uint8_t attributes;
+    bool consistent;
+    std::vector< char > data;
+};
+
 /*
  * The structure of an attribute as described in 3.2.2.1
  */
