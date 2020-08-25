@@ -6,6 +6,8 @@ Specific tests for channels and frames
 ================================= ==============================================
 Filename                          Description
 ================================= ==============================================
+1-channel-2-frames.dlis           Same channel belongs to two different frames
+
 duplicated.dlis                   A frame containing two channels with the same
                                   signatures (mnemonic, origin and copynumber)
 

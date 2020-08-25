@@ -341,6 +341,12 @@ def test_channel_without_frame(assert_info, tmpdir_factory, merge_files_manyLR):
         assert channel.frame == None
         assert_info('does not belong')
 
+def test_channel_in_multiple_frames(assert_log):
+    fpath = "data/chap4-7/eflr/frames-and-channels/1-channel-2-frames.dlis"
+    with dlisio.load(fpath) as (f, *_):
+        _ = f.object("CHANNEL", "DUPL")
+        assert_log("Channel(DUPL) already belongs to")
+
 def test_channel_fmt():
     fpath = "data/chap4-7/eflr/frames-and-channels/various.dlis"
     with dlisio.load(fpath) as (f, *_):
