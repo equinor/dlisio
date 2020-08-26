@@ -51,6 +51,11 @@ coefficient-wrong       Coefficient objects that do not conform to the rp66v1
 fdata***                contains IFLR(s) of type FDATA, referencing Frame
                         objects defined in the frame**.dlis.part files
 
+frames-and-channels     Files for curves testing
+
+match                   Files for match testing. Every file is named by the
+                        object it contains
+
 ======================= ======================================================
 
 
