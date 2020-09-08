@@ -138,61 +138,18 @@ class dlis(object):
         'COMMENT'                : plumbing.Comment,
     }
 
-    """dict: Parsing guide for native dlis object-types. The typical user can
-    safely ignore this attribute. It is mainly intended for internal use and
-    advanced customization of dlisio's parsing routine.
+    """dict: Dispatch-table for turning :py:class:`dlisio.core.basic_objects`
+    into type-specific python objects like Channel and Frame.  This is mainly
+    intended for internal use so the typical user can safely ignore this
+    attribute.
 
-    Maps the native dlis object-type to python class. E.g. all dlis objects
-    with type AXIS will be constructed into Axis objects. It is possible to
-    both remove and add new object-types before loading or reloading a file.
-    New objects will behave the same way as the defaulted object-types.
+    Object-types not present in the table are considered as unknowns. They can
+    still be reached through :py:func:`object` and :py:func:`match` but lack
+    the syntactic sugar added by the type-specific classes.
 
-    If an object-type is not in types, it will be default parsed as an unknown
-    object and accessible through the dlis.unknowns property.
-
-    Examples
-    --------
-
-    Create a new object-type
-
-    >>> from dlisio.plumbing import BasicObject
-    >>> from dlisio.plumbing import scalar, vector, obname
-    >>> class Channel440(BasicObject):
-    ...     attributes = {
-    ...       'LONG-NAME' : scalar,
-    ...       'SAMPLES'   : vector,
-    ...     }
-    ...     linkage= { 'longname' : obname('LONG-NAME') }
-    ...
-    ...     def __init__(self, obj = None, name = None):
-    ...       super().__init_(obj, name = name, type = '440-CHANNEL')
-    ...
-    ...     @property
-    ...     def longname(self):
-    ...         return self['LONG-NAME']
-    ...
-    ...     @property
-    ...     def samples(self):
-    ...         return self['SAMPLES']
-
-    Add the new object-type and load the file
-
-    >>> dlisio.dlis.types['440-CHANNEL'] = Channel440
-    >>> f = dlisio.load('filename')
-
-    Remove object-type CHANNEL. CHANNEL objects will no longer
-    have a specialized parsing routine and will be parsed as Unknown objects
-
-    >>> del dlisio.dlis.types['CHANNEL']
-    >>> f = dlisio.load('filename')
-
-    See also
-    --------
-
-    plumbing.BasicObject.attributes : Attributes of an object can be customized
-      in a similar manner as types.
-    plumbing.BasicObject.linkage    :  Linkage tells dlisio how it should try
-       to link the content of attributes to other objects.
+    It is possible to monkey-patch the dispatch-table with your own custom
+    classes. However this is considered to be a fairly advanced usage and it's
+    then the users responsibility of ensuring correctness for the custom class.
     """
 
     def __init__(self, stream, object_pool, fdata_index, sul=None):
