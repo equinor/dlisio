@@ -193,7 +193,7 @@ struct obname {
         return !(*this == o);
     }
 
-    std::string fingerprint(const std::string& type) const noexcept (false);
+    dl::ident fingerprint(const std::string& type) const noexcept (false);
 };
 
 struct objref {
@@ -209,7 +209,7 @@ struct objref {
         return !(*this == o);
     }
 
-    std::string fingerprint() const noexcept (false);
+    dl::ident fingerprint() const noexcept (false);
 };
 
 struct attref {

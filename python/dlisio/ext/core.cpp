@@ -303,10 +303,10 @@ py::dict storage_label( py::buffer b ) {
     );
 }
 
-std::string fingerprint(const std::string& type,
-                        const std::string& id,
-                        std::int32_t origin,
-                        std::int32_t copy) {
+dl::ident fingerprint(const std::string& type,
+                      const std::string& id,
+                      std::int32_t origin,
+                      std::int32_t copy) {
 
     std::string msg = "Invalid argument, copy out of range";
     if ( copy > (std::numeric_limits< std::uint8_t >::max)() )

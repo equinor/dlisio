@@ -240,10 +240,10 @@ class BasicObject():
 
         fingerprint : str
         """
-        return core.fingerprint(self.type,
-                                self.name,
-                                self.origin,
-                                self.copynumber)
+        return core.fingerprint(self.attic.type,
+                                self.attic.name.id,
+                                self.attic.name.origin,
+                                self.attic.name.copynumber)
     @property
     def stash(self):
         """Attributes unknown to dlisio
