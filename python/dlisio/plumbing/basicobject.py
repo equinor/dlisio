@@ -196,7 +196,7 @@ class BasicObject():
         Returns a default value for missing attributes. I.e. attributes defined
         in :attr:`attributes` but are not in :attr:`attic`.
         """
-        if key not in self.attributes and key not in self.attic:
+        if key not in self.attributes and key not in self.attic.keys():
             raise KeyError("'{}'".format(key))
 
         try:
@@ -220,6 +220,12 @@ class BasicObject():
             value = [v.strip() if isinstance(v, str) else v for v in rp66value]
 
         return parsevalue(value, parse_as)
+
+    def __eq__(self, rhs):
+        try:
+            return self.attic == rhs.attic
+        except AttributeError:
+            return False
 
     @property
     def fingerprint(self):
@@ -253,9 +259,9 @@ class BasicObject():
             all attributes not defined in :attr:`attributes`
         """
         stash = {
-            key : value
-            for key, value
-            in self.attic.items()
+            key : self.attic[key]
+            for key
+            in self.attic.keys()
             if key not in self.attributes
         }
 

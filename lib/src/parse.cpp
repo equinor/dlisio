@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <ciso646>
 
 #include <fmt/core.h>
 
@@ -540,6 +541,12 @@ struct variant_equal {
         return false;
     }
 
+    bool operator () (mpark::monostate,
+                      mpark::monostate)
+    const noexcept (true) {
+        return true;
+    }
+
     template < typename T >
     bool operator () (const std::vector< T >& lhs,
                       const std::vector< T >& rhs)
@@ -673,6 +680,7 @@ bool basic_object::operator == (const basic_object& o) const noexcept (true) {
 bool basic_object::operator != (const basic_object& o) const noexcept (true) {
     return !(*this == o);
 }
+
 
 const char* parse_template( const char* cur,
                             const char* end,
@@ -845,6 +853,7 @@ noexcept (false)
 }
 
 object_vector parse_objects( const object_template& tmpl,
+                             const dl::ident type,
                              const char* cur,
                              const char* end ) noexcept (false) {
 
@@ -859,6 +868,7 @@ object_vector parse_objects( const object_template& tmpl,
         cur += DLIS_DESCRIPTOR_SIZE;
 
         auto current = default_object;
+        current.type = type;
         if (object_flags.name) cur = cast( cur, current.object_name );
 
         for (const auto& template_attr : tmpl) {
@@ -987,19 +997,86 @@ const char* parse_set_component( const char* cur,
     return cur;
 }
 
-object_set parse_objects( const char* cur, const char* end ) {
-    object_set set;
-    cur = parse_set_component( cur, end, &set.type, &set.name, &set.role);
-    cur = parse_template( cur, end, set.tmpl );
+bool exactmatcher::match(const dl::ident& pattern, const dl::ident& candidate)
+const noexcept (false) {
+    return pattern == candidate;
+}
 
-    /*
-    Return if set has no objects
-    */
-    if (std::distance( cur, end ) == 0)
-         return set;
 
-    set.objects = parse_objects( set.tmpl, cur, end );
-    return set;
+object_set::object_set(dl::record rec) noexcept (false)  {
+        parse_set_component(rec.data.data(),
+                            rec.data.data() + rec.data.size(),
+                            &this->type,
+                            &this->name,
+                            &this->role);
+        this->record = std::move(rec);
+}
+
+void object_set::parse() noexcept (false) {
+    if (this->parsed) return;
+
+    const char* beg = this->record.data.data();
+    const char* end = beg + this->record.data.size();
+
+    /* Skip past the set component as it's already been read and parsed */
+    auto cur = parse_set_component(beg, end, nullptr, nullptr, nullptr);
+
+    object_template tmpl;
+    cur = parse_template(cur, end, tmpl);
+
+    //TODO parse_object should return empty list when there are no objects
+    if (std::distance( cur, end ) > 0) {
+        auto objs = parse_objects(tmpl, this->type, cur, end);
+        this->objs = objs;
+    }
+
+    this->tmpl = tmpl;
+    this->parsed = true;
+}
+
+dl::object_vector& object_set::objects() noexcept (false) {
+    this->parse();
+    return this->objs;
+}
+
+std::vector< dl::ident > pool::types() const noexcept (true) {
+    std::vector< dl::ident > types;
+    for (const auto& eflr : this->eflrs) {
+        types.push_back( eflr.type );
+    }
+    return types;
+}
+
+object_vector pool::get(const std::string& type,
+                        const std::string& name,
+                        const dl::matcher& m)
+noexcept (false) {
+    object_vector objs;
+
+    for (auto& eflr : this->eflrs) {
+        if (not m.match(dl::ident{type}, eflr.type)) continue;
+
+        for (const auto& obj : eflr.objects()) {
+            if (not m.match(dl::ident{name}, obj.object_name.id)) continue;
+
+            objs.push_back(obj);
+        }
+    }
+    return objs;
+}
+
+object_vector pool::get(const std::string& type,
+                        const dl::matcher& m)
+noexcept (false) {
+    object_vector objs;
+
+    for (auto& eflr : this->eflrs) {
+        if (not m.match(dl::ident{type}, eflr.type)) continue;
+
+        auto tmp = eflr.objects();
+        objs.insert(objs.end(), tmp.begin(), tmp.end());
+    }
+    return objs;
 }
 
 }

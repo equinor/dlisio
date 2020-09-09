@@ -22,6 +22,7 @@ from .path import Path
 from .process import Process
 from .unknown import Unknown
 
+from .matcher import *
 from .valuetypes import *
 from .linkage import *
 from .utils import *

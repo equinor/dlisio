@@ -688,7 +688,38 @@ noexcept (false) {
     return dstobj;
 }
 
+/** trampoline helper class for dl::matcher bindings
+ *
+ * Creating the binding code for a abstract c++ class that we want do derive
+ * new classes from in python requires some extra boilerplate code in the form
+ * of this "trampoline" class [1].
+ *
+ * This class helps redirect virtual calls back to python and is *not* intended
+ * to be used for anything other than creating valid bindings for dl::matcher.
+ *
+ * [1] https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtual-functions-in-python
+ */
+class Pymatcher : public dl::matcher {
+public:
+    /* Inherit the constructor */
+    using dl::matcher::matcher;
+
+    /* Trampoline (need one for each virtual function) */
+    bool match(const dl::ident& pattern, const dl::ident& candidate)
+    const noexcept(false) override {
+        PYBIND11_OVERLOAD_PURE(
+            bool,           /* Return type */
+            dl::matcher,    /* Parent class */
+            match,          /* Name of function in C++ (must match Python name) */
+            pattern,        /* Argument(s) */
+            candidate
+        );
+    }
+};
+
 }
+
+PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
 
 PYBIND11_MODULE(core, m) {
     PyDateTime_IMPORT;
@@ -704,6 +735,8 @@ PYBIND11_MODULE(core, m) {
             PyErr_SetString( PyExc_EOFError, e.what() );
         }
     });
+
+    py::bind_vector<std::vector< dl::object_set >>(m, "list(object_set)");
 
     m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
     m.def("open_rp66", &dl::open_rp66);
@@ -816,24 +849,49 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
-    py::class_< dl::object_set >( m, "object_set" )
-        .def_readonly( "type",    &dl::object_set::type )
-        .def_readonly( "name",    &dl::object_set::name )
-        .def_property_readonly("objects",
-        [](const dl::object_set& object_set) {
-            py::dict objects;
-            for (const auto& object : object_set.objects) {
-                py::dict obj;
-                for (const auto& attr : object.attributes) {
-                    auto label = py::str(dl::decay(attr.label));
-                    // TODO: need units? So far they're not used
-                    obj[label] = dl::decay(attr.value);
-                }
-                const auto& name = dl::decay(object.object_name);
-                objects[py::cast(name)] = obj;
-            }
-            return objects;
+    py::class_< dl::basic_object >( m, "basic_object" )
+        .def_readonly("type", &dl::basic_object::type)
+        .def_readonly("name", &dl::basic_object::object_name)
+        .def( "__len__", []( const dl::basic_object& o ) {
+            return o.attributes.size();
         })
+        .def( "__eq__", &dl::basic_object::operator == )
+        .def( "__ne__", &dl::basic_object::operator != )
+        .def( "__getitem__", []( dl::basic_object& o, const std::string& key ) {
+            try { return o.at(key).value; }
+            catch (const std::out_of_range& e) { throw py::key_error( e.what() ); }
+        })
+        .def( "__repr__", []( const dl::basic_object& o ) {
+            return "dlisio.core.basic_object(name={})"_s
+                    .format(o.object_name);
+        })
+        .def( "keys", []( const dl::basic_object& o ){
+            std::vector< dl::ident > keys;
+            for ( auto attr : o.attributes ) {
+                keys.push_back( attr.label );
+            }
+            return keys;
+        })
+    ;
+
+    py::class_< dl::object_set >( m, "object_set" )
+        .def_readonly( "type", &dl::object_set::type )
+        .def_readonly( "name", &dl::object_set::name )
+        .def( "objects", &dl::object_set::objects )
+    ;
+
+    py::class_< dl::pool >( m, "pool" )
+        .def(py::init< std::vector< dl::object_set> >())
+        .def_property_readonly( "types", &dl::pool::types )
+        .def( "get", (dl::object_vector (dl::pool::*) (
+            const std::string&,
+            const std::string&,
+            const dl::matcher&
+        )) &dl::pool::get )
+        .def( "get", (dl::object_vector (dl::pool::*) (
+            const std::string&,
+            const dl::matcher&
+        )) &dl::pool::get )
     ;
 
     py::enum_< dl::representation_code >( m, "reprc" )
@@ -918,36 +976,11 @@ PYBIND11_MODULE(core, m) {
         return recs;
     });
 
-    m.def( "parse_set_types", [](const std::vector< dl::record >& recs ) {
-        /*
-         * Returns the set-type of each record. If a record is encrypted, it's
-         * not possible to parse the set-type. To keep the lists aligned,
-         * 'encrypted' is inserted in this case.
-         */
-        std::vector< dl::ident > types;
-        std::string encrypted = "encrypted";
-        for (const auto& rec : recs) {
-            if (rec.isencrypted()) {
-                types.push_back( dl::ident{ encrypted } );
-                continue;
-            }
-            auto begin = rec.data.data();
-            auto end   = begin + rec.data.size();
-
-            dl::ident type;
-            dl::parse_set_component( begin, end, &type, nullptr, nullptr );
-            types.push_back( type );
-        }
-        return types;
-    });
-
     m.def( "parse_objects", []( const std::vector< dl::record >& recs ) {
         std::vector< dl::object_set > objects;
         for (const auto& rec : recs) {
             if (rec.isencrypted()) continue;
-            auto begin = rec.data.data();
-            auto end = begin + rec.data.size();
-            objects.push_back( dl::parse_objects( begin, end ) );
+            objects.push_back( dl::object_set( rec ) );
         }
         return objects;
     });
@@ -964,4 +997,12 @@ PYBIND11_MODULE(core, m) {
 
     m.def("set_encodings", set_encodings);
     m.def("get_encodings", get_encodings);
+
+    py::class_< dl::matcher, Pymatcher >( m, "matcher")
+        .def(py::init<>())
+    ;
+
+    py::class_< dl::exactmatcher, dl::matcher >( m, "exactmatcher" )
+        .def(py::init<>())
+    ;
 }

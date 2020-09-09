@@ -52,7 +52,6 @@ def test_type_new(f):
     finally:
         del f.types['UNKNOWN_SET']
 
-
 def test_type_change(f):
     try:
         # Parse all parameters as if they where Channels
@@ -61,7 +60,7 @@ def test_type_change(f):
 
         longname = f.object('LONG-NAME', 'PARAM1-LONG', 10, 0)
         axis     = f.object('AXIS', 'AXIS1', 10, 0)
-        obj      = f.object('CHANNEL', 'PARAM1', 10, 0)
+        obj      = f.object('PARAMETER', 'PARAM1', 10, 0)
 
         # obj should have been parsed as a Channel
         assert isinstance(obj, dlisio.plumbing.Channel)
@@ -100,12 +99,8 @@ def test_type_removal(f):
         # to not interfere with other tests
         f.types['CHANNEL'] = dlisio.plumbing.Channel
 
-    f.load()
-    obj = f.object('CHANNEL', 'CHANN1', 10, 0)
-
     # Channels should now be parsed as Channel.allobjects
-    assert isinstance(obj, dlisio.plumbing.Channel)
-    assert obj not in f.unknowns
+    assert 'CHANNEL' not in f.unknowns
 
 def test_attribute_change_in_instance():
     ch1 = Channel()
