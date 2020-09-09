@@ -163,4 +163,42 @@ def test_broken_utf8_set(tmpdir, merge_files_oneLR):
         dlisio.set_encodings(prev_encodings)
         f.close()
 
+def test_access_to_object_with_non_utf8_name(tmpdir, merge_files_oneLR):
+    # Object with a non-utf8 name can be queried with dlis.object
+    # regardless of what encoding is set.
+
+    path = os.path.join(str(tmpdir), 'broken_utf8_object_name.dlis')
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/broken-utf8-object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+
+    prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
+
+    try:
+        f, = dlisio.load(path)
+
+        # Can't expect to find an object with an encoded string
+        # if the encoding is not given to dlisio
+        with pytest.raises(ValueError):
+            _ = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
+
+        # However it can be found by matching the bytes
+        with pytest.warns(UnicodeWarning):
+            obj = f.object('VERY_MUCH_TESTY_SET', b'\xeb\xe1\xe4\xf2')
+
+        assert obj.name == b'\xeb\xe1\xe4\xf2'
+
+        # When the encoding of the string parameter matches the encoding dlisio
+        # uses, we should expect to find the object
+        dlisio.set_encodings(['koi8_r'])
+        obj = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
+        assert obj.name == 'КАДР'
+
+    finally:
+        dlisio.set_encodings(prev_encodings)
+        f.close()
 

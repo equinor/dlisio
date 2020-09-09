@@ -1001,8 +1001,4 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::matcher, Pymatcher >( m, "matcher")
         .def(py::init<>())
     ;
-
-    py::class_< dl::exactmatcher, dl::matcher >( m, "exactmatcher" )
-        .def(py::init<>())
-    ;
 }

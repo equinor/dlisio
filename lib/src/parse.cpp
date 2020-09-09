@@ -997,12 +997,6 @@ const char* parse_set_component( const char* cur,
     return cur;
 }
 
-bool exactmatcher::match(const dl::ident& pattern, const dl::ident& candidate)
-const noexcept (false) {
-    return pattern == candidate;
-}
-
-
 object_set::object_set(dl::record rec) noexcept (false)  {
         parse_set_component(rec.data.data(),
                             rec.data.data() + rec.data.size(),

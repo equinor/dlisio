@@ -179,7 +179,7 @@ class dlis(object):
         objects : dict
             all objects of type 'type'
         """
-        objs = self.object_pool.get(type, core.exactmatcher())
+        objs = self.object_pool.get(type, plumbing.exact_matcher())
         return { x.fingerprint : x for x in self.promote(objs) }
 
     def __enter__(self):
@@ -398,7 +398,7 @@ class dlis(object):
         MKAP
 
         """
-        matches = self.object_pool.get(type, name, core.exactmatcher())
+        matches = self.object_pool.get(type, name, plumbing.exact_matcher())
         matches = self.promote(matches)
 
         if origin is not None:

@@ -530,11 +530,6 @@ struct matcher {
     virtual ~matcher() = default;
 };
 
-struct exactmatcher : public matcher {
-    bool match(const dl::ident& pattern, const dl::ident& candidate)
-        const noexcept (false) override;
-};
-
 /* A queryable pool of metadata objects */
 class pool {
 public:
