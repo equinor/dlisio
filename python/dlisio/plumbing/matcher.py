@@ -20,7 +20,7 @@ class regex_matcher(core.matcher):
     >>> matcher.match("FO*", "FOO")
     True
     """
-    def __init__(self, flags):
+    def __init__(self, flags=0):
         core.matcher.__init__(self)
         self.flags = flags
 
