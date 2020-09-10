@@ -145,6 +145,10 @@ Remaining files
 ================================================ ==================================================
 Filename                                         Description
 ================================================ ==================================================
+encoded-obname.dlis                              A frame with a non-ascii name, with a
+                                                 corresponding fdata entry. The Channel beloning to
+                                                 the Frame also has a non-ascii name.
+
 invalid-date-in-origin.dlis                      Simple file which contains invalid creation time
                                                  attribute in origin
 

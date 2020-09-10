@@ -237,3 +237,24 @@ def test_access_to_object_with_non_utf8_name(tmpdir, merge_files_oneLR):
         dlisio.set_encodings(prev_encodings)
         f.close()
 
+def test_non_utf8_frame():
+    # findfdata (and hence load) should _not_ fail because of a non-utf8
+    # Frame name. Furthermore, it should be possible to extract the curves of
+    # said frame, provided that the right encoding is set.
+    fpath = 'data/chap4-7/encoded-obname.dlis'
+
+    prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings(['koi8_r'])
+
+    f, = dlisio.load(fpath)
+    try:
+        fr = f.object('FRAME', 'ENCODED-[Б╣дTУБ1')
+        ch = fr.channels[0]
+        curves = fr.curves()
+
+        assert curves[fr.index]       == [1]
+        assert curves[ch.fingerprint] == [32915]
+
+    finally:
+        dlisio.set_encodings(prev_encodings)
+        f.close()

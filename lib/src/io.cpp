@@ -436,10 +436,10 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
     return ofs;
 }
 
-std::vector< std::pair< std::string, long long > >
+std::vector< std::pair< dl::ident, long long > >
 findfdata(dl::stream& file, const std::vector< long long >& tells)
 noexcept (false) {
-    std::vector< std::pair< std::string, long long > > xs;
+    std::vector< std::pair< dl::ident, long long > > xs;
 
     constexpr std::size_t OBNAME_SIZE_MAX = 262;
 
@@ -466,7 +466,7 @@ noexcept (false) {
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
                         dl::ident{ std::string{ id, id + idlen } } };
-        xs.emplace_back(tmp.fingerprint("FRAME"), tell);
+        xs.emplace_back(dl::decay(tmp.fingerprint("FRAME")), tell);
     }
     return xs;
 }
