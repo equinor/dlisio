@@ -6,7 +6,7 @@ class regex_matcher(core.matcher):
     """ Regex matcher
 
     A regex matcher using Python's re module, that can be passed to
-    dl::pool::match along with the search patterns.
+    dl::pool::get along with the search patterns.
 
     Examples
     --------
