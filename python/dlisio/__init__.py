@@ -63,6 +63,14 @@ def set_encodings(encodings):
     so there's a high chance that decoding with the wrong encoding will give a
     valid string, but not the one the writer intended.
 
+    Warnings
+    --------
+    It is possible to change the encodings at any time. However, only strings
+    created after the change will use the new encoding. Having strings that are
+    out of sync w.r.t encodings might lead to unexpected behaviour.  It is
+    recommended that the file is reloaded after changing the encodings to
+    ensure that all strings use the same encoding.
+
     See also
     --------
     get_encodings : currently set encodings
