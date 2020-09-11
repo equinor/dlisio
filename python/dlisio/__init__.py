@@ -622,15 +622,12 @@ def load(path):
             explicits, implicits = core.findoffsets(stream)
             hint = rewind(stream.absolute_tell, tapemarks)
 
-            recs = core.extract(stream, explicits)
-            sets = core.parse_objects(recs)
-            pool = core.pool(sets)
+            recs  = core.extract(stream, explicits)
+            sets  = core.parse_objects(recs)
+            pool  = core.pool(sets)
+            fdata = core.findfdata(stream, implicits)
 
-            fdata_index = defaultdict(list)
-            for key, val in core.findfdata(stream, implicits):
-                fdata_index[key].append(val)
-
-            lf = dlis(stream, pool, fdata_index, sul)
+            lf = dlis(stream, pool, fdata, sul)
             lfs.append(lf)
 
             try:
