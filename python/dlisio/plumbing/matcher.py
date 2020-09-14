@@ -6,7 +6,7 @@ class regex_matcher(core.matcher):
     """ Regex matcher
 
     A regex matcher using Python's re module, that can be passed to
-    dl::pool::match along with the search patterns.
+    dl::pool::get along with the search patterns.
 
     Examples
     --------
@@ -20,7 +20,7 @@ class regex_matcher(core.matcher):
     >>> matcher.match("FO*", "FOO")
     True
     """
-    def __init__(self, flags):
+    def __init__(self, flags=0):
         core.matcher.__init__(self)
         self.flags = flags
 
@@ -34,3 +34,16 @@ class regex_matcher(core.matcher):
 
         return bool(re.match(compiled, str(candidate)))
 
+class exact_matcher(core.matcher):
+    """ Exact matcher
+
+    A matcher using the == operator for comparison, that can be passed to
+    dl::pool::get along with the search parameter(s).
+    """
+    def __init__(self):
+        core.matcher.__init__(self)
+
+    @staticmethod
+    def match(pattern, candidate):
+        """ Overrides dl::matcher::match """
+        return pattern == candidate

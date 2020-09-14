@@ -112,6 +112,41 @@ def test_broken_utf8_object_name(tmpdir, merge_files_oneLR):
         dlisio.set_encodings(prev_encodings)
         f.close()
 
+def test_broken_utf8_object_fp(tmpdir, merge_files_oneLR):
+    # Should be able to create object.fingerprint regardless of
+    # encoding
+    path = os.path.join(str(tmpdir), 'broken_utf8_object_name.dlis')
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/broken-utf8-object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+
+    prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings(['koi8_r'])
+
+    try:
+        f, = dlisio.load(path)
+
+        # With the correct encoding we should get a nice fingerprint
+        obj = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
+        assert obj.fingerprint == 'T.VERY_MUCH_TESTY_SET-I.КАДР-O.12-C.0'
+
+        dlisio.set_encodings([])
+
+        # Without an matching encoding we should get a warning and
+        # a byte object
+        expected = b'T.VERY_MUCH_TESTY_SET-I.\xeb\xe1\xe4\xf2-O.12-C.0'
+
+        with pytest.warns(UnicodeWarning):
+            fp = obj.fingerprint
+
+        assert fp == expected
+    finally:
+        dlisio.set_encodings(prev_encodings)
+        f.close()
+
 def test_broken_utf8_label(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'broken_utf8_label.dlis')
     content = [
@@ -163,4 +198,63 @@ def test_broken_utf8_set(tmpdir, merge_files_oneLR):
         dlisio.set_encodings(prev_encodings)
         f.close()
 
+def test_access_to_object_with_non_utf8_name(tmpdir, merge_files_oneLR):
+    # Object with a non-utf8 name can be queried with dlis.object
+    # regardless of what encoding is set.
 
+    path = os.path.join(str(tmpdir), 'broken_utf8_object_name.dlis')
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/broken-utf8-object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+
+    prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings([])
+
+    try:
+        f, = dlisio.load(path)
+
+        # Can't expect to find an object with an encoded string
+        # if the encoding is not given to dlisio
+        with pytest.raises(ValueError):
+            _ = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
+
+        # However it can be found by matching the bytes
+        with pytest.warns(UnicodeWarning):
+            obj = f.object('VERY_MUCH_TESTY_SET', b'\xeb\xe1\xe4\xf2')
+
+        assert obj.name == b'\xeb\xe1\xe4\xf2'
+
+        # When the encoding of the string parameter matches the encoding dlisio
+        # uses, we should expect to find the object
+        dlisio.set_encodings(['koi8_r'])
+        obj = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
+        assert obj.name == 'КАДР'
+
+    finally:
+        dlisio.set_encodings(prev_encodings)
+        f.close()
+
+def test_non_utf8_frame():
+    # findfdata (and hence load) should _not_ fail because of a non-utf8
+    # Frame name. Furthermore, it should be possible to extract the curves of
+    # said frame, provided that the right encoding is set.
+    fpath = 'data/chap4-7/encoded-obname.dlis'
+
+    prev_encodings = dlisio.get_encodings()
+    dlisio.set_encodings(['koi8_r'])
+
+    f, = dlisio.load(fpath)
+    try:
+        fr = f.object('FRAME', 'ENCODED-[Б╣дTУБ1')
+        ch = fr.channels[0]
+        curves = fr.curves()
+
+        assert curves[fr.index]       == [1]
+        assert curves[ch.fingerprint] == [32915]
+
+    finally:
+        dlisio.set_encodings(prev_encodings)
+        f.close()

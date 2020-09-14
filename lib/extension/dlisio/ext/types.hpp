@@ -193,7 +193,7 @@ struct obname {
         return !(*this == o);
     }
 
-    std::string fingerprint(const std::string& type) const noexcept (false);
+    dl::ident fingerprint(const std::string& type) const noexcept (false);
 };
 
 struct objref {
@@ -209,7 +209,7 @@ struct objref {
         return !(*this == o);
     }
 
-    std::string fingerprint() const noexcept (false);
+    dl::ident fingerprint() const noexcept (false);
 };
 
 struct attref {
@@ -528,11 +528,6 @@ struct matcher {
         const noexcept (false) = 0;
 
     virtual ~matcher() = default;
-};
-
-struct exactmatcher : public matcher {
-    bool match(const dl::ident& pattern, const dl::ident& candidate)
-        const noexcept (false) override;
 };
 
 /* A queryable pool of metadata objects */

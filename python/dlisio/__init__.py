@@ -63,6 +63,14 @@ def set_encodings(encodings):
     so there's a high chance that decoding with the wrong encoding will give a
     valid string, but not the one the writer intended.
 
+    Warnings
+    --------
+    It is possible to change the encodings at any time. However, only strings
+    created after the change will use the new encoding. Having strings that are
+    out of sync w.r.t encodings might lead to unexpected behaviour.  It is
+    recommended that the file is reloaded after changing the encodings to
+    ensure that all strings use the same encoding.
+
     See also
     --------
     get_encodings : currently set encodings
@@ -179,7 +187,7 @@ class dlis(object):
         objects : dict
             all objects of type 'type'
         """
-        objs = self.object_pool.get(type, core.exactmatcher())
+        objs = self.object_pool.get(type, plumbing.exact_matcher())
         return { x.fingerprint : x for x in self.promote(objs) }
 
     def __enter__(self):
@@ -398,7 +406,7 @@ class dlis(object):
         MKAP
 
         """
-        matches = self.object_pool.get(type, name, core.exactmatcher())
+        matches = self.object_pool.get(type, name, plumbing.exact_matcher())
         matches = self.promote(matches)
 
         if origin is not None:
@@ -622,15 +630,12 @@ def load(path):
             explicits, implicits = core.findoffsets(stream)
             hint = rewind(stream.absolute_tell, tapemarks)
 
-            recs = core.extract(stream, explicits)
-            sets = core.parse_objects(recs)
-            pool = core.pool(sets)
+            recs  = core.extract(stream, explicits)
+            sets  = core.parse_objects(recs)
+            pool  = core.pool(sets)
+            fdata = core.findfdata(stream, implicits)
 
-            fdata_index = defaultdict(list)
-            for key, val in core.findfdata(stream, implicits):
-                fdata_index[key].append(val)
-
-            lf = dlis(stream, pool, fdata_index, sul)
+            lf = dlis(stream, pool, fdata, sul)
             lfs.append(lf)
 
             try:

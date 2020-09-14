@@ -577,7 +577,7 @@ const noexcept (true) {
         && value_variant_eq(this->value, o.value);
 }
 
-std::string obname::fingerprint(const std::string& type)
+dl::ident obname::fingerprint(const std::string& type)
 const noexcept (false) {
     const auto& origin = dl::decay(this->origin);
     const auto& copy = dl::decay(this->copy);
@@ -607,10 +607,10 @@ const noexcept (false) {
     if (err)
         throw std::runtime_error("fingerprint: something went wrong");
 
-    return std::string(str.begin(), str.end());
+    return dl::ident( std::string(str.begin(), str.end()) );
 }
 
-std::string objref::fingerprint() const noexcept (false) {
+dl::ident objref::fingerprint() const noexcept (false) {
     return this->name.fingerprint(dl::decay(this->type));
 }
 
@@ -996,12 +996,6 @@ const char* parse_set_component( const char* cur,
     if (role) *role = tmp_role;
     return cur;
 }
-
-bool exactmatcher::match(const dl::ident& pattern, const dl::ident& candidate)
-const noexcept (false) {
-    return pattern == candidate;
-}
-
 
 object_set::object_set(dl::record rec) noexcept (false)  {
         parse_set_component(rec.data.data(),
