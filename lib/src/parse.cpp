@@ -1075,6 +1075,36 @@ const char* object_set::parse_set_component(const char* cur) noexcept (false) {
         throw std::out_of_range( msg );
     }
 
+    switch (flags.role) {
+        case DLIS_ROLE_RDSET: {
+            dlis_error err {
+                dl::error_severity::MINOR,
+                "Redundant sets are not supported by dlisio",
+                "3.2.2.2 Component Usage: A Redundant Set is an identical copy "
+                    "of some Set written previously in the same Logical File",
+                "Redundant set is treated as a normal set, which might lead "
+                    "to issues with duplicated objects"
+            };
+            this->log.push_back(err);
+            break;
+        }
+        case DLIS_ROLE_RSET: {
+            dlis_error err {
+                dl::error_severity::MAJOR,
+                "Replacement sets are not supported by dlisio",
+                "3.2.2.2 Component Usage: Attributes of the Replacement Set "
+                    "reflect all updates that may have been applied since the "
+                    "original Set was written",
+                "Replacement set is treated as a normal set, which might lead "
+                    "to issues with duplicated objects and invalid information"
+            };
+            this->log.push_back(err);
+            break;
+        }
+        default:
+            break;
+    }
+
     /*
      * TODO: check for every read that inside [begin,end)?
      */

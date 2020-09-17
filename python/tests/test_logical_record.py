@@ -620,6 +620,36 @@ def test_novalue_more_count(tmpdir, merge_files_oneLR):
         with pytest.raises(NotImplementedError):
             f.load()
 
+def test_set_redundat(tmpdir, merge_files_oneLR, assert_info):
+    path = os.path.join(str(tmpdir), 'redundant-set.dlis')
+    content = [
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/redundant.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *tail):
+        _ = f.object('REDUNDANT', 'OBJECT', 1, 1)
+        assert_info("Redundant sets are not supported")
+
+def test_set_replacement(tmpdir, merge_files_oneLR, assert_log):
+    path = os.path.join(str(tmpdir), 'replacement-set.dlis')
+    content = [
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/replacement.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *tail):
+        _ = f.object('REPLACEMENT', 'OBJECT', 1, 1)
+        assert_log("Replacement sets are not supported")
+
 
 # these tests first of all verify findfdata method, which now belongs
 # both to physical and logical layers of processing.
