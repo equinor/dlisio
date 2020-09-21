@@ -64,7 +64,12 @@ def test_zeroed_before_vr(assert_error):
         assert_error("Incorrect format version")
         assert len(f.channels) == 1
 
-# TODO: test_extract
+def test_extract_broken_padbytes(assert_error):
+    path = 'data/chap2/padbytes-bad.dlis'
+    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+        assert_error("bad segment trim")
+        valid_obj = f.object("VALID-SET", "VALID-OBJ", 10, 0)
+        assert valid_obj
 
 # TODO: test_parse_exeptions
 

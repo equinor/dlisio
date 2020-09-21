@@ -43,7 +43,8 @@ old-vr.dlis                         Older visible record, see 2.3.6.2 Format
                                     Version of rp66v1
 
 padbytes-bad.dlis                   Mismatch between padbyte length and logical
-                                    record length
+                                    record length. Second LR in the file is
+                                    correct.
 
 padbytes-encrypted.dlis             Explicitly formatted logical record with
                                     encrypted padbytes

@@ -129,7 +129,7 @@ def load(path, error_handler = None):
             explicits, implicits, broken = core.findoffsets(stream, error_handler)
             hint = rewind(stream.absolute_tell, tapemarks)
 
-            recs  = core.extract(stream, explicits)
+            recs  = core.extract(stream, explicits, error_handler)
             sets  = core.parse_objects(recs)
             pool  = core.pool(sets)
             fdata = core.findfdata(stream, implicits)

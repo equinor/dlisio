@@ -997,11 +997,21 @@ PYBIND11_MODULE(core, m) {
     ;
 
     m.def( "extract", [](dl::stream& s,
-                        const std::vector< long long >& tells) {
+                        const std::vector< long long >& tells,
+                        dl::error_handler& errorhandler) {
         std::vector< dl::record > recs;
         recs.reserve( tells.size() );
         for (auto tell : tells) {
-            auto rec = dl::extract(s, tell);
+            dl::record rec;
+            try {
+                rec = dl::extract(s, tell);
+            } catch (const std::exception& e) {
+                const auto context =
+                    "dl::extract: Reading raw bytes from record";
+                errorhandler.log(dl::error_severity::CRITICAL, context,
+                                 e.what(), "", "Record is skipped");
+                continue;
+            }
             if (rec.data.size() > 0) {
                 recs.push_back( std::move( rec ) );
             }
