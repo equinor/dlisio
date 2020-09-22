@@ -718,7 +718,8 @@ def test_findfdata_bad_obname():
 
     # Obname is truncated by LRS-length, which in itself is fine as long as it
     # continues on the next LRS. However, in this case there are no new LRS.
-    assert 'File corrupted. Error on reading fdata obname' in str(excinfo.value)
+    msg = 'fdata record corrupted, error on reading obname'
+    assert msg in str(excinfo.value)
 
 def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'unexpected-attribute.dlis')

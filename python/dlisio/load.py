@@ -132,7 +132,7 @@ def load(path, error_handler = None):
             recs  = core.extract(stream, explicits, error_handler)
             sets  = core.parse_objects(recs)
             pool  = core.pool(sets)
-            fdata = core.findfdata(stream, implicits)
+            fdata = core.findfdata(stream, implicits, error_handler)
 
             lf = logicalfile(stream, pool, fdata, sul, error_handler)
             lfs.append(lf)

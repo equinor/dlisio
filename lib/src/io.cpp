@@ -529,8 +529,8 @@ noexcept (false) {
 }
 
 std::map< dl::ident, std::vector< long long > >
-findfdata(dl::stream& file, const std::vector< long long >& tells)
-noexcept (false) {
+findfdata(dl::stream& file, const std::vector< long long >& tells,
+dl::error_handler& errorhandler) noexcept (false) {
     std::map< dl::ident, std::vector< long long > > xs;
 
     constexpr std::size_t OBNAME_SIZE_MAX = 262;
@@ -538,8 +538,20 @@ noexcept (false) {
     record rec;
     rec.data.reserve( OBNAME_SIZE_MAX );
 
+    const auto handle = [&]( const std::string& problem ) {
+        const auto context = "dl::findfdata: Indexing implicit records";
+        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
+                         "Record is skipped");
+    };
+
     for (auto tell : tells) {
-        extract(file, tell, OBNAME_SIZE_MAX, rec);
+        try {
+            extract(file, tell, OBNAME_SIZE_MAX, rec);
+        } catch (std::exception& e) {
+            handle(e.what());
+            continue;
+        }
+
         if (rec.isencrypted()) continue;
         if (rec.type != 0) continue;
         if (rec.data.size() == 0) continue;
@@ -552,8 +564,10 @@ noexcept (false) {
 
         std::size_t obname_size = cur - rec.data.data();
         if (obname_size > rec.data.size()) {
-            auto msg = "File corrupted. Error on reading fdata obname";
-            throw std::runtime_error(msg);
+            const auto problem =
+                "fdata record corrupted, error on reading obname";
+            handle(problem);
+            continue;
         }
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
