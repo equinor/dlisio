@@ -42,6 +42,12 @@ def test_lrs_atributes_inconsistency():
         _ = dlisio.load('data/chap2/attrs-inconsistency-type-pred.dlis')
     assert "inconsistency" in str(excinfo.value)
 
+@pytest.mark.xfail(reason="not implemented", strict=True)
+def test_logical_file_lrs_inconsistency():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/lf_lrs_inconsistency.dlis')
+    assert "inconsistency" in str(excinfo.value)
+
 def test_padbytes_as_large_as_record():
     path = 'data/chap2/padbytes-large-as-record.dlis'
     with dlisio.load(path) as (f,):
@@ -91,6 +97,12 @@ def test_broken_vr():
         _ = dlisio.load('data/chap2/incomplete-vr.dlis')
     assert "file may be corrupted" in str(excinfo.value)
 
+@pytest.mark.xfail(reason="should raise", strict=True)
+def test_truncated_in_iflr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-in-iflr.dlis')
+    assert "findoffsets: file truncated" in str(excinfo.value)
+
 def test_truncated_in_second_lr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/truncated-in-second-lr.dlis')
@@ -101,10 +113,25 @@ def test_truncated_in_lrsh():
         _ = dlisio.load('data/chap2/truncated-in-lrsh.dlis')
     assert "unexpected EOF when reading record" in str(excinfo.value)
 
-def test_truncated_on_lrs():
+def test_truncated_in_lrsh_vr_over():
+    with pytest.raises(ValueError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-in-lrsh-vr-over.dlis')
+    assert "error parsing object set descriptor" in str(excinfo.value)
+
+def test_truncated_after_lrsh():
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load('data/chap2/truncated-on-lrs.dlis')
+        _ = dlisio.load('data/chap2/truncated-after-lrsh.dlis')
     assert "unexpected EOF when reading record" in str(excinfo.value)
+
+def test_truncated_lr_missing_lrs_in_vr():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-lr-no-lrs-in-vr.dlis')
+    assert "unexpected EOF when reading record" in str(excinfo.value)
+
+def test_truncated_lr_missing_lrs_vr_over():
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dlisio.load('data/chap2/truncated-lr-no-lrs-vr-over.dlis')
+    assert "extract: unable to read LRSH" in str(excinfo.value)
 
 def test_truncated_on_full_lr():
     with pytest.raises(RuntimeError) as excinfo:
