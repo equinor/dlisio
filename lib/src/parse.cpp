@@ -828,14 +828,22 @@ noexcept (false)
         }
 
         /*
-         * count is larger, so insert default values, maybe? for now, throw
-         * exception and consider what to do when a file actually uses this
-         * behaviour
+         * count is larger, which makes little sense. Likely file is already
+         * spoiled, but mark attribute as errored and attempt to continue
          */
-        const auto msg = "object attribute without no explicit value, but "
-                         "count (which is {}) > size (which is {})"
-        ;
-        throw dl::not_implemented(fmt::format(msg, count, size));
+        const auto msg =
+            "template value is not overridden by object attribute, but "
+            "count is. count ({}) > template count ({})";
+
+        dlis_error err {
+            dl::error_severity::CRITICAL,
+            fmt::format(msg, count, size),
+            "3.2.2.1 Component Descriptor: The number of Elements that "
+                "make up the Value is specified by the Count "
+                "Characteristic.",
+            "value is left as in template"
+        };
+        attr.log.push_back(err);
     }
 
     /*

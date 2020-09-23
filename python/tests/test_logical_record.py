@@ -605,20 +605,27 @@ def test_novalue_less_count(tmpdir, merge_files_oneLR, assert_log):
         assert_log("< template count")
 
 
-@pytest.mark.not_implemented
 def test_novalue_more_count(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'novalue-more-count.dlis')
     content = [
         'data/chap3/start.dlis.part',
         'data/chap3/template/default.dlis.part',
         'data/chap3/object/object.dlis.part',
-        'data/chap3/objattr/count9-novalue.dlis.part'
+        'data/chap3/objattr/count9-novalue.dlis.part',
+        'data/chap3/object/object2.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
     ]
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(RuntimeError):
-            f.load()
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = obj['DEFAULT_ATTRIBUTE']
+        assert "> template count" in str(excinfo.value)
+
+        obj2 = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
+        attr = obj2['DEFAULT_ATTRIBUTE']
+        assert attr == [1, 2, 3, 4]
 
 def test_set_redundat(tmpdir, merge_files_oneLR, assert_info):
     path = os.path.join(str(tmpdir), 'redundant-set.dlis')
