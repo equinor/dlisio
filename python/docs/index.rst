@@ -50,6 +50,13 @@ Standard (DLIS)`.
 
    examples
 
+.. toctree::
+   :caption: Q&A
+   :name: Q&A
+   :maxdepth: 1
+
+   beginner
+
 Indices and tables
 ==================
 
