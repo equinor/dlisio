@@ -199,13 +199,13 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
         frame = f.object("FRAME", "MAINFRAME")
         _ = memoryview(np.zeros(1, dtype = frame.dtype()))
 
-def test_duplicated_signatures(assert_log):
+def test_duplicated_signatures(assert_error):
     fpath = "data/chap4-7/eflr/frames-and-channels/duplicated.dlis"
     with dlisio.load(fpath) as (f, *_):
         frame = f.object("FRAME", "DUPLICATED")
         with pytest.raises(Exception):
             _ = frame.curves()
-        assert_log("duplicated mnemonics")
+        assert_error("duplicated mnemonics")
 
         curves = frame.curves(strict=False)
         names  = curves.dtype.names
@@ -291,14 +291,14 @@ def test_dtype_fmt_class():
     ("x-{:d}.{:s}.{:d}"),
     ("x-{:s}.{:d}.{:d}.{:d}"),
 ])
-def test_dtype_wrong_fmt(fmt, assert_log):
+def test_dtype_wrong_fmt(fmt, assert_error):
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
     with dlisio.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         frame.dtype_fmt = fmt
         with pytest.raises(Exception):
             _ = frame.dtype().names
-        assert_log("rich label")
+        assert_error("rich label")
 
 
 def test_channel_curves():
