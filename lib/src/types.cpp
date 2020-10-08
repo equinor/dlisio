@@ -342,12 +342,30 @@ const char* dlis_vsingl( const char* xs, float* out ) {
     std::uint32_t exp_bits = (v & 0x7F800000) >> 23;
 
     float sign = sign_bit ? -1.0 : 1.0;
-    float exponent = float( exp_bits );
-    float significand = frac_bits / float( 0x00800000 );
+    float exponent = float( exp_bits ) - 128.0f;
+
+    /* VAX floats have a 24 bit normalized mantissa where the MSB is hidden.
+     * That is, the normalized mantissa takes the form 0.1m where m is the 23
+     * bits on disk, and 1 is the hidden bit that is _not_ present on disk [1].
+     *
+     * This is similar to the 24 bit normalized mantissa of the IEEE 754 float,
+     * but the difference being that IEEE float defines the hidden bit before
+     * the point (1.m).
+     *
+     * The implicit hidden bit must be explicitly masked in before calculating
+     * the value of the mantissa.
+     *
+     * [1] https://pubs.usgs.gov/of/2005/1424/of2005-1424_v1.2.pdf
+     */
+
+    float significand = (float)(frac_bits | 0x00800000) / std::pow(2.0f, 24);
 
     if (exp_bits)
-        *out = sign * (0.5 + significand) * std::pow(2.0f, exponent - 128.0f);
+        *out = sign * significand * std::pow(2.0f, exponent);
     else if (!sign_bit)
+        /* Unlike a IEEE 754 float there is no denormalized form in VAX floats.
+         * if e=0, s=0  -> v = 0, or if e=0, s=1 -> v = undefined
+         */
         *out = 0;
     else
         *out = std::nanf("");
@@ -476,7 +494,7 @@ void* dlis_vsinglo( void* xs, float x ) {
 
     std::uint32_t sign_bit = (u & 0x80000000);
     std::uint32_t exp_bits = (u & 0x7F800000) >> 23;
-    std::uint32_t frac_bits = (u & 0x007FFFFE) >> 1;
+    std::uint32_t frac_bits = (u & 0x007FFFFF);
 
     if( !exp_bits ){
         std::uint32_t zeros = 0;

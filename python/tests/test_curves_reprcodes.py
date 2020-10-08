@@ -205,7 +205,7 @@ def test_vsingl_x2():
     fpath = 'data/chap4-7/iflr/reprcodes-x2/06-vsingl.dlis'
     curves = load_curves(fpath)
     assert curves[0][1] == 0.125
-    assert curves[1][1] == -26.5
+    assert curves[1][1] == -21.25
 
 def test_fdoubl_x2():
     fpath = 'data/chap4-7/iflr/reprcodes-x2/07-fdoubl.dlis'
