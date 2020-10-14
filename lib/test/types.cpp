@@ -638,24 +638,65 @@ TEST_CASE("ibm single precision float", "[type]") {
 }
 
 TEST_CASE("vax single precision float", "[type]") {
-    const std::array< bytes< 4 >, 3 > inputs = {{
-        { 0x00, 0x00, 0x00, 0x00 }, // 0
-        { 0x0C, 0x44, 0x00, 0x80 }, // 153
-        { 0x0C, 0xC4, 0x00, 0x80 }, // -153
+    const std::array< bytes< 4 >, 15 > inputs = {{
+        { 0x00, 0x00, 0x00, 0x00 }, //  0
+        { 0x19, 0x44, 0x00, 0x00 }, //  153
+        { 0x19, 0xC4, 0x00, 0x00 }, // -153
+        { 0x80, 0x40, 0x00, 0x00 }, //  1.000000
+        { 0x80, 0xC0, 0x00, 0x00 }, // -1.000000
+        { 0x60, 0x41, 0x00, 0x00 }, //  3.500000
+        { 0x60, 0xC1, 0x00, 0x00 }, // -3.500000
+        { 0x49, 0x41, 0xD0, 0x0F }, //  3.141590
+        { 0x49, 0xC1, 0xD0, 0x0F }, // -3.141590
+        { 0xF0, 0x7D, 0xC2, 0xBD }, //  9.9999999E+36
+        { 0xF0, 0xFD, 0xC2, 0xBD }, // -9.9999999E+36
+        { 0x08, 0x03, 0xEA, 0x1C }, //  9.9999999E-38
+        { 0x08, 0x83, 0xEA, 0x1C }, // -9.9999999E-38
+        { 0x9E, 0x40, 0x53, 0x06 }, //  1.234568
+        { 0x9E, 0xC0, 0x53, 0x06 }, // -1.234568
     }};
 
     const std::array< float, inputs.size() > expected = {
         0.0,
         153,
         -153,
+        1.000000,
+        -1.000000,
+        3.500000,
+        -3.500000,
+        3.141590,
+        -3.141590,
+        9.9999999E+36,
+        -9.9999999E+36,
+        9.9999999E-38,
+        -9.9999999E-38,
+        1.234568,
+        -1.234568,
     };
 
     SECTION( "to native" ) {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v;
             dlis_vsingl( inputs[ i ], &v );
-            CHECK( v == expected[ i ] );
+            CHECK( v == Approx(expected[ i ]).epsilon(0.0000001));
         }
+    }
+
+    SECTION( "to native - undefined" ) {
+        bytes<4> vax_undef = { 0x00, 0x80, 0x01, 0x00 }; // s=1, e=0, m=!0
+
+        float v;
+        dlis_vsingl( vax_undef, &v );
+        CHECK( std::isnan(v) );
+    }
+
+    SECTION( "to native - dirty zero" ) {
+        bytes<4> vax_undef = { 0x00, 0x00, 0xF3, 0xFF }; // s=0, e=0, m=!0
+        float expected = 0.0;
+
+        float v;
+        dlis_vsingl( vax_undef, &v );
+        CHECK( v == expected);
     }
 
     SECTION( "from native" ) {

@@ -221,7 +221,7 @@ TEST_CASE_METHOD(check_packsize, "pack floats", "[pack]") {
         0xC3, 0x19, 0x00, 0x00, //-153 fsingl
         0xC1, 0xC0, 0x00, 0x00, //-12 isingl
         0x45, 0x10, 0x00, 0x08, //65536.5 isingl
-        0xAA, 0xC2, 0x00, 0x00, //-26.5 vsingl
+        0xAA, 0xC2, 0x00, 0x00, //-21.25 vsingl
         0x00, 0x3F, 0x00, 0x00, //0.125 vsingl
     };
 
@@ -238,7 +238,7 @@ TEST_CASE_METHOD(check_packsize, "pack floats", "[pack]") {
     CHECK( dst[ 3 ] == -153.0 );
     CHECK( dst[ 4 ] == -12 );
     CHECK( dst[ 5 ] == 65536.5 );
-    CHECK( dst[ 6 ] == -26.5 );
+    CHECK( dst[ 6 ] == -21.25 );
     CHECK( dst[ 7 ] == 0.125 );
 }
 
