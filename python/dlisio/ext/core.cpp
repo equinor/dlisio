@@ -637,7 +637,8 @@ py::object read_fdata(const char* pre_fmt,
                       dl::stream& file,
                       const std::vector< long long >& indices,
                       std::size_t itemsize,
-                      py::object alloc)
+                      py::object alloc,
+                      dl::error_handler& errorhandler)
 noexcept (false) {
     // TODO: reverse fingerprint to skip bytes ahead-of-time
     /*
@@ -688,6 +689,7 @@ noexcept (false) {
         dst = static_cast< unsigned char* >(info.ptr);
     };
 
+
     /*
      * The frameno is a part of the dtype, and only frame.channels is allowed
      * to call this function. If pre/post format is set, wrong data is read.
@@ -698,13 +700,33 @@ noexcept (false) {
     assert(std::string(pre_fmt) == "");
     assert(std::string(post_fmt) == "");
 
+    auto record_dst = dst;
+
+    const auto handle = [&]( const std::string& problem ) {
+        const auto context = "dl::read_fdata: reading curves";
+        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
+                         "Record is skipped");
+        // we update the buffer as we go. Hence if error happened we need to
+        // go back and start rewriting updated data
+        dst = record_dst;
+    };
+
     int frames = 0;
     for (auto i : indices) {
+        record_dst = dst;
+
         /* get record */
-        auto record = dl::extract(file, i);
+        dl::record record;
+        try {
+            record = dl::extract(file, i);
+        } catch (std::exception& e) {
+            handle(e.what());
+            continue;
+        }
 
         if (record.isencrypted()) {
-            throw dl::not_implemented("encrypted FDATA record");
+            handle("encrypted FDATA record");
+            continue;
         }
 
         const auto* ptr = record.data.data();
@@ -715,8 +737,13 @@ noexcept (false) {
         std::uint8_t copy;
         ptr = dlis_obname(ptr, &origin, &copy, nullptr, nullptr);
 
-        read_fdata_record(pre_fmt, fmt, post_fmt, ptr, end, dst, frames,
-                          itemsize, allocated_rows, resize);
+        try {
+            read_fdata_record(pre_fmt, fmt, post_fmt, ptr, end, dst, frames,
+                              itemsize, allocated_rows, resize);
+        } catch (std::exception& e) {
+            handle(e.what());
+            continue;
+        }
     }
 
     assert(allocated_rows >= frames);

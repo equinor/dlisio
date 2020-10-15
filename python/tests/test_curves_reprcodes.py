@@ -385,3 +385,9 @@ def test_ascii_broken():
 def test_ascii_broken_utf8():
     fpath = 'data/chap4-7/iflr/broken-utf8-ascii.dlis'
     _ = load_curves(fpath)
+
+def test_fmt_broken():
+    fpath = 'data/chap4-7/iflr/broken-fmt.dlis'
+    with pytest.raises(RuntimeError) as exc:
+        _ = load_curves(fpath)
+    assert "fmtstr would read past end" in str(exc.value)
