@@ -48,11 +48,12 @@ def test_logical_file_lrs_inconsistency():
     msg = "logical file, but last logical record segment expects successor"
     assert msg in str(excinfo.value)
 
-def test_padbytes_as_large_as_record():
+def test_padbytes_as_large_as_record(assert_info):
     path = 'data/chap2/padbytes-large-as-record.dlis'
     with dlisio.load(path) as (f,):
         assert len(f.find('.*', '.*')) == 0
         assert len(f.fdata_index) == 0
+        assert_info("= logical record segment length")
 
 def test_padbytes_as_large_as_segment_explicit():
     path = 'data/chap2/padbytes-large-as-seg-explict.dlis'

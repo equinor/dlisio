@@ -718,7 +718,7 @@ noexcept (false) {
         /* get record */
         dl::record record;
         try {
-            record = dl::extract(file, i);
+            record = dl::extract(file, i, errorhandler);
         } catch (std::exception& e) {
             handle(e.what());
             continue;
@@ -1069,7 +1069,7 @@ PYBIND11_MODULE(core, m) {
         for (auto tell : tells) {
             dl::record rec;
             try {
-                rec = dl::extract(s, tell);
+                rec = dl::extract(s, tell, errorhandler);
             } catch (const std::exception& e) {
                 const auto context =
                     "dl::extract: Reading raw bytes from record";

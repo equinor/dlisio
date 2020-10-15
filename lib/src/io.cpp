@@ -177,7 +177,8 @@ bool type_consistent( const T& ) noexcept (true) {
 void trim_segment(std::uint8_t attrs,
                   const char* begin,
                   int segment_size,
-                  std::vector< char >& segment)
+                  std::vector< char >& segment,
+                  dl::error_handler& errorhandler)
 noexcept (false) {
     int trim = 0;
     const auto* end = begin + segment_size;
@@ -188,22 +189,27 @@ noexcept (false) {
             segment.resize(segment.size() - trim);
             return;
 
-        case DLIS_BAD_SIZE:
+        case DLIS_BAD_SIZE: {
             if (trim - segment_size != DLIS_LRSH_SIZE) {
                 const auto msg =
-                    "bad segment trim: padbytes (which is {}) "
+                    "bad segment trim: trim size (which is {}) "
                     ">= segment.size() (which is {})";
                 throw std::runtime_error(fmt::format(msg, trim, segment_size));
             }
 
-            /*
-             * padbytes included the segment header. It's larger than
-             * the segment body, but only because it also counts the
-             * header. accept that, pretend the body was never added,
-             * and move on.
-             */
+            errorhandler.log(
+                dl::error_severity::MINOR,
+                "extract (trim_segment)",
+                "trim size (padbytes + checksum + trailing length) = logical "
+                    "record segment length",
+                "[from 2.2.2.1 Logical Record Segment Header (LRSH) and "
+                    "2.2.2.4 Logical Record Segment Trailer (LRST) situation "
+                    "should be impossible]",
+                "Segment is skipped");
+
             segment.resize(segment.size() - segment_size);
             return;
+        }
 
         default:
             throw std::invalid_argument("dlis_trim_record_segment");
@@ -299,14 +305,16 @@ template < typename T >
 using shortvec = std::basic_string< T >;
 
 
-record extract(stream& file, long long tell) noexcept (false) {
+record extract(stream& file, long long tell, error_handler& errorhandler)
+noexcept (false) {
     record rec;
     rec.data.reserve( 8192 );
     auto nbytes = std::numeric_limits< std::int64_t >::max();
-    return extract(file, tell, nbytes, rec);
+    return extract(file, tell, nbytes, rec, errorhandler);
 }
 
-record& extract(stream& file, long long tell, long long bytes, record& rec) noexcept (false) {
+record& extract(stream& file, long long tell, long long bytes, record& rec,
+                error_handler& errorhandler) noexcept (false) {
     shortvec< std::uint8_t > attributes;
     shortvec< int > types;
     bool consistent = true;
@@ -359,7 +367,7 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
          */
 
         const auto* fst = rec.data.data() + prevsize;
-        trim_segment(attrs, fst, len, rec.data);
+        trim_segment(attrs, fst, len, rec.data, errorhandler);
 
         /* if the whole segment is getting trimmed, it's unclear if successor
          * attribute should be erased or not.  For now ignoring.  Suspecting
@@ -546,7 +554,7 @@ dl::error_handler& errorhandler) noexcept (false) {
 
     for (auto tell : tells) {
         try {
-            extract(file, tell, OBNAME_SIZE_MAX, rec);
+            extract(file, tell, OBNAME_SIZE_MAX, rec, errorhandler);
         } catch (std::exception& e) {
             handle(e.what());
             continue;

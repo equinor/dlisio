@@ -69,8 +69,9 @@ long long findsul(stream&) noexcept (false);
 long long findvrl(stream&, long long) noexcept (false);
 bool hastapemark(stream&) noexcept (false);
 
-dl::record extract(stream&, long long) noexcept (false);
-dl::record& extract(stream&, long long, long long, dl::record&) noexcept (false);
+dl::record extract(stream&, long long, dl::error_handler&) noexcept (false);
+dl::record& extract(stream&, long long, long long, dl::record&,
+    dl::error_handler&) noexcept (false);
 
 stream_offsets findoffsets(dl::stream&, dl::error_handler&) noexcept (false);
 
