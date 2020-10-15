@@ -63,7 +63,7 @@ class Group(BasicObject):
     @property
     def objects(self):
         try:
-            ref = self.attic['OBJECT-LIST'][0]
+            ref = self.attic['OBJECT-LIST'].values[0]
         except (KeyError, IndexError):
             return []
 

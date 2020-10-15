@@ -87,13 +87,13 @@ def test_channel(f):
     assert channel.properties             == ["AVERAGED", "DERIVED", "PATCHED"]
     assert channel.reprc                  == 16
     assert channel.dimension              == [4, 3, 2]
-    assert channel.attic["DIMENSION"]     == [2, 3, 4]
+    assert channel.attic["DIMENSION"].values     == [2, 3, 4]
     assert channel.axis                   == [axis3, axis2, axis1]
-    assert channel.attic["AXIS"]          == [(10, 0, 'AXIS1'),
+    assert channel.attic["AXIS"].values          == [(10, 0, 'AXIS1'),
                                               (10, 0, 'AXIS2'),
                                               (10, 0, 'AXIS3')]
     assert channel.element_limit          == [11, 15, 10]
-    assert channel.attic["ELEMENT-LIMIT"] == [10, 15, 11]
+    assert channel.attic["ELEMENT-LIMIT"].values == [10, 15, 11]
     assert channel.source                 == tool
 
 def test_frame(f):
@@ -139,11 +139,11 @@ def test_parameter(f):
 
     assert p.long_name           == longname
     assert p.dimension           == [2, 3]
-    assert p.attic["DIMENSION"]  == [3, 2]
+    assert p.attic["DIMENSION"].values  == [3, 2]
     assert p.axis                == [axis3, axis2]
-    assert len(p.attic["AXIS"])  == 2
+    assert len(p.attic["AXIS"].values)  == 2
     assert p.zones               == [zoneA, None, None, None]
-    assert len(p.attic["ZONES"]) == 4
+    assert len(p.attic["ZONES"].values) == 4
 
     sample = np.reshape(np.array([1, 2, 3, 4, 5, 6]), (2,3))
 
@@ -196,7 +196,7 @@ def test_tool(f):
     assert tool.status                   == True
     assert tool.channels                 == [channel1, channel2]
     assert tool.parameters               == [param1, None, param2]
-    assert len(tool.attic['PARAMETERS']) == 3
+    assert len(tool.attic['PARAMETERS'].values) == 3
 
 def test_message(f):
     mes = f.object('MESSAGE', 'MESSAGE1', 10, 0)
@@ -219,7 +219,7 @@ def test_measurement(f):
     assert m.source             == tool
     assert m.mtype              == "Zero"
     assert m.dimension          == [3, 2]
-    assert m.attic["DIMENSION"] == [2, 3]
+    assert m.attic["DIMENSION"].values == [2, 3]
     assert m.axis               == [axis2, axis1]
     assert m.samplecount        == 4
     assert m.begin_time         == 13447
@@ -280,7 +280,7 @@ def test_computation(f):
     assert com.long_name          == 'computation object 2'
     assert com.properties         == ['MUDCAKE-CORRECTED', 'DEPTH-MATCHED']
     assert com.dimension          == [4, 2]
-    assert com.attic["DIMENSION"] == [2, 4]
+    assert com.attic["DIMENSION"].values == [2, 4]
     assert com.axis               == [axis3, axis2]
     assert com.zones              == [zone]
     assert com.source             == process
@@ -296,17 +296,17 @@ def test_splice(f):
 
     # Output channel does not exist, but should be accessible through attic
     assert splice.output_channel == None
-    assert splice.attic['OUTPUT-CHANNEL'][0].id         == 'CHANN-NEW'
-    assert splice.attic['OUTPUT-CHANNEL'][0].origin     == 10
-    assert splice.attic['OUTPUT-CHANNEL'][0].copynumber ==  0
+    assert splice.attic['OUTPUT-CHANNEL'].values[0].id         == 'CHANN-NEW'
+    assert splice.attic['OUTPUT-CHANNEL'].values[0].origin     == 10
+    assert splice.attic['OUTPUT-CHANNEL'].values[0].copynumber ==  0
 
     assert splice.input_channels == [in1, in2]
 
     # Second zone does not exist, but should be accessible through attic
     assert splice.zones                       == [zone1 , None]
-    assert splice.attic['ZONES'][1].id         == 'ZONE-B'
-    assert splice.attic['ZONES'][1].origin     == 10
-    assert splice.attic['ZONES'][1].copynumber == 0
+    assert splice.attic['ZONES'].values[1].id         == 'ZONE-B'
+    assert splice.attic['ZONES'].values[1].origin     == 10
+    assert splice.attic['ZONES'].values[1].copynumber == 0
 
 def test_wellref(f):
     wellref = f.object('WELL-REFERENCE', 'THE-WELL', 10, 0)
@@ -322,14 +322,17 @@ def test_wellref(f):
     assert wellref.coordinates['elevation']  == 0.25
 
 def test_wellref_coordinates():
+    from collections import namedtuple
+    Attr = namedtuple('attr', ['values', 'units'], defaults=[[], None])
+
     wellref = dlisio.plumbing.wellref.Wellref()
     wellref.attic = {
-        'COORDINATE-2-VALUE' : [2],
-        'COORDINATE-1-NAME'  : ['longitude'],
-        'COORDINATE-3-NAME'  : ['elevation'],
-        'COORDINATE-1-VALUE' : [1],
-        'COORDINATE-3-VALUE' : [3],
-        'COORDINATE-2-NAME'  : ['latitude'],
+        'COORDINATE-2-VALUE' : Attr([2]),
+        'COORDINATE-1-NAME'  : Attr(['longitude']),
+        'COORDINATE-3-NAME'  : Attr(['elevation']),
+        'COORDINATE-1-VALUE' : Attr([1]),
+        'COORDINATE-3-VALUE' : Attr([3]),
+        'COORDINATE-2-NAME'  : Attr(['latitude']),
     }
 
     assert wellref.coordinates['longitude']  == 1

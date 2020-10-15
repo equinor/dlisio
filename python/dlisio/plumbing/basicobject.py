@@ -206,7 +206,7 @@ class BasicObject():
             parse_as = vector
 
         try:
-            rp66value = self.attic[key]
+            rp66value = self.attic[key].values
         except KeyError:
             return defaultvalue(parse_as)
 
@@ -259,7 +259,7 @@ class BasicObject():
             all attributes not defined in :attr:`attributes`
         """
         stash = {
-            key : self.attic[key]
+            key : self.attic[key].values
             for key
             in self.attic.keys()
             if key not in self.attributes

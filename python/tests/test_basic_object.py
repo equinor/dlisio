@@ -5,6 +5,7 @@ import pytest
 import dlisio
 from dlisio.plumbing import *
 
+from collections import namedtuple
 
 def test_getitem(f):
     obj = f.object('FRAME', 'FRAME1')
@@ -111,9 +112,10 @@ def test_parse_attribute_reverse_unexpected_element(assert_log):
 
 def test_valuetype_mismatch(assert_log):
     tool = dlisio.plumbing.tool.Tool()
+    Attr = namedtuple('attr', ['values', 'units'], defaults=[[], None])
     tool.attic = {
-        'DESCRIPTION' : ["Description", "Unexpected description"],
-        'STATUS'      : ["Yes", 0],
+        'DESCRIPTION' : Attr(["Description", "Unexpected description"]),
+        'STATUS'      : Attr(["Yes", 0])
     }
 
     assert tool.description == "Description"

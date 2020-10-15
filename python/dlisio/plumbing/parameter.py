@@ -82,6 +82,10 @@ class Parameter(BasicObject):
         return self['ZONES']
 
     @property
+    def unit(self):
+        return self.attic['VALUES'].units
+
+    @property
     def values(self):
         """ Parameter values
 
@@ -127,7 +131,7 @@ class Parameter(BasicObject):
         Zone('ZONE-A')
         """
         try:
-            values = self.attic['VALUES']
+            values = self.attic['VALUES'].values
         except KeyError:
             return np.empty(0)
 

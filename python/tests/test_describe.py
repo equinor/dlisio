@@ -130,9 +130,12 @@ def test_describe_header():
 
 def test_describe_description():
     ln = Longname()
+    from collections import namedtuple
+    Attr = namedtuple('attr', ['values', 'units'], defaults=[[], None])
+
     ln.attic = {
-        'QUANTITY'           : ['diameter and stuff'],
-        'SOURCE-PART-NUMBER' : [10]
+        'QUANTITY'           : Attr(['diameter and stuff']),
+        'SOURCE-PART-NUMBER' : Attr([10])
     }
     # description is a Longname object
     case1 = (' Description\n'

@@ -10,6 +10,9 @@ from dlisio.plumbing import Parameter
 
 import dlisio
 
+from collections import namedtuple
+Attr = namedtuple('attr', ['values', 'units'], defaults=[[], None])
+
 class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
     attributes = {
         "SOME_LIST"   : valuetypes.vector,
@@ -104,10 +107,10 @@ def test_type_removal(f):
 
 def test_attribute_change_in_instance():
     ch1 = Channel()
-    ch1.attic['PROPERTIES'] = [10]
+    ch1.attic['PROPERTIES'] = Attr([10])
 
     ch2 = Channel()
-    ch2.attic['PROPERTIES'] = [10]
+    ch2.attic['PROPERTIES'] = Attr([10])
 
     # Change properties to be parsed as scalar (not vector)
     ch1.attributes = dict(ch1.attributes)
@@ -120,10 +123,10 @@ def test_attribute_change_in_instance():
 
 def test_attribute_change_in_class():
     ch1 = Channel()
-    ch1.attic['PROPERTIES'] = [10]
+    ch1.attic['PROPERTIES'] = Attr([10])
 
     ch2 = Channel()
-    ch2.attic['PROPERTIES'] = [10]
+    ch2.attic['PROPERTIES'] = Attr([10])
 
     try:
         # Change properties to be parsed as scalar (not vector)

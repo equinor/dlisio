@@ -12,6 +12,10 @@ from datetime import datetime
 
 from dlisio.plumbing import *
 
+from collections import namedtuple
+Attr = namedtuple('attr', ['values', 'units'], defaults=[[], None])
+
+
 def test_sampling_scalar_dims():
     raw = [1, 2, 3, 4, 5, 6]
     dimensions = [1]
@@ -95,7 +99,7 @@ def test_validshape_inconsistent_dims():
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_empty(obj):
-    obj.attic = {'VALUES' : [], 'DIMENSION' : [], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([]), 'DIMENSION' : Attr([]), 'ZONES' : Attr([])}
 
     assert np.array_equal(obj.values, np.empty(0))
     assert obj.dimension == []
@@ -104,7 +108,7 @@ def test_values_empty(obj):
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_empty_dimension_provided(obj):
-    obj.attic = {'VALUES' : [], 'DIMENSION' : [1], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([]), 'DIMENSION' : Attr([1]), 'ZONES' : Attr([])}
 
     assert np.array_equal(obj.values, np.empty(0))
     assert obj.dimension == [1]
@@ -113,97 +117,97 @@ def test_values_empty_dimension_provided(obj):
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_simple(obj):
-    obj.attic = {'VALUES' : [14], 'DIMENSION' : [1], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([14]), 'DIMENSION' : Attr([1]), 'ZONES' : Attr([])}
 
     assert obj.values[0] == 14
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_infer_simple(obj):
-    obj.attic = {'VALUES' : [14], 'DIMENSION' : [], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([14]), 'DIMENSION' : Attr([]), 'ZONES' : Attr([])}
 
     assert obj.values[0] == 14
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_one_sample(obj):
-    obj.attic = {'VALUES' : [1, 2], 'DIMENSION' : [2], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([1, 2]), 'DIMENSION' : Attr([2]), 'ZONES' : Attr([])}
 
     assert list(obj.values[0]) == [1, 2]
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_wrong_dimensions(obj):
-    obj.attic = {'VALUES' : [1, 2, 3, 4, 5], 'DIMENSION' : [2], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([1, 2, 3, 4, 5]), 'DIMENSION' : Attr([2]), 'ZONES' : Attr([])}
 
     msg  = 'cannot reshape array of size 5 into shape [2]'
     with pytest.raises(ValueError) as error:
         _ = obj.values
     assert str(error.value) == msg
-    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
+    assert np.array_equal(obj.attic['VALUES'].values, np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_wrong_dimensions_wrong_zones(obj):
     obj.attic = {
-        'VALUES'    : [1, 2, 3, 4, 5],
-        'DIMENSION' : [2],
-        'ZONES'     : [None for _ in range(4)]
+        'VALUES'    : Attr([1, 2, 3, 4, 5]),
+        'DIMENSION' : Attr([2]),
+        'ZONES'     : Attr([None for _ in range(4)])
     }
 
     msg  = 'cannot reshape array of size 5 into shape [2]'
     with pytest.raises(ValueError) as error:
         _ = obj.values
     assert str(error.value) == msg
-    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
+    assert np.array_equal(obj.attic['VALUES'].values, np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_infer_dimensions_from_zones(obj):
     obj.attic = {
-        'VALUES'    : [1, 2, 3, 4, 5],
-        'DIMENSION' : [],
-        'ZONES'     : [None for _ in range(5)]
+        'VALUES'    : Attr([1, 2, 3, 4, 5]),
+        'DIMENSION' : Attr([]),
+        'ZONES'     : Attr([None for _ in range(5)])
     }
 
     # Should be able to infer correct dimension from zones
     assert np.array_equal(obj.values, np.array([1, 2, 3, 4, 5]))
-    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
+    assert np.array_equal(obj.attic['VALUES'].values, np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_no_dimensions_wrong_zones(obj):
     obj.attic = {
-        'VALUES'    : [1],
-        'DIMENSION' : [],
-        'ZONES'     : [None for _ in range(2)]
+        'VALUES'    : Attr([1]),
+        'DIMENSION' : Attr([]),
+        'ZONES'     : Attr([None for _ in range(2)])
     }
 
     # Should use dimension over zones
     assert np.array_equal(obj.values, np.array([1]))
-    assert np.array_equal(obj.attic['VALUES'], np.array([1]))
+    assert np.array_equal(obj.attic['VALUES'].values, np.array([1]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_right_dimensions_wrong_zones(obj):
     obj.attic = {
-        'VALUES'    : [1, 2, 3, 4],
-        'DIMENSION' : [2],
-        'ZONES'     : [None for _ in range(5)]
+        'VALUES'    : Attr([1, 2, 3, 4]),
+        'DIMENSION' : Attr([2]),
+        'ZONES'     : Attr([None for _ in range(5)])
     }
 
     # Should use dimension over zones
     assert np.array_equal(obj.values, np.array([[1, 2 ], [3, 4]]))
-    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
+    assert np.array_equal(obj.attic['VALUES'].values, np.array([1, 2, 3, 4]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_right_dimensions_right_zones(obj):
     obj.attic = {
-        'VALUES'    : [1, 2, 3, 4],
-        'DIMENSION' : [2],
-        'ZONES'     : [None, None]
+        'VALUES'    : Attr([1, 2, 3, 4]),
+        'DIMENSION' : Attr([2]),
+        'ZONES'     : Attr([None, None])
     }
 
     assert np.array_equal(obj.values, np.array([[1, 2 ], [3, 4]]))
-    assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
+    assert np.array_equal(obj.attic['VALUES'].values, np.array([1, 2, 3, 4]))
 
 @pytest.mark.parametrize('obj', [Parameter(), Computation()])
 def test_values_multidim_values(obj):
-    obj.attic = {'VALUES' : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                   'DIMENSION' : [2, 3], 'ZONES' : []}
+    obj.attic = {'VALUES' : Attr([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+                   'DIMENSION' : Attr([2, 3]), 'ZONES' : Attr()}
 
     assert list(obj.values[0][1]) == [3, 4]
     assert list(obj.values[1][2]) == [11, 12]
@@ -220,19 +224,19 @@ def test_values_multidim_values(obj):
 ])
 def test_parameter_computation_repcode(value):
     param = Parameter()
-    param.attic = {'DIMENSION' : [], 'ZONES' : []}
+    param.attic = {'DIMENSION' : Attr(), 'ZONES' : Attr()}
 
-    param.attic['VALUES'] = [value]
+    param.attic['VALUES'] = Attr([value])
     assert np.array_equal(param.values[0], value)
 
     comput = Computation()
-    comput.attic = {'DIMENSION' : [], 'ZONES' : []}
-    comput.attic['VALUES'] = [value]
+    comput.attic = {'DIMENSION' : Attr(), 'ZONES' : Attr()}
+    comput.attic['VALUES'] = Attr([value])
     assert np.array_equal(comput.values[0], value)
 
 def test_measurement_empty():
     m = Measurement()
-    m.attic = {'MEASUREMENT' : [], 'REFERENCE' : [], 'DIMENSION' : []}
+    m.attic = {'MEASUREMENT' : Attr(), 'REFERENCE' : Attr(), 'DIMENSION' : Attr()}
 
     assert m.samples.size       == 0
     assert m.reference.size     == 0
@@ -242,7 +246,7 @@ def test_measurement_empty():
 
 def test_measurement_dimension():
     m = Measurement()
-    m.attic = {'MEASUREMENT' : [], 'DIMENSION' : [3, 5]}
+    m.attic = {'MEASUREMENT' : Attr(), 'DIMENSION' : Attr([3, 5])}
 
     assert m.samples.size   == 0
     assert m.reference.size == 0
@@ -251,26 +255,26 @@ def test_measurement_dimension():
 
 def test_measurement_wrong_dimension_samples():
     m = Measurement()
-    m.attic = {'MEASUREMENT' : [1, 2, 3], 'DIMENSION' : [3, 5]}
+    m.attic = {'MEASUREMENT' : Attr([1, 2, 3]), 'DIMENSION' : Attr([3, 5])}
 
     msg = 'cannot reshape array of size 3 into shape [5, 3]'
     with pytest.raises(ValueError) as error:
         _ = m.samples
 
     assert str(error.value) == msg
-    assert m.attic['MEASUREMENT'] == [1, 2, 3]
+    assert m.attic['MEASUREMENT'] == Attr([1, 2, 3])
     assert m.dimension == [5, 3]
 
 def test_measurement_many_samples():
     m = Measurement()
     m.attic = {
-        'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        'MAXIMUM-DEVIATION' : [2, 3, 2, 1],
-        'STANDARD-DEVIATION': [3, 2, 5, 6],
-        'REFERENCE'         : [3, 6, 9, 12],
-        'PLUS-TOLERANCE'    : [0.4, 0.2, 0.1, 0.3],
-        'MINUS-TOLERANCE'   : [0.5, 0.1, 0, 1],
-        'DIMENSION'         : [4]
+        'MEASUREMENT'       : Attr([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        'MAXIMUM-DEVIATION' : Attr([2, 3, 2, 1]),
+        'STANDARD-DEVIATION': Attr([3, 2, 5, 6]),
+        'REFERENCE'         : Attr([3, 6, 9, 12]),
+        'PLUS-TOLERANCE'    : Attr([0.4, 0.2, 0.1, 0.3]),
+        'MINUS-TOLERANCE'   : Attr([0.5, 0.1, 0, 1]),
+        'DIMENSION'         : Attr([4])
     }
 
     assert np.array_equal(m.samples[0], np.array([1, 2, 3, 4]))
@@ -286,13 +290,13 @@ def test_measurement_many_samples():
 def test_measurement_non_corresponding_values():
     m = Measurement()
     m.attic = {
-        'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        'MAXIMUM-DEVIATION' : [2, 3, 2],
-        'STANDARD-DEVIATION': [3, 2],
-        'REFERENCE'         : [3, 6],
-        'PLUS-TOLERANCE'    : [0.4, 0.2, 0.1, 0.3, 0.5],
-        'MINUS-TOLERANCE'   : [0.5, 0.1, 0],
-        'DIMENSION'         : [4]
+        'MEASUREMENT'       : Attr([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
+        'MAXIMUM-DEVIATION' : Attr([2, 3, 2]),
+        'STANDARD-DEVIATION': Attr([3, 2]),
+        'REFERENCE'         : Attr([3, 6]),
+        'PLUS-TOLERANCE'    : Attr([0.4, 0.2, 0.1, 0.3, 0.5]),
+        'MINUS-TOLERANCE'   : Attr([0.5, 0.1, 0]),
+        'DIMENSION'         : Attr([4])
     }
 
     msg = 'cannot reshape array of size {} into shape 4'
@@ -323,13 +327,13 @@ def test_measurement_non_corresponding_values():
 def test_measurement_more_than_one_sample(assert_log):
     m = Measurement()
     m.attic = {
-        'MEASUREMENT'       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        'MAXIMUM-DEVIATION' : [2, 3, 1, 3],
-        'STANDARD-DEVIATION': [3, 2, 1, 3, 4, 5],
-        'REFERENCE'         : [3, 6, 3, 4, 5, 1, 9, 6],
-        'PLUS-TOLERANCE'    : [4, 2, 1, 3, 5, 6, 5, 7, 2, 1],
-        'MINUS-TOLERANCE'   : [5, 2, 3, 6, 2, 2, 2, 4, 6, 7, 9, 1],
-        'DIMENSION'         : [2]
+        'MEASUREMENT'       : Attr([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        'MAXIMUM-DEVIATION' : Attr([2, 3, 1, 3]),
+        'STANDARD-DEVIATION': Attr([3, 2, 1, 3, 4, 5]),
+        'REFERENCE'         : Attr([3, 6, 3, 4, 5, 1, 9, 6]),
+        'PLUS-TOLERANCE'    : Attr([4, 2, 1, 3, 5, 6, 5, 7, 2, 1]),
+        'MINUS-TOLERANCE'   : Attr([5, 2, 3, 6, 2, 2, 2, 4, 6, 7, 9, 1]),
+        'DIMENSION'         : Attr([2])
     }
 
     assert np.array_equal(m.samples[2], np.array([5, 6]))
@@ -364,10 +368,10 @@ def test_measurement_more_than_one_sample(assert_log):
 ])
 def test_measurement_repcode(reference, samples):
     m = Measurement()
-    m.attic = {'DIMENSION' : [2]}
+    m.attic = {'DIMENSION' : Attr([2])}
 
-    m.attic['MEASUREMENT'] = samples
-    m.attic['REFERENCE'] = reference
+    m.attic['MEASUREMENT'] = Attr(samples)
+    m.attic['REFERENCE'] = Attr(reference)
 
     assert np.array_equal(np.array(reference), m.reference)
     sampled = [samples[0:2], samples[2:4]]

@@ -22,7 +22,7 @@ def test_default_attribute(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 2
         #assert attr.reprc == dlisio.core.reprc.fdoubl
         #assert attr.units == 'default attr units'
@@ -41,8 +41,8 @@ def test_default_attribute_cut(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['INVARIANT_ATTRIBUTE']
-        assert obj.attic['DEFAULT_ATTRIBUTE']
+        assert obj.attic['INVARIANT_ATTRIBUTE'].values
+        assert obj.attic['DEFAULT_ATTRIBUTE'].values
 
 @pytest.mark.future_test_attributes
 def test_invariant_attribute(tmpdir, merge_files_oneLR):
@@ -56,7 +56,7 @@ def test_invariant_attribute(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['INVARIANT_ATTRIBUTE']
+        attr = obj.attic['INVARIANT_ATTRIBUTE'].values
         #assert attr.count == 3
         #assert attr.reprc == dlisio.core.reprc.status
         #assert attr.units == 'invariant units'
@@ -76,7 +76,7 @@ def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         assert attr == [8.0]
 
 
@@ -93,9 +93,9 @@ def test_absent_attribute(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['INVARIANT_ATTRIBUTE']
+        assert obj.attic['INVARIANT_ATTRIBUTE'].values
         with pytest.raises(KeyError):
-            _ = obj.attic['DEFAULT_ATTRIBUTE']
+            _ = obj.attic['DEFAULT_ATTRIBUTE'].values
 
 
 @pytest.mark.future_warning_absent_attr_in_template
@@ -111,7 +111,7 @@ def test_absent_attribute_in_template(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['DEFAULT_ATTRIBUTE']
+        assert obj.attic['DEFAULT_ATTRIBUTE'].values
 
 @pytest.mark.future_test_attributes
 def test_global_default_attribute(tmpdir, merge_files_oneLR):
@@ -126,7 +126,7 @@ def test_global_default_attribute(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
+        attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 1
         #assert attr.reprc == dlisio.core.reprc.ident
         #assert attr.units == ''
@@ -146,7 +146,7 @@ def test_all_attribute_bits(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 4
         #assert attr.reprc == dlisio.core.reprc.ushort
         #assert attr.units == 'overwritten units'
@@ -165,7 +165,7 @@ def test_objattr_same_as_default_no_value(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         assert attr == [-0.75, 10.0]
 
 
@@ -231,7 +231,7 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic[attr_n]
+        attr = obj.attic[attr_n].values
         #assert attr.reprc == attr_reprc
         assert attr == [attr_v]
 
@@ -282,7 +282,7 @@ def test_repcode_invalid_in_template_no_value(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['INVALID']
+        attr = obj.attic['INVALID'].values
         assert attr == [1, 2, 3, 4]
 
 
@@ -314,7 +314,7 @@ def test_repcode_different_no_value(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['DEFAULT_ATTRIBUTE'] == [0j, 0j]
+        assert obj.attic['DEFAULT_ATTRIBUTE'].values == [0j, 0j]
 
 @pytest.mark.future_test_attributes
 def test_count0_novalue(tmpdir, merge_files_oneLR):
@@ -329,7 +329,7 @@ def test_count0_novalue(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 0
         assert attr == None
 
@@ -347,7 +347,7 @@ def test_count0_value_bit(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 0
         assert attr == None
 
@@ -365,7 +365,7 @@ def test_count0_different_repcode(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 0
         #assert attr.reprc == dlisio.core.reprc.units
         assert attr == None
@@ -384,7 +384,7 @@ def test_label_bit_set_in_attribute(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['DEFAULT_ATTRIBUTE']
+        assert obj.attic['DEFAULT_ATTRIBUTE'].values
 
 
 @pytest.mark.future_warning_label_bit_not_set_in_template
@@ -400,7 +400,7 @@ def test_label_bit_not_set_in_template(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['NEW_ATTRIBUTE']
+        attr = obj.attic['NEW_ATTRIBUTE'].values
         dt = datetime(2033, 4, 19, 20, 39, 58, 103000)
         assert attr == [dt]
 
@@ -418,7 +418,7 @@ def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['DEFAULT_ATTRIBUTE']
+        assert obj.attic['DEFAULT_ATTRIBUTE'].values
 
 
 @pytest.mark.future_warning_object_name_bit_not_set
@@ -433,7 +433,7 @@ def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['DEFAULT_ATTRIBUTE']
+        assert obj.attic['DEFAULT_ATTRIBUTE'].values
 
 
 @pytest.mark.future_test_attributes
@@ -449,7 +449,7 @@ def test_novalue_less_count(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        attr = obj.attic['DEFAULT_ATTRIBUTE']
+        attr = obj.attic['DEFAULT_ATTRIBUTE'].values
         #assert attr.count == 1
         #assert attr.reprc == dlisio.core.reprc.fdoubl
         #assert attr.units == 'default attr units'
