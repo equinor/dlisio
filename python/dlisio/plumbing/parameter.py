@@ -54,6 +54,7 @@ class Parameter(BasicObject):
         'AXIS'      : reverse,
         'ZONES'     : vector,
         'VALUES'    : vector,
+        '_VALUE_UNIT_'      : scalar,
     }
 
     linkage = {
@@ -80,6 +81,10 @@ class Parameter(BasicObject):
     @property
     def zones(self):
         return self['ZONES']
+
+    @property
+    def unit(self):
+        return self['_VALUE_UNIT_']
 
     @property
     def values(self):

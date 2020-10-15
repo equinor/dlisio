@@ -952,6 +952,14 @@ object_vector parse_objects( const object_template& tmpl,
             }
 
             current.set(attr);
+            if (flags.units && !std::string(attr.units).empty())
+            {
+                object_attribute unit_attr;
+                unit_attr.label = ident("_VALUE_UNIT_");
+                unit_attr.units = attr.units;
+                unit_attr.value = value_vector(std::vector<units>{attr.units});
+                current.set(unit_attr);
+            }
         }
 
         objs.push_back( std::move( current ) );
