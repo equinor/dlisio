@@ -390,6 +390,31 @@ using value_vector = mpark::variant<
     std::vector< units  >
 >;
 
+/*
+ * Assigned error severity.
+ */
+enum class error_severity {
+    INFO     = 1, // everything seems fine, but situation itself is not typical
+    MINOR    = 2, // contradicts specification, but recovery is most likely ok
+    MAJOR    = 3, // contradicts specification, not sure if recovery is ok
+    CRITICAL = 4, // broken beyond repair, could not recover
+};
+
+/*
+ * Error which is caused by violations with regards to rp66 protocol.
+ *
+ * It can be classified by us in different severity levels. In some situations
+ * we might know that violation is common and have a good idea how to recover.
+ * In other situations violation might be too severe for us to do anything about
+ * it.
+ */
+struct dlis_error {
+    error_severity severity;
+    std::string problem;
+    std::string specification;
+    std::string action;
+};
+
 struct record {
     bool isexplicit()  const noexcept (true);
     bool isencrypted() const noexcept (true);

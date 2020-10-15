@@ -1000,6 +1000,20 @@ PYBIND11_MODULE(core, m) {
         return py::make_tuple( ofs.explicits, ofs.implicits );
     });
 
+    py::enum_< dl::error_severity >( m, "error_severity" )
+        .value( "info",     dl::error_severity::INFO )
+        .value( "minor",    dl::error_severity::MINOR )
+        .value( "major",    dl::error_severity::MAJOR )
+        .value( "critical", dl::error_severity::CRITICAL )
+    ;
+
+    py::class_< dl::dlis_error >( m, "dlis_error" )
+        .def_readonly( "severity",      &dl::dlis_error::severity )
+        .def_readonly( "problem",       &dl::dlis_error::problem )
+        .def_readonly( "specification", &dl::dlis_error::specification )
+        .def_readonly( "action",        &dl::dlis_error::action )
+    ;
+
     m.def("set_encodings", set_encodings);
     m.def("get_encodings", get_encodings);
 
