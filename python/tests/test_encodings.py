@@ -52,7 +52,7 @@ def test_broken_utf8_value(tmpdir, merge_files_oneLR):
         dlisio.set_encodings(['koi8_r'])
         with dlisio.load(path) as (f, *_):
             obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-            assert obj.attic['DEFAULT_ATTRIBUTE'] == ['ВАЖНЫЙ-ПАРАМЕТР']
+            assert obj['DEFAULT_ATTRIBUTE'] == ['ВАЖНЫЙ-ПАРАМЕТР']
             assert obj.stash['DEFAULT_ATTRIBUTE'] == ['ВАЖНЫЙ-ПАРАМЕТР']
             #assert units == "2 локтя на долю"
     finally:

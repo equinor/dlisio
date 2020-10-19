@@ -45,9 +45,6 @@ axis-encrypted          Encrypted records
 
 channel-same-objects    Channel duplication
 
-coefficient-wrong       Coefficient objects that do not conform to the rp66v1
-                        specification
-
 fdata***                contains IFLR(s) of type FDATA, referencing Frame
                         objects defined in the frame**.dlis.part files
 
@@ -56,6 +53,14 @@ frames-and-channels     Files for curves testing
 match                   Files for match testing. Every file is named by the
                         object it contains
 
+ndattrs                 .dlis.part files for testing dimensional attributes.
+                        Must be combined together in a .dlis file before
+                        suitable for use.
+
+tool-wrong              Generic-name is correct, Description has wrong count,
+                        Trademark-Name and Parts have wrong type, Status has
+                        wrong count and type, Channels and Parameters are
+                        virtually not present, there are additional attributes
 ======================= ======================================================
 
 
