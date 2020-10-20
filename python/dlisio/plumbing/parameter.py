@@ -127,7 +127,7 @@ class Parameter(BasicObject):
         Zone('ZONE-A')
         """
         try:
-            values = self.attic['VALUES']
+            values = self.attic['VALUES'].value
         except KeyError:
             return np.empty(0)
 

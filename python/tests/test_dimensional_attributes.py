@@ -215,7 +215,8 @@ def test_values_wrong_dimensions(tmpdir, merge_files_oneLR, settype):
         with pytest.raises(ValueError) as error:
             _ = obj.values
         assert str(error.value) == msg
-        assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
+        assert np.array_equal(obj.attic['VALUES'].value,
+                              np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('settype', ["PARAMETER", "COMPUTATION"])
 def test_values_wrong_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype):
@@ -234,7 +235,8 @@ def test_values_wrong_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype)
         with pytest.raises(ValueError) as error:
             _ = obj.values
         assert str(error.value) == msg
-        assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
+        assert np.array_equal(obj.attic['VALUES'].value,
+                              np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('settype', ["PARAMETER", "COMPUTATION"])
 def test_values_infer_dimensions_from_zones(tmpdir, merge_files_oneLR, settype):
@@ -251,7 +253,6 @@ def test_values_infer_dimensions_from_zones(tmpdir, merge_files_oneLR, settype):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         # Should be able to infer correct dimension from zones
         assert np.array_equal(obj.values, np.array([1, 2, 3, 4, 5]))
-        assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4, 5]))
 
 @pytest.mark.parametrize('settype', ["PARAMETER", "COMPUTATION"])
 def test_values_no_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype):
@@ -268,7 +269,6 @@ def test_values_no_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         # Should use dimension over zones
         assert np.array_equal(obj.values, np.array([1]))
-        assert np.array_equal(obj.attic['VALUES'], np.array([1]))
 
 @pytest.mark.parametrize('settype', ["PARAMETER", "COMPUTATION"])
 def test_values_right_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype):
@@ -285,7 +285,6 @@ def test_values_right_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype)
         obj  = f.object(settype, 'OBJECT', 10, 0)
         # Should use dimension over zones
         assert np.array_equal(obj.values, np.array([[1, 2], [3, 4]]))
-        assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
 
 @pytest.mark.parametrize('settype', ["PARAMETER", "COMPUTATION"])
 def test_values_right_dimensions_right_zones(tmpdir, merge_files_oneLR, settype):
@@ -302,7 +301,6 @@ def test_values_right_dimensions_right_zones(tmpdir, merge_files_oneLR, settype)
         obj  = f.object(settype, 'OBJECT', 10, 0)
 
         assert np.array_equal(obj.values, np.array([[1, 2], [3, 4]]))
-        assert np.array_equal(obj.attic['VALUES'], np.array([1, 2, 3, 4]))
 
 @pytest.mark.parametrize('settype', ["PARAMETER", "COMPUTATION"])
 def test_values_multidim_values(tmpdir, merge_files_oneLR, settype):
@@ -415,7 +413,7 @@ def test_measurement_wrong_dimension(tmpdir, merge_files_oneLR):
             _ = m.samples
 
         assert str(error.value) == msg
-        assert m.attic['MEASUREMENT'] == [1, 2, 3]
+        assert m.attic['MEASUREMENT'].value == [1, 2, 3]
         assert m.dimension == [3, 2]
 
 def test_measurement_many_samples(tmpdir, merge_files_oneLR):

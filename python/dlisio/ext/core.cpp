@@ -849,6 +849,11 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
+    py::class_< dl::object_attribute >( m, "object_attribute" )
+        .def_readonly("value", &dl::object_attribute::value)
+        .def_readonly("units", &dl::object_attribute::units)
+    ;
+
     py::class_< dl::basic_object >( m, "basic_object" )
         .def_readonly("type", &dl::basic_object::type)
         .def_readonly("name", &dl::basic_object::object_name)
@@ -858,7 +863,7 @@ PYBIND11_MODULE(core, m) {
         .def( "__eq__", &dl::basic_object::operator == )
         .def( "__ne__", &dl::basic_object::operator != )
         .def( "__getitem__", []( dl::basic_object& o, const std::string& key ) {
-            try { return o.at(key).value; }
+            try { return o.at(key); }
             catch (const std::out_of_range& e) { throw py::key_error( e.what() ); }
         })
         .def( "__repr__", []( const dl::basic_object& o ) {

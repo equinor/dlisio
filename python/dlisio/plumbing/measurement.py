@@ -127,7 +127,7 @@ class Measurement(BasicObject):
         may be either a scalar or ndarray
         """
         try:
-            samples = self.attic['MEASUREMENT']
+            samples = self.attic['MEASUREMENT'].value
         except KeyError:
             return np.empty(0)
 
@@ -147,7 +147,7 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            dev = self.attic['MAXIMUM-DEVIATION']
+            dev = self.attic['MAXIMUM-DEVIATION'].value
         except KeyError:
             return np.empty(0)
 
@@ -166,7 +166,7 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            dev = self.attic['STANDARD-DEVIATION']
+            dev = self.attic['STANDARD-DEVIATION'].value
         except KeyError:
             return np.empty(0)
 
@@ -181,7 +181,7 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            ref = self.attic['REFERENCE']
+            ref = self.attic['REFERENCE'].value
         except KeyError:
             return np.empty(0)
 
@@ -199,7 +199,7 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            tolerance = self.attic['PLUS-TOLERANCE']
+            tolerance = self.attic['PLUS-TOLERANCE'].value
         except KeyError:
             return np.empty(0)
 
@@ -217,7 +217,7 @@ class Measurement(BasicObject):
         structure as the samples in the sample attribute.
         """
         try:
-            tolerance   = self.attic['MINUS-TOLERANCE']
+            tolerance   = self.attic['MINUS-TOLERANCE'].value
         except KeyError:
             return np.empty(0)
 

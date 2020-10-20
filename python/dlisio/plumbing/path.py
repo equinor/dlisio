@@ -103,7 +103,6 @@ class Path(BasicObject):
 
     @property
     def frame(self):
-        print(self.attic)
         return self['FRAME-TYPE']
 
     @property

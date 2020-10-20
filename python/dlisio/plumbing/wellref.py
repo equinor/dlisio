@@ -95,12 +95,12 @@ class Wellref(BasicObject):
 
         for i in range(1, 4):
             try:
-                key = self.attic[name.format(i)][0]
+                key = self.attic[name.format(i)].value[0]
             except KeyError:
                 key = custom_label.format(i)
 
             try:
-                val = self.attic[value.format(i)][0]
+                val = self.attic[value.format(i)].value[0]
             except KeyError:
                 val = None
 
