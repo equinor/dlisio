@@ -321,34 +321,6 @@ def test_wellref(f):
     assert wellref.coordinates['latitude']   == 60.75
     assert wellref.coordinates['elevation']  == 0.25
 
-def test_wellref_coordinates():
-    wellref = dlisio.plumbing.wellref.Wellref()
-    wellref.attic = {
-        'COORDINATE-2-VALUE' : [2],
-        'COORDINATE-1-NAME'  : ['longitude'],
-        'COORDINATE-3-NAME'  : ['elevation'],
-        'COORDINATE-1-VALUE' : [1],
-        'COORDINATE-3-VALUE' : [3],
-        'COORDINATE-2-NAME'  : ['latitude'],
-    }
-
-    assert wellref.coordinates['longitude']  == 1
-    assert wellref.coordinates['latitude']   == 2
-    assert wellref.coordinates['elevation']  == 3
-
-    del wellref.attic['COORDINATE-3-VALUE']
-    assert wellref.coordinates['latitude']   == 2
-    assert wellref.coordinates['elevation']  == None
-
-    del wellref.attic['COORDINATE-2-NAME']
-    assert wellref.coordinates['longitude']    == 1
-    assert wellref.coordinates['COORDINATE-2'] == 2
-
-    del wellref.attic['COORDINATE-1-NAME']
-    del wellref.attic['COORDINATE-1-VALUE']
-    assert len(wellref.coordinates) == 3
-    assert wellref.coordinates['COORDINATE-1'] == None
-
 def test_group(f):
     g1    = f.object('GROUP', 'GROUP1', 10, 0)
     param = f.object('PARAMETER', 'PARAM3', 10, 0)
