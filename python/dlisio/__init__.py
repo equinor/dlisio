@@ -495,7 +495,7 @@ def load(path):
     Returns
     -------
 
-    dlis : tuple(dlisio.logicalfile)
+    dlis : dlisio.physicalfile(dlisio.logicalfile)
     """
     sulsize = 80
     tifsize = 12
@@ -559,7 +559,7 @@ def load(path):
                     break
                 raise
 
-        return Batch(lfs)
+        return physicalfile(lfs)
     except:
         stream.close()
         for f in lfs:
@@ -567,7 +567,7 @@ def load(path):
         raise
 
 
-class Batch(tuple):
+class physicalfile(tuple):
     def __enter__(self):
         return self
 
@@ -579,11 +579,11 @@ class Batch(tuple):
             f.close()
 
     def __repr__(self):
-        return 'Batch(logical files: {})'.format(len(self))
+        return 'physicalfile(logical files: {})'.format(len(self))
 
     def describe(self, width=80, indent=''):
         buf = StringIO()
-        plumbing.describe_header(buf, 'Batch of Logical Files', width, indent)
+        plumbing.describe_header(buf, 'Physical File', width, indent)
 
         d = {'Number of Logical Files' : len(self)}
         plumbing.describe_dict(buf, d, width, indent)

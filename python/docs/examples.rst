@@ -50,9 +50,9 @@ file:
     >>> import dlisio
     >>> with dlisio.load(filename) as files:
     ...     files.describe()
-    ----------------------
-    Batch of Logical Files
-    ----------------------
+    -------------
+    Physical File
+    -------------
     Number of Logical Files : 3
 
     Description : logicalfile(DDBC1)
