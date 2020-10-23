@@ -2,6 +2,7 @@
 Testing 'describe' functionality
 """
 from io import StringIO
+import os
 
 import dlisio
 from dlisio.plumbing import *
@@ -43,69 +44,91 @@ def test_replist():
     assert reprs == [str(x) for x in elems]
 
 
-def test_sampled_attrs():
-    attic = {
-        'CORRECT' : [1, 2],
-        'WRONG'   : [5, 6, 7],
-        'VALUES'  : [0.5, 0.6, 0.7, 0.8]
-    }
-    dims = [2]
+def test_sampled_attrs(tmpdir, merge_files_oneLR):
+    path = os.path.join(str(tmpdir), 'sampled-attrs.dlis')
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/ndattrs/set/parameter.dlis.part',
+        'data/chap4-7/eflr/ndattrs/template/correct.dlis.part',
+        'data/chap4-7/eflr/ndattrs/template/wrong.dlis.part',
+        'data/chap4-7/eflr/ndattrs/template/values.dlis.part',
+        'data/chap4-7/eflr/ndattrs/object.dlis.part',
+        'data/chap4-7/eflr/ndattrs/objattr/1-2.dlis.part',
+        'data/chap4-7/eflr/ndattrs/objattr/1-2-3.dlis.part',
+        'data/chap4-7/eflr/ndattrs/objattr/0.5-1.5-2.5-3.5.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
 
-    exclude = parseoptions('e')
-    buf = StringIO()
+    with dlisio.load(path) as (f, *_):
+        obj  = f.object('PARAMETER', 'OBJECT', 10, 0)
+        dims = [2]
 
-    d = OrderedDict()
-    d['correct'] = 'CORRECT'
-    d['wrong'] = 'WRONG'
-    d['drop'] = 'NOT-IN-ATTIC'
+        exclude = parseoptions('e')
+        buf = StringIO()
 
-    describe_sampled_attrs(
-            buf,
-            attic,
-            dims,
-            'VALUES',
-            d,
-            80,
-            ' ',
-            exclude
-    )
+        d = OrderedDict()
+        d['correct'] = 'CORRECT'
+        d['wrong'] = 'WRONG'
+        d['drop'] = 'NOT-IN-ATTIC'
 
-    ref = (' Value(s) : [[0.5 0.6]\n'
-           '             [0.7 0.8]]\n'
-           ' correct  : 1 2\n'
-           '\n'
-           ' Invalid dimensions\n'
-           ' --\n'
-           ' wrong : 5 6 7\n\n'
-    )
+        describe_sampled_attrs(
+                buf,
+                obj.attic,
+                dims,
+                'VALUES',
+                d,
+                80,
+                ' ',
+                exclude
+        )
 
-    assert str(buf.getvalue()) == ref
+        ref = (' Value(s) : [[0.5 1.5]\n'
+               '             [2.5 3.5]]\n'
+               ' correct  : 1 2\n'
+               '\n'
+               ' Invalid dimensions\n'
+               ' --\n'
+               ' wrong : 1 2 3\n\n'
+        )
 
-def test_sampled_attrs_wrong_value():
-    attic = {'VALUES' : [0.5, 0.6, 0.7]}
-    dims = [2]
+        assert str(buf.getvalue()) == ref
 
-    exclude = parseoptions('e')
-    buf = StringIO()
+def test_sampled_attrs_wrong_value(tmpdir, merge_files_oneLR):
+    path = os.path.join(str(tmpdir), 'sampled-attrs-wrong-value.dlis')
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/ndattrs/set/parameter.dlis.part',
+        'data/chap4-7/eflr/ndattrs/template/values.dlis.part',
+        'data/chap4-7/eflr/ndattrs/object.dlis.part',
+        'data/chap4-7/eflr/ndattrs/objattr/0.5-1.5-2.5.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
 
-    describe_sampled_attrs(
-            buf,
-            attic,
-            dims,
-            'VALUES',
-            {},
-            80,
-            ' ',
-            exclude
-    )
+    with dlisio.load(path) as (f, *_):
+        obj  = f.object('PARAMETER', 'OBJECT', 10, 0)
+        dims = [2]
 
-    ref = (
-           ' Invalid dimensions\n'
-           ' --\n'
-           ' Value(s) : 0.5 0.6 0.7\n\n'
-    )
+        exclude = parseoptions('e')
+        buf = StringIO()
 
-    assert str(buf.getvalue()) == ref
+        describe_sampled_attrs(
+                buf,
+                obj.attic,
+                dims,
+                'VALUES',
+                {},
+                80,
+                ' ',
+                exclude
+        )
+
+        ref = (
+               ' Invalid dimensions\n'
+               ' --\n'
+               ' Value(s) : 0.5 1.5 2.5\n\n'
+        )
+
+        assert str(buf.getvalue()) == ref
 
 
 def test_describe_header():
@@ -128,12 +151,9 @@ def test_describe_header():
     describe_header(buf, 'Index', 10, ' ', lvl=2)
     assert str(buf.getvalue()) == case2
 
-def test_describe_description():
-    ln = Longname()
-    ln.attic = {
-        'QUANTITY'           : ['diameter and stuff'],
-        'SOURCE-PART-NUMBER' : [10]
-    }
+def test_describe_description(f):
+    ln  = f.object('LONG-NAME', 'SHORT-LONG-NAME', 10, 0)
+
     # description is a Longname object
     case1 = (' Description\n'
              ' --\n'

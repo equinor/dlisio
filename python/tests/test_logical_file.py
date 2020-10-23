@@ -199,11 +199,11 @@ def test_dlis_types(f):
     assert f.fileheader.name   == "N"
     assert len(f.origins)      == 2
     assert len(f.axes)         == 3
-    assert len(f.longnames)    == 4
+    assert len(f.longnames)    == 5
     assert len(f.channels)     == 4
     assert len(f.frames)       == 2
     assert len(f.zones)        == 1
-    assert len(f.tools)        == 1
+    assert len(f.tools)        == 2
     assert len(f.parameters)   == 3
     assert len(f.processes)    == 2
     assert len(f.groups)       == 3
@@ -213,7 +213,7 @@ def test_dlis_types(f):
     assert len(f.equipments)   == 1
     assert len(f.computations) == 3
     assert len(f.measurements) == 2
-    assert len(f.coefficients) == 3
+    assert len(f.coefficients) == 2
     assert len(f.calibrations) == 1
     assert len(f.comments)     == 1
     assert len(f.messages)     == 1

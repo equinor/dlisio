@@ -19,13 +19,13 @@ def test_getitem_defaultvalue(f):
     assert obj['INDEX-TYPE'] is None
 
 def test_getitem_unexpected_attr(f):
-    obj = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD')
-    # Attributes unknown to dlisio, such as 'LNKS' should be reachable
+    obj = f.object('TOOL', 'TOOL-BAD')
+    # Attributes unknown to dlisio, such as 'MY_PARAM' should be reachable
     # through __getitem__
-    assert obj['LNKS'] == [18, 32]
+    assert obj["MY_PARAM"] == ["wrong", "W"]
 
     # Should also be in stash
-    assert obj.stash['LNKS'] == [18, 32]
+    assert obj.stash["MY_PARAM"] == ["wrong", "W"]
 
 def test_getitem_noattribute(f):
     obj = f.object('FRAME', 'FRAME2')
@@ -109,30 +109,36 @@ def test_parse_attribute_reverse_unexpected_element(assert_log):
     res = parsevalue([1, 2], reverse)
     assert res == [2, 1]
 
-def test_valuetype_mismatch(assert_log):
-    tool = dlisio.plumbing.tool.Tool()
-    tool.attic = {
-        'DESCRIPTION' : ["Description", "Unexpected description"],
-        'STATUS'      : ["Yes", 0],
-    }
+def test_incorrect_object(f, assert_log):
+    t = f.object('TOOL', 'TOOL-BAD', 10, 0)
 
-    assert tool.description == "Description"
-    assert tool.status      == True
+    # two descriptions provided
+    assert t.description == "Description"
     assert_log('Expected only 1 value')
 
-def test_unexpected_attributes(f):
-    c = f.object('CALIBRATION-COEFFICIENT', 'COEFF_BAD', 10, 0)
+    # according to spec it must be ascii
+    assert t.trademark_name == 21
 
-    assert c.label                           == "SMTH"
-    assert c.plus_tolerance                  == [] #count 0
-    assert c.minus_tolerance                 == [] #not specified
+    # correct attribute
+    assert t.generic_name == "Some important tool"
 
-    #'lnks' instead of 'references'
-    assert c.stash["LNKS"]                   == [18, 32]
     #spaces are stripped for stash also
-    assert c.stash["MY_PARAM"]               == ["wrong", "W"]
+    assert t["MY_PARAM"] == ["wrong", "W"]
+
     # no linkage is performed for stash even for known objects
-    assert c.stash["LINKS_TO_PARAMETERS"]    ==  [(10, 0, "PARAM2"),
-                                                  (10, 0, "PARAMU")]
-    assert c.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
-                                                  (10, 0, "OBJ1"))]
+    assert t["LINKS_TO_PARAMETERS"] == [(10, 0, "PARAM2"),
+                                        (10, 0, "PARAMU")]
+    assert t.stash["LINK_TO_UNKNOWN_OBJECT"] == [("UNKNOWN_SET",
+                                                 (10, 0, "OBJ1"))]
+
+    # wrong type
+    assert t.parts == ["SOME PART"]
+
+    # There were two non-boolean statuses
+    assert t.status == True
+
+    # attribute count is 0
+    assert t.channels == []
+
+    # attribute missing
+    assert t.parameters == []

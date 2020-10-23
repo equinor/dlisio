@@ -290,7 +290,7 @@ def describe_sampled_attrs(buf, attic, dims, valuekey, extras, width, indent,
 
     valids, invs = OrderedDict(), OrderedDict()
     try:
-        value = attic[valuekey]
+        value = attic[valuekey].value
         shape = validshape(value, dims)
         valids['Value(s)'] = sampling(value, shape)
     except KeyError:
@@ -301,7 +301,7 @@ def describe_sampled_attrs(buf, attic, dims, valuekey, extras, width, indent,
     if extras:
         for label, key in extras.items():
             try:
-                value = attic[key]
+                value = attic[key].value
                 shape = validshape(value, dims)
                 valids[label] = sampling(value, shape, single=single)
             except KeyError:

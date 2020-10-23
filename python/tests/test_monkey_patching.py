@@ -102,40 +102,6 @@ def test_type_removal(f):
     # Channels should now be parsed as Channel.allobjects
     assert 'CHANNEL' not in f.unknowns
 
-def test_attribute_change_in_instance():
-    ch1 = Channel()
-    ch1.attic['PROPERTIES'] = [10]
-
-    ch2 = Channel()
-    ch2.attic['PROPERTIES'] = [10]
-
-    # Change properties to be parsed as scalar (not vector)
-    ch1.attributes = dict(ch1.attributes)
-    ch1.attributes['PROPERTIES'] = valuetypes.scalar
-
-    assert ch1.properties == 10
-
-    # check that other object of the same type is not affected
-    assert ch2.properties == [10]
-
-def test_attribute_change_in_class():
-    ch1 = Channel()
-    ch1.attic['PROPERTIES'] = [10]
-
-    ch2 = Channel()
-    ch2.attic['PROPERTIES'] = [10]
-
-    try:
-        # Change properties to be parsed as scalar (not vector)
-        original = dict(Channel.attributes)
-        Channel.attributes['PROPERTIES'] = valuetypes.scalar
-
-        # The change should be observable on all newly created objects
-        assert ch2.properties == 10
-        assert ch2.properties == 10
-    finally:
-        Channel.attributes = original
-
 def test_linkage_change_in_instance(f, assert_log):
     ch1  = f.object('CHANNEL', 'CHANN1')
     ch2  = f.object('CHANNEL', 'CHANN2')

@@ -96,19 +96,28 @@ def update_envelope_LRSL(b, lrs_offset = 0):
     b[lrs_offset]     = lrsl // 256
     b[lrs_offset + 1] = lrsl %  256
 
+def assert_caplog(caplog, level):
+    caplog.set_level(level)
+    def assert_message(message_id):
+        assert any([message_id in r.message
+                    for r in caplog.records if r.levelno == level])
+    return assert_message
+
+@pytest.fixture
+def assert_error(caplog):
+    return assert_caplog(caplog, logging.ERROR)
 
 @pytest.fixture
 def assert_log(caplog):
-    def assert_message(message_id):
-        assert any([message_id in r.message for r in caplog.records])
-    return assert_message
+    return assert_caplog(caplog, logging.WARNING)
 
 @pytest.fixture
 def assert_info(caplog):
-    caplog.set_level(logging.INFO)
-    def assert_message(message_id):
-        assert any([message_id in r.message for r in caplog.records])
-    return assert_message
+    return assert_caplog(caplog, logging.INFO)
+
+@pytest.fixture
+def assert_debug(caplog):
+    return assert_caplog(caplog, logging.DEBUG)
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files_manyLR):
@@ -133,11 +142,11 @@ def fpath(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/parameter.dlis.part',
         'data/chap4-7/eflr/equipment.dlis.part',
         'data/chap4-7/eflr/tool.dlis.part',
+        'data/chap4-7/eflr/tool-wrong.dlis.part',
         'data/chap4-7/eflr/process.dlis.part',
         'data/chap4-7/eflr/computation.dlis.part',
         'data/chap4-7/eflr/measurement.dlis.part',
         'data/chap4-7/eflr/coefficient.dlis.part',
-        'data/chap4-7/eflr/coefficient-wrong.dlis.part',
         'data/chap4-7/eflr/calibration.dlis.part',
         'data/chap4-7/eflr/group.dlis.part',
         'data/chap4-7/eflr/splice.dlis.part',
