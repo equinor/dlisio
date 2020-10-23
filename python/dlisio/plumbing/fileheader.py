@@ -67,8 +67,8 @@ class Fileheader(BasicObject):
         'ID'             : scalar,
     }
 
-    def __init__(self, obj = None, name = None, lf = None):
-        super().__init__(obj, name = name, type = 'FILE-HEADER', lf = lf)
+    def __init__(self, attic, lf):
+        super().__init__(attic, lf=lf)
 
     @property
     def sequencenr(self):

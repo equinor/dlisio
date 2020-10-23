@@ -55,8 +55,8 @@ class Message(BasicObject):
         'TEXT'           : vector,
     }
 
-    def __init__(self, obj = None, name = None, lf = None):
-        super().__init__(obj, name = name, type = 'MESSAGE', lf = lf)
+    def __init__(self, attic, lf):
+        super().__init__(attic, lf=lf)
 
     @property
     def message_type(self):

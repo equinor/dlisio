@@ -426,9 +426,9 @@ class logicalfile(object):
         objs = []
         for o in objects:
             try:
-                obj = self.types[o.type](o, name=o.name, lf=self)
+                obj = self.types[o.type](o, lf=self)
             except KeyError:
-                obj = plumbing.Unknown(o, name=o.name, type=o.type, lf=self)
+                obj = plumbing.Unknown(o, lf=self)
             objs.append(obj)
         return objs
 

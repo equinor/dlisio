@@ -12,7 +12,5 @@ class Unknown(BasicObject):
     BasicObject : The basic object that Unknown is derived from
 
     """
-    def __init__(self, obj = None, name = None, type = None, lf = None):
-        if type is None:
-            type = 'UNKNOWN'
-        super().__init__(obj, name = name, type = type, lf = lf)
+    def __init__(self, attic, lf):
+        super().__init__(attic, lf=lf)

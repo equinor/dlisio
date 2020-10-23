@@ -20,23 +20,22 @@ def test_describe(fpath):
             for obj in f.match('.*', '.*'):
                 _ = obj.describe(indent='   ', width=70, exclude='e')
 
-def test_replist():
-    ch1 = Channel(name='TIME')
-    ch1.origin = 1
-    ch1.copynumber = 0
+def test_replist(f):
+    frame = f.object('FRAME', 'FRAME1')
+    # If dlisio cannot find a particular object, it will return None. Hence
+    # it's not uncommon for lists such as frame.channels to include some Nones.
+    # The None is added to simulate a missing object.
+    channels = frame.channels + [None]
 
-    ch2 = Channel(name='TDEP')
-    ch2.origin = 1
-    ch2.copynumber = 1
-
-    channels = [ch1, ch2, None]
     names    = replist(channels, 'name')
     typename = replist(channels, 'typename')
     default  = replist(channels, 'not-a-valid-option')
 
-    assert names    == ['TIME', 'TDEP', 'None']
-    assert typename == ['Channel(TIME)', 'Channel(TDEP)', 'None']
-    assert default  == ['Channel(TIME, 1, 0)', 'Channel(TDEP, 1, 1)', 'None']
+    assert names    == ['CHANN1', 'CHANN2', 'None']
+    assert typename == ['Channel(CHANN1)', 'Channel(CHANN2)', 'None']
+    assert default  == ['Channel(CHANN1, 10, 0)',
+                        'Channel(CHANN2, 10, 0)',
+                        'None']
 
     # Elements that are not a subclass of BasicObjects
     elems = [None , 1, 'str', 2.0]
