@@ -15,7 +15,7 @@ except pkg_resources.DistributionNotFound:
 
 
 
-class dlis(object):
+class logicalfile(object):
     """Logical file
 
     A logical file is a collection of objects - in lack of a better word,
@@ -122,7 +122,7 @@ class dlis(object):
             desc = self.fileheader.id
         except AttributeError:
             desc = 'Unknown'
-        return 'dlis({})'.format(desc)
+        return 'logicalfile({})'.format(desc)
 
     class IndexedObjectDescriptor:
         """ Return all objects of this type"""
@@ -495,7 +495,7 @@ def load(path):
     Returns
     -------
 
-    dlis : tuple(dlisio.dlis)
+    dlis : tuple(dlisio.logicalfile)
     """
     sulsize = 80
     tifsize = 12
@@ -547,7 +547,7 @@ def load(path):
             pool  = core.pool(sets)
             fdata = core.findfdata(stream, implicits)
 
-            lf = dlis(stream, pool, fdata, sul)
+            lf = logicalfile(stream, pool, fdata, sul)
             lfs.append(lf)
 
             try:

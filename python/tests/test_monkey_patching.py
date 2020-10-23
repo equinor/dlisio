@@ -55,7 +55,7 @@ def test_type_new(f):
 def test_type_change(f):
     try:
         # Parse all parameters as if they where Channels
-        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Channel
+        dlisio.logicalfile.types['PARAMETER'] = dlisio.plumbing.Channel
         f.load()
 
         longname = f.object('LONG-NAME', 'PARAM1-LONG', 10, 0)
@@ -78,12 +78,12 @@ def test_type_change(f):
     finally:
         # even if the test fails, make sure that types is reset to its default,
         # to not interfere with other tests
-        dlisio.dlis.types['PARAMETER'] = dlisio.plumbing.Parameter
+        dlisio.logicalfile.types['PARAMETER'] = dlisio.plumbing.Parameter
 
 def test_type_removal(f):
     try:
         # Deleting object-type CHANNEL and reload
-        del dlisio.dlis.types['CHANNEL']
+        del dlisio.logicalfile.types['CHANNEL']
         f.load()
 
         obj = f.object('CHANNEL', 'CHANN1', 10, 0)
