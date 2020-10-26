@@ -28,7 +28,7 @@ def test_object_unknown(f):
 def test_object_nonexisting(f):
     with pytest.raises(ValueError) as exc:
         _ = f.object("UNKNOWN_TYPE", "SOME_OBJECT", 0, 0)
-    assert "not found" in str(exc.value)
+    assert "Object not found" in str(exc.value)
 
     with pytest.raises(ValueError):
         _ = f.object("CHANNEL", "CHANN1", 11, 0)
@@ -46,7 +46,7 @@ def test_object_solo_nameonly(f):
 def test_object_nonexisting_nameonly(f):
     with pytest.raises(ValueError) as exc:
         _ = f.object("CHANNEL", "NOTFOUND")
-    assert "No objects" in str(exc.value)
+    assert "Object not found" in str(exc.value)
 
 def test_object_many_objects_nameonly(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('lf').join('same-id.dlis'))
@@ -60,7 +60,7 @@ def test_object_many_objects_nameonly(tmpdir_factory, merge_files_manyLR):
     with dlisio.load(fpath) as (f, *_):
         with pytest.raises(ValueError) as exc:
             _ = f.object("CHANNEL", "MATCH1")
-        assert "There are multiple" in str(exc.value)
+        assert "Candidates are" in str(exc.value)
 
 def test_object_ducplicated_object(tmpdir_factory, merge_files_manyLR):
     # Spec violation: Two objects with the same signature AND identical content
@@ -95,7 +95,7 @@ def test_object_same_signature_diff_content(tmpdir_factory, merge_files_manyLR):
     with dlisio.load(fpath) as (f, *_):
         with pytest.raises(ValueError) as exc:
             _ = f.object("CHANNEL", "CHANN1", 10, 0)
-        assert "There are multiple" in str(exc.value)
+        assert "Candidates are" in str(exc.value)
 
         # They can still be reached through find
         chs = f.find("CHANNEL", "CHANN1")

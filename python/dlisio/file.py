@@ -450,24 +450,23 @@ class logicalfile(object):
         if len(matches) == 1: return matches[0]
 
         if len(matches) == 0:
-            if origin is not None and copynr is not None:
-                msg = "Object {}.{}.{} of type {} is not found"
-                raise ValueError(msg.format(name, origin, copynr, type))
-            else:
-                msg = "No objects with name {} and type {} are found"
-                raise ValueError(msg.format(name, type))
+            msg = "Object not found: type={}, name={}, origin={}, copynumber={}"
+            if not origin: origin = "'any'"
+            if not copynr: copynr = "'any'"
+
+            raise ValueError(msg.format(type, name, origin, copynr))
 
         # We found multiple matching objects. If they are all equal, return one
         # of them and be done with it
         if all(x.attic == matches[0].attic for x in matches):
             return matches[0]
 
-        msg = "There are multiple {}s named {}. Found: {}"
-        desc = ""
-        for o in matches:
-            desc += ("(origin={}, copy={}), "
-                        .format(o.origin, o.copynumber))
-        raise ValueError(msg.format(type, name, desc))
+        msg = "Multiple {} objects with name {}. Candidates are:"
+        candidate = "\norigin={}, copy={},"
+        candidates = [candidate.format(x.origin, x.copynumber) for x in matches]
+
+        msg += ''.join(candidates)
+        raise ValueError(msg.format(type, name))
 
 
     def describe(self, width=80, indent=''):
