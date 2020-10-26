@@ -122,8 +122,8 @@ class logicalfile(object):
         objects : dict
             all objects of type 'type'
         """
-        objs = self.object_pool.get(type, plumbing.exact_matcher())
-        return { x.fingerprint : x for x in self.promote(objs) }
+        objs = self.find(type, matcher=plumbing.exact_matcher())
+        return { x.fingerprint : x for x in objs }
 
     def __enter__(self):
         return self
@@ -154,7 +154,7 @@ class logicalfile(object):
 
         def __get__(self, instance, owner):
             if instance is None: return None
-            return instance[self.t].values()
+            return instance.find(self.t, matcher=plumbing.exact_matcher())
 
     @property
     def fileheader(self):
@@ -165,7 +165,7 @@ class logicalfile(object):
         fileheader : Fileheader
 
         """
-        values = list(self['FILE-HEADER'].values())
+        values = self.find('FILE-HEADER', matcher=plumbing.exact_matcher())
 
         if len(values) != 1:
             msg = "Expected exactly one fileheader. Was: {}"
@@ -221,7 +221,8 @@ class logicalfile(object):
         unknowns = defaultdict(dict)
         for t in set(self.object_pool.types):
             if t in self.types: continue
-            unknowns[t] = self[t]
+            objects = self.find(t, matcher=plumbing.exact_matcher())
+            unknowns[t] = {x.fingerprint : x for x in objects}
 
         return unknowns
 
@@ -422,8 +423,8 @@ class logicalfile(object):
         MKAP
 
         """
-        matches = self.object_pool.get(type, name, plumbing.exact_matcher())
-        matches = self.promote(matches)
+        matcher = plumbing.exact_matcher()
+        matches = self.find(type, name, matcher)
 
         if origin is not None:
             matches = [o for o in matches if o.origin == origin]
@@ -484,8 +485,9 @@ class logicalfile(object):
 
         known, unknown = {}, {}
         for objtype in self.object_pool.types:
-            if objtype in self.types: known[objtype]   = len(self[objtype])
-            else:                     unknown[objtype] = len(self[objtype])
+            objs = self.find(objtype, matcher=plumbing.exact_matcher())
+            if objtype in self.types: known[objtype]   = len(objs)
+            else:                     unknown[objtype] = len(objs)
 
         if known:
             plumbing.describe_header(buf, 'Known objects', width, indent, lvl=2)
@@ -499,7 +501,8 @@ class logicalfile(object):
 
     def load(self):
         """ Force load all objects - mainly indended for debugging"""
-        _ = [self[x] for x in self.object_pool.types]
+        _ = [self.find(x, matcher=plumbing.exact_matcher())
+             for x in self.object_pool.types]
 
     def promote(self, objects):
         """Enrich instances of the generic core.basicobject into type-specific
