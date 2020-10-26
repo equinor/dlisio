@@ -237,6 +237,9 @@ class logicalfile(object):
 
         [1] https://docs.python.org/3.7/library/re.html
 
+        .. deprecated:: 0.2.6
+            use :func:`find` instead
+
         Parameters
         ----------
 
@@ -302,6 +305,10 @@ class logicalfile(object):
         Channel(CHANNEL123)
 
         """
+        import warnings
+        msg = "match is deprecated and will be removed in a future version, "
+        msg += "use find('{}', '{}') instead".format(type, pattern)
+        warnings.warn(msg, FutureWarning)
 
         # Use python's re with case-insensitivity as matcher when searching for
         # object_pool objects in dl::pool
