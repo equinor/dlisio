@@ -111,6 +111,9 @@ class logicalfile(object):
     def __getitem__(self, type):
         """Return all objects of a given type
 
+        .. deprecated:: 0.2.6
+            use :func:`find(type, matcher=dlisio.settings.exact)` instead
+
         Parameters
         ----------
         type : str
@@ -122,6 +125,11 @@ class logicalfile(object):
         objects : dict
             all objects of type 'type'
         """
+        import warnings
+        msg = "__getitem__ is deprecated and will be removed in a future version, "
+        msg += "use find('{}', matcher=dlisio.settings..exact) instead".format(type)
+        warnings.warn(msg, FutureWarning)
+
         objs = self.find(type, matcher=settings.exact)
         return { x.fingerprint : x for x in objs }
 
