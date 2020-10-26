@@ -46,7 +46,7 @@ class logicalfile(object):
     of objects. Some examples of objects are Channel, Frame, Fileheader, Tool.
     They are all accessible through their own attribute.
 
-    :py:func:`object()` and :py:func:`match()` let you access specific objects
+    :py:func:`object()` and :py:func:`find()` let you access specific objects
     or search for objects matching a regular expression. Unknown objects such
     as vendor-specific objects are accessible through the 'unknown'-attribute.
 
