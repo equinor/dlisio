@@ -389,7 +389,15 @@ class logicalfile(object):
         else:
             attics = self.object_pool.get(objecttype, objectname, matcher)
 
-        return self.promote(attics)
+        objects = []
+        for attic in attics:
+            try:
+                obj = self.types[attic.type](attic, lf=self)
+            except KeyError:
+                obj = plumbing.Unknown(attic, lf=self)
+            objects.append(obj)
+
+        return objects
 
     def object(self, type, name, origin=None, copynr=None):
         """
@@ -503,18 +511,6 @@ class logicalfile(object):
         """ Force load all objects - mainly indended for debugging"""
         _ = [self.find(x, matcher=plumbing.exact_matcher())
              for x in self.object_pool.types]
-
-    def promote(self, objects):
-        """Enrich instances of the generic core.basicobject into type-specific
-        objects like Channel, Frame, etc... """
-        objs = []
-        for o in objects:
-            try:
-                obj = self.types[o.type](o, lf=self)
-            except KeyError:
-                obj = plumbing.Unknown(o, lf=self)
-            objs.append(obj)
-        return objs
 
     def storage_label(self):
         """Return the storage label of the physical file
