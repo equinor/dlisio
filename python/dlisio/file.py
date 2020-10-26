@@ -1,11 +1,11 @@
 import logging
-import re
 
 from collections import defaultdict, OrderedDict
 from io import StringIO
 
 from . import core
 from . import plumbing
+from . import settings
 
 class physicalfile(tuple):
     def __enter__(self):
@@ -122,7 +122,7 @@ class logicalfile(object):
         objects : dict
             all objects of type 'type'
         """
-        objs = self.find(type, matcher=plumbing.exact_matcher())
+        objs = self.find(type, matcher=settings.exact)
         return { x.fingerprint : x for x in objs }
 
     def __enter__(self):
@@ -154,7 +154,7 @@ class logicalfile(object):
 
         def __get__(self, instance, owner):
             if instance is None: return None
-            return instance.find(self.t, matcher=plumbing.exact_matcher())
+            return instance.find(self.t, matcher=settings.exact)
 
     @property
     def fileheader(self):
@@ -165,7 +165,7 @@ class logicalfile(object):
         fileheader : Fileheader
 
         """
-        values = self.find('FILE-HEADER', matcher=plumbing.exact_matcher())
+        values = self.find('FILE-HEADER', matcher=settings.exact)
 
         if len(values) != 1:
             msg = "Expected exactly one fileheader. Was: {}"
@@ -221,7 +221,7 @@ class logicalfile(object):
         unknowns = defaultdict(dict)
         for t in set(self.object_pool.types):
             if t in self.types: continue
-            objects = self.find(t, matcher=plumbing.exact_matcher())
+            objects = self.find(t, matcher=settings.exact)
             unknowns[t] = {x.fingerprint : x for x in objects}
 
         return unknowns
@@ -333,7 +333,7 @@ class logicalfile(object):
         matcher : Any matcher derived from dlisio.core.matcher, optional
                   matcher object to be used when comparing objecttype,
                   objectname to file content. Default is
-                  :py:func:`dlisio.regex_matcher(re.IGNORECASE)`.
+                  :py:attr:`dlisio.settings.regex`.
 
         Returns
         -------
@@ -378,11 +378,11 @@ class logicalfile(object):
         self.exact and compiling- and comparing regex expressions with
         self.regex.
 
-        >>> f.find('FRAME', matcher=dlisio.plumbing.exact_matcher())
+        >>> f.find('FRAME', matcher=self.exact)
         [Frame(60B), Frame(20B), Frame(10B)]
         """
         if not matcher:
-            matcher = plumbing.regex_matcher(re.IGNORECASE)
+            matcher = settings.regex
 
         if not objectname:
             attics = self.object_pool.get(objecttype, matcher)
@@ -431,8 +431,7 @@ class logicalfile(object):
         MKAP
 
         """
-        matcher = plumbing.exact_matcher()
-        matches = self.find(type, name, matcher)
+        matches = self.find(type, name, settings.exact)
 
         if origin is not None:
             matches = [o for o in matches if o.origin == origin]
@@ -493,7 +492,7 @@ class logicalfile(object):
 
         known, unknown = {}, {}
         for objtype in self.object_pool.types:
-            objs = self.find(objtype, matcher=plumbing.exact_matcher())
+            objs = self.find(objtype, matcher=settings.exact)
             if objtype in self.types: known[objtype]   = len(objs)
             else:                     unknown[objtype] = len(objs)
 
@@ -509,7 +508,7 @@ class logicalfile(object):
 
     def load(self):
         """ Force load all objects - mainly indended for debugging"""
-        _ = [self.find(x, matcher=plumbing.exact_matcher())
+        _ = [self.find(x, matcher=settings.exact)
              for x in self.object_pool.types]
 
     def storage_label(self):
