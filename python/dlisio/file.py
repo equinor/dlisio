@@ -310,11 +310,7 @@ class logicalfile(object):
         msg += "use find('{}', '{}') instead".format(type, pattern)
         warnings.warn(msg, FutureWarning)
 
-        # Use python's re with case-insensitivity as matcher when searching for
-        # object_pool objects in dl::pool
-        matcher = plumbing.regex_matcher(re.IGNORECASE);
-        matches = self.object_pool.get(type, pattern, matcher)
-        return self.promote(matches)
+        return self.find(type, pattern)
 
     def find(self, objecttype, objectname=None, matcher=None):
         """Find objects in the logical file
