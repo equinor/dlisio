@@ -63,9 +63,8 @@ matching a regular expression with :func:`logicalfile.find`
    >>> channel.long_name
    'Gamma Ray'
 
-   >>> channels = f.find('CHANNEL', '.*GR.*')
-   >>> channels
-   ['GR', 'RGR']
+   >>> f.find('CHANNEL', '.*GR.*')
+   [Channel(GR), Channel(RGR)]
 
 .. note::
    Note that :func:`logicalfile.object` allows you to ommit the origin and/or
