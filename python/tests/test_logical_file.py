@@ -97,8 +97,8 @@ def test_object_same_signature_diff_content(tmpdir_factory, merge_files_manyLR):
             _ = f.object("CHANNEL", "CHANN1", 10, 0)
         assert "There are multiple" in str(exc.value)
 
-        # They can still be reached through match
-        chs = f.match("CHANN1", "CHANNEL")
+        # They can still be reached through find
+        chs = f.find("CHANNEL", "CHANN1")
         assert len(chs) == 2
 
 def test_match(tmpdir_factory, merge_files_manyLR):
@@ -191,6 +191,100 @@ def test_match_special_characters(tmpdir_factory, merge_files_manyLR):
 
         refs = [o2]
         channels = f.match('440.MATCH1', '440-TYPE')
+        assert len(list(channels)) == 1
+        for ch in channels:
+            assert ch in refs
+
+def test_find(tmpdir_factory, merge_files_manyLR):
+    fpath = str(tmpdir_factory.mktemp('lf').join('find.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH111-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.127-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.440-TYPE-I.440.MATCH1-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
+    with dlisio.load(fpath) as (f, *_):
+        refs = []
+        refs.append(f.object('CHANNEL', 'MATCH1', 16, 0))
+        refs.append(f.object('CHANNEL', 'MATCH111', 16, 0))
+        refs.append(f.object('CHANNEL', 'MATCH1', 127, 0))
+
+        channels = f.find('CHANNEL', '.*match1.*')
+
+        assert len(list(channels)) == 3
+        for ch in channels:
+            assert ch in refs
+
+        channels = f.find('.*', '.*match1.*')
+        assert len(list(channels)) == 5
+
+def test_find_type(tmpdir_factory, merge_files_manyLR):
+    fpath = str(tmpdir_factory.mktemp('lf').join('find-type.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/match/T.FRAME-I.MATCH22-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.MATCH-I.MATCH22-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
+    with dlisio.load(fpath) as (f, *_):
+        refs = []
+        refs.append( f.object('MATCH', 'MATCH22', 16, 0) )
+        refs.append( f.object('FRAME', 'MATCH22', 16, 0) )
+
+        objs = f.find('MATCH|FRAME', 'MATCH2.*')
+
+        assert len(list(objs)) == len(refs)
+        for obj in objs:
+            assert obj in refs
+
+        objs = f.find('match|frame', '')
+
+        assert len(list(objs)) == len(refs)
+        for obj in objs:
+            assert obj in refs
+
+def test_find_invalid_regex(f):
+    with pytest.raises(ValueError):
+        _ = next(f.find('*'))
+
+    with pytest.raises(ValueError):
+        _ = next(f.find('*', 'AIBK'))
+
+def test_find_special_characters(tmpdir_factory, merge_files_manyLR):
+    fpath = str(tmpdir_factory.mktemp('lf').join('find-special.dlis'))
+    content = [
+        'data/chap4-7/eflr/envelope.dlis.part',
+        'data/chap4-7/eflr/file-header.dlis.part',
+        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.440-TYPE-I.440.MATCH1-O.16-C.0.dlis.part',
+        'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
+    ]
+    merge_files_manyLR(fpath, content)
+    with dlisio.load(fpath) as (f, *_):
+        o1 = f.object('440.TYPE', '440-MATCH1', 16, 0)
+        o2 = f.object('440-TYPE', '440.MATCH1', 16, 0)
+
+        refs = [o1, o2]
+        channels = f.find('440.TYPE', '440.MATCH1')
+
+        assert len(list(channels)) == 2
+        for ch in channels:
+            assert ch in refs
+
+        refs = [o1]
+        channels = f.find('440.TYPE', '440-MATCH1')
+        assert len(list(channels)) == 1
+        for ch in channels:
+            assert ch in refs
+
+        refs = [o2]
+        channels = f.find('440-TYPE', '440.MATCH1')
         assert len(list(channels)) == 1
         for ch in channels:
             assert ch in refs

@@ -309,6 +309,84 @@ class logicalfile(object):
         matches = self.object_pool.get(type, pattern, matcher)
         return self.promote(matches)
 
+    def find(self, objecttype, objectname=None, matcher=None):
+        """Find objects in the logical file
+
+        Find searches and returns all objects matching objecttype, and if
+        specified, objectname. By default find uses python's re module with
+        case-insensitivity when searching for objects matching objecttype and
+        objectname. See examples for how to use.
+
+        Parameters
+        ----------
+
+        objectype : str
+            type of objects to be looked for
+
+        objectname : str, optional
+            name / mnemonic of objects to be looked for
+
+        matcher : Any matcher derived from dlisio.core.matcher, optional
+                  matcher object to be used when comparing objecttype,
+                  objectname to file content. Default is
+                  :py:func:`dlisio.regex_matcher(re.IGNORECASE)`.
+
+        Returns
+        -------
+
+        objects : list
+            A list of all objects in the logicalfile that matches objecttype
+            (and objectname)
+
+        See also
+        --------
+
+        plumbing.exact_matcher : string comparison using str.__eq__
+        plumbing.regex_matcher : string comparison using python's re module
+
+        Examples
+        --------
+
+        Query for all Channels where the name / mnemonic contains 'GR':
+
+        >>> f.find('CHANNEL', '.*GR.*')
+        [Channel(GR), Channel(GR1)]
+
+        Query for all Channel-like objects. I.e. both regular Channels and
+        vendor-specific ones:
+
+        >>> f.find('.*CHANNEL')
+        [Channel(TDEP), Channel(GR), Channel(GR1), 440channel(GR2)]
+
+        The two queries above can be combined:
+
+        >>> f.find('.*CHANNEL', '.*GR.*')
+        [Channel(GR), Channel(GR1), 440channel(GR2)]
+
+        Omitting the objectname yields *all* objects matching objecttype:
+
+        >>> f.find('FRAME')
+        [Frame(60B), Frame(20B), Frame(10B)]
+
+        If your query does not include a regular expression and you care about
+        performance, tell find to use the default exact matcher. For large
+        files there is a significant difference between comparing strings with
+        self.exact and compiling- and comparing regex expressions with
+        self.regex.
+
+        >>> f.find('FRAME', matcher=dlisio.plumbing.exact_matcher())
+        [Frame(60B), Frame(20B), Frame(10B)]
+        """
+        if not matcher:
+            matcher = plumbing.regex_matcher(re.IGNORECASE)
+
+        if not objectname:
+            attics = self.object_pool.get(objecttype, matcher)
+        else:
+            attics = self.object_pool.get(objecttype, objectname, matcher)
+
+        return self.promote(attics)
+
     def object(self, type, name, origin=None, copynr=None):
         """
         Direct access to a single object.

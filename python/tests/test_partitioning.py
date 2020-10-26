@@ -10,7 +10,7 @@ def test_partitioning():
         assert len(tail) == 0
 
         def getobjects(f):
-            return f.match('.*', '.*')
+            return f.find('.*', '.*')
 
         assert len(getobjects(f1)) == 8
         assert len(getobjects(f2)) == 7
