@@ -48,8 +48,8 @@ class Group(BasicObject):
 
     }
 
-    def __init__(self, obj = None, name = None, lf = None):
-        super().__init__(obj, name = name, type = 'GROUP', lf = lf)
+    def __init__(self, attic, lf):
+        super().__init__(attic, lf=lf)
         self.linkage = deepcopy(self.linkage)
 
     @property

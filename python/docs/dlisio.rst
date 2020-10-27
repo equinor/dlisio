@@ -10,7 +10,7 @@ Open and Load
 
 Logical files
 =============
-.. autoclass:: dlisio.dlis()
+.. autoclass:: dlisio.logicalfile()
     :members:
     :exclude-members: types, IndexedObjectDescriptor
     :member-order: bysource

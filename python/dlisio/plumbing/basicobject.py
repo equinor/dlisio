@@ -158,23 +158,14 @@ class BasicObject():
     Parameter('2000T')
     """
 
-    def __init__(self, obj, name = None, type = None, lf = None):
-        self.type       = type
-        self.name       = name
-        self.origin     = None
-        self.copynumber = None
+    def __init__(self, attic, lf):
+        self.type       = attic.type
+        self.name       = attic.name.id
+        self.origin     = attic.name.origin
+        self.copynumber = attic.name.copynumber
 
-        if obj is None: obj = {}
-        self.attic = obj
-
+        self.attic       = attic
         self.logicalfile = lf
-
-        try:
-            self.name       = name.id
-            self.origin     = int(name.origin)
-            self.copynumber = int(name.copynumber)
-        except AttributeError:
-            pass
 
     def __repr__(self):
         """Return a string representation of the object"""

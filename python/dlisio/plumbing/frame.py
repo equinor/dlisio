@@ -95,8 +95,8 @@ class Frame(BasicObject):
 
     dtype_format = '{:s}.{:d}.{:d}'
 
-    def __init__(self, obj = None, name = None, lf = None):
-        super().__init__(obj, name = name, type = 'FRAME', lf = lf)
+    def __init__(self, attic, lf):
+        super().__init__(attic, lf=lf)
         # Instance-specific dtype label formatter on duplicated mnemonics.
         # Defaults to Frame.dtype_format
         self.dtype_fmt = self.dtype_format

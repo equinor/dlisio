@@ -30,7 +30,7 @@ the logs.
        support for. I.e. they are not translated into their own python class,
        but rather use the more generic and rough interface of
        :class:`plumbing.BasicObject`. These rarely see the light of day, but if
-       present they can be accessed through :attr:`dlis.unknowns`.
+       present they can be accessed through :attr:`logicalfile.unknowns`.
 
 Identifying specific objects
 ----------------------------
@@ -54,8 +54,8 @@ with the same name/mnemonic and both belong to the same origin.
 
 .. currentmodule:: dlisio
 
-To access a specific object use :func:`dlis.object`. Or search for objects
-matching a regular expression with :func:`dlis.match`
+To access a specific object use :func:`logicalfile.object`. Or search for objects
+matching a regular expression with :func:`logicalfile.match`
 
 .. code-block:: python
 
@@ -68,10 +68,10 @@ matching a regular expression with :func:`dlis.match`
    ['GR', 'RGR']
 
 .. note::
-   Note that :func:`dlis.object` allows you to ommit the origin and/or
+   Note that :func:`logicalfile.object` allows you to ommit the origin and/or
    copynumber, but will raise if it's unable to uniquely identify the object.
-   The documentation for :func:`dlis.object` and :func:`dlis.match` offers more
-   examples.
+   The documentation for :func:`logicalfile.object` and
+   :func:`logicalfile.match` offers more examples.
 
 Relationship between metadata objects
 -------------------------------------

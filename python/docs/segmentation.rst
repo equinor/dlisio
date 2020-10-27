@@ -28,4 +28,4 @@ objects, see :ref:`Object types`::
 
 This is a simplified illustration of the logical file structure, but to work
 with dlis-files this is pretty much how you should think of logical files. To
-see how to access specific objects, check out :py:class:`dlisio.dlis`
+see how to access specific objects, check out :py:class:`dlisio.logicalfile`
