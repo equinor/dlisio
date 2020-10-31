@@ -1,11 +1,11 @@
 import logging
-import re
 
 from collections import defaultdict, OrderedDict
 from io import StringIO
 
 from . import core
 from . import plumbing
+from . import settings
 
 class physicalfile(tuple):
     def __enter__(self):
@@ -46,7 +46,7 @@ class logicalfile(object):
     of objects. Some examples of objects are Channel, Frame, Fileheader, Tool.
     They are all accessible through their own attribute.
 
-    :py:func:`object()` and :py:func:`match()` let you access specific objects
+    :py:func:`object()` and :py:func:`find()` let you access specific objects
     or search for objects matching a regular expression. Unknown objects such
     as vendor-specific objects are accessible through the 'unknown'-attribute.
 
@@ -111,6 +111,9 @@ class logicalfile(object):
     def __getitem__(self, type):
         """Return all objects of a given type
 
+        .. deprecated:: 0.2.6
+            use :func:`find(type, matcher=dlisio.settings.exact)` instead
+
         Parameters
         ----------
         type : str
@@ -122,8 +125,13 @@ class logicalfile(object):
         objects : dict
             all objects of type 'type'
         """
-        objs = self.object_pool.get(type, plumbing.exact_matcher())
-        return { x.fingerprint : x for x in self.promote(objs) }
+        import warnings
+        msg = "__getitem__ is deprecated and will be removed in a future version, "
+        msg += "use find('{}', matcher=dlisio.settings..exact) instead".format(type)
+        warnings.warn(msg, FutureWarning)
+
+        objs = self.find(type, matcher=settings.exact)
+        return { x.fingerprint : x for x in objs }
 
     def __enter__(self):
         return self
@@ -154,7 +162,7 @@ class logicalfile(object):
 
         def __get__(self, instance, owner):
             if instance is None: return None
-            return instance[self.t].values()
+            return instance.find(self.t, matcher=settings.exact)
 
     @property
     def fileheader(self):
@@ -165,7 +173,7 @@ class logicalfile(object):
         fileheader : Fileheader
 
         """
-        values = list(self['FILE-HEADER'].values())
+        values = self.find('FILE-HEADER', matcher=settings.exact)
 
         if len(values) != 1:
             msg = "Expected exactly one fileheader. Was: {}"
@@ -221,7 +229,8 @@ class logicalfile(object):
         unknowns = defaultdict(dict)
         for t in set(self.object_pool.types):
             if t in self.types: continue
-            unknowns[t] = self[t]
+            objects = self.find(t, matcher=settings.exact)
+            unknowns[t] = {x.fingerprint : x for x in objects}
 
         return unknowns
 
@@ -236,6 +245,9 @@ class logicalfile(object):
         match("tdep") yield the same result.
 
         [1] https://docs.python.org/3.7/library/re.html
+
+        .. deprecated:: 0.2.6
+            use :func:`find` instead
 
         Parameters
         ----------
@@ -302,12 +314,98 @@ class logicalfile(object):
         Channel(CHANNEL123)
 
         """
+        import warnings
+        msg = "match is deprecated and will be removed in a future version, "
+        msg += "use find('{}', '{}') instead".format(type, pattern)
+        warnings.warn(msg, FutureWarning)
 
-        # Use python's re with case-insensitivity as matcher when searching for
-        # object_pool objects in dl::pool
-        matcher = plumbing.regex_matcher(re.IGNORECASE);
-        matches = self.object_pool.get(type, pattern, matcher)
-        return self.promote(matches)
+        return self.find(type, pattern)
+
+    def find(self, objecttype, objectname=None, matcher=None):
+        """Find objects in the logical file
+
+        Find searches and returns all objects matching objecttype, and if
+        specified, objectname. By default find uses python's re module with
+        case-insensitivity when searching for objects matching objecttype and
+        objectname. See examples for how to use.
+
+        Parameters
+        ----------
+
+        objectype : str
+            type of objects to be looked for
+
+        objectname : str, optional
+            name / mnemonic of objects to be looked for
+
+        matcher : Any matcher derived from dlisio.core.matcher, optional
+                  matcher object to be used when comparing objecttype,
+                  objectname to file content. Default is
+                  :py:attr:`dlisio.settings.regex`.
+
+        Returns
+        -------
+
+        objects : list
+            A list of all objects in the logicalfile that matches objecttype
+            (and objectname)
+
+        See also
+        --------
+
+        plumbing.exact_matcher : string comparison using str.__eq__
+        plumbing.regex_matcher : string comparison using python's re module
+
+        Examples
+        --------
+
+        Query for all Channels where the name / mnemonic contains 'GR':
+
+        >>> f.find('CHANNEL', '.*GR.*')
+        [Channel(GR), Channel(GR1)]
+
+        Query for all Channel-like objects. I.e. both regular Channels and
+        vendor-specific ones:
+
+        >>> f.find('.*CHANNEL')
+        [Channel(TDEP), Channel(GR), Channel(GR1), 440channel(GR2)]
+
+        The two queries above can be combined:
+
+        >>> f.find('.*CHANNEL', '.*GR.*')
+        [Channel(GR), Channel(GR1), 440channel(GR2)]
+
+        Omitting the objectname yields *all* objects matching objecttype:
+
+        >>> f.find('FRAME')
+        [Frame(60B), Frame(20B), Frame(10B)]
+
+        If your query does not include a regular expression and you care about
+        performance, tell find to use the default exact matcher. For large
+        files there is a significant difference between comparing strings with
+        self.exact and compiling- and comparing regex expressions with
+        self.regex.
+
+        >>> f.find('FRAME', matcher=self.exact)
+        [Frame(60B), Frame(20B), Frame(10B)]
+        """
+        if not matcher:
+            matcher = settings.regex
+
+        if not objectname:
+            attics = self.object_pool.get(objecttype, matcher)
+        else:
+            attics = self.object_pool.get(objecttype, objectname, matcher)
+
+        objects = []
+        for attic in attics:
+            try:
+                obj = self.types[attic.type](attic, lf=self)
+            except KeyError:
+                obj = plumbing.Unknown(attic, lf=self)
+            objects.append(obj)
+
+        return objects
 
     def object(self, type, name, origin=None, copynr=None):
         """
@@ -341,8 +439,7 @@ class logicalfile(object):
         MKAP
 
         """
-        matches = self.object_pool.get(type, name, plumbing.exact_matcher())
-        matches = self.promote(matches)
+        matches = self.find(type, name, settings.exact)
 
         if origin is not None:
             matches = [o for o in matches if o.origin == origin]
@@ -353,24 +450,23 @@ class logicalfile(object):
         if len(matches) == 1: return matches[0]
 
         if len(matches) == 0:
-            if origin is not None and copynr is not None:
-                msg = "Object {}.{}.{} of type {} is not found"
-                raise ValueError(msg.format(name, origin, copynr, type))
-            else:
-                msg = "No objects with name {} and type {} are found"
-                raise ValueError(msg.format(name, type))
+            msg = "Object not found: type={}, name={}, origin={}, copynumber={}"
+            if not origin: origin = "'any'"
+            if not copynr: copynr = "'any'"
+
+            raise ValueError(msg.format(type, name, origin, copynr))
 
         # We found multiple matching objects. If they are all equal, return one
         # of them and be done with it
         if all(x.attic == matches[0].attic for x in matches):
             return matches[0]
 
-        msg = "There are multiple {}s named {}. Found: {}"
-        desc = ""
-        for o in matches:
-            desc += ("(origin={}, copy={}), "
-                        .format(o.origin, o.copynumber))
-        raise ValueError(msg.format(type, name, desc))
+        msg = "Multiple {} objects with name {}. Candidates are:"
+        candidate = "\norigin={}, copy={},"
+        candidates = [candidate.format(x.origin, x.copynumber) for x in matches]
+
+        msg += ''.join(candidates)
+        raise ValueError(msg.format(type, name))
 
 
     def describe(self, width=80, indent=''):
@@ -403,8 +499,9 @@ class logicalfile(object):
 
         known, unknown = {}, {}
         for objtype in self.object_pool.types:
-            if objtype in self.types: known[objtype]   = len(self[objtype])
-            else:                     unknown[objtype] = len(self[objtype])
+            objs = self.find(objtype, matcher=settings.exact)
+            if objtype in self.types: known[objtype]   = len(objs)
+            else:                     unknown[objtype] = len(objs)
 
         if known:
             plumbing.describe_header(buf, 'Known objects', width, indent, lvl=2)
@@ -418,19 +515,8 @@ class logicalfile(object):
 
     def load(self):
         """ Force load all objects - mainly indended for debugging"""
-        _ = [self[x] for x in self.object_pool.types]
-
-    def promote(self, objects):
-        """Enrich instances of the generic core.basicobject into type-specific
-        objects like Channel, Frame, etc... """
-        objs = []
-        for o in objects:
-            try:
-                obj = self.types[o.type](o, lf=self)
-            except KeyError:
-                obj = plumbing.Unknown(o, lf=self)
-            objs.append(obj)
-        return objs
+        _ = [self.find(x, matcher=settings.exact)
+             for x in self.object_pool.types]
 
     def storage_label(self):
         """Return the storage label of the physical file

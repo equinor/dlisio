@@ -17,7 +17,7 @@ def test_describe(fpath):
         for f in batch:
             _ = f.describe()
 
-            for obj in f.match('.*', '.*'):
+            for obj in f.find('.*', '.*'):
                 _ = obj.describe(indent='   ', width=70, exclude='e')
 
 def test_replist(f):

@@ -101,11 +101,11 @@ def test_broken_utf8_object_name(tmpdir, merge_files_oneLR):
     try:
         f, = dlisio.load(path)
         with pytest.warns(UnicodeWarning):
-            _ = f.match('.*', 'VERY_MUCH_TESTY_SET')
+            _ = f.find('VERY_MUCH_TESTY_SET', '.*')
 
         dlisio.set_encodings(['koi8_r'])
 
-        objs = f.match('.*', 'VERY_MUCH_TESTY_SET')
+        objs = f.find('VERY_MUCH_TESTY_SET', '.*')
         [obj] = [x for x in objs]
         assert obj.name == 'КАДР'
     finally:

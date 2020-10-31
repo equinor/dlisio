@@ -55,7 +55,7 @@ with the same name/mnemonic and both belong to the same origin.
 .. currentmodule:: dlisio
 
 To access a specific object use :func:`logicalfile.object`. Or search for objects
-matching a regular expression with :func:`logicalfile.match`
+matching a regular expression with :func:`logicalfile.find`
 
 .. code-block:: python
 
@@ -63,15 +63,14 @@ matching a regular expression with :func:`logicalfile.match`
    >>> channel.long_name
    'Gamma Ray'
 
-   >>> channels = f.match('.*GR.*', 'CHANNEL')
-   >>> channels
-   ['GR', 'RGR']
+   >>> f.find('CHANNEL', '.*GR.*')
+   [Channel(GR), Channel(RGR)]
 
 .. note::
    Note that :func:`logicalfile.object` allows you to ommit the origin and/or
    copynumber, but will raise if it's unable to uniquely identify the object.
    The documentation for :func:`logicalfile.object` and
-   :func:`logicalfile.match` offers more examples.
+   :func:`logicalfile.find` offers more examples.
 
 Relationship between metadata objects
 -------------------------------------

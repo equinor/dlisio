@@ -630,7 +630,7 @@ def test_cut_before_object(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
     with dlisio.load(path) as (f,):
-        objects = f.match('.*', '.*')
+        objects = f.find('.*', '.*')
         assert len(objects) == 0
 
 

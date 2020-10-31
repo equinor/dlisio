@@ -114,11 +114,11 @@ See :ref:`Logical files` for a full list of all object types.
 
     >>> obj = f.object('CHANNEL', 'TDEP')
 
-Objects can also be searched for with :py:func:`dlisio.logicalfile.match()`:
+Objects can also be searched for with :py:func:`dlisio.logicalfile.find()`:
 
 .. code-block:: python
 
-    >>> objs = f.match('T.*')
+    >>> objs = f.find('CHANNEL', 'T.*')
 
 Inspect an object with the :code:`.describe()`-method:
 
