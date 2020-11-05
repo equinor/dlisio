@@ -896,6 +896,14 @@ noexcept (false)
     }
 }
 
+bool is_log_clear( const std::vector< dlis_error >& log ) noexcept (true) {
+    for (const auto& entry : log) {
+        if (entry.severity >= dl::error_severity::MINOR)
+            return false;
+    }
+    return true;
+}
+
 }
 
 const char* object_set::parse_objects(const char* cur) noexcept (false) {
@@ -913,6 +921,7 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
         auto current = default_object;
         current.type = type;
         if (object_flags.name) cur = cast( cur, current.object_name );
+        bool object_clear = true;
 
         for (const auto& template_attr : tmpl) {
             if (template_attr.invariant) continue;
@@ -1004,7 +1013,18 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
                 patch_missing_value( attr );
             }
 
+            object_clear = object_clear && is_log_clear(attr.log);
+
             current.set(attr);
+        }
+
+        if (not object_clear) {
+            const auto msg =
+                "One or more attributes of this object violate specification. "
+                "This can potentially corrupt the entire object";
+            dlis_error err{
+                    dl::error_severity::MINOR, msg, "", ""};
+            current.log.push_back(err);
         }
 
         this->objs.push_back( std::move( current ) );

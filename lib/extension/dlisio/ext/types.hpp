@@ -524,6 +524,7 @@ struct basic_object {
     dl::obname object_name;
     dl::ident type;
     std::vector< object_attribute > attributes;
+    std::vector< dl::dlis_error > log;
 };
 
 /* Object set
@@ -555,6 +556,11 @@ struct basic_object {
  * encrypted records cannot be parsed by dlisio without being decrypted first.
  * As object_set does its parsing itself, it _will_ fail on construction if
  * given an encrypted record.
+ *
+ * Log:
+ *
+ * As well as attributes, every object set should have information about issues
+ * that arose during parsing.
  */
 using object_vector = std::vector< basic_object >;
 
@@ -565,6 +571,8 @@ public:
     int role; // TODO: enum class?
     dl::ident type;
     dl::ident name;
+
+    std::vector< dl::dlis_error > log;
 
     dl::object_vector& objects() noexcept (false);
 private:
