@@ -876,6 +876,7 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::object_attribute >( m, "object_attribute" )
         .def_readonly("value", &dl::object_attribute::value)
         .def_readonly("units", &dl::object_attribute::units)
+        .def_readonly("log",   &dl::object_attribute::log)
     ;
 
     py::class_< dl::basic_object >( m, "basic_object" )

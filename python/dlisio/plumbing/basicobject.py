@@ -197,9 +197,19 @@ class BasicObject():
             parse_as = vector
 
         try:
-            rp66value = self.attic[key].value
+            attribute = self.attic[key]
         except KeyError:
             return defaultvalue(parse_as)
+
+        rp66value = attribute.value
+
+        # already report errors. presence of key in the attic is enough
+        if len(attribute.log) > 0:
+            context = "{}-A.{}".format(self.fingerprint, key)
+            for error in attribute.log:
+                self.logicalfile.error_handler.log(
+                    error.severity, context, error.problem,
+                    error.specification, error.action)
 
         if rp66value is None: return defaultvalue(parse_as)
         if rp66value == []  : return defaultvalue(parse_as)

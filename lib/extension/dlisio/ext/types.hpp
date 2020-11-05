@@ -436,6 +436,23 @@ struct record {
 
 /*
  * The structure of an attribute as described in 3.2.2.1
+ *
+ * Error handling:
+ *
+ * Due to the intricate structure of a dlis-file, dlisio typically over-parses
+ * when a certain piece of information is queried. This would typically make
+ * any warnings or errors issued from the parsing routines pre-mature and might
+ * result in the query failing due to an error in some (from a
+ * user-perspective) unrelated data.
+ *
+ * To combat this, the result of parsing routines (and the state of the
+ * parsed object) is communicated through error codes set on the object.
+ *
+ *      It is the consumers responsibility to check the state of the
+ *      object before using its content.
+ *
+ * object_attribute.log contains a list of dl::dlis_error, which provide
+ * human-readable explanation of the problem
  */
 struct object_attribute {
     dl::ident           label = {};
@@ -445,6 +462,8 @@ struct object_attribute {
     dl::units           units = {};
     dl::value_vector    value = {};
     bool invariant            = false;
+
+    std::vector< dl::dlis_error > log;
 
     bool operator == (const object_attribute& ) const noexcept (true);
 };
