@@ -454,12 +454,35 @@ const char* cast( const char* xs,
     xs = cast( xs, x );
 
     if (x < DLIS_FSHORT || x > DLIS_UNITS) {
-        debug_warning("Read incorrect representation code");
         reprc = dl::representation_code::undef;
-    }else{
+    } else {
         reprc = static_cast< dl::representation_code >( x );
     }
     return xs;
+}
+
+const char* repcode(const char* xs, dl::object_attribute& attr )
+noexcept (false) {
+    dl::representation_code& reprc = attr.reprc;
+
+    auto cur = cast(xs, reprc);
+    if (reprc == dl::representation_code::undef) {
+        // retrieve value again for reporting, as it is lost
+        dl::ushort x{ 0 };
+        cast( xs, x );
+
+        const auto msg = "Invalid representation code {}";
+        const auto code = static_cast< int >(x);
+        dl::dlis_error err {
+            dl::error_severity::MINOR,
+            fmt::format(msg, code),
+            "Appendix B: Representation Codes",
+            "Continue. Postpone dealing with this until later"
+        };
+        attr.log.push_back(err);
+    }
+
+    return cur;
 }
 
 template < typename T >
@@ -718,7 +741,7 @@ const char* object_set::parse_template(const char* cur) noexcept (false) {
 
                          cur = cast( cur, attr.label );
         if (flags.count) cur = cast( cur, attr.count );
-        if (flags.reprc) cur = cast( cur, attr.reprc );
+        if (flags.reprc) cur = repcode( cur, attr );
         if (flags.units) cur = cast( cur, attr.units );
         if (flags.value) cur = elements( cur, attr );
         attr.invariant = flags.invariant;
@@ -769,12 +792,13 @@ struct shrink {
     }
 };
 
-void patch_missing_value( dl::value_vector& value,
-                          std::size_t count,
-                          dl::representation_code reprc,
-                          std::vector< dl::dlis_error >& log)
+void patch_missing_value( dl::object_attribute& attr )
 noexcept (false)
 {
+    const dl::representation_code reprc = attr.reprc;
+    const std::size_t count             = dl::decay( attr.count );
+    dl::value_vector& value             = attr.value;
+
     /*
      * value is *NOT* monostate, i.e. there is a default value.  if count !=
      * values.size(), resize it.
@@ -800,7 +824,7 @@ noexcept (false)
                     "Characteristic.",
                 "shrank template value to new attribute count"
             };
-            log.push_back(err);
+            attr.log.push_back(err);
             return;
         }
 
@@ -854,10 +878,23 @@ noexcept (false)
         case rpc::status: reset< dl::status >(value).resize(count); return;
         case rpc::units:  reset< dl::units  >(value).resize(count); return;
         default: {
-            const auto msg = "unable to patch attribute with no value: "
-                             "unknown representation code {}";
+            // repcode is incorrect, but value is missing
+            // hence we can log an error but continue processing
+            const auto msg =
+                "invalid representation code {}";
+            /* TODO: there is a problem with reporting. If representation code
+             * is undefined, we define the value to be 66, not the actual value
+             * that is present in the file
+             */
             const auto code = static_cast< int >(reprc);
-            throw std::runtime_error(fmt::format(msg, code));
+            dl::dlis_error err {
+                dl::error_severity::CRITICAL,
+                fmt::format(msg, code),
+                "Appendix B: Representation Codes",
+                "attribute value is left as template default. Continue"
+            };
+            attr.log.push_back(err);
+
         }
     }
 }
@@ -925,7 +962,7 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
             }
 
             if (flags.count) cur = cast( cur, attr.count );
-            if (flags.reprc) cur = cast( cur, attr.reprc );
+            if (flags.reprc) cur = repcode( cur, attr );
             if (flags.units) cur = cast( cur, attr.units );
             if (flags.value) cur = elements( cur, attr );
 
@@ -968,7 +1005,7 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
                     attr.value = mpark::monostate{};
                 }
 
-                patch_missing_value( attr.value, count, attr.reprc, attr.log);
+                patch_missing_value( attr );
             }
 
             current.set(attr);
