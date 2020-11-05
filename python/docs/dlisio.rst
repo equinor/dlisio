@@ -3,6 +3,11 @@ Strings and encodings
 .. autofunction:: dlisio.set_encodings
 .. autofunction:: dlisio.get_encodings
 
+Error handling
+==============
+.. autoclass:: dlisio.errors.ErrorHandler()
+.. autoclass:: dlisio.errors.Actions()
+
 Open and Load
 =============
 .. autofunction:: dlisio.load

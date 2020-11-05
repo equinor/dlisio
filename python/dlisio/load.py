@@ -1,5 +1,6 @@
 from . import core
 from .file import physicalfile, logicalfile
+from .errors import ErrorHandler
 
 def open(path):
     """ Open a file
@@ -21,7 +22,7 @@ def open(path):
     """
     return core.open(str(path))
 
-def load(path):
+def load(path, error_handler = None):
     """ Loads a file and returns one filehandle pr logical file.
 
     The dlis standard have a concept of logical files. A logical file is a
@@ -47,6 +48,11 @@ def load(path):
     ----------
 
     path : str_like
+
+    error_handler : dlisio.errors.ErrorHandler, optional
+            Error handling rules. Default rules will apply if none supplied.
+            Handler will be added to all the logical files, so users may modify
+            the behavior at any time.
 
     Examples
     --------
@@ -75,6 +81,9 @@ def load(path):
 
     dlis : dlisio.physicalfile(dlisio.logicalfile)
     """
+    if not error_handler:
+        error_handler = ErrorHandler()
+
     sulsize = 80
     tifsize = 12
     lfs = []
@@ -125,7 +134,7 @@ def load(path):
             pool  = core.pool(sets)
             fdata = core.findfdata(stream, implicits)
 
-            lf = logicalfile(stream, pool, fdata, sul)
+            lf = logicalfile(stream, pool, fdata, sul, error_handler)
             lfs.append(lf)
 
             try:

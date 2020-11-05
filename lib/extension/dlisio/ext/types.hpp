@@ -415,6 +415,15 @@ struct dlis_error {
     std::string action;
 };
 
+struct error_handler {
+    virtual void log(const error_severity &level, const std::string &context,
+                     const std::string &problem,const std::string &specification,
+                     const std::string &action)
+        const noexcept(false) = 0;
+
+    virtual ~error_handler() = default;
+};
+
 struct record {
     bool isexplicit()  const noexcept (true);
     bool isencrypted() const noexcept (true);

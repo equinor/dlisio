@@ -717,6 +717,30 @@ public:
     }
 };
 
+/** trampoline helper class for dl::error_handler bindings */
+class PyErrorHandler : public dl::error_handler {
+public:
+    /* Inherit the constructor */
+    using dl::error_handler::error_handler;
+
+    /* Trampoline (need one for each virtual function) */
+    void log(const dl::error_severity& level, const std::string& context,
+             const std::string& problem, const std::string& specification,
+             const std::string& action)
+    const noexcept(false) override {
+        PYBIND11_OVERLOAD_PURE(
+            void,              /* Return type */
+            dl::error_handler, /* Parent class */
+            log,               /* Name of function in C++ */
+            level,             /* Argument(s) */
+            context,
+            problem,
+            specification,
+            action
+        );
+    }
+};
+
 }
 
 PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
@@ -1014,10 +1038,16 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "action",        &dl::dlis_error::action )
     ;
 
-    m.def("set_encodings", set_encodings);
-    m.def("get_encodings", get_encodings);
-
     py::class_< dl::matcher, Pymatcher >( m, "matcher")
         .def(py::init<>())
     ;
+
+    py::class_< dl::error_handler, PyErrorHandler >( m, "error_handler")
+        .def(py::init<>())
+    ;
+
+    /* settings */
+    m.def("set_encodings", set_encodings);
+    m.def("get_encodings", get_encodings);
+
 }

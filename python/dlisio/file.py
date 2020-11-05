@@ -95,11 +95,12 @@ class logicalfile(object):
     then the users responsibility of ensuring correctness for the custom class.
     """
 
-    def __init__(self, stream, object_pool, fdata_index, sul=None):
+    def __init__(self, stream, object_pool, fdata_index, sul, error_handler):
         self.file = stream
         self.object_pool = object_pool
         self.sul = sul
         self.fdata_index = fdata_index
+        self.error_handler = error_handler
 
         if 'UPDATE' in self.object_pool.types:
             msg = ('{} contains UPDATE-object(s) which changes other '
