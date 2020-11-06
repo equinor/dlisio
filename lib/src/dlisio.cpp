@@ -499,15 +499,14 @@ int dlis_component_set( std::uint8_t desc, int role, int* type, int* name ) {
     *type = desc & (1 << 4);
     *name = desc & (1 << 3);
 
-    if( !*type ) return DLIS_INCONSISTENT;
     return DLIS_OK;
 }
 
 int dlis_component_object( std::uint8_t desc, int role, int* obname ) {
-    if( role != DLIS_ROLE_OBJECT ) return DLIS_UNEXPECTED_VALUE;
+    if( role != DLIS_ROLE_OBJECT )
+        return DLIS_UNEXPECTED_VALUE;
 
     *obname = desc & (1 << 4);
-    if( !*obname ) return DLIS_INCONSISTENT;
     return DLIS_OK;
 }
 

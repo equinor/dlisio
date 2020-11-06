@@ -203,21 +203,21 @@ TEST_CASE("Set descriptors", "[component][v1]") {
         err = dlis_component_set( N, role, &type, &name );
         CHECK( !type );
         CHECK( name );
-        CHECK( err == DLIS_INCONSISTENT );
+        CHECK( err == DLIS_OK );
     }
 
     SECTION("SET: ") {
         err = dlis_component_set( Z, role, &type, &name );
         CHECK( !type );
         CHECK( !name );
-        CHECK( err == DLIS_INCONSISTENT );
+        CHECK( err == DLIS_OK );
     }
 
     SECTION("SET: reserved values") {
         err = dlis_component_set( R, DLIS_ROLE_RDSET, &type, &name );
         CHECK( !type );
         CHECK( !name );
-        CHECK( err == DLIS_INCONSISTENT );
+        CHECK( err == DLIS_OK );
     }
 }
 
@@ -244,7 +244,7 @@ TEST_CASE("Object descriptors", "[component][v1]") {
 
     SECTION("Object: ") {
         err = dlis_component_object( O, role, &name );
-        CHECK( err == DLIS_INCONSISTENT );
+        CHECK( err == DLIS_OK );
         CHECK( !name );
     }
 

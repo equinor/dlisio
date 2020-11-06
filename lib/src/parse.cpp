@@ -33,44 +33,26 @@ set_descriptor parse_set_descriptor( const char* cur ) noexcept (false) {
     set_descriptor flags;
     dlis_component( attr, &flags.role );
 
-    switch (flags.role) {
-        case DLIS_ROLE_RDSET:
-        case DLIS_ROLE_RSET:
-        case DLIS_ROLE_SET:
-            break;
-
-        default: {
-            const auto bits = std::bitset< 8 >{ attr }.to_string();
-            const auto role = dlis_component_str(flags.role);
-            const auto msg  = "error parsing object set descriptor: "
-                              "expected SET, RSET or RDSET, was {} ({})"
-                            ;
-            throw std::invalid_argument(fmt::format(msg, role, bits));
-        }
-    }
-
     int type, name;
     const auto err = dlis_component_set( attr, flags.role, &type, &name );
-    flags.type = type;
-    flags.name = name;
 
     switch (err) {
         case DLIS_OK:
             break;
-
-        case DLIS_INCONSISTENT:
-            /*
-             * 3.2.2.2 Component usage
-             *  The Set Component contains the Set Type, which is not optional
-             *  and must not be null, and the Set Name, which is optional.
-             */
-            user_warning( "SET:type not set, but must be non-null." );
-            flags.type = true;
-            break;
-
+        case DLIS_UNEXPECTED_VALUE: {
+                const auto bits = std::bitset< 8 >{ attr }.to_string();
+                const auto role = dlis_component_str(flags.role);
+                const auto msg  = "error parsing object set descriptor: "
+                                "expected SET, RSET or RDSET, was {} ({})"
+                                ;
+                throw std::invalid_argument(fmt::format(msg, role, bits));
+            }
         default:
             throw std::runtime_error("unhandled error in dlis_component_set");
     }
+
+    flags.type = type;
+    flags.name = name;
 
     return flags;
 }
@@ -107,18 +89,10 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
 
         case DLIS_ROLE_INVATR:
             flags.invariant = true;
-
-        case DLIS_ROLE_ATTRIB:
             break;
 
-        default: {
-            const auto bits = std::bitset< 8 >(role).to_string();
-            const auto was  = dlis_component_str(role);
-            const auto msg  = "error parsing attribute descriptor: "
-                              "expected ATTRIB, INVATR, ABSATR or OBJECT, was {} ({})"
-                            ;
-            throw std::invalid_argument(fmt::format(msg, was, bits));
-        }
+        default:
+            break;
     }
 
     if (flags.object || flags.absent) return flags;
@@ -129,17 +103,30 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
                                                         &reprc,
                                                         &units,
                                                         &value );
+
+    switch (err) {
+        case DLIS_OK:
+            break;
+        case DLIS_UNEXPECTED_VALUE: {
+            const auto bits = std::bitset< 8 >(role).to_string();
+            const auto was  = dlis_component_str(role);
+            const auto msg  = "error parsing attribute descriptor: "
+                              "expected ATTRIB, INVATR, ABSATR or OBJECT, "
+                              "was {} ({})";
+            throw std::invalid_argument(fmt::format(msg, was, bits));
+            }
+        default:
+            throw std::runtime_error( "unhandled error in "
+                                      "dlis_component_attrib" );
+    }
+
     flags.label = label;
     flags.count = count;
     flags.reprc = reprc;
     flags.units = units;
     flags.value = value;
 
-    if (!err) return flags;
-
-    // all sources for this error should've been checked, so
-    // something is REALLY wrong if we end up here
-    throw std::runtime_error( "unhandled error in dlis_component_attrib" );
+    return flags;
 }
 
 struct object_descriptor {
@@ -153,20 +140,29 @@ object_descriptor parse_object_descriptor( const char* cur ) {
     int role;
     dlis_component( attr, &role );
 
-    if (role != DLIS_ROLE_OBJECT) {
-        const auto bits = std::bitset< 8 >{ attr }.to_string();
-        const auto was  = dlis_component_str(role);
-        const auto msg  = "error parsing object descriptor: "
-                          "expected OBJECT, was {} ({})"
-                        ;
-        throw std::invalid_argument(fmt::format(msg, was, bits));
-    }
-
     int name;
     const auto err = dlis_component_object( attr, role, &name );
-    if (err) user_warning( "OBJECT:name was not set, but must be non-null" );
 
-    return { true };
+    switch (err) {
+        case DLIS_OK:
+            break;
+        case DLIS_UNEXPECTED_VALUE: {
+            const auto bits = std::bitset< 8 >{ attr }.to_string();
+            const auto was  = dlis_component_str(role);
+            const auto msg  = "error parsing object descriptor: "
+                            "expected OBJECT, was {} ({})"
+                            ;
+            throw std::invalid_argument(fmt::format(msg, was, bits));
+            }
+        default:
+            throw std::runtime_error("unhandled error in "
+                                     "dlis_component_object");
+    }
+
+    object_descriptor flags;
+    flags.name = name;
+
+    return flags;
 }
 
 using std::swap;
@@ -920,8 +916,13 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
 
         auto current = default_object;
         current.type = type;
-        if (object_flags.name) cur = cast( cur, current.object_name );
         bool object_clear = true;
+
+        if (object_flags.name) {
+            user_warning( "OBJECT:name was not set, but must be non-null" );
+        }
+
+        cur = cast( cur, current.object_name );
 
         for (const auto& template_attr : tmpl) {
             if (template_attr.invariant) continue;
@@ -1055,7 +1056,16 @@ const char* object_set::parse_set_component(const char* cur) noexcept (false) {
     dl::ident tmp_type;
     dl::ident tmp_name;
 
-    if (flags.type) cur = cast( cur, tmp_type );
+    if (!flags.type) {
+    /*
+        * 3.2.2.2 Component usage
+        *  The Set Component contains the Set Type, which is not optional
+        *  and must not be null, and the Set Name, which is optional.
+        */
+        user_warning( "SET:type not set, but must be non-null." );
+    }
+
+                    cur = cast( cur, tmp_type );
     if (flags.name) cur = cast( cur, tmp_name );
 
     this->type = tmp_type;
