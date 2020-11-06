@@ -1084,11 +1084,21 @@ PYBIND11_MODULE(core, m) {
         return recs;
     });
 
-    m.def( "parse_objects", []( const std::vector< dl::record >& recs ) {
+    m.def( "parse_objects", []( const std::vector< dl::record >& recs,
+                                dl::error_handler& errorhandler ) {
         std::vector< dl::object_set > objects;
         for (const auto& rec : recs) {
             if (rec.isencrypted()) continue;
-            objects.push_back( dl::object_set( rec ) );
+
+            try {
+                objects.push_back( dl::object_set( rec ) );
+            } catch (const std::exception& e) {
+                const auto context =
+                    "core.parse_objects: Construct object sets";
+                errorhandler.log(dl::error_severity::CRITICAL, context,
+                                 e.what(), "", "Set is skipped");
+                continue;
+            }
         }
         return objects;
     });

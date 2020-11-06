@@ -58,6 +58,17 @@ fdata-vr-obname-trailing.dlis          Fdata obname is interrupted by Visible
 ====================================== ========================================
 
 
+*explicit* folder contains full files.
+
+====================================== ========================================
+Files in /explicit                     Description
+====================================== ========================================
+broken-in-set.dlis                     First EFLR is correct, second EFLR is
+                                       broken in set component (not a set),
+                                       third EFLR is correct
+====================================== ========================================
+
+
 Creating a valid .dlis-file
 ---------------------------
 

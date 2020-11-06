@@ -731,7 +731,7 @@ def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(RuntimeError) as excinfo:
         dlisio.load(path)
     assert "expected SET" in str(excinfo.value)
 

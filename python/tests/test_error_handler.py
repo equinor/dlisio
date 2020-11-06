@@ -86,7 +86,12 @@ def test_curves_broken_fmt(assert_error):
         assert_error("fmtstr would read past end")
         assert np.array_equal(curves['FRAMENO'], np.array([1, 3]))
 
-# TODO: test_parse_exeptions
+def test_parse_objects_unexpected_attribute_in_set(assert_error):
+    path = 'data/chap3/explicit/broken-in-set.dlis'
+    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+        assert_error("Construct object sets")
+        _ = f.object('VALID-SET', 'VALID-OBJ', 10, 0)
+        _ = f.object('GOOOD-SET', 'VALID-OBJ', 10, 0)
 
 def test_parse_critical_escaped(tmpdir, merge_files_oneLR,
                                          assert_error):
@@ -130,7 +135,6 @@ def test_parse_unparsable_record(tmpdir, merge_files_oneLR, assert_error):
         with pytest.raises(ValueError) as excinfo:
             _ = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
         assert "not found" in str(excinfo.value)
-
 
 def test_parse_major_errored(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'replacement-set.dlis')

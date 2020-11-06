@@ -130,7 +130,7 @@ def load(path, error_handler = None):
             hint = rewind(stream.absolute_tell, tapemarks)
 
             recs  = core.extract(stream, explicits, error_handler)
-            sets  = core.parse_objects(recs)
+            sets  = core.parse_objects(recs, error_handler)
             pool  = core.pool(sets)
             fdata = core.findfdata(stream, implicits, error_handler)
 
