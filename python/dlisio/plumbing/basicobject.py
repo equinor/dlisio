@@ -196,6 +196,17 @@ class BasicObject():
             # No rule for parsing, keep rp66value as is, i.e. vector
             parse_as = vector
 
+        # report errors before checking for key presence - it might be a symptom
+        if len(self.attic.log) > 0:
+            # TODO: here and for attribute: we use fingerprint to report
+            # context, not repr, to have origina and copynr, but is fingerprint
+            # clear enough for the user?
+            context = "{}".format(self.fingerprint)
+            for error in self.attic.log:
+                self.logicalfile.error_handler.log(
+                    error.severity, context, error.problem,
+                    error.specification, error.action)
+
         try:
             attribute = self.attic[key]
         except KeyError:

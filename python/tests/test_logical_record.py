@@ -294,6 +294,7 @@ def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
     content = [
         'data/chap3/start.dlis.part',
         'data/chap3/template/invalid-repcode-no-value.dlis.part',
+        'data/chap3/template/default.dlis.part',
         'data/chap3/object/object.dlis.part',
         'data/chap3/objattr/all-set.dlis.part',
     ]
@@ -302,11 +303,18 @@ def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
     with dlisio.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
 
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_info("Problem:      One or more attributes "
+                    "of this object violate specification")
+        assert_info("Where:        T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1")
+
         attr = obj.attic['INVALID']
         assert attr.value == [1, 2, 3, 4]
 
         _ = obj['INVALID']
-        assert_info("Invalid representation code 0")
+        assert_info("Problem:      Invalid representation code 0\n"
+                    "Where:        "
+                    "T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1-A.INVALID")
 
 def test_repcode_invalid_in_template_no_value_not_fixed(tmpdir,
                                                         merge_files_oneLR,
@@ -556,8 +564,8 @@ def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR, assert_log):
                    "named ''")
 
 
-@pytest.mark.future_warning_object_name_bit_not_set
-def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR):
+def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR,
+                                           assert_log):
     path = os.path.join(str(tmpdir), 'no-object-name-bit.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -569,6 +577,9 @@ def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR):
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_log("Problem:      OBJECT:name was not set\n"
+                   "Where:        T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1")
 
 
 @pytest.mark.future_test_attributes

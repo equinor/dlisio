@@ -882,6 +882,7 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::basic_object >( m, "basic_object" )
         .def_readonly("type", &dl::basic_object::type)
         .def_readonly("name", &dl::basic_object::object_name)
+        .def_readonly("log",  &dl::basic_object::log)
         .def( "__len__", []( const dl::basic_object& o ) {
             return o.attributes.size();
         })
