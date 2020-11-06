@@ -452,8 +452,8 @@ class logicalfile(object):
 
         if len(matches) == 0:
             msg = "Object not found: type={}, name={}, origin={}, copynumber={}"
-            if not origin: origin = "'any'"
-            if not copynr: copynr = "'any'"
+            if origin is None: origin = "'any'"
+            if copynr is None: copynr = "'any'"
 
             raise ValueError(msg.format(type, name, origin, copynr))
 

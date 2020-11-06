@@ -28,7 +28,8 @@ def test_object_unknown(f):
 def test_object_nonexisting(f):
     with pytest.raises(ValueError) as exc:
         _ = f.object("UNKNOWN_TYPE", "SOME_OBJECT", 0, 0)
-    assert "Object not found" in str(exc.value)
+    assert ("Object not found: type=UNKNOWN_TYPE, name=SOME_OBJECT, "
+            "origin=0, copynumber=0") in str(exc.value)
 
     with pytest.raises(ValueError):
         _ = f.object("CHANNEL", "CHANN1", 11, 0)
@@ -61,6 +62,8 @@ def test_object_many_objects_nameonly(tmpdir_factory, merge_files_manyLR):
         with pytest.raises(ValueError) as exc:
             _ = f.object("CHANNEL", "MATCH1")
         assert "Candidates are" in str(exc.value)
+        assert "origin=16, copy=0" in str(exc.value)
+        assert "origin=127, copy=0" in str(exc.value)
 
 def test_object_ducplicated_object(tmpdir_factory, merge_files_manyLR):
     # Spec violation: Two objects with the same signature AND identical content
