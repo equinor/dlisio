@@ -394,9 +394,9 @@ class logicalfile(object):
             matcher = settings.regex
 
         if not objectname:
-            attics = self.object_pool.get(objecttype, matcher)
+            attics = self.object_pool.get(objecttype, matcher, self.error_handler)
         else:
-            attics = self.object_pool.get(objecttype, objectname, matcher)
+            attics = self.object_pool.get(objecttype, objectname, matcher, self.error_handler)
 
         objects = []
         for attic in attics:

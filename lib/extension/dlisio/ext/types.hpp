@@ -604,10 +604,12 @@ public:
 
     object_vector get(const std::string& type,
                       const std::string& name,
-                      const dl::matcher& matcher) noexcept (false);
+                      const dl::matcher& matcher,
+                      const error_handler& errorhandler) noexcept (false);
 
     object_vector get(const std::string& type,
-                      const dl::matcher& matcher) noexcept (false);
+                      const dl::matcher& matcher,
+                      const error_handler& errorhandler) noexcept (false);
 
 private:
     std::vector< dl::object_set > eflrs;

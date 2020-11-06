@@ -916,11 +916,13 @@ PYBIND11_MODULE(core, m) {
         .def( "get", (dl::object_vector (dl::pool::*) (
             const std::string&,
             const std::string&,
-            const dl::matcher&
+            const dl::matcher&,
+            const dl::error_handler&
         )) &dl::pool::get )
         .def( "get", (dl::object_vector (dl::pool::*) (
             const std::string&,
-            const dl::matcher&
+            const dl::matcher&,
+            const dl::error_handler&
         )) &dl::pool::get )
     ;
 
