@@ -617,7 +617,7 @@ def test_novalue_more_count(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(RuntimeError):
             f.load()
 
 def test_set_redundat(tmpdir, merge_files_oneLR, assert_info):
@@ -748,7 +748,7 @@ def test_unexpected_set_in_object(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected ATTRIB" in str(excinfo.value)
 
@@ -765,7 +765,7 @@ def test_unexpected_set_in_template(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected ATTRIB" in str(excinfo.value)
 
@@ -782,7 +782,7 @@ def test_unexpected_attribute_instead_of_object(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected OBJECT" in str(excinfo.value)
 
@@ -797,7 +797,7 @@ def test_cut_before_template(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(IndexError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "unexpected end-of-record" in str(excinfo.value)
 

@@ -1139,15 +1139,31 @@ object_set::object_set(dl::record rec) noexcept (false)  {
         parse_set_component(this->record.data.data());
 }
 
-void object_set::parse() noexcept (false) {
+void object_set::parse() noexcept (true) {
     if (this->parsed) return;
 
     const char* cur = this->record.data.data();
-    /* As cursor value is not stored, read data again to get the position */
-    cur = parse_set_component(cur);
-    cur = parse_template(cur);
-          parse_objects(cur);
 
+    try {
+        /* As cursor value is not stored, read data again to get the position */
+        cur = parse_set_component(cur);
+        cur = parse_template(cur);
+              parse_objects(cur);
+    } catch (const std::exception& e) {
+        dlis_error err {
+            dl::error_severity::CRITICAL,
+            e.what(),
+            "",
+            "object set parse has been interrupted"
+        };
+        this->log.push_back(err);
+    }
+    // TODO: possible assert that cur == end of data
+
+    /* If set is parsed in default mode, exception will be thrown and set won't
+     * be considered parsed. If set is parsed after that in error-escape mode,
+     * parsing will be locked, but error will get stored on object set anyway.
+     */
     this->parsed = true;
 }
 

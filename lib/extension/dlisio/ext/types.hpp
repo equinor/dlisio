@@ -580,7 +580,7 @@ private:
     dl::object_vector   objs;
     dl::object_template tmpl;
 
-    void parse() noexcept (false);
+    void parse() noexcept (true);
     bool parsed = false;
 
     const char* parse_set_component(const char* cur) noexcept (false);
