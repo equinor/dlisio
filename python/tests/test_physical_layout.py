@@ -42,11 +42,11 @@ def test_lrs_atributes_inconsistency():
         _ = dlisio.load('data/chap2/attrs-inconsistency-type-pred.dlis')
     assert "inconsistency" in str(excinfo.value)
 
-@pytest.mark.xfail(reason="not implemented", strict=True)
 def test_logical_file_lrs_inconsistency():
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load('data/chap2/lf_lrs_inconsistency.dlis')
-    assert "inconsistency" in str(excinfo.value)
+        _ = dlisio.load('data/chap2/lf-lrs-inconsistency.dlis')
+    msg = "file appears, but previous logical record segment expects successor"
+    assert msg in str(excinfo.value)
 
 def test_padbytes_as_large_as_record():
     path = 'data/chap2/padbytes-large-as-record.dlis'
@@ -97,7 +97,6 @@ def test_broken_vr():
         _ = dlisio.load('data/chap2/incomplete-vr.dlis')
     assert "file may be corrupted" in str(excinfo.value)
 
-@pytest.mark.xfail(reason="should raise", strict=True)
 def test_truncated_in_iflr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/truncated-in-iflr.dlis')
@@ -106,7 +105,7 @@ def test_truncated_in_iflr():
 def test_truncated_in_second_lr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/truncated-in-second-lr.dlis')
-    assert "unexpected EOF when reading record" in str(excinfo.value)
+    assert "findoffsets: file truncated" in str(excinfo.value)
 
 def test_truncated_in_lrsh():
     with pytest.raises(RuntimeError) as excinfo:
@@ -121,7 +120,7 @@ def test_truncated_in_lrsh_vr_over():
 def test_truncated_after_lrsh():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/truncated-after-lrsh.dlis')
-    assert "unexpected EOF when reading record" in str(excinfo.value)
+    assert "findoffsets: file truncated" in str(excinfo.value)
 
 def test_truncated_lr_missing_lrs_in_vr():
     with pytest.raises(RuntimeError) as excinfo:
@@ -131,7 +130,8 @@ def test_truncated_lr_missing_lrs_in_vr():
 def test_truncated_lr_missing_lrs_vr_over():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/truncated-lr-no-lrs-vr-over.dlis')
-    assert "extract: unable to read LRSH" in str(excinfo.value)
+    msg = "last logical record segment expects successor"
+    assert msg in str(excinfo.value)
 
 def test_truncated_on_full_lr():
     with pytest.raises(RuntimeError) as excinfo:

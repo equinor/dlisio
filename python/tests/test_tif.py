@@ -96,7 +96,7 @@ def test_layout_truncated_in_data():
     fpath = 'data/tif/layout/truncated-in-data.dlis'
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load(fpath)
-    assert "unexpected EOF" in str(excinfo.value)
+    assert "findoffsets: file truncated" in str(excinfo.value)
 
 def test_layout_truncated_in_header():
     fpath = 'data/tif/layout/truncated-in-header.dlis'

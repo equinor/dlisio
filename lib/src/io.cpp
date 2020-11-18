@@ -210,6 +210,23 @@ noexcept (false) {
     }
 }
 
+void check_for_truncation(dl::stream& file, std::int64_t offset) {
+    file.seek(offset - 1);
+    char tmp;
+    /*
+    * lfp returns UNEXPECTED_EOF for cfile when truncation happens
+    * inside of declared data
+    * TODO: if dlisio will support other types of io, this might have
+    * to be reconsidered
+    */
+    try {
+        file.read(&tmp, 1);
+    } catch (const std::runtime_error& e) {
+        throw std::runtime_error("findoffsets: file truncated");
+    }
+    return;
+}
+
 }
 
 stream::stream( lfp_protocol* f ) noexcept (false){
@@ -392,14 +409,22 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
     stream_offsets ofs;
 
     std::int64_t offset = 0;
+    bool has_successor = false;
     char buffer[ DLIS_LRSH_SIZE ];
 
     int len = 0;
     while (true) {
         file.seek(offset);
         file.read(buffer, DLIS_LRSH_SIZE);
-        if (file.eof())
+        if (file.eof()) {
+            check_for_truncation(file, offset);
+            if (has_successor) {
+                auto msg = "File is over, but last logical record segment "
+                           "expects successor";
+                throw std::runtime_error(msg);
+            }
             break;
+        }
 
         int type;
         std::uint8_t attrs;
@@ -420,6 +445,14 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
                  * this LR and all successive LR's until we encounter another
                  * FILE-HEADER.
                  */
+                check_for_truncation(file, offset);
+
+                if (has_successor) {
+                    auto msg = "New logical file appears, but previous logical "
+                               "record segment expects successor";
+                    throw std::runtime_error(msg);
+                }
+
                 file.seek( offset );
                 break;
             }
@@ -432,6 +465,8 @@ stream_offsets findoffsets( dl::stream& file) noexcept (false) {
              */
             else            ofs.implicits.push_back( offset );
         }
+
+        has_successor  = attrs & DLIS_SEGATTR_SUCCSEG;
         offset += len;
     }
     return ofs;
