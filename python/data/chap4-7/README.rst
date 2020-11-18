@@ -164,7 +164,9 @@ invalid-date-in-origin.dlis                      Simple file which contains inva
 many-logical-files.dlis                          Contains several logical files, one without file
                                                  header
 
-many-logical-files-error-in-last.dlis            Contains several logical files, last one is broken
+many-logical-files-error-in-last.dlis            Contains several logical files, last one is broken.
+                                                 Two first ones have minor issue (Origin sets are
+                                                 redundant)
 
 many-logical-files-same-object.dlis              Contains 2 logical files with the same objects and
                                                  encrypted records

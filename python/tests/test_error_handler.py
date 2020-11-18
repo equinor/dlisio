@@ -13,10 +13,16 @@ from dlisio.errors import ErrorHandler, Actions
 
 errorhandler = ErrorHandler(critical = Actions.LOG_ERROR)
 
-# TODO: test_errors_explicit (let users examine the errors regardless of escape
-# level set)
+def test_custom_action():
+    def custom(msg):
+        raise ValueError("custom message: "+msg)
 
-# TODO: test mix (do not fail on truncation, but fail on bad attribute access)
+    path = 'data/chap2/truncated-in-lrsh-vr-over.dlis'
+    errorhandler = ErrorHandler(critical=custom)
+    with pytest.raises(ValueError) as excinfo:
+        _ = dlisio.load(path, error_handler=errorhandler)
+    assert "custom message: \n" in str(excinfo.value)
+    assert "File truncated in Logical Record Header" in str(excinfo.value)
 
 def test_unescapable_notdlis(assert_error):
     path = 'data/chap2/nondlis.txt'
@@ -171,3 +177,93 @@ def test_parse_minor_errored(tmpdir, merge_files_oneLR):
         with pytest.raises(RuntimeError) as excinfo:
             _ = f.object('REDUNDANT', 'OBJECT', 1, 1)
         assert "Redundant sets are not supported" in str(excinfo.value)
+
+def test_many_logical_files():
+    path = "data/chap4-7/many-logical-files-error-in-last.dlis"
+    errorhandler = ErrorHandler()
+    errorhandler.critical = Actions.LOG_ERROR
+
+    with dlisio.load(path, error_handler=errorhandler) as files:
+        # last file is not processed
+        assert len(files) == 2
+
+        errorhandler.critical = Actions.RAISE
+        errorhandler.major    = Actions.RAISE
+        errorhandler.minor    = Actions.RAISE
+        for f in files:
+            with pytest.raises(RuntimeError):
+                f.load()
+
+        # define default error handler specially for the first logical file
+        errorhandler = ErrorHandler()
+        files[0].error_handler = errorhandler
+
+        files[0].load()
+        with pytest.raises(RuntimeError):
+            files[1].load()
+
+
+@pytest.fixture
+def create_very_broken_file(tmpdir, merge_files_oneLR, merge_files_manyLR):
+    valid = os.path.join(str(tmpdir), 'valid.dlis')
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invalid-repcode-no-value.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        # will cause issues on attribute access
+        'data/chap3/objattr/empty.dlis.part',
+        'data/chap3/object/object2.dlis.part',
+        # will cause issues on parsing
+        'data/chap3/objattr/reprcode-invalid-value.dlis.part'
+    ]
+    merge_files_oneLR(valid, content)
+
+    content = [
+        valid,
+        'data/chap3/sul.dlis.part', # will cause issues on load
+    ]
+
+    def create_file(path):
+        merge_files_manyLR(path, content)
+    return create_file
+
+
+def test_complex(create_very_broken_file, tmpdir):
+
+    path = os.path.join(str(tmpdir), 'complex.dlis')
+    create_very_broken_file(path)
+
+    errorhandler = ErrorHandler()
+
+    with pytest.raises(RuntimeError):
+        with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+            pass
+
+    # escape errors on load
+    errorhandler.critical = Actions.LOG_ERROR
+    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+
+        # fail again on parsing objects not parsed on load
+        errorhandler.critical = Actions.RAISE
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        assert "object set" in str(excinfo.value)
+
+        # escape errors on parsing
+        errorhandler.critical = Actions.LOG_ERROR
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+
+        errorhandler.critical = Actions.RAISE
+        # set is parsed, but user should get error anyway
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        assert "object set" in str(excinfo.value)
+
+        # fail on attribute access
+        errorhandler.critical = Actions.RAISE
+        with pytest.raises(RuntimeError):
+            _ = obj['INVALID']
+
+        # retrieve whatever value from errored attribute
+        errorhandler.critical = Actions.LOG_ERROR
+        _ = obj['INVALID']
