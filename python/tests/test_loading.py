@@ -33,14 +33,24 @@ def test_filehandles_closed(tmpdir):
     many_logical = str(tmpdir.join('many_logical'))
     shutil.copyfile('data/chap4-7/many-logical-files.dlis', many_logical)
 
+    offsets_error_escape = str(tmpdir.join('error_escape_zeroed'))
+    shutil.copyfile('data/chap2/zeroed-in-1st-lr.dlis', offsets_error_escape)
+
     with dlisio.load(tmp) as _:
         pass
 
     with dlisio.load(many_logical) as fls:
         assert len(fls) == 3
 
+    # error happens in 1st LF, but is escaped
+    errorhandler = dlisio.errors.ErrorHandler(
+        critical=dlisio.errors.Actions.LOG_ERROR)
+    with dlisio.load(offsets_error_escape, error_handler=errorhandler):
+        pass
+
     os.remove(tmp)
     os.remove(many_logical)
+    os.remove(offsets_error_escape)
 
 def test_filehandles_closed_when_load_fails(tmpdir):
     # Check that we don't leak open filehandles on failure

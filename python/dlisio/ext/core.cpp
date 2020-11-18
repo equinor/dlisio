@@ -1023,9 +1023,10 @@ PYBIND11_MODULE(core, m) {
     m.def( "hastapemark", dl::hastapemark );
     m.def("findfdata", dl::findfdata);
 
-    m.def( "findoffsets", []( dl::stream& file ) {
-        const auto ofs = dl::findoffsets( file );
-        return py::make_tuple( ofs.explicits, ofs.implicits );
+    m.def( "findoffsets", []( dl::stream& file,
+                              dl::error_handler& errorhandler) {
+        const auto ofs = dl::findoffsets( file, errorhandler );
+        return py::make_tuple( ofs.explicits, ofs.implicits, ofs.broken );
     });
 
     py::enum_< dl::error_severity >( m, "error_severity" )

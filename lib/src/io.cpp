@@ -210,23 +210,6 @@ noexcept (false) {
     }
 }
 
-void check_for_truncation(dl::stream& file, std::int64_t offset) {
-    file.seek(offset - 1);
-    char tmp;
-    /*
-    * lfp returns UNEXPECTED_EOF for cfile when truncation happens
-    * inside of declared data
-    * TODO: if dlisio will support other types of io, this might have
-    * to be reconsidered
-    */
-    try {
-        file.read(&tmp, 1);
-    } catch (const std::runtime_error& e) {
-        throw std::runtime_error("findoffsets: file truncated");
-    }
-    return;
-}
-
 }
 
 stream::stream( lfp_protocol* f ) noexcept (false){
@@ -405,69 +388,142 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
     }
 }
 
-stream_offsets findoffsets( dl::stream& file) noexcept (false) {
+stream_offsets findoffsets( dl::stream& file, dl::error_handler& errorhandler)
+noexcept (false) {
     stream_offsets ofs;
 
-    std::int64_t offset = 0;
+    std::int64_t lr_offset = 0;
+    std::int64_t lrs_offset = 0;
+
     bool has_successor = false;
     char buffer[ DLIS_LRSH_SIZE ];
 
+    const auto handle = [&]( const std::string& problem ) {
+        const auto context = "dl::findoffsets (indexing logical file)";
+        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
+                         "Indexing is suspended at last valid Logical Record");
+        ofs.broken.push_back( lr_offset );
+    };
+
     int len = 0;
+    auto read = 0;
+
+    file.seek(lrs_offset);
+
     while (true) {
-        file.seek(offset);
-        file.read(buffer, DLIS_LRSH_SIZE);
-        if (file.eof()) {
-            check_for_truncation(file, offset);
-            if (has_successor) {
-                auto msg = "File is over, but last logical record segment "
-                           "expects successor";
-                throw std::runtime_error(msg);
-            }
+        try {
+            read = file.read(buffer, DLIS_LRSH_SIZE);
+        } catch (std::exception& e) {
+            handle(e.what());
             break;
+        }
+
+        // read operation is enough to set eof correctly
+        if (file.eof()) {
+            if (read == 0) {
+                if (has_successor) {
+                    const auto problem =
+                        "Reached EOF, but last logical record segment expects "
+                        "successor";
+                    handle(problem);
+                }
+                break;
+            }
+            if (read < 4) {
+                /*
+                 * Very unlikely situation.
+                 * Usually exception will be thrown during read.
+                 */
+                const auto problem =
+                    "File truncated in Logical Record Header";
+                handle(problem);
+                break;
+            }
+            /*
+             * Do nothing if read == 4
+             * This might be the problem for next Logical File.
+             * If not, it will be dealt with later
+             */
         }
 
         int type;
         std::uint8_t attrs;
         dlis_lrsh( buffer, &len, &attrs, &type );
         if (len < 4) {
-            auto msg = "Too short logical record. Length can't be less than 4, "
-                       "but was {}";
-            throw std::runtime_error(fmt::format(msg, len));
+            const auto problem =
+                "Too short logical record. Length can't be less than 4, "
+                "but was {}";
+            handle(fmt::format(problem, len));
+            break;
         }
 
-        int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
-        if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
+        bool isexplicit      = attrs & DLIS_SEGATTR_EXFMTLR;
+        bool has_predecessor = attrs & DLIS_SEGATTR_PREDSEG;
+
+        if (not (has_predecessor)) {
             if (isexplicit and type == 0 and ofs.explicits.size()) {
                 /*
-                 * Wrap up when we encounter a EFLR of type FILE-HEADER that is
-                 * NOT the first Logical Record. More precisely we expect the
-                 * _first_ LR we encounter to be a FILE-HEADER. We gather up
-                 * this LR and all successive LR's until we encounter another
-                 * FILE-HEADER.
+                 * Wrap up when we encounter a EFLR of type FILE-HEADER that
+                 * is NOT the first Logical Record. More precisely we expect
+                 * the _first_ LR we encounter to be a FILE-HEADER. We
+                 * gather up this LR and all successive LR's until we
+                 * encounter another FILE-HEADER.
                  */
-                check_for_truncation(file, offset);
 
                 if (has_successor) {
-                    auto msg = "New logical file appears, but previous logical "
-                               "record segment expects successor";
-                    throw std::runtime_error(msg);
+                    const auto problem =
+                        "End of logical file, but last logical "
+                        "record segment expects successor";
+                    handle(problem);
+                    break;
                 }
 
-                file.seek( offset );
+                // seek to assure handle is in the right place to read next LF
+                file.seek( lrs_offset );
                 break;
             }
-            if (isexplicit) ofs.explicits.push_back( offset );
-            /*
-             * Consider doing fdata-indexing on the fly as we are now at the
-             * correct offset to read the OBNAME. That would mean we only need
-             * to traverse the file a single time to index it. Additionally it
-             * would make the caller code from python way nicer.
-             */
-            else            ofs.implicits.push_back( offset );
         }
 
-        has_successor  = attrs & DLIS_SEGATTR_SUCCSEG;
-        offset += len;
+        has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
+        lrs_offset += len;
+
+        /*
+         * Skip the segment by moving the cursor to the next offset.
+         * Seek operation alone isn't enough to correctly set EOF. To make sure
+         * record is not truncated, read its last byte instead of seeking
+         * to the new offset.
+         *
+         * Note that lfp returns UNEXPECTED_EOF for cfile when truncation
+         * happens inside of declared data
+         * TODO: assure behavior for other io types
+         */
+
+        char tmp;
+        file.seek(lrs_offset - 1);
+        try {
+            file.read(&tmp, 1);
+        } catch (const std::runtime_error& e) {
+            const auto problem = "File truncated in Logical Record Segment";
+            handle(problem);
+            break;
+        }
+
+
+        if (not (has_successor)) {
+            if (isexplicit)
+                ofs.explicits.push_back( lr_offset );
+            /*
+             * Consider doing fdata-indexing on the fly as we are now at the
+             * correct offset to read the OBNAME. That would mean we only
+             * need to traverse the file a single time to index it.
+             * Additionally it would make the caller code from python way
+             * nicer.
+             */
+            else
+                ofs.implicits.push_back( lr_offset );
+
+            lr_offset = lrs_offset;
+        }
     }
     return ofs;
 }

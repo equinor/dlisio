@@ -95,7 +95,9 @@ wrong-lrhs.dlis                     Mismatch between logical record segment
                                     length)
 
 zeroed-in-1st-lr.dlis               VR is expected to contain over 1 LR. Data is
-                                    zeroed from middle of 1st LR
+                                    zeroed from middle of 1st LR. There are 512
+                                    zeroes (more than default 200 bytes
+                                    findvrl value)
 
 zeroed-in-2nd-lr.dlis               VR contains 2 LRs. Data is zeroed in the
                                     middle of 2nd LR

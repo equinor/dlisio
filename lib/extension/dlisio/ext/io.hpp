@@ -58,6 +58,7 @@ private:
 struct stream_offsets {
     std::vector< long long > explicits;
     std::vector< long long > implicits;
+    std::vector< long long > broken;
 };
 
 stream open(const std::string&, std::int64_t) noexcept (false);
@@ -71,7 +72,7 @@ bool hastapemark(stream&) noexcept (false);
 dl::record extract(stream&, long long) noexcept (false);
 dl::record& extract(stream&, long long, long long, dl::record&) noexcept (false);
 
-stream_offsets findoffsets(dl::stream&) noexcept (false);
+stream_offsets findoffsets(dl::stream&, dl::error_handler&) noexcept (false);
 
 std::map< dl::ident, std::vector< long long > >
 findfdata(dl::stream&, const std::vector< long long >&) noexcept (false);

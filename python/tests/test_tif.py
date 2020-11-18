@@ -96,7 +96,7 @@ def test_layout_truncated_in_data():
     fpath = 'data/tif/layout/truncated-in-data.dlis'
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load(fpath)
-    assert "findoffsets: file truncated" in str(excinfo.value)
+    assert "File truncated in Logical Record Segment" in str(excinfo.value)
 
 def test_layout_truncated_in_header():
     fpath = 'data/tif/layout/truncated-in-header.dlis'
