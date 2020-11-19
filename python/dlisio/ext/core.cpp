@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <vector>
 #include <limits>
+#include <functional>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
@@ -325,13 +326,319 @@ dl::ident fingerprint(const std::string& type,
     return ref.fingerprint();
 }
 
+void assert_overflow(const char* ptr, const char* end, int skip) {
+    if (ptr + skip > end) {
+        const auto msg = "corrupted record: fmtstr would read past end";
+        throw std::runtime_error(msg);
+    }
+}
+
+void read_curve_sample(const char* f, const char*& ptr, const char* end,
+                      unsigned char*& dst)
+{
+    /*
+     * Reads to dst buffer a singular curve where:
+     *    f   - current fmt character
+     *    ptr - pointer to current position in source buffer (file record)
+     *    end - pointer to end of the source buffer (record end)
+     *    dst - pointer to current position in destination buffer
+     */
+
+    /*
+     * Supporting bounded-length identifiers in frame data is
+     * slightly more difficult than it immediately seem like, and
+     * this implementation relies on a few assumptions that may not
+     * hold.
+     *
+     * 1. numpy structured arrays interpret unicode on the fly
+     *
+     * On my amd64 linux:
+     * >>> dt = np.dtype('U5')
+     * >>> dt.itemsize
+     * 20
+     * >>> np.array(['foo'], dtype = dt)[0]
+     * 'foo'
+     * >>> np.array(['foobar'], dtype = dt)[0]
+     * 'fooba'
+     *
+     * Meaning it supports string lengths of [0, n]. It apparently
+     * (and maybe rightly so) uses null termination, or the bounded
+     * length, which ever comes first.
+     *
+     * 2. numpy stores characters as int32 Py_UNICODE
+     * Numpy seems to always use uint32, and not Py_UNICODE, which
+     * can be both 16 and 32 bits [1]. Since it's an integer it's
+     * endian sensitive, and widening from char works. This is not
+     * really documented by numpy.
+     *
+     * 3. numpy stores no metadata with the string
+     * It is assumed, and seems necessary from the interface, that
+     * there is no in-band metadata stored about the strings when
+     * used in structured arrays. This means we can just write the
+     * unicode ourselves, and have numpy interpret it correctly.
+     *
+     * --
+     * Units is just an IDENT in disguise, so it can very well take
+     * the same code path.
+     *
+     * [1] http://docs.h5py.org/en/stable/strings.html#what-about-numpy-s-u-type
+     *     NumPy also has a Unicode type, a UTF-32 fixed-width
+     *     format (4-byte characters). HDF5 has no support for wide
+     *     characters. Rather than trying to hack around this and
+     *     “pretend” to support it, h5py will raise an error when
+     *     attempting to create datasets or attributes of this
+     *     type.
+     *
+     */
+     auto swap_pointer = [&](py::object obj)
+     {
+         PyObject* p;
+         std::memcpy(&p, dst, sizeof(p));
+         Py_DECREF(p);
+         p = obj.inc_ref().ptr();
+         std::memcpy(dst, &p, sizeof(p));
+         dst += sizeof(p);
+     };
+
+     if (*f == DLIS_FMT_FSING1) {
+        float v;
+        float a;
+        ptr = dlis_fsing1(ptr, &v, &a);
+        auto t = py::make_tuple(v, a);
+
+        swap_pointer(t);
+        return;
+    }
+
+     if (*f == DLIS_FMT_FSING2) {
+        float v;
+        float a;
+        float b;
+        ptr = dlis_fsing2(ptr, &v, &a, &b);
+        auto t = py::make_tuple(v, a, b);
+
+        swap_pointer(t);
+        return;
+    }
+
+     if (*f == DLIS_FMT_FDOUB1) {
+        double v;
+        double a;
+        ptr = dlis_fdoub1(ptr, &v, &a);
+        auto t = py::make_tuple(v, a);
+
+        swap_pointer(t);
+        return;
+    }
+
+     if (*f == DLIS_FMT_FDOUB2) {
+        double v;
+        double a;
+        double b;
+        ptr = dlis_fdoub2(ptr, &v, &a, &b);
+        auto t = py::make_tuple(v, a, b);
+
+        swap_pointer(t);
+        return;
+    }
+
+    if (*f == DLIS_FMT_IDENT || *f == DLIS_FMT_UNITS) {
+        constexpr auto chars = 255;
+        constexpr auto ident_size = chars * sizeof(std::uint32_t);
+
+        std::int32_t len;
+        char tmp[chars];
+        ptr = dlis_ident(ptr, &len, tmp);
+
+        /*
+         * From reading the numpy source, it looks like they put
+         * and interpret the unicode buffer in the array directly,
+         * and pad with zero. This means the string is both null
+         * and length terminated, whichever comes first.
+         */
+        std::memset(dst, 0, ident_size);
+        for (auto i = 0; i < len; ++i) {
+            const auto x = std::uint32_t(tmp[i]);
+            std::memcpy(dst + i * sizeof(x), &x, sizeof(x));
+        }
+        dst += ident_size;
+        return;
+    }
+
+    if (*f == DLIS_FMT_ASCII) {
+        std::int32_t len;
+        ptr = dlis_uvari(ptr, &len);
+        auto ascii = py::str(ptr, len);
+        ptr += len;
+
+        /*
+         * Numpy seems to default initalize object types even in
+         * the case of np.empty to None [1]. The refcount is surely
+         * increased, so decref it before replacing the pointer
+         * with a fresh str.
+         *
+         * [1] Array of uninitialized (arbitrary) data of the given
+         *     shape, dtype, and order. Object arrays will be
+         *     initialized to None.
+         *     https://docs.scipy.org/doc/numpy/reference/generated/numpy.empty.html
+         */
+        swap_pointer(ascii);
+        return;
+    }
+
+    if (*f == DLIS_FMT_OBNAME) {
+        std::int32_t origin;
+        std::uint8_t copy;
+        std::int32_t idlen;
+        char id[255];
+        ptr = dlis_obname(ptr, &origin, &copy, &idlen, id);
+
+        const auto name = dl::obname {
+            dl::origin(origin),
+            dl::ushort(copy),
+            dl::ident(std::string(id, idlen)),
+        };
+
+        swap_pointer(py::cast(name));
+        return;
+    }
+
+    if (*f == DLIS_FMT_OBJREF) {
+        std::int32_t idlen;
+        char id[255];
+        std::int32_t origin;
+        std::uint8_t copy;
+        std::int32_t objnamelen;
+        char objname[255];
+        ptr = dlis_objref(ptr,
+                          &idlen,
+                          id,
+                          &origin,
+                          &copy,
+                          &objnamelen,
+                          objname);
+
+        const auto name = dl::objref {
+            dl::ident(std::string(id, idlen)),
+            dl::obname {
+                dl::origin(origin),
+                dl::ushort(copy),
+                dl::ident(std::string(objname, objnamelen)),
+            },
+        };
+
+        swap_pointer(py::cast(name));
+        return;
+    }
+
+    if (*f == DLIS_FMT_ATTREF) {
+        std::int32_t id1len;
+        char id1[255];
+        std::int32_t origin;
+        std::uint8_t copy;
+        std::int32_t objnamelen;
+        char objname[255];
+        std::int32_t id2len;
+        char id2[255];
+        ptr = dlis_attref(ptr,
+                          &id1len,
+                          id1,
+                          &origin,
+                          &copy,
+                          &objnamelen,
+                          objname,
+                          &id2len,
+                          id2);
+
+        const auto ref = dl::attref {
+            dl::ident(std::string(id1, id1len)),
+            dl::obname {
+                dl::origin(origin),
+                dl::ushort(copy),
+                dl::ident(std::string(objname, objnamelen)),
+            },
+            dl::ident(std::string(id2, id2len)),
+        };
+
+        swap_pointer(py::cast(ref));
+        return;
+    }
+
+    if (*f == DLIS_FMT_DTIME) {
+        int Y, TZ, M, D, H, MN, S, MS;
+        ptr = dlis_dtime(ptr, &Y, &TZ, &M, &D, &H, &MN, &S, &MS);
+        Y = dlis_year(Y);
+        const auto US = MS * 1000;
+
+        PyObject* p;
+        std::memcpy(&p, dst, sizeof(p));
+        Py_DECREF(p);
+        p = PyDateTime_FromDateAndTime(Y, M, D, H, MN, S, US);
+        if (!p) throw py::error_already_set();
+        std::memcpy(dst, &p, sizeof(p));
+        dst += sizeof(p);
+        return;
+    }
+
+    int src_skip, dst_skip;
+    const char localfmt[] = {*f, '\0'};
+    dlis_packflen(localfmt, ptr, &src_skip, &dst_skip);
+    assert_overflow(ptr, end, src_skip);
+    dlis_packf(localfmt, ptr, dst);
+    dst += dst_skip;
+    ptr += src_skip;
+}
+
+void read_fdata_frame(const char* fmt, const char*& ptr, const char* end,
+                      unsigned char*& dst) noexcept (false) {
+    for (auto* f = fmt; *f; ++f) {
+        read_curve_sample(f, ptr, end, dst);
+    }
+}
+
+void read_fdata_record(const char* pre_fmt,
+                       const char* fmt,
+                       const char* post_fmt,
+                       const char* ptr,
+                       const char* end,
+                       unsigned char*& dst,
+                       int& frames,
+                       const std::size_t& itemsize,
+                       std::size_t allocated_rows,
+                       std::function<void (std::size_t)> resize)
+noexcept (false) {
+
+    /* get frame number and slots */
+    while (ptr < end) {
+        if (frames == allocated_rows) {
+            resize(frames * 2);
+            dst += (frames * itemsize);
+        }
+
+        int src_skip, dst_skip;
+
+        dlis_packflen(pre_fmt, ptr, &src_skip, nullptr);
+        assert_overflow(ptr, end, src_skip);
+        ptr += src_skip;
+
+        read_fdata_frame(fmt, ptr, end, dst);
+
+        dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
+        assert_overflow(ptr, end, src_skip);
+        ptr += src_skip;
+
+        ++frames;
+    }
+}
+
 py::object read_fdata(const char* pre_fmt,
                       const char* fmt,
                       const char* post_fmt,
                       dl::stream& file,
                       const std::vector< long long >& indices,
                       std::size_t itemsize,
-                      py::object alloc)
+                      py::object alloc,
+                      dl::error_handler& errorhandler)
 noexcept (false) {
     // TODO: reverse fingerprint to skip bytes ahead-of-time
     /*
@@ -382,6 +689,7 @@ noexcept (false) {
         dst = static_cast< unsigned char* >(info.ptr);
     };
 
+
     /*
      * The frameno is a part of the dtype, and only frame.channels is allowed
      * to call this function. If pre/post format is set, wrong data is read.
@@ -392,13 +700,33 @@ noexcept (false) {
     assert(std::string(pre_fmt) == "");
     assert(std::string(post_fmt) == "");
 
+    auto record_dst = dst;
+
+    const auto handle = [&]( const std::string& problem ) {
+        const auto context = "dl::read_fdata: reading curves";
+        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
+                         "Record is skipped");
+        // we update the buffer as we go. Hence if error happened we need to
+        // go back and start rewriting updated data
+        dst = record_dst;
+    };
+
     int frames = 0;
     for (auto i : indices) {
+        record_dst = dst;
+
         /* get record */
-        auto record = dl::extract(file, i);
+        dl::record record;
+        try {
+            record = dl::extract(file, i, errorhandler);
+        } catch (std::exception& e) {
+            handle(e.what());
+            continue;
+        }
 
         if (record.isencrypted()) {
-            throw dl::not_implemented("encrypted FDATA record");
+            handle("encrypted FDATA record");
+            continue;
         }
 
         const auto* ptr = record.data.data();
@@ -409,275 +737,12 @@ noexcept (false) {
         std::uint8_t copy;
         ptr = dlis_obname(ptr, &origin, &copy, nullptr, nullptr);
 
-        /* get frame number and slots */
-        while (ptr < end) {
-            if (frames == allocated_rows) {
-                resize(frames * 2);
-                dst += (frames * itemsize);
-            }
-
-            auto assert_overflow = [end](const char* ptr, int skip) {
-                if (ptr + skip > end) {
-                    const auto msg = "corrupted record: fmtstr would read past end";
-                    throw std::runtime_error(msg);
-                }
-            };
-
-            int src_skip, dst_skip;
-            dlis_packflen(pre_fmt, ptr, &src_skip, nullptr);
-            assert_overflow(ptr, src_skip);
-            ptr += src_skip;
-
-            for (auto* f = fmt; *f; ++f) {
-                /*
-                 * Supporting bounded-length identifiers in frame data is
-                 * slightly more difficult than it immediately seem like, and
-                 * this implementation relies on a few assumptions that may not
-                 * hold.
-                 *
-                 * 1. numpy structured arrays interpret unicode on the fly
-                 *
-                 * On my amd64 linux:
-                 * >>> dt = np.dtype('U5')
-                 * >>> dt.itemsize
-                 * 20
-                 * >>> np.array(['foo'], dtype = dt)[0]
-                 * 'foo'
-                 * >>> np.array(['foobar'], dtype = dt)[0]
-                 * 'fooba'
-                 *
-                 * Meaning it supports string lengths of [0, n]. It apparently
-                 * (and maybe rightly so) uses null termination, or the bounded
-                 * length, which ever comes first.
-                 *
-                 * 2. numpy stores characters as int32 Py_UNICODE
-                 * Numpy seems to always use uint32, and not Py_UNICODE, which
-                 * can be both 16 and 32 bits [1]. Since it's an integer it's
-                 * endian sensitive, and widening from char works. This is not
-                 * really documented by numpy.
-                 *
-                 * 3. numpy stores no metadata with the string
-                 * It is assumed, and seems necessary from the interface, that
-                 * there is no in-band metadata stored about the strings when
-                 * used in structured arrays. This means we can just write the
-                 * unicode ourselves, and have numpy interpret it correctly.
-                 *
-                 * --
-                 * Units is just an IDENT in disguise, so it can very well take
-                 * the same code path.
-                 *
-                 * [1] http://docs.h5py.org/en/stable/strings.html#what-about-numpy-s-u-type
-                 *     NumPy also has a Unicode type, a UTF-32 fixed-width
-                 *     format (4-byte characters). HDF5 has no support for wide
-                 *     characters. Rather than trying to hack around this and
-                 *     “pretend” to support it, h5py will raise an error when
-                 *     attempting to create datasets or attributes of this
-                 *     type.
-                 *
-                 */
-                 auto swap_pointer = [&](py::object obj)
-                 {
-                     PyObject* p;
-                     std::memcpy(&p, dst, sizeof(p));
-                     Py_DECREF(p);
-                     p = obj.inc_ref().ptr();
-                     std::memcpy(dst, &p, sizeof(p));
-                     dst += sizeof(p);
-                 };
-
-                 if (*f == DLIS_FMT_FSING1) {
-                    float v;
-                    float a;
-                    ptr = dlis_fsing1(ptr, &v, &a);
-                    auto t = py::make_tuple(v, a);
-
-                    swap_pointer(t);
-                    continue;
-                }
-
-                 if (*f == DLIS_FMT_FSING2) {
-                    float v;
-                    float a;
-                    float b;
-                    ptr = dlis_fsing2(ptr, &v, &a, &b);
-                    auto t = py::make_tuple(v, a, b);
-
-                    swap_pointer(t);
-                    continue;
-                }
-
-                 if (*f == DLIS_FMT_FDOUB1) {
-                    double v;
-                    double a;
-                    ptr = dlis_fdoub1(ptr, &v, &a);
-                    auto t = py::make_tuple(v, a);
-
-                    swap_pointer(t);
-                    continue;
-                }
-
-                 if (*f == DLIS_FMT_FDOUB2) {
-                    double v;
-                    double a;
-                    double b;
-                    ptr = dlis_fdoub2(ptr, &v, &a, &b);
-                    auto t = py::make_tuple(v, a, b);
-
-                    swap_pointer(t);
-                    continue;
-                }
-
-                if (*f == DLIS_FMT_IDENT || *f == DLIS_FMT_UNITS) {
-                    constexpr auto chars = 255;
-                    constexpr auto ident_size = chars * sizeof(std::uint32_t);
-
-                    std::int32_t len;
-                    char tmp[chars];
-                    ptr = dlis_ident(ptr, &len, tmp);
-
-                    /*
-                     * From reading the numpy source, it looks like they put
-                     * and interpret the unicode buffer in the array directly,
-                     * and pad with zero. This means the string is both null
-                     * and length terminated, whichever comes first.
-                     */
-                    std::memset(dst, 0, ident_size);
-                    for (auto i = 0; i < len; ++i) {
-                        const auto x = std::uint32_t(tmp[i]);
-                        std::memcpy(dst + i * sizeof(x), &x, sizeof(x));
-                    }
-                    dst += ident_size;
-                    continue;
-                }
-
-                if (*f == DLIS_FMT_ASCII) {
-                    std::int32_t len;
-                    ptr = dlis_uvari(ptr, &len);
-                    auto ascii = py::str(ptr, len);
-                    ptr += len;
-
-                    /*
-                     * Numpy seems to default initalize object types even in
-                     * the case of np.empty to None [1]. The refcount is surely
-                     * increased, so decref it before replacing the pointer
-                     * with a fresh str.
-                     *
-                     * [1] Array of uninitialized (arbitrary) data of the given
-                     *     shape, dtype, and order. Object arrays will be
-                     *     initialized to None.
-                     *     https://docs.scipy.org/doc/numpy/reference/generated/numpy.empty.html
-                     */
-                    swap_pointer(ascii);
-                    continue;
-                }
-
-                if (*f == DLIS_FMT_OBNAME) {
-                    std::int32_t origin;
-                    std::uint8_t copy;
-                    std::int32_t idlen;
-                    char id[255];
-                    ptr = dlis_obname(ptr, &origin, &copy, &idlen, id);
-
-                    const auto name = dl::obname {
-                        dl::origin(origin),
-                        dl::ushort(copy),
-                        dl::ident(std::string(id, idlen)),
-                    };
-
-                    swap_pointer(py::cast(name));
-                    continue;
-                }
-
-                if (*f == DLIS_FMT_OBJREF) {
-                    std::int32_t idlen;
-                    char id[255];
-                    std::int32_t origin;
-                    std::uint8_t copy;
-                    std::int32_t objnamelen;
-                    char objname[255];
-                    ptr = dlis_objref(ptr,
-                                      &idlen,
-                                      id,
-                                      &origin,
-                                      &copy,
-                                      &objnamelen,
-                                      objname);
-
-                    const auto name = dl::objref {
-                        dl::ident(std::string(id, idlen)),
-                        dl::obname {
-                            dl::origin(origin),
-                            dl::ushort(copy),
-                            dl::ident(std::string(objname, objnamelen)),
-                        },
-                    };
-
-                    swap_pointer(py::cast(name));
-                    continue;
-                }
-
-                if (*f == DLIS_FMT_ATTREF) {
-                    std::int32_t id1len;
-                    char id1[255];
-                    std::int32_t origin;
-                    std::uint8_t copy;
-                    std::int32_t objnamelen;
-                    char objname[255];
-                    std::int32_t id2len;
-                    char id2[255];
-                    ptr = dlis_attref(ptr,
-                                      &id1len,
-                                      id1,
-                                      &origin,
-                                      &copy,
-                                      &objnamelen,
-                                      objname,
-                                      &id2len,
-                                      id2);
-
-                    const auto ref = dl::attref {
-                        dl::ident(std::string(id1, id1len)),
-                        dl::obname {
-                            dl::origin(origin),
-                            dl::ushort(copy),
-                            dl::ident(std::string(objname, objnamelen)),
-                        },
-                        dl::ident(std::string(id2, id2len)),
-                    };
-
-                    swap_pointer(py::cast(ref));
-                    continue;
-                }
-
-                if (*f == DLIS_FMT_DTIME) {
-                    int Y, TZ, M, D, H, MN, S, MS;
-                    ptr = dlis_dtime(ptr, &Y, &TZ, &M, &D, &H, &MN, &S, &MS);
-                    Y = dlis_year(Y);
-                    const auto US = MS * 1000;
-
-                    PyObject* p;
-                    std::memcpy(&p, dst, sizeof(p));
-                    Py_DECREF(p);
-                    p = PyDateTime_FromDateAndTime(Y, M, D, H, MN, S, US);
-                    if (!p) throw py::error_already_set();
-                    std::memcpy(dst, &p, sizeof(p));
-                    dst += sizeof(p);
-                    continue;
-                }
-
-                const char localfmt[] = {*f, '\0'};
-                dlis_packflen(localfmt, ptr, &src_skip, &dst_skip);
-                assert_overflow(ptr, src_skip);
-                dlis_packf(localfmt, ptr, dst);
-                dst += dst_skip;
-                ptr += src_skip;
-            }
-
-            dlis_packflen(post_fmt, ptr, &src_skip, nullptr);
-            assert_overflow(ptr, src_skip);
-            ptr += src_skip;
-
-            ++frames;
+        try {
+            read_fdata_record(pre_fmt, fmt, post_fmt, ptr, end, dst, frames,
+                              itemsize, allocated_rows, resize);
+        } catch (std::exception& e) {
+            handle(e.what());
+            continue;
         }
     }
 
@@ -713,6 +778,30 @@ public:
             match,          /* Name of function in C++ (must match Python name) */
             pattern,        /* Argument(s) */
             candidate
+        );
+    }
+};
+
+/** trampoline helper class for dl::error_handler bindings */
+class PyErrorHandler : public dl::error_handler {
+public:
+    /* Inherit the constructor */
+    using dl::error_handler::error_handler;
+
+    /* Trampoline (need one for each virtual function) */
+    void log(const dl::error_severity& level, const std::string& context,
+             const std::string& problem, const std::string& specification,
+             const std::string& action)
+    const noexcept(false) override {
+        PYBIND11_OVERLOAD_PURE(
+            void,              /* Return type */
+            dl::error_handler, /* Parent class */
+            log,               /* Name of function in C++ */
+            level,             /* Argument(s) */
+            context,
+            problem,
+            specification,
+            action
         );
     }
 };
@@ -852,11 +941,13 @@ PYBIND11_MODULE(core, m) {
     py::class_< dl::object_attribute >( m, "object_attribute" )
         .def_readonly("value", &dl::object_attribute::value)
         .def_readonly("units", &dl::object_attribute::units)
+        .def_readonly("log",   &dl::object_attribute::log)
     ;
 
     py::class_< dl::basic_object >( m, "basic_object" )
         .def_readonly("type", &dl::basic_object::type)
         .def_readonly("name", &dl::basic_object::object_name)
+        .def_readonly("log",  &dl::basic_object::log)
         .def( "__len__", []( const dl::basic_object& o ) {
             return o.attributes.size();
         })
@@ -891,11 +982,13 @@ PYBIND11_MODULE(core, m) {
         .def( "get", (dl::object_vector (dl::pool::*) (
             const std::string&,
             const std::string&,
-            const dl::matcher&
+            const dl::matcher&,
+            const dl::error_handler&
         )) &dl::pool::get )
         .def( "get", (dl::object_vector (dl::pool::*) (
             const std::string&,
-            const dl::matcher&
+            const dl::matcher&,
+            const dl::error_handler&
         )) &dl::pool::get )
     ;
 
@@ -969,11 +1062,21 @@ PYBIND11_MODULE(core, m) {
     ;
 
     m.def( "extract", [](dl::stream& s,
-                        const std::vector< long long >& tells) {
+                        const std::vector< long long >& tells,
+                        dl::error_handler& errorhandler) {
         std::vector< dl::record > recs;
         recs.reserve( tells.size() );
         for (auto tell : tells) {
-            auto rec = dl::extract(s, tell);
+            dl::record rec;
+            try {
+                rec = dl::extract(s, tell, errorhandler);
+            } catch (const std::exception& e) {
+                const auto context =
+                    "dl::extract: Reading raw bytes from record";
+                errorhandler.log(dl::error_severity::CRITICAL, context,
+                                 e.what(), "", "Record is skipped");
+                continue;
+            }
             if (rec.data.size() > 0) {
                 recs.push_back( std::move( rec ) );
             }
@@ -981,11 +1084,21 @@ PYBIND11_MODULE(core, m) {
         return recs;
     });
 
-    m.def( "parse_objects", []( const std::vector< dl::record >& recs ) {
+    m.def( "parse_objects", []( const std::vector< dl::record >& recs,
+                                dl::error_handler& errorhandler ) {
         std::vector< dl::object_set > objects;
         for (const auto& rec : recs) {
             if (rec.isencrypted()) continue;
-            objects.push_back( dl::object_set( rec ) );
+
+            try {
+                objects.push_back( dl::object_set( rec ) );
+            } catch (const std::exception& e) {
+                const auto context =
+                    "core.parse_objects: Construct object sets";
+                errorhandler.log(dl::error_severity::CRITICAL, context,
+                                 e.what(), "", "Set is skipped");
+                continue;
+            }
         }
         return objects;
     });
@@ -995,15 +1108,36 @@ PYBIND11_MODULE(core, m) {
     m.def( "hastapemark", dl::hastapemark );
     m.def("findfdata", dl::findfdata);
 
-    m.def( "findoffsets", []( dl::stream& file ) {
-        const auto ofs = dl::findoffsets( file );
-        return py::make_tuple( ofs.explicits, ofs.implicits );
+    m.def( "findoffsets", []( dl::stream& file,
+                              dl::error_handler& errorhandler) {
+        const auto ofs = dl::findoffsets( file, errorhandler );
+        return py::make_tuple( ofs.explicits, ofs.implicits, ofs.broken );
     });
 
-    m.def("set_encodings", set_encodings);
-    m.def("get_encodings", get_encodings);
+    py::enum_< dl::error_severity >( m, "error_severity" )
+        .value( "info",     dl::error_severity::INFO )
+        .value( "minor",    dl::error_severity::MINOR )
+        .value( "major",    dl::error_severity::MAJOR )
+        .value( "critical", dl::error_severity::CRITICAL )
+    ;
+
+    py::class_< dl::dlis_error >( m, "dlis_error" )
+        .def_readonly( "severity",      &dl::dlis_error::severity )
+        .def_readonly( "problem",       &dl::dlis_error::problem )
+        .def_readonly( "specification", &dl::dlis_error::specification )
+        .def_readonly( "action",        &dl::dlis_error::action )
+    ;
 
     py::class_< dl::matcher, Pymatcher >( m, "matcher")
         .def(py::init<>())
     ;
+
+    py::class_< dl::error_handler, PyErrorHandler >( m, "error_handler")
+        .def(py::init<>())
+    ;
+
+    /* settings */
+    m.def("set_encodings", set_encodings);
+    m.def("get_encodings", get_encodings);
+
 }

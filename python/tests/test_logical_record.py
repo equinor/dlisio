@@ -63,8 +63,7 @@ def test_invariant_attribute(tmpdir, merge_files_oneLR):
         assert attr.value == [False, False, True]
 
 
-@pytest.mark.future_warning_invariant_attribute
-def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR):
+def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'invariant-attribute-in-object.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -78,6 +77,9 @@ def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         assert attr.value == [8.0]
+
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_log("Invariant attribute")
 
 
 def test_absent_attribute(tmpdir, merge_files_oneLR):
@@ -98,8 +100,7 @@ def test_absent_attribute(tmpdir, merge_files_oneLR):
             _ = obj.attic['DEFAULT_ATTRIBUTE']
 
 
-@pytest.mark.future_warning_absent_attr_in_template
-def test_absent_attribute_in_template(tmpdir, merge_files_oneLR):
+def test_absent_attribute_in_template(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'absent-attribute-in-template.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -112,6 +113,7 @@ def test_absent_attribute_in_template(tmpdir, merge_files_oneLR):
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
+        assert_log("Absent Attribute in object set template")
 
 @pytest.mark.future_test_attributes
 def test_global_default_attribute(tmpdir, merge_files_oneLR):
@@ -255,7 +257,15 @@ def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
         assert "month must be" in str(excinfo.value)
 
 def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
-    path = os.path.join(str(tmpdir), 'invalid-repcode.dlis')
+    path = os.path.join(str(tmpdir), 'invalid-repcode-template-value.dlis')
+
+    # template for attribute 'INVALID':
+    # repcode = 0  # invalid
+    # value = [bytes] # value is declared to be present
+
+    # attribute 'INVALID' in obj 'OBJECT':
+    # repcode = USHORT  # valid
+    # value = [1, 2, 3, 4]  # valid value
     content = [
         'data/chap3/start.dlis.part',
         'data/chap3/template/invalid-repcode-value.dlis.part',
@@ -270,11 +280,21 @@ def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     assert "unknown representation code" in str(excinfo.value)
 
 
-def test_repcode_invalid_in_template_no_value(tmpdir, merge_files_oneLR):
-    path = os.path.join(str(tmpdir), 'invalid-repcode-template.dlis')
+def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
+                                                    assert_info):
+    path = os.path.join(str(tmpdir), 'invalid-repcode-template-fixed.dlis')
+
+    # template for attribute 'INVALID':
+    # repcode = 0  # invalid
+    # value = None # no value
+
+    # attribute 'INVALID' in obj 'OBJECT':
+    # repcode = USHORT  # valid
+    # value = [1, 2, 3, 4]  # valid value
     content = [
         'data/chap3/start.dlis.part',
         'data/chap3/template/invalid-repcode-no-value.dlis.part',
+        'data/chap3/template/default.dlis.part',
         'data/chap3/object/object.dlis.part',
         'data/chap3/objattr/all-set.dlis.part',
     ]
@@ -282,17 +302,101 @@ def test_repcode_invalid_in_template_no_value(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_info("Problem:      One or more attributes "
+                    "of this object violate specification")
+        assert_info("Where:        T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1")
+
         attr = obj.attic['INVALID']
         assert attr.value == [1, 2, 3, 4]
 
+        _ = obj['INVALID']
+        assert_info("Problem:      Invalid representation code 0\n"
+                    "Where:        "
+                    "T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1-A.INVALID")
 
-def test_repcode_invalid_in_objects(tmpdir, merge_files_oneLR):
+def test_repcode_invalid_in_template_no_value_not_fixed(tmpdir,
+                                                        merge_files_oneLR,
+                                                        assert_info):
+    path = os.path.join(str(tmpdir), 'invalid-repcode-template-bad.dlis')
+
+
+    # template for attribute 'INVALID':
+    # repcode = 0  # invalid
+    # value = None # no value
+
+    # attribute 'INVALID' in obj 'OBJECT' is implicitly taken from template
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invalid-repcode-no-value.dlis.part',
+        'data/chap3/object/object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+    with dlisio.load(path) as (f, *_):
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        attr = obj.attic['INVALID']
+        # note that behavior is different from the one below
+        # here we never process the attribute, hence error is not triggered
+        assert attr.value == None
+
+        _ = obj['INVALID']
+        assert_info("Invalid representation code 0")
+
+def test_repcode_invalid_in_template_no_value_empty(tmpdir, merge_files_oneLR,
+                                                    assert_log, assert_info):
+    path = os.path.join(str(tmpdir), 'invalid-repcode-template-bad-empty.dlis')
+
+    # template for attribute 'INVALID':
+    # repcode = 0  # invalid
+    # value = None # no value
+
+    # attribute 'INVALID' in obj 'OBJECT' is explicitly taken from template
+
+    # attribute 'INVALID' in obj 'OBJECT2':
+    # repcode = USHORT  # valid
+    # value = [1, 2, 3, 4]  # valid value
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/invalid-repcode-no-value.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/empty.dlis.part',
+        'data/chap3/object/object2.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+    with dlisio.load(path) as (f, *_):
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        with pytest.raises(RuntimeError) as excinfo:
+            # note that behavior is different from the one above
+            # by adding "empty", we process the attribute, hence trigger error
+            _ = obj['INVALID']
+        assert "invalid representation code" in str(excinfo.value)
+
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
+        attr = obj.attic['INVALID']
+        assert attr.value == [1, 2, 3, 4]
+
+        _ = obj['INVALID']
+        assert_info(
+            "Problem:      Invalid representation code 0\n"
+            "Where:        T.VERY_MUCH_TESTY_SET-I.OBJECT2-O.1-C.1-A.INVALID")
+
+def test_repcode_invalid_in_objects_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode-object.dlis')
+
+    # template for attribute 'DEFAULT_ATTRIBUTE':
+    # repcode = FDOUBLE  # valid
+    # value = [value1, value2] # valid
+
+    # attribute 'DEFAULT_ATTRIBUTE' in obj 'OBJECT':
+    # repcode = 32  # invalid
+    # value = [bytes]  # value is declared to be present
     content = [
         'data/chap3/start.dlis.part',
         'data/chap3/template/default.dlis.part',
         'data/chap3/object/object.dlis.part',
-        'data/chap3/objattr/reprcode-invalid.dlis.part',
+        'data/chap3/objattr/reprcode-invalid-value.dlis.part',
     ]
     merge_files_oneLR(path, content)
 
@@ -301,8 +405,41 @@ def test_repcode_invalid_in_objects(tmpdir, merge_files_oneLR):
             f.load()
     assert "unknown representation code" in str(excinfo.value)
 
-@pytest.mark.future_warning_repcode_different_no_value
-def test_repcode_different_no_value(tmpdir, merge_files_oneLR):
+def test_repcode_invalid_in_objects_no_value(tmpdir, merge_files_oneLR,
+                                             assert_log):
+    path = os.path.join(str(tmpdir), 'invalid-repcode-object-no-value.dlis')
+
+    # template for attribute 'GLOBAL_DEFAULT_ATTRIBUTE' is empty
+
+    # attribute 'GLOBAL_DEFAULT_ATTRIBUTE' in obj 'OBJECT':
+    # repcode = 32  # invalid
+    # value = None  # no value is present
+
+    # attribute 'GLOBAL_DEFAULT_ATTRIBUTE' in obj 'OBJECT2':
+    # repcode = USHORT  # valid
+    # value = [1, 2, 3, 4]  # valid value
+    content = [
+        'data/chap3/start.dlis.part',
+        'data/chap3/template/global-default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/reprcode-invalid-no-value.dlis.part',
+        'data/chap3/object/object2.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+    with dlisio.load(path) as (f, *_):
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = obj['GLOBAL_DEFAULT_ATTRIBUTE']
+        assert "invalid representation code" in str(excinfo.value)
+        assert_log("value is not explicitly set")
+
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
+        attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
+        assert attr.value == [1, 2, 3, 4]
+
+def test_repcode_different_no_value(tmpdir, merge_files_oneLR, assert_log,
+                                    assert_info):
     path = os.path.join(str(tmpdir), 'different-repcode-no-value.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -314,7 +451,10 @@ def test_repcode_different_no_value(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        assert obj.attic['DEFAULT_ATTRIBUTE'].value == [0j, 0j]
+
+        attr = obj['DEFAULT_ATTRIBUTE']
+        assert attr == [0j, 0j]
+        assert_log("value is not explicitly set")
 
 @pytest.mark.future_test_attributes
 def test_count0_novalue(tmpdir, merge_files_oneLR):
@@ -371,8 +511,7 @@ def test_count0_different_repcode(tmpdir, merge_files_oneLR):
         assert attr.value == None
 
 
-@pytest.mark.future_warning_label_bit_set_in_object_attr
-def test_label_bit_set_in_attribute(tmpdir, merge_files_oneLR):
+def test_label_bit_set_in_attribute(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'label_bit_set_in_attribute.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -386,10 +525,11 @@ def test_label_bit_set_in_attribute(tmpdir, merge_files_oneLR):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
 
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_log("Label bit")
 
-@pytest.mark.future_warning_label_bit_not_set_in_template
 @pytest.mark.not_implemented_datetime_timezone
-def test_label_bit_not_set_in_template(tmpdir, merge_files_oneLR):
+def test_label_bit_not_set_in_template(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'label-bit-not-set-in-template.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -403,10 +543,10 @@ def test_label_bit_not_set_in_template(tmpdir, merge_files_oneLR):
         attr = obj.attic['NEW_ATTRIBUTE']
         dt = datetime(2033, 4, 19, 20, 39, 58, 103000)
         assert attr.value == [dt]
+        assert_log("Label not set in template")
 
 
-@pytest.mark.future_warning_set_type_bit_not_set
-def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR):
+def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'set-type-not-set.dlis')
     content = [
         'data/chap3/sul.dlis.part',
@@ -419,10 +559,13 @@ def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR):
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
+        assert_log("Problem:      SET:type not set\n"
+                   "Where:        object set of type 'VERY_MUCH_TESTY_SET' "
+                   "named ''")
 
 
-@pytest.mark.future_warning_object_name_bit_not_set
-def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR):
+def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR,
+                                           assert_log):
     path = os.path.join(str(tmpdir), 'no-object-name-bit.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -434,10 +577,13 @@ def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR):
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_log("Problem:      OBJECT:name was not set\n"
+                   "Where:        T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1")
 
 
 @pytest.mark.future_test_attributes
-def test_novalue_less_count(tmpdir, merge_files_oneLR):
+def test_novalue_less_count(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'novalue-less-count.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -455,21 +601,61 @@ def test_novalue_less_count(tmpdir, merge_files_oneLR):
         assert attr.units == 'default attr units'
         assert attr.value == [-0.75]
 
+        _ = obj['DEFAULT_ATTRIBUTE']
+        assert_log("< template count")
 
-@pytest.mark.not_implemented
+
 def test_novalue_more_count(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'novalue-more-count.dlis')
     content = [
         'data/chap3/start.dlis.part',
         'data/chap3/template/default.dlis.part',
         'data/chap3/object/object.dlis.part',
-        'data/chap3/objattr/count9-novalue.dlis.part'
+        'data/chap3/objattr/count9-novalue.dlis.part',
+        'data/chap3/object/object2.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
     ]
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(NotImplementedError):
-            f.load()
+        obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = obj['DEFAULT_ATTRIBUTE']
+        assert "> template count" in str(excinfo.value)
+
+        obj2 = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
+        attr = obj2['DEFAULT_ATTRIBUTE']
+        assert attr == [1, 2, 3, 4]
+
+def test_set_redundat(tmpdir, merge_files_oneLR, assert_info):
+    path = os.path.join(str(tmpdir), 'redundant-set.dlis')
+    content = [
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/redundant.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *tail):
+        _ = f.object('REDUNDANT', 'OBJECT', 1, 1)
+        assert_info("Redundant sets are not supported")
+
+def test_set_replacement(tmpdir, merge_files_oneLR, assert_log):
+    path = os.path.join(str(tmpdir), 'replacement-set.dlis')
+    content = [
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/replacement.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+        'data/chap3/objattr/all-set.dlis.part'
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *tail):
+        _ = f.object('REPLACEMENT', 'OBJECT', 1, 1)
+        assert_log("Replacement sets are not supported")
 
 
 # these tests first of all verify findfdata method, which now belongs
@@ -539,7 +725,8 @@ def test_findfdata_bad_obname():
 
     # Obname is truncated by LRS-length, which in itself is fine as long as it
     # continues on the next LRS. However, in this case there are no new LRS.
-    assert 'File corrupted. Error on reading fdata obname' in str(excinfo.value)
+    msg = 'fdata record corrupted, error on reading obname'
+    assert msg in str(excinfo.value)
 
 def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'unexpected-attribute.dlis')
@@ -551,7 +738,7 @@ def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(RuntimeError) as excinfo:
         dlisio.load(path)
     assert "expected SET" in str(excinfo.value)
 
@@ -568,7 +755,7 @@ def test_unexpected_set_in_object(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected ATTRIB" in str(excinfo.value)
 
@@ -585,7 +772,7 @@ def test_unexpected_set_in_template(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected ATTRIB" in str(excinfo.value)
 
@@ -602,7 +789,7 @@ def test_unexpected_attribute_instead_of_object(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected OBJECT" in str(excinfo.value)
 
@@ -617,12 +804,13 @@ def test_cut_before_template(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with dlisio.load(path) as (f, *_):
-        with pytest.raises(IndexError) as excinfo:
+        with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "unexpected end-of-record" in str(excinfo.value)
 
 
-def test_cut_before_object(tmpdir, merge_files_oneLR):
+def test_cut_before_object(tmpdir, merge_files_oneLR, assert_debug):
+    # otherwise known as "set with no objects" test
     path = os.path.join(str(tmpdir), 'cut-before-object.dlis')
     content = [
         'data/chap3/start.dlis.part',
@@ -632,6 +820,7 @@ def test_cut_before_object(tmpdir, merge_files_oneLR):
     with dlisio.load(path) as (f,):
         objects = f.find('.*', '.*')
         assert len(objects) == 0
+        assert_debug("Set contains no objects")
 
 
 @pytest.mark.skip(reason="result inconsistent")

@@ -30,13 +30,21 @@ incomplete-sul.dlis                 Incomplete storage unit label
 
 incomplete-vr.dlis                  Incomplete visible record
 
+
+lf-lrs-inconsistency.dlis           First implicit lrs expects successor, but
+                                    what follows is a new Logical File
+
+lf-truncated-after-lrsh.dlis        First LF is ok, second is truncated after
+                                    File Header lrs
+
 nondlis.txt                         Not a dlis file
 
 old-vr.dlis                         Older visible record, see 2.3.6.2 Format
                                     Version of rp66v1
 
 padbytes-bad.dlis                   Mismatch between padbyte length and logical
-                                    record length
+                                    record length. Second LR in the file is
+                                    correct.
 
 padbytes-encrypted.dlis             Explicitly formatted logical record with
                                     encrypted padbytes
@@ -59,16 +67,28 @@ small.dlis                          Test file smaller than 4kB
 too-small-record.dlis               Visible record is smaller than the minimum
                                     requirement (20Bytes)
 
+truncated-after-lrsh.dlis           File is truncated after LRSH which expects
+                                    successor
+
+truncated-in-iflr.dlis              Truncated one byte before expected end of
+                                    long IFLR
+
 truncated-in-lrsh.dlis              File is truncated in the LRSH
 
-truncated-on-full-lr.dlis           File is truncated on a complete LR, but not
-                                    VR
+truncated-in-lrsh-vr-over.dlis      File is truncated in the LRSH, VR end aligns
+                                    with EOF. Extremely unlikely situation.
 
 truncated-in-second-lr.dlis         Mismatch between visible record length and
                                     remaining bytes. Second LR truncated
 
-truncated-on-lrs.dlis               LRS expects successor, but none comes. File
-                                    is truncated
+truncated-lr-no-lrs-in-vr.dlis      LRS expects successor, but none comes. File
+                                    is truncated. VR is also truncated
+
+truncated-lr-no-lrs-vr-over.dlis    LRS expects successor, but none comes. File
+                                    is truncated. LRS and VR ends align
+
+truncated-on-full-lr.dlis           File is truncated on a complete LR, but not
+                                    VR
 
 wrong-lrhs.dlis                     Mismatch between logical record segment
                                     length and remaining bytes in visible
@@ -76,7 +96,9 @@ wrong-lrhs.dlis                     Mismatch between logical record segment
                                     length)
 
 zeroed-in-1st-lr.dlis               VR is expected to contain over 1 LR. Data is
-                                    zeroed from middle of 1st LR
+                                    zeroed from middle of 1st LR. There are 512
+                                    zeroes (more than default 200 bytes
+                                    findvrl value)
 
 zeroed-in-2nd-lr.dlis               VR contains 2 LRs. Data is zeroed in the
                                     middle of 2nd LR

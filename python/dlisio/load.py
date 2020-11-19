@@ -1,5 +1,6 @@
 from . import core
 from .file import physicalfile, logicalfile
+from .errors import ErrorHandler
 
 def open(path):
     """ Open a file
@@ -21,7 +22,7 @@ def open(path):
     """
     return core.open(str(path))
 
-def load(path):
+def load(path, error_handler = None):
     """ Loads a file and returns one filehandle pr logical file.
 
     The dlis standard have a concept of logical files. A logical file is a
@@ -47,6 +48,11 @@ def load(path):
     ----------
 
     path : str_like
+
+    error_handler : dlisio.errors.ErrorHandler, optional
+            Error handling rules. Default rules will apply if none supplied.
+            Handler will be added to all the logical files, so users may modify
+            the behavior at any time.
 
     Examples
     --------
@@ -75,6 +81,9 @@ def load(path):
 
     dlis : dlisio.physicalfile(dlisio.logicalfile)
     """
+    if not error_handler:
+        error_handler = ErrorHandler()
+
     sulsize = 80
     tifsize = 12
     lfs = []
@@ -117,19 +126,26 @@ def load(path):
             if tapemarks: stream = core.open_tif(stream)
             stream = core.open_rp66(stream)
 
-            explicits, implicits = core.findoffsets(stream)
+            explicits, implicits, broken = core.findoffsets(stream, error_handler)
             hint = rewind(stream.absolute_tell, tapemarks)
 
-            recs  = core.extract(stream, explicits)
-            sets  = core.parse_objects(recs)
+            recs  = core.extract(stream, explicits, error_handler)
+            sets  = core.parse_objects(recs, error_handler)
             pool  = core.pool(sets)
-            fdata = core.findfdata(stream, implicits)
+            fdata = core.findfdata(stream, implicits, error_handler)
 
-            lf = logicalfile(stream, pool, fdata, sul)
+            lf = logicalfile(stream, pool, fdata, sul, error_handler)
             lfs.append(lf)
 
+            if len(broken):
+                # do not attempt to recover or read more logical files
+                # if the error happened in findoffsets
+                # return all logical files we were able to process until now
+                break
+
+            stream = core.open(path)
+
             try:
-                stream = core.open(path)
                 offset = core.findvrl(stream, hint)
             except RuntimeError:
                 if stream.eof():

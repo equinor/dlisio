@@ -24,4 +24,5 @@ def curves(dlis, frame, dtype, pre_fmt, fmt, post_fmt):
         indices,
         dtype.itemsize,
         alloc,
+        dlis.error_handler
     )

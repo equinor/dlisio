@@ -25,8 +25,9 @@ start.dlis.part              SUL + all the VR and LRSH bytesiBytes 50 and 51
 ====================================== ========================================
 Files in /implicit                     Description
 ====================================== ========================================
-fdata-broken-obname.dlis               File is truncated in the obname of fdata
-                                       record
+fdata-broken-obname.dlis               Obname length in first implicit record is
+                                       bigger than remaining record length.
+                                       Second implicit record is correct
 
 fdata-encrypted.dlis                   Fdata record is encrypted
 
@@ -54,6 +55,17 @@ fdata-vr-disaligned.dlis               Fdata which is interrupted by Visible
 fdata-vr-obname-trailing.dlis          Fdata obname is interrupted by Visible
                                        Record border with just 1 byte to go and
                                        lrs has trailing length of 2 bytes
+====================================== ========================================
+
+
+*explicit* folder contains full files.
+
+====================================== ========================================
+Files in /explicit                     Description
+====================================== ========================================
+broken-in-set.dlis                     First EFLR is correct, second EFLR is
+                                       broken in set component (not a set),
+                                       third EFLR is correct
 ====================================== ========================================
 
 

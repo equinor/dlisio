@@ -196,10 +196,31 @@ class BasicObject():
             # No rule for parsing, keep rp66value as is, i.e. vector
             parse_as = vector
 
+        # report errors before checking for key presence - it might be a symptom
+        if len(self.attic.log) > 0:
+            # TODO: here and for attribute: we use fingerprint to report
+            # context, not repr, to have origina and copynr, but is fingerprint
+            # clear enough for the user?
+            context = "{}".format(self.fingerprint)
+            for error in self.attic.log:
+                self.logicalfile.error_handler.log(
+                    error.severity, context, error.problem,
+                    error.specification, error.action)
+
         try:
-            rp66value = self.attic[key].value
+            attribute = self.attic[key]
         except KeyError:
             return defaultvalue(parse_as)
+
+        rp66value = attribute.value
+
+        # already report errors. presence of key in the attic is enough
+        if len(attribute.log) > 0:
+            context = "{}-A.{}".format(self.fingerprint, key)
+            for error in attribute.log:
+                self.logicalfile.error_handler.log(
+                    error.severity, context, error.problem,
+                    error.specification, error.action)
 
         if rp66value is None: return defaultvalue(parse_as)
         if rp66value == []  : return defaultvalue(parse_as)

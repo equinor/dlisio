@@ -95,11 +95,12 @@ class logicalfile(object):
     then the users responsibility of ensuring correctness for the custom class.
     """
 
-    def __init__(self, stream, object_pool, fdata_index, sul=None):
+    def __init__(self, stream, object_pool, fdata_index, sul, error_handler):
         self.file = stream
         self.object_pool = object_pool
         self.sul = sul
         self.fdata_index = fdata_index
+        self.error_handler = error_handler
 
         if 'UPDATE' in self.object_pool.types:
             msg = ('{} contains UPDATE-object(s) which changes other '
@@ -393,9 +394,9 @@ class logicalfile(object):
             matcher = settings.regex
 
         if not objectname:
-            attics = self.object_pool.get(objecttype, matcher)
+            attics = self.object_pool.get(objecttype, matcher, self.error_handler)
         else:
-            attics = self.object_pool.get(objecttype, objectname, matcher)
+            attics = self.object_pool.get(objecttype, objectname, matcher, self.error_handler)
 
         objects = []
         for attic in attics:
@@ -451,8 +452,8 @@ class logicalfile(object):
 
         if len(matches) == 0:
             msg = "Object not found: type={}, name={}, origin={}, copynumber={}"
-            if not origin: origin = "'any'"
-            if not copynr: copynr = "'any'"
+            if origin is None: origin = "'any'"
+            if copynr is None: copynr = "'any'"
 
             raise ValueError(msg.format(type, name, origin, copynr))
 

@@ -390,6 +390,40 @@ using value_vector = mpark::variant<
     std::vector< units  >
 >;
 
+/*
+ * Assigned error severity.
+ */
+enum class error_severity {
+    INFO     = 1, // everything seems fine, but situation itself is not typical
+    MINOR    = 2, // contradicts specification, but recovery is most likely ok
+    MAJOR    = 3, // contradicts specification, not sure if recovery is ok
+    CRITICAL = 4, // broken beyond repair, could not recover
+};
+
+/*
+ * Error which is caused by violations with regards to rp66 protocol.
+ *
+ * It can be classified by us in different severity levels. In some situations
+ * we might know that violation is common and have a good idea how to recover.
+ * In other situations violation might be too severe for us to do anything about
+ * it.
+ */
+struct dlis_error {
+    error_severity severity;
+    std::string problem;
+    std::string specification;
+    std::string action;
+};
+
+struct error_handler {
+    virtual void log(const error_severity &level, const std::string &context,
+                     const std::string &problem,const std::string &specification,
+                     const std::string &action)
+        const noexcept(false) = 0;
+
+    virtual ~error_handler() = default;
+};
+
 struct record {
     bool isexplicit()  const noexcept (true);
     bool isencrypted() const noexcept (true);
@@ -402,6 +436,23 @@ struct record {
 
 /*
  * The structure of an attribute as described in 3.2.2.1
+ *
+ * Error handling:
+ *
+ * Due to the intricate structure of a dlis-file, dlisio typically over-parses
+ * when a certain piece of information is queried. This would typically make
+ * any warnings or errors issued from the parsing routines pre-mature and might
+ * result in the query failing due to an error in some (from a
+ * user-perspective) unrelated data.
+ *
+ * To combat this, the result of parsing routines (and the state of the
+ * parsed object) is communicated through error codes set on the object.
+ *
+ *      It is the consumers responsibility to check the state of the
+ *      object before using its content.
+ *
+ * object_attribute.log contains a list of dl::dlis_error, which provide
+ * human-readable explanation of the problem
  */
 struct object_attribute {
     dl::ident           label = {};
@@ -411,6 +462,8 @@ struct object_attribute {
     dl::units           units = {};
     dl::value_vector    value = {};
     bool invariant            = false;
+
+    std::vector< dl::dlis_error > log;
 
     bool operator == (const object_attribute& ) const noexcept (true);
 };
@@ -471,6 +524,7 @@ struct basic_object {
     dl::obname object_name;
     dl::ident type;
     std::vector< object_attribute > attributes;
+    std::vector< dl::dlis_error > log;
 };
 
 /* Object set
@@ -502,6 +556,11 @@ struct basic_object {
  * encrypted records cannot be parsed by dlisio without being decrypted first.
  * As object_set does its parsing itself, it _will_ fail on construction if
  * given an encrypted record.
+ *
+ * Log:
+ *
+ * As well as attributes, every object set should have information about issues
+ * that arose during parsing.
  */
 using object_vector = std::vector< basic_object >;
 
@@ -513,14 +572,20 @@ public:
     dl::ident type;
     dl::ident name;
 
+    std::vector< dl::dlis_error > log;
+
     dl::object_vector& objects() noexcept (false);
 private:
     dl::record          record;
     dl::object_vector   objs;
     dl::object_template tmpl;
 
-    void parse() noexcept (false);
+    void parse() noexcept (true);
     bool parsed = false;
+
+    const char* parse_set_component(const char* cur) noexcept (false);
+    const char* parse_template(const char* cur) noexcept (false);
+    const char* parse_objects(const char* cur) noexcept (false);
 };
 
 struct matcher {
@@ -539,26 +604,16 @@ public:
 
     object_vector get(const std::string& type,
                       const std::string& name,
-                      const dl::matcher& matcher) noexcept (false);
+                      const dl::matcher& matcher,
+                      const error_handler& errorhandler) noexcept (false);
 
     object_vector get(const std::string& type,
-                      const dl::matcher& matcher) noexcept (false);
+                      const dl::matcher& matcher,
+                      const error_handler& errorhandler) noexcept (false);
 
 private:
     std::vector< dl::object_set > eflrs;
 };
-
-const char* parse_template( const char* begin,
-                            const char* end,
-                            object_template& ) noexcept (false);
-
-
-object_set parse_objects( const char*, const char* ) noexcept (false);
-const char* parse_set_component( const char*,
-                                 const char*,
-                                 ident*,
-                                 ident*,
-                                 int* ) noexcept (false);
 
 }
 

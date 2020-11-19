@@ -12,14 +12,6 @@
 
 namespace {
 
-void user_warning( const std::string& ) noexcept (true) {
-    // TODO:
-}
-
-void debug_warning( const std::string& ) noexcept (true) {
-    // TODO:
-}
-
 struct set_descriptor {
     int role;
     bool type;
@@ -33,44 +25,26 @@ set_descriptor parse_set_descriptor( const char* cur ) noexcept (false) {
     set_descriptor flags;
     dlis_component( attr, &flags.role );
 
-    switch (flags.role) {
-        case DLIS_ROLE_RDSET:
-        case DLIS_ROLE_RSET:
-        case DLIS_ROLE_SET:
-            break;
-
-        default: {
-            const auto bits = std::bitset< 8 >{ attr }.to_string();
-            const auto role = dlis_component_str(flags.role);
-            const auto msg  = "error parsing object set descriptor: "
-                              "expected SET, RSET or RDSET, was {} ({})"
-                            ;
-            throw std::invalid_argument(fmt::format(msg, role, bits));
-        }
-    }
-
     int type, name;
     const auto err = dlis_component_set( attr, flags.role, &type, &name );
-    flags.type = type;
-    flags.name = name;
 
     switch (err) {
         case DLIS_OK:
             break;
-
-        case DLIS_INCONSISTENT:
-            /*
-             * 3.2.2.2 Component usage
-             *  The Set Component contains the Set Type, which is not optional
-             *  and must not be null, and the Set Name, which is optional.
-             */
-            user_warning( "SET:type not set, but must be non-null." );
-            flags.type = true;
-            break;
-
+        case DLIS_UNEXPECTED_VALUE: {
+                const auto bits = std::bitset< 8 >{ attr }.to_string();
+                const auto role = dlis_component_str(flags.role);
+                const auto msg  = "error parsing object set descriptor: "
+                                "expected SET, RSET or RDSET, was {} ({})"
+                                ;
+                throw std::invalid_argument(fmt::format(msg, role, bits));
+            }
         default:
             throw std::runtime_error("unhandled error in dlis_component_set");
     }
+
+    flags.type = type;
+    flags.name = name;
 
     return flags;
 }
@@ -107,18 +81,10 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
 
         case DLIS_ROLE_INVATR:
             flags.invariant = true;
-
-        case DLIS_ROLE_ATTRIB:
             break;
 
-        default: {
-            const auto bits = std::bitset< 8 >(role).to_string();
-            const auto was  = dlis_component_str(role);
-            const auto msg  = "error parsing attribute descriptor: "
-                              "expected ATTRIB, INVATR, ABSATR or OBJECT, was {} ({})"
-                            ;
-            throw std::invalid_argument(fmt::format(msg, was, bits));
-        }
+        default:
+            break;
     }
 
     if (flags.object || flags.absent) return flags;
@@ -129,17 +95,30 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
                                                         &reprc,
                                                         &units,
                                                         &value );
+
+    switch (err) {
+        case DLIS_OK:
+            break;
+        case DLIS_UNEXPECTED_VALUE: {
+            const auto bits = std::bitset< 8 >(role).to_string();
+            const auto was  = dlis_component_str(role);
+            const auto msg  = "error parsing attribute descriptor: "
+                              "expected ATTRIB, INVATR, ABSATR or OBJECT, "
+                              "was {} ({})";
+            throw std::invalid_argument(fmt::format(msg, was, bits));
+            }
+        default:
+            throw std::runtime_error( "unhandled error in "
+                                      "dlis_component_attrib" );
+    }
+
     flags.label = label;
     flags.count = count;
     flags.reprc = reprc;
     flags.units = units;
     flags.value = value;
 
-    if (!err) return flags;
-
-    // all sources for this error should've been checked, so
-    // something is REALLY wrong if we end up here
-    throw std::runtime_error( "unhandled error in dlis_component_attrib" );
+    return flags;
 }
 
 struct object_descriptor {
@@ -153,20 +132,29 @@ object_descriptor parse_object_descriptor( const char* cur ) {
     int role;
     dlis_component( attr, &role );
 
-    if (role != DLIS_ROLE_OBJECT) {
-        const auto bits = std::bitset< 8 >{ attr }.to_string();
-        const auto was  = dlis_component_str(role);
-        const auto msg  = "error parsing object descriptor: "
-                          "expected OBJECT, was {} ({})"
-                        ;
-        throw std::invalid_argument(fmt::format(msg, was, bits));
-    }
-
     int name;
     const auto err = dlis_component_object( attr, role, &name );
-    if (err) user_warning( "OBJECT:name was not set, but must be non-null" );
 
-    return { true };
+    switch (err) {
+        case DLIS_OK:
+            break;
+        case DLIS_UNEXPECTED_VALUE: {
+            const auto bits = std::bitset< 8 >{ attr }.to_string();
+            const auto was  = dlis_component_str(role);
+            const auto msg  = "error parsing object descriptor: "
+                            "expected OBJECT, was {} ({})"
+                            ;
+            throw std::invalid_argument(fmt::format(msg, was, bits));
+            }
+        default:
+            throw std::runtime_error("unhandled error in "
+                                     "dlis_component_object");
+    }
+
+    object_descriptor flags;
+    flags.name = name;
+
+    return flags;
 }
 
 using std::swap;
@@ -454,12 +442,35 @@ const char* cast( const char* xs,
     xs = cast( xs, x );
 
     if (x < DLIS_FSHORT || x > DLIS_UNITS) {
-        debug_warning("Read incorrect representation code");
         reprc = dl::representation_code::undef;
-    }else{
+    } else {
         reprc = static_cast< dl::representation_code >( x );
     }
     return xs;
+}
+
+const char* repcode(const char* xs, dl::object_attribute& attr )
+noexcept (false) {
+    dl::representation_code& reprc = attr.reprc;
+
+    auto cur = cast(xs, reprc);
+    if (reprc == dl::representation_code::undef) {
+        // retrieve value again for reporting, as it is lost
+        dl::ushort x{ 0 };
+        cast( xs, x );
+
+        const auto msg = "Invalid representation code {}";
+        const auto code = static_cast< int >(x);
+        dl::dlis_error err {
+            dl::error_severity::MINOR,
+            fmt::format(msg, code),
+            "Appendix B: Representation Codes",
+            "Continue. Postpone dealing with this until later"
+        };
+        attr.log.push_back(err);
+    }
+
+    return cur;
 }
 
 template < typename T >
@@ -483,12 +494,10 @@ std::vector< T >& reset( dl::value_vector& value ) noexcept (false) {
     return value.emplace< std::vector< T > >();
 }
 
-const char* elements( const char* xs,
-                      dl::uvari count,
-                      dl::representation_code reprc,
-                      dl::value_vector& vec ) {
-
-    const auto n = dl::decay( count );
+const char* elements( const char* xs, dl::object_attribute& attr ) {
+    const auto reprc = attr.reprc;
+    dl::value_vector& vec = attr.value;
+    const auto n = dl::decay( attr.count );
 
     if (n == 0) {
         vec = mpark::monostate{};
@@ -682,10 +691,8 @@ bool basic_object::operator != (const basic_object& o) const noexcept (true) {
 }
 
 
-const char* parse_template( const char* cur,
-                            const char* end,
-                            object_template& out ) noexcept (false) {
-    object_template tmp;
+const char* object_set::parse_template(const char* cur) noexcept (false) {
+    const char* end = this->record.data.data() + this->record.data.size();
 
     while (true) {
         if (cur >= end)
@@ -693,7 +700,6 @@ const char* parse_template( const char* cur,
 
         const auto flags = parse_attribute_descriptor( cur );
         if (flags.object) {
-            swap( tmp, out );
             return cur;
         }
 
@@ -701,38 +707,49 @@ const char* parse_template( const char* cur,
         cur += DLIS_DESCRIPTOR_SIZE;
 
         if (flags.absent) {
-            user_warning( "ABSATR in object template - skipping" );
+            dlis_error err {
+                dl::error_severity::MAJOR,
+                "Absent Attribute in object set template",
+                "3.2.2.2 Component Usage: A Template consists of a collection "
+                    "of Attribute Components and/or Invariant Attribute "
+                    "Components, mixed in any fashion.",
+                "Attribute not included in template"
+            };
+            this->log.push_back(err);
             continue;
         }
 
         object_attribute attr;
 
         if (!flags.label) {
-            /*
-             * 3.2.2.2 Component usage
-             *  All Components in the Template must have distinct, non-null
-             *  Labels.
-             *
-             *  Assume that if this isn't set properly it's a corrupted
-             *  descriptor, so just try to read the label anyway
-             */
-            user_warning( "Label not set, but must be non-null" );
+            dlis_error err {
+                dl::error_severity::MAJOR,
+                "Label not set in template",
+                "3.2.2.2 Component Usage: All Components in the Template must "
+                    "have distinct, non-null Labels.",
+                "Assumed attribute descriptor corrupted, attempt to read "
+                    "label anyway"
+            };
+            this->log.push_back(err);
         }
 
                          cur = cast( cur, attr.label );
         if (flags.count) cur = cast( cur, attr.count );
-        if (flags.reprc) cur = cast( cur, attr.reprc );
+        if (flags.reprc) cur = repcode( cur, attr );
         if (flags.units) cur = cast( cur, attr.units );
-        if (flags.value) cur = elements( cur, attr.count,
-                                              attr.reprc,
-                                              attr.value );
+        if (flags.value) cur = elements( cur, attr );
         attr.invariant = flags.invariant;
 
-        tmp.push_back( std::move( attr ) );
+        this->tmpl.push_back( std::move( attr ) );
 
         if (cur == end){
-            debug_warning("Set contains no objects");
-            swap( tmp, out );
+            dlis_error err {
+                dl::error_severity::INFO,
+                "Set contains no objects",
+                "3.2.2.2 Component Usage: A Set consists of one or more Objects",
+                "Leave the set empty and return"
+            };
+            this->log.push_back(err);
             return cur;
         }
     }
@@ -774,11 +791,13 @@ struct shrink {
     }
 };
 
-void patch_missing_value( dl::value_vector& value,
-                          std::size_t count,
-                          dl::representation_code reprc )
+void patch_missing_value( dl::object_attribute& attr )
 noexcept (false)
 {
+    const dl::representation_code reprc = attr.reprc;
+    const std::size_t count             = dl::decay( attr.count );
+    dl::value_vector& value             = attr.value;
+
     /*
      * value is *NOT* monostate, i.e. there is a default value.  if count !=
      * values.size(), resize it.
@@ -790,19 +809,41 @@ noexcept (false)
 
         /* smaller, shrink and all is fine */
         if (size > count) {
+
+            const auto msg =
+                "template value is not overridden by object attribute, but "
+                "count is. count ({}) < template count ({})";
+
             mpark::visit( shrink( count ), value );
+            dlis_error err {
+                dl::error_severity::MAJOR,
+                fmt::format(msg, count, size),
+                "3.2.2.1 Component Descriptor: The number of Elements that "
+                    "make up the Value is specified by the Count "
+                    "Characteristic.",
+                "shrank template value to new attribute count"
+            };
+            attr.log.push_back(err);
             return;
         }
 
         /*
-         * count is larger, so insert default values, maybe? for now, throw
-         * exception and consider what to do when a file actually uses this
-         * behaviour
+         * count is larger, which makes little sense. Likely file is already
+         * spoiled, but mark attribute as errored and attempt to continue
          */
-        const auto msg = "object attribute without no explicit value, but "
-                         "count (which is {}) > size (which is {})"
-        ;
-        throw dl::not_implemented(fmt::format(msg, count, size));
+        const auto msg =
+            "template value is not overridden by object attribute, but "
+            "count is. count ({}) > template count ({})";
+
+        dlis_error err {
+            dl::error_severity::CRITICAL,
+            fmt::format(msg, count, size),
+            "3.2.2.1 Component Descriptor: The number of Elements that "
+                "make up the Value is specified by the Count "
+                "Characteristic.",
+            "value is left as in template"
+        };
+        attr.log.push_back(err);
     }
 
     /*
@@ -844,24 +885,57 @@ noexcept (false)
         case rpc::status: reset< dl::status >(value).resize(count); return;
         case rpc::units:  reset< dl::units  >(value).resize(count); return;
         default: {
-            const auto msg = "unable to patch attribute with no value: "
-                             "unknown representation code {}";
+            // repcode is incorrect, but value is missing
+            // hence we can log an error but continue processing
+            const auto msg =
+                "invalid representation code {}";
+            /* TODO: there is a problem with reporting. If representation code
+             * is undefined, we define the value to be 66, not the actual value
+             * that is present in the file
+             */
             const auto code = static_cast< int >(reprc);
-            throw std::runtime_error(fmt::format(msg, code));
+            dl::dlis_error err {
+                dl::error_severity::CRITICAL,
+                fmt::format(msg, code),
+                "Appendix B: Representation Codes",
+                "attribute value is left as template default. Continue"
+            };
+            attr.log.push_back(err);
+
         }
     }
 }
 
-object_vector parse_objects( const object_template& tmpl,
-                             const dl::ident type,
-                             const char* cur,
-                             const char* end ) noexcept (false) {
+bool is_log_clear( const std::vector< dlis_error >& log ) noexcept (true) {
+    for (const auto& entry : log) {
+        if (entry.severity >= dl::error_severity::MINOR)
+            return false;
+    }
+    return true;
+}
 
-    object_vector objs;
+void report_set_errors(const dl::object_set& eflr,
+                       const dl::error_handler& errorhandler) {
+    if (eflr.log.size()) {
+        const auto context = "object set of type '" +
+                             dl::decay(eflr.type) + "' named '" +
+                             dl::decay(eflr.name) +"'";
+        for (const auto &err : eflr.log) {
+            errorhandler.log(err.severity, context, err.problem,
+                             err.specification, err.action);
+        }
+    }
+}
+
+}
+
+const char* object_set::parse_objects(const char* cur) noexcept (false) {
+
+    const char* end = this->record.data.data() + this->record.data.size();
     const auto default_object = defaulted_object( tmpl );
 
-    while (true) {
-        if (std::distance( cur, end ) <= 0)
+    while (cur != end) {
+        if (std::distance( cur, end ) < 0)
             throw std::out_of_range( "unexpected end-of-record" );
 
         auto object_flags = parse_object_descriptor( cur );
@@ -869,7 +943,21 @@ object_vector parse_objects( const object_template& tmpl,
 
         auto current = default_object;
         current.type = type;
-        if (object_flags.name) cur = cast( cur, current.object_name );
+        bool object_clear = true;
+
+        if (!object_flags.name) {
+            dlis_error err {
+                dl::error_severity::MAJOR,
+                "OBJECT:name was not set",
+                "3.2.2.1 Component Descriptor: That is, every Object has "
+                    "a non-null Name",
+                "Assumed object descriptor corrupted, attempt to read name "
+                    "anyway"
+            };
+            current.log.push_back(err);
+        }
+
+        cur = cast( cur, current.object_name );
 
         for (const auto& template_attr : tmpl) {
             if (template_attr.invariant) continue;
@@ -893,28 +981,31 @@ object_vector parse_objects( const object_template& tmpl,
             }
 
             if (flags.invariant) {
-                /*
-                 * 3.2.2.2 Component Usage
-                 *  Invariant Attribute Components, which may only appear in
-                 *  the Template [...]
-                 *
-                 * Assume this is a mistake, assume it was a regular
-                 * non-invariant attribute
-                 */
-                user_warning("ATTRIB:invariant in attribute, "
-                             "but should only be in template");
+                dlis_error err {
+                    dl::error_severity::MAJOR,
+                    "Invariant attribute in object attributes",
+                    "3.2.2.2 Component Usage: Invariant Attribute Components, "
+                        "which may only appear in the Template [...]",
+                    "ignored invariant bit, assumed that attribute followed"
+                };
+                attr.log.push_back(err);
             }
 
             if (flags.label) {
-                user_warning( "ATTRIB:label set, but must be null");
+                dlis_error err {
+                    dl::error_severity::MAJOR,
+                    "Label bit set in object attribute",
+                    "3.2.2.2 Component Usage: Attribute Components that follow "
+                        "Object Components must not have Attribute Labels",
+                    "ignored label bit, assumed that label never followed"
+                };
+                attr.log.push_back(err);
             }
 
             if (flags.count) cur = cast( cur, attr.count );
-            if (flags.reprc) cur = cast( cur, attr.reprc );
+            if (flags.reprc) cur = repcode( cur, attr );
             if (flags.units) cur = cast( cur, attr.units );
-            if (flags.value) cur = elements( cur, attr.count,
-                                                  attr.reprc,
-                                                  attr.value );
+            if (flags.value) cur = elements( cur, attr );
 
             const auto count = dl::decay( attr.count );
 
@@ -944,31 +1035,43 @@ object_vector parse_objects( const object_template& tmpl,
                     const auto msg = "count ({}) isn't 0 and representation "
                         "code ({}) changed, but value is not explicitly set";
                     const auto code = static_cast< int >(attr.reprc);
-                    user_warning(fmt::format(msg, count, code));
+                    dlis_error err {
+                        dl::error_severity::MAJOR,
+                        fmt::format(msg, count, code),
+                        "",
+                        "value defaulted based on representation code from "
+                            "attribute"
+                    };
+                    attr.log.push_back(err);
                     attr.value = mpark::monostate{};
                 }
 
-                patch_missing_value( attr.value, count, attr.reprc );
+                patch_missing_value( attr );
             }
+
+            object_clear = object_clear && is_log_clear(attr.log);
 
             current.set(attr);
         }
 
-        objs.push_back( std::move( current ) );
+        if (not object_clear) {
+            const auto msg =
+                "One or more attributes of this object violate specification. "
+                "This can potentially corrupt the entire object";
+            dlis_error err{
+                    dl::error_severity::MINOR, msg, "", ""};
+            current.log.push_back(err);
+        }
 
-        if (cur == end) break;
+        this->objs.push_back( std::move( current ) );
     }
 
-    return objs;
+    return cur;
 }
 
-}
+const char* object_set::parse_set_component(const char* cur) noexcept (false) {
 
-const char* parse_set_component( const char* cur,
-                                 const char* end,
-                                 dl::ident* type,
-                                 dl::ident* name,
-                                 int* role) {
+    const char* end = this->record.data.data() + this->record.data.size();
     if (std::distance( cur, end ) <= 0)
         throw std::out_of_range( "eflr must be non-empty" );
 
@@ -980,6 +1083,36 @@ const char* parse_set_component( const char* cur,
         throw std::out_of_range( msg );
     }
 
+    switch (flags.role) {
+        case DLIS_ROLE_RDSET: {
+            dlis_error err {
+                dl::error_severity::MINOR,
+                "Redundant sets are not supported by dlisio",
+                "3.2.2.2 Component Usage: A Redundant Set is an identical copy "
+                    "of some Set written previously in the same Logical File",
+                "Redundant set is treated as a normal set, which might lead "
+                    "to issues with duplicated objects"
+            };
+            this->log.push_back(err);
+            break;
+        }
+        case DLIS_ROLE_RSET: {
+            dlis_error err {
+                dl::error_severity::MAJOR,
+                "Replacement sets are not supported by dlisio",
+                "3.2.2.2 Component Usage: Attributes of the Replacement Set "
+                    "reflect all updates that may have been applied since the "
+                    "original Set was written",
+                "Replacement set is treated as a normal set, which might lead "
+                    "to issues with duplicated objects and invalid information"
+            };
+            this->log.push_back(err);
+            break;
+        }
+        default:
+            break;
+    }
+
     /*
      * TODO: check for every read that inside [begin,end)?
      */
@@ -988,43 +1121,57 @@ const char* parse_set_component( const char* cur,
     dl::ident tmp_type;
     dl::ident tmp_name;
 
-    if (flags.type) cur = cast( cur, tmp_type );
+    if (!flags.type) {
+        dlis_error err {
+            dl::error_severity::MAJOR,
+            "SET:type not set",
+            "3.2.2.1 Component Descriptor: A Set’s Type Characteristic must "
+                "be non-null and must always be explicitly present in "
+                "the Set Component",
+            "Assumed set descriptor corrupted, attempt to read type anyway"
+        };
+        this->log.push_back(err);
+    }
+
+                    cur = cast( cur, tmp_type );
     if (flags.name) cur = cast( cur, tmp_name );
 
-    if (type) *type = tmp_type;
-    if (name) *name = tmp_name;
-    if (role) *role = tmp_role;
+    this->type = tmp_type;
+    this->name = tmp_name;
+    this->role = tmp_role;
     return cur;
 }
 
 object_set::object_set(dl::record rec) noexcept (false)  {
-        parse_set_component(rec.data.data(),
-                            rec.data.data() + rec.data.size(),
-                            &this->type,
-                            &this->name,
-                            &this->role);
         this->record = std::move(rec);
+        parse_set_component(this->record.data.data());
 }
 
-void object_set::parse() noexcept (false) {
+void object_set::parse() noexcept (true) {
     if (this->parsed) return;
 
-    const char* beg = this->record.data.data();
-    const char* end = beg + this->record.data.size();
+    const char* cur = this->record.data.data();
 
-    /* Skip past the set component as it's already been read and parsed */
-    auto cur = parse_set_component(beg, end, nullptr, nullptr, nullptr);
-
-    object_template tmpl;
-    cur = parse_template(cur, end, tmpl);
-
-    //TODO parse_object should return empty list when there are no objects
-    if (std::distance( cur, end ) > 0) {
-        auto objs = parse_objects(tmpl, this->type, cur, end);
-        this->objs = objs;
+    try {
+        /* As cursor value is not stored, read data again to get the position */
+        cur = parse_set_component(cur);
+        cur = parse_template(cur);
+              parse_objects(cur);
+    } catch (const std::exception& e) {
+        dlis_error err {
+            dl::error_severity::CRITICAL,
+            e.what(),
+            "",
+            "object set parse has been interrupted"
+        };
+        this->log.push_back(err);
     }
+    // TODO: possible assert that cur == end of data
 
-    this->tmpl = tmpl;
+    /* If set is parsed in default mode, exception will be thrown and set won't
+     * be considered parsed. If set is parsed after that in error-escape mode,
+     * parsing will be locked, but error will get stored on object set anyway.
+     */
     this->parsed = true;
 }
 
@@ -1043,7 +1190,8 @@ std::vector< dl::ident > pool::types() const noexcept (true) {
 
 object_vector pool::get(const std::string& type,
                         const std::string& name,
-                        const dl::matcher& m)
+                        const dl::matcher& m,
+                        const error_handler& errorhandler)
 noexcept (false) {
     object_vector objs;
 
@@ -1055,12 +1203,15 @@ noexcept (false) {
 
             objs.push_back(obj);
         }
+
+        report_set_errors (eflr, errorhandler);
     }
     return objs;
 }
 
 object_vector pool::get(const std::string& type,
-                        const dl::matcher& m)
+                        const dl::matcher& m,
+                        const error_handler& errorhandler)
 noexcept (false) {
     object_vector objs;
 
@@ -1069,6 +1220,8 @@ noexcept (false) {
 
         auto tmp = eflr.objects();
         objs.insert(objs.end(), tmp.begin(), tmp.end());
+
+        report_set_errors (eflr, errorhandler);
     }
     return objs;
 }

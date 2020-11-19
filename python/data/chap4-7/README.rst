@@ -93,6 +93,10 @@ broken-ascii.dlis                                Ascii with incorrect specified 
                                                  characters are expected, but only 20 are actually
                                                  present
 
+broken-fmt.dlis                                  There is less data in first fdata record than it
+                                                 should be according to fmt string. Second IFLR is
+                                                 correct.
+
 broken-utf8-ascii.dlis                           Ascii containing non-utf8 characters
 
 duplicate-framenos.dlis                          2 FDATA containing different values, but they have
@@ -160,7 +164,9 @@ invalid-date-in-origin.dlis                      Simple file which contains inva
 many-logical-files.dlis                          Contains several logical files, one without file
                                                  header
 
-many-logical-files-error-in-last.dlis            Contains several logical files, last one is broken
+many-logical-files-error-in-last.dlis            Contains several logical files, last one is broken.
+                                                 Two first ones have minor issue (Origin sets are
+                                                 redundant)
 
 many-logical-files-same-object.dlis              Contains 2 logical files with the same objects and
                                                  encrypted records

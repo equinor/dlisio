@@ -177,7 +177,8 @@ bool type_consistent( const T& ) noexcept (true) {
 void trim_segment(std::uint8_t attrs,
                   const char* begin,
                   int segment_size,
-                  std::vector< char >& segment)
+                  std::vector< char >& segment,
+                  dl::error_handler& errorhandler)
 noexcept (false) {
     int trim = 0;
     const auto* end = begin + segment_size;
@@ -188,22 +189,27 @@ noexcept (false) {
             segment.resize(segment.size() - trim);
             return;
 
-        case DLIS_BAD_SIZE:
+        case DLIS_BAD_SIZE: {
             if (trim - segment_size != DLIS_LRSH_SIZE) {
                 const auto msg =
-                    "bad segment trim: padbytes (which is {}) "
+                    "bad segment trim: trim size (which is {}) "
                     ">= segment.size() (which is {})";
                 throw std::runtime_error(fmt::format(msg, trim, segment_size));
             }
 
-            /*
-             * padbytes included the segment header. It's larger than
-             * the segment body, but only because it also counts the
-             * header. accept that, pretend the body was never added,
-             * and move on.
-             */
+            errorhandler.log(
+                dl::error_severity::MINOR,
+                "extract (trim_segment)",
+                "trim size (padbytes + checksum + trailing length) = logical "
+                    "record segment length",
+                "[from 2.2.2.1 Logical Record Segment Header (LRSH) and "
+                    "2.2.2.4 Logical Record Segment Trailer (LRST) situation "
+                    "should be impossible]",
+                "Segment is skipped");
+
             segment.resize(segment.size() - segment_size);
             return;
+        }
 
         default:
             throw std::invalid_argument("dlis_trim_record_segment");
@@ -299,14 +305,16 @@ template < typename T >
 using shortvec = std::basic_string< T >;
 
 
-record extract(stream& file, long long tell) noexcept (false) {
+record extract(stream& file, long long tell, error_handler& errorhandler)
+noexcept (false) {
     record rec;
     rec.data.reserve( 8192 );
     auto nbytes = std::numeric_limits< std::int64_t >::max();
-    return extract(file, tell, nbytes, rec);
+    return extract(file, tell, nbytes, rec, errorhandler);
 }
 
-record& extract(stream& file, long long tell, long long bytes, record& rec) noexcept (false) {
+record& extract(stream& file, long long tell, long long bytes, record& rec,
+                error_handler& errorhandler) noexcept (false) {
     shortvec< std::uint8_t > attributes;
     shortvec< int > types;
     bool consistent = true;
@@ -359,7 +367,7 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
          */
 
         const auto* fst = rec.data.data() + prevsize;
-        trim_segment(attrs, fst, len, rec.data);
+        trim_segment(attrs, fst, len, rec.data, errorhandler);
 
         /* if the whole segment is getting trimmed, it's unclear if successor
          * attribute should be erased or not.  For now ignoring.  Suspecting
@@ -388,58 +396,149 @@ record& extract(stream& file, long long tell, long long bytes, record& rec) noex
     }
 }
 
-stream_offsets findoffsets( dl::stream& file) noexcept (false) {
+stream_offsets findoffsets( dl::stream& file, dl::error_handler& errorhandler)
+noexcept (false) {
     stream_offsets ofs;
 
-    std::int64_t offset = 0;
+    std::int64_t lr_offset = 0;
+    std::int64_t lrs_offset = 0;
+
+    bool has_successor = false;
     char buffer[ DLIS_LRSH_SIZE ];
 
+    const auto handle = [&]( const std::string& problem ) {
+        const auto context = "dl::findoffsets (indexing logical file)";
+        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
+                         "Indexing is suspended at last valid Logical Record");
+        ofs.broken.push_back( lr_offset );
+    };
+
     int len = 0;
+    auto read = 0;
+
+    file.seek(lrs_offset);
+
     while (true) {
-        file.seek(offset);
-        file.read(buffer, DLIS_LRSH_SIZE);
-        if (file.eof())
+        try {
+            read = file.read(buffer, DLIS_LRSH_SIZE);
+        } catch (std::exception& e) {
+            handle(e.what());
             break;
+        }
+
+        // read operation is enough to set eof correctly
+        if (file.eof()) {
+            if (read == 0) {
+                if (has_successor) {
+                    const auto problem =
+                        "Reached EOF, but last logical record segment expects "
+                        "successor";
+                    handle(problem);
+                }
+                break;
+            }
+            if (read < 4) {
+                /*
+                 * Very unlikely situation.
+                 * Usually exception will be thrown during read.
+                 */
+                const auto problem =
+                    "File truncated in Logical Record Header";
+                handle(problem);
+                break;
+            }
+            /*
+             * Do nothing if read == 4
+             * This might be the problem for next Logical File.
+             * If not, it will be dealt with later
+             */
+        }
 
         int type;
         std::uint8_t attrs;
         dlis_lrsh( buffer, &len, &attrs, &type );
         if (len < 4) {
-            auto msg = "Too short logical record. Length can't be less than 4, "
-                       "but was {}";
-            throw std::runtime_error(fmt::format(msg, len));
+            const auto problem =
+                "Too short logical record. Length can't be less than 4, "
+                "but was {}";
+            handle(fmt::format(problem, len));
+            break;
         }
 
-        int isexplicit = attrs & DLIS_SEGATTR_EXFMTLR;
-        if (not (attrs & DLIS_SEGATTR_PREDSEG)) {
+        bool isexplicit      = attrs & DLIS_SEGATTR_EXFMTLR;
+        bool has_predecessor = attrs & DLIS_SEGATTR_PREDSEG;
+
+        if (not (has_predecessor)) {
             if (isexplicit and type == 0 and ofs.explicits.size()) {
                 /*
-                 * Wrap up when we encounter a EFLR of type FILE-HEADER that is
-                 * NOT the first Logical Record. More precisely we expect the
-                 * _first_ LR we encounter to be a FILE-HEADER. We gather up
-                 * this LR and all successive LR's until we encounter another
-                 * FILE-HEADER.
+                 * Wrap up when we encounter a EFLR of type FILE-HEADER that
+                 * is NOT the first Logical Record. More precisely we expect
+                 * the _first_ LR we encounter to be a FILE-HEADER. We
+                 * gather up this LR and all successive LR's until we
+                 * encounter another FILE-HEADER.
                  */
-                file.seek( offset );
+
+                if (has_successor) {
+                    const auto problem =
+                        "End of logical file, but last logical "
+                        "record segment expects successor";
+                    handle(problem);
+                    break;
+                }
+
+                // seek to assure handle is in the right place to read next LF
+                file.seek( lrs_offset );
                 break;
             }
-            if (isexplicit) ofs.explicits.push_back( offset );
+        }
+
+        has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
+        lrs_offset += len;
+
+        /*
+         * Skip the segment by moving the cursor to the next offset.
+         * Seek operation alone isn't enough to correctly set EOF. To make sure
+         * record is not truncated, read its last byte instead of seeking
+         * to the new offset.
+         *
+         * Note that lfp returns UNEXPECTED_EOF for cfile when truncation
+         * happens inside of declared data
+         * TODO: assure behavior for other io types
+         */
+
+        char tmp;
+        file.seek(lrs_offset - 1);
+        try {
+            file.read(&tmp, 1);
+        } catch (const std::runtime_error& e) {
+            const auto problem = "File truncated in Logical Record Segment";
+            handle(problem);
+            break;
+        }
+
+
+        if (not (has_successor)) {
+            if (isexplicit)
+                ofs.explicits.push_back( lr_offset );
             /*
              * Consider doing fdata-indexing on the fly as we are now at the
-             * correct offset to read the OBNAME. That would mean we only need
-             * to traverse the file a single time to index it. Additionally it
-             * would make the caller code from python way nicer.
+             * correct offset to read the OBNAME. That would mean we only
+             * need to traverse the file a single time to index it.
+             * Additionally it would make the caller code from python way
+             * nicer.
              */
-            else            ofs.implicits.push_back( offset );
+            else
+                ofs.implicits.push_back( lr_offset );
+
+            lr_offset = lrs_offset;
         }
-        offset += len;
     }
     return ofs;
 }
 
 std::map< dl::ident, std::vector< long long > >
-findfdata(dl::stream& file, const std::vector< long long >& tells)
-noexcept (false) {
+findfdata(dl::stream& file, const std::vector< long long >& tells,
+dl::error_handler& errorhandler) noexcept (false) {
     std::map< dl::ident, std::vector< long long > > xs;
 
     constexpr std::size_t OBNAME_SIZE_MAX = 262;
@@ -447,8 +546,20 @@ noexcept (false) {
     record rec;
     rec.data.reserve( OBNAME_SIZE_MAX );
 
+    const auto handle = [&]( const std::string& problem ) {
+        const auto context = "dl::findfdata: Indexing implicit records";
+        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
+                         "Record is skipped");
+    };
+
     for (auto tell : tells) {
-        extract(file, tell, OBNAME_SIZE_MAX, rec);
+        try {
+            extract(file, tell, OBNAME_SIZE_MAX, rec, errorhandler);
+        } catch (std::exception& e) {
+            handle(e.what());
+            continue;
+        }
+
         if (rec.isencrypted()) continue;
         if (rec.type != 0) continue;
         if (rec.data.size() == 0) continue;
@@ -461,8 +572,10 @@ noexcept (false) {
 
         std::size_t obname_size = cur - rec.data.data();
         if (obname_size > rec.data.size()) {
-            auto msg = "File corrupted. Error on reading fdata obname";
-            throw std::runtime_error(msg);
+            const auto problem =
+                "fdata record corrupted, error on reading obname";
+            handle(problem);
+            continue;
         }
         dl::obname tmp{ dl::origin{ origin },
                         dl::ushort{ copy },
