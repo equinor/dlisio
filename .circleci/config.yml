@@ -222,6 +222,11 @@ jobs:
         type: enum
         enum: ["x86", "x64"]
         # machine is 64-bit, but script attempts not to rely on it by default
+      build_type:
+        description: Release or Debug
+        type: enum
+        enum: ["Release", "Debug"]
+        default: "Release"
     steps:
       - run:
           name: explicitly disable autocrlf
@@ -297,10 +302,11 @@ jobs:
             cmake -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
                   -DLFP_FMT_HEADER_ONLY=ON `
                   -DBUILD_TESTING=OFF `
-                  -DCMAKE_BUILD_TYPE=Release `
+                  -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
                   -A $env:generatorplatform `
                   ..
-            cmake --build . --config Release --target install
+            # lfp must be build with the same build config as dlisio or build will fail
+            cmake --build . --config << parameters.build_type >>  --target install
       - pull_submodules
       - restore_cache:
           key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
@@ -337,22 +343,22 @@ jobs:
             $env:lfp_DIR = $env:install_dir + "/layered-file-protocols/share/lfp/cmake"
             cmake -G "Visual Studio 16 2019" `
                   -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
-                  -DCMAKE_BUILD_TYPE=Release `
+                  -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
                   -A $env:generatorplatform `
                   ..
-            cmake --build . --target install --config Release
+            cmake --build . --target install --config << parameters.build_type >>
       - run:
           name: run tests
           command: |
             cd build
             conda activate py-<< parameters.python >>-<< parameters.platform >>
-            ctest -C Release --output-on-failure
+            ctest -C << parameters.build_type >> --output-on-failure
       - run:
           name: build python
           command: |
             conda activate py-<< parameters.python >>-<< parameters.platform >>
             cd python
-            python setup.py bdist_wheel -G "Visual Studio 16 2019"
+            python setup.py bdist_wheel -G "Visual Studio 16 2019" --build-type=<< parameters.build_type >>
       - run:
           name: run import test
           command: |
@@ -492,6 +498,13 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+      - windows_build:
+          name: debug-build-python-<< matrix.python >>-win-<< matrix.platform >>
+          matrix:
+            parameters:
+              python: ["3.8"]
+              platform: ["x86", "x64"]
+              build_type: ["Debug"]
   arch:
     jobs:
       - bigendian
