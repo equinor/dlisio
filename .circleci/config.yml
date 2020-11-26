@@ -230,6 +230,24 @@ jobs:
           command: |
             git config --global core.autocrlf false
       - checkout
+      - run:
+          name: set all platform-dependent environment variables
+          command: |
+            if('<< parameters.platform >>' -eq 'x86') {
+              $install_dir = "C:/Program Files (x86)"
+              $generatorplatform = 'Win32'
+              $CONDA_FORCE_32BIT = 1
+            } else {
+              $install_dir = "C:/Program Files (x86)"
+              $generatorplatform = 'x64'
+              $CONDA_FORCE_32BIT = 0
+            }
+            [Environment]::SetEnvironmentVariable("install_dir", $install_dir,  `
+                                                  [EnvironmentVariableTarget]::Machine)
+            [Environment]::SetEnvironmentVariable("generatorplatform", $generatorplatform,  `
+                                                  [EnvironmentVariableTarget]::Machine)
+            [Environment]::SetEnvironmentVariable("CONDA_FORCE_32BIT", $CONDA_FORCE_32BIT,  `
+                                                  [EnvironmentVariableTarget]::Machine)
       - restore_cache:
           key: vers3-cmake
       - run:
@@ -251,19 +269,15 @@ jobs:
       - run:
           name: install fmtlib
           command: |
-            if (!(Test-Path "C:/Program Files (x86)/FMT")){
+            $fmtpath = $env:install_dir + "/FMT"
+            if (!(Test-Path $fmtpath)) {
               git clone https://github.com/fmtlib/fmt.git
               mkdir fmt/build
               cd fmt/build
-              if('<< parameters.platform >>' -eq 'x86') {
-                $platform = 'Win32'
-              } else {
-                $platform = 'x64'
-              }
               cmake -DFMT_TEST=OFF `
                     -DFMT_DOC=OFF `
                     -DCMAKE_BUILD_TYPE=Release `
-                    -A $platform `
+                    -A $env:generatorplatform `
                     ..
               cmake --build . --config Release --target install
             }
@@ -277,16 +291,11 @@ jobs:
             git clone https://github.com/equinor/layered-file-protocols.git
             mkdir layered-file-protocols/build
             cd layered-file-protocols/build
-            if('<< parameters.platform >>' -eq 'x86') {
-              $platform = 'Win32'
-            } else {
-              $platform = 'x64'
-            }
             cmake -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
                   -DLFP_FMT_HEADER_ONLY=ON `
                   -DBUILD_TESTING=OFF `
                   -DCMAKE_BUILD_TYPE=Release `
-                  -A $platform `
+                  -A $env:generatorplatform `
                   ..
             cmake --build . --config Release --target install
       - pull_submodules
@@ -297,10 +306,7 @@ jobs:
           command: |
             conda init powershell
             conda env list
-            if (!(Test-Path "C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>")){
-              if('<< parameters.platform >>' -eq 'x86') {
-                $Env:CONDA_FORCE_32BIT = 1
-              }
+            if (!(Test-Path "C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>")) {
               conda create -y -n py-<< parameters.python >>-<< parameters.platform >> python=<< parameters.python >>
             }
       - run:
@@ -316,8 +322,6 @@ jobs:
             - C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>
       - run:
           name: install core
-          environment:
-            lfp_DIR: "C:/Program Files (x86)/layered-file-protocols/share/lfp/cmake"
           command: |
             mkdir build
             cd build
@@ -325,15 +329,13 @@ jobs:
             $pversion = (python --version | Out-String).trim()
             $pmode = (python -c "import struct;print(struct.calcsize('P') * 8)" | Out-String).trim()
             echo "active python is $pversion ; executing in $pmode -bit mode"
-            if('<< parameters.platform >>' -eq 'x86') {
-              $platform = 'Win32'
-            } else {
-              $platform = 'x64'
-            }
+            # in contrast with fmt, we need to set lfp_DIR
+            # fmt is found automatically because of default path (C:/Program Files/FMT/lib/cmake)
+            $env:lfp_DIR = $env:install_dir + "/layered-file-protocols/share/lfp/cmake"
             cmake -G "Visual Studio 16 2019" `
                   -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
                   -DCMAKE_BUILD_TYPE=Release `
-                  -A $platform `
+                  -A $env:generatorplatform `
                   ..
             cmake --build . --target install --config Release
       - run:
