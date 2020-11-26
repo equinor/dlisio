@@ -353,6 +353,11 @@ jobs:
             conda activate py-<< parameters.python >>-<< parameters.platform >>
             cd python
             python setup.py bdist_wheel -G "Visual Studio 16 2019"
+      - run:
+          name: run import test
+          command: |
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            python -c "import dlisio; print(dlisio.__version__)"
       - persist_to_workspace:
           root: C:/Users/circleci/project/python
           paths:
