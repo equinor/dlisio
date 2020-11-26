@@ -222,6 +222,11 @@ jobs:
         type: enum
         enum: ["x86", "x64"]
         # machine is 64-bit, but script attempts not to rely on it by default
+      build_type:
+        description: Release or Debug
+        type: enum
+        enum: ["Release", "Debug"]
+        default: "Release"
     steps:
       - run:
           name: explicitly disable autocrlf
@@ -230,8 +235,26 @@ jobs:
           command: |
             git config --global core.autocrlf false
       - checkout
+      - run:
+          name: set all platform-dependent environment variables
+          command: |
+            if('<< parameters.platform >>' -eq 'x86') {
+              $programfilesdir = "C:/Program Files (x86)"
+              $generatorplatform = 'Win32'
+              $CONDA_FORCE_32BIT = 1
+            } else {
+              $programfilesdir = "C:/Program Files"
+              $generatorplatform = 'x64'
+              $CONDA_FORCE_32BIT = 0
+            }
+            [Environment]::SetEnvironmentVariable("programfilesdir", $programfilesdir,  `
+                                                  [EnvironmentVariableTarget]::Machine)
+            [Environment]::SetEnvironmentVariable("generatorplatform", $generatorplatform,  `
+                                                  [EnvironmentVariableTarget]::Machine)
+            [Environment]::SetEnvironmentVariable("CONDA_FORCE_32BIT", $CONDA_FORCE_32BIT,  `
+                                                  [EnvironmentVariableTarget]::Machine)
       - restore_cache:
-          key: vers3-cmake
+          key: vers6-cmake
       - run:
           name: install cmake
           command: |
@@ -243,64 +266,56 @@ jobs:
             }
             refreshenv
       - save_cache:
-          key: vers3-cmake
+          key: vers6-cmake
           paths:
             - C:\Program Files\CMake
       - restore_cache:
-          key: vers3-fmt-<< parameters.platform >>
+          key: vers6-fmt-<< parameters.platform >>
       - run:
           name: install fmtlib
           command: |
-            if (!(Test-Path "C:/Program Files (x86)/FMT")){
+            $fmtpath = $env:programfilesdir + "/FMT"
+            if (!(Test-Path $fmtpath)) {
               git clone https://github.com/fmtlib/fmt.git
               mkdir fmt/build
               cd fmt/build
-              if('<< parameters.platform >>' -eq 'x86') {
-                $platform = 'Win32'
-              } else {
-                $platform = 'x64'
-              }
               cmake -DFMT_TEST=OFF `
                     -DFMT_DOC=OFF `
                     -DCMAKE_BUILD_TYPE=Release `
-                    -A $platform `
+                    -A $env:generatorplatform `
                     ..
               cmake --build . --config Release --target install
             }
       - save_cache:
-          key: vers3-fmt-<< parameters.platform >>
+          key: vers6-fmt-<< parameters.platform >>
           paths:
+            # 'programfilesdir' variable is not accessible in configuration, so need to mark both options
+            # if directory doesn't exist, it simply won't be saved
             - C:/Program Files (x86)/FMT
+            - C:/Program Files/FMT
       - run:
           name: install layered-file-protocol
           command: |
             git clone https://github.com/equinor/layered-file-protocols.git
             mkdir layered-file-protocols/build
             cd layered-file-protocols/build
-            if('<< parameters.platform >>' -eq 'x86') {
-              $platform = 'Win32'
-            } else {
-              $platform = 'x64'
-            }
-            cmake -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
+            cmake -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS" `
                   -DLFP_FMT_HEADER_ONLY=ON `
                   -DBUILD_TESTING=OFF `
-                  -DCMAKE_BUILD_TYPE=Release `
-                  -A $platform `
+                  -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
+                  -A $env:generatorplatform `
                   ..
-            cmake --build . --config Release --target install
+            # lfp must be build with the same build config as dlisio or build will fail
+            cmake --build . --config << parameters.build_type >>  --target install
       - pull_submodules
       - restore_cache:
-          key: vers3-miniconda-<< parameters.python >>-<< parameters.platform >>
+          key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
       - run:
           name: create python version with miniconda
           command: |
             conda init powershell
             conda env list
-            if (!(Test-Path "C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>")){
-              if('<< parameters.platform >>' -eq 'x86') {
-                $Env:CONDA_FORCE_32BIT = 1
-              }
+            if (!(Test-Path "C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>")) {
               conda create -y -n py-<< parameters.python >>-<< parameters.platform >> python=<< parameters.python >>
             }
       - run:
@@ -311,13 +326,11 @@ jobs:
             python -m pip install --upgrade setuptools
             python -m pip install -r python/requirements-dev.txt
       - save_cache:
-          key: vers3-miniconda-<< parameters.python >>-<< parameters.platform >>
+          key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
           paths:
             - C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>
       - run:
           name: install core
-          environment:
-            lfp_DIR: "C:/Program Files (x86)/layered-file-protocols/share/lfp/cmake"
           command: |
             mkdir build
             cd build
@@ -325,23 +338,32 @@ jobs:
             $pversion = (python --version | Out-String).trim()
             $pmode = (python -c "import struct;print(struct.calcsize('P') * 8)" | Out-String).trim()
             echo "active python is $pversion ; executing in $pmode -bit mode"
-            if('<< parameters.platform >>' -eq 'x86') {
-              $platform = 'Win32'
-            } else {
-              $platform = 'x64'
-            }
+            # in contrast with fmt, we need to set lfp_DIR
+            # fmt is found automatically because of default path (C:/Program Files/FMT/lib/cmake)
+            $env:lfp_DIR = $env:programfilesdir + "/layered-file-protocols/share/lfp/cmake"
             cmake -G "Visual Studio 16 2019" `
-                  -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc" `
-                  -DCMAKE_BUILD_TYPE=Release `
-                  -A $platform `
+                  -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS" `
+                  -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
+                  -A $env:generatorplatform `
                   ..
-            cmake --build . --target install --config Release
+            cmake --build . --target install --config << parameters.build_type >>
+      - run:
+          name: run tests
+          command: |
+            cd build
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            ctest -C << parameters.build_type >> --output-on-failure
       - run:
           name: build python
           command: |
             conda activate py-<< parameters.python >>-<< parameters.platform >>
             cd python
-            python setup.py bdist_wheel -G "Visual Studio 16 2019"
+            python setup.py bdist_wheel -G "Visual Studio 16 2019" --build-type=<< parameters.build_type >>
+      - run:
+          name: run import test
+          command: |
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            python -c "import dlisio; print(dlisio.__version__)"
       - persist_to_workspace:
           root: C:/Users/circleci/project/python
           paths:
@@ -476,6 +498,13 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+      - windows_build:
+          name: debug-build-python-<< matrix.python >>-win-<< matrix.platform >>
+          matrix:
+            parameters:
+              python: ["3.8"]
+              platform: ["x86", "x64"]
+              build_type: ["Debug"]
   arch:
     jobs:
       - bigendian

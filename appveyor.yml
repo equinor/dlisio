@@ -51,7 +51,7 @@ before_build:
     - ps: mkdir layered-file-protocols/build
     - ps: pushd layered-file-protocols/build
     - cmake -G %generator%
-            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc"
+            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS"
             -DLFP_FMT_HEADER_ONLY=ON
             -DCMAKE_BUILD_TYPE=Release
             -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
@@ -67,7 +67,7 @@ build_script:
           pushd build
     - cmake %APPVEYOR_BUILD_FOLDER%
             -G %generator%
-            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS /EHsc"
+            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS"
     - cmake --build .  --config %configuration%
     - ctest --build-config %configuration% --output-on-failure
     - ps: popd
