@@ -342,6 +342,12 @@ jobs:
                   ..
             cmake --build . --target install --config Release
       - run:
+          name: run tests
+          command: |
+            cd build
+            conda activate py-<< parameters.python >>-<< parameters.platform >>
+            ctest -C Release --output-on-failure
+      - run:
           name: build python
           command: |
             conda activate py-<< parameters.python >>-<< parameters.platform >>
