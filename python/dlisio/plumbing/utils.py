@@ -343,8 +343,12 @@ def describe_text(buf, text, width, indent, subindent=None):
     if subindent is None: subindent = indent
 
     if text is None: text = str(None)
+    else: text = str(text)
+
+    if len(text) == 0: text = '""'
+
     wrapped = fill(
-        str(text),
+        text,
         width             = width,
         initial_indent    = indent,
         subsequent_indent = subindent
