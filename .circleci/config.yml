@@ -227,6 +227,15 @@ jobs:
         type: enum
         enum: ["Release", "Debug"]
         default: "Release"
+      install_dir:
+        description: where installation is performed (platform dependent)
+        type: string
+      generator_platform:
+        description: cmake generator to use (platform dependent)
+        type: string
+      conda_force_32bit:
+        description: conda bit parameter (platform dependent)
+        type: integer
     steps:
       - run:
           name: explicitly disable autocrlf
@@ -235,26 +244,8 @@ jobs:
           command: |
             git config --global core.autocrlf false
       - checkout
-      - run:
-          name: set all platform-dependent environment variables
-          command: |
-            if('<< parameters.platform >>' -eq 'x86') {
-              $programfilesdir = "C:/Program Files (x86)"
-              $generatorplatform = 'Win32'
-              $CONDA_FORCE_32BIT = 1
-            } else {
-              $programfilesdir = "C:/Program Files"
-              $generatorplatform = 'x64'
-              $CONDA_FORCE_32BIT = 0
-            }
-            [Environment]::SetEnvironmentVariable("programfilesdir", $programfilesdir,  `
-                                                  [EnvironmentVariableTarget]::Machine)
-            [Environment]::SetEnvironmentVariable("generatorplatform", $generatorplatform,  `
-                                                  [EnvironmentVariableTarget]::Machine)
-            [Environment]::SetEnvironmentVariable("CONDA_FORCE_32BIT", $CONDA_FORCE_32BIT,  `
-                                                  [EnvironmentVariableTarget]::Machine)
       - restore_cache:
-          key: vers6-cmake
+          key: vers70-cmake
       - run:
           name: install cmake
           command: |
@@ -266,15 +257,15 @@ jobs:
             }
             refreshenv
       - save_cache:
-          key: vers6-cmake
+          key: vers70-cmake
           paths:
             - C:\Program Files\CMake
       - restore_cache:
-          key: vers6-fmt-<< parameters.platform >>
+          key: vers70-fmt-<< parameters.platform >>
       - run:
           name: install fmtlib
           command: |
-            $fmtpath = $env:programfilesdir + "/FMT"
+            $fmtpath = "<< parameters.install_dir >>/FMT"
             if (!(Test-Path $fmtpath)) {
               git clone https://github.com/fmtlib/fmt.git
               mkdir fmt/build
@@ -282,17 +273,14 @@ jobs:
               cmake -DFMT_TEST=OFF `
                     -DFMT_DOC=OFF `
                     -DCMAKE_BUILD_TYPE=Release `
-                    -A $env:generatorplatform `
+                    -A << parameters.generator_platform >> `
                     ..
               cmake --build . --config Release --target install
             }
       - save_cache:
-          key: vers6-fmt-<< parameters.platform >>
+          key: vers70-fmt-<< parameters.platform >>
           paths:
-            # 'programfilesdir' variable is not accessible in configuration, so need to mark both options
-            # if directory doesn't exist, it simply won't be saved
-            - C:/Program Files (x86)/FMT
-            - C:/Program Files/FMT
+            - << parameters.install_dir >>/FMT
       - run:
           name: install layered-file-protocol
           command: |
@@ -303,19 +291,20 @@ jobs:
                   -DLFP_FMT_HEADER_ONLY=ON `
                   -DBUILD_TESTING=OFF `
                   -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
-                  -A $env:generatorplatform `
+                  -A << parameters.generator_platform >> `
                   ..
             # lfp must be build with the same build config as dlisio or build will fail
             cmake --build . --config << parameters.build_type >>  --target install
       - pull_submodules
       - restore_cache:
-          key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
+          key: vers70-miniconda-<< parameters.python >>-<< parameters.platform >>
       - run:
           name: create python version with miniconda
           command: |
             conda init powershell
             conda env list
             if (!(Test-Path "C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>")) {
+              $Env:CONDA_FORCE_32BIT = << parameters.conda_force_32bit >>
               conda create -y -n py-<< parameters.python >>-<< parameters.platform >> python=<< parameters.python >>
             }
       - run:
@@ -326,7 +315,7 @@ jobs:
             python -m pip install --upgrade setuptools
             python -m pip install -r python/requirements-dev.txt
       - save_cache:
-          key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
+          key: vers70-miniconda-<< parameters.python >>-<< parameters.platform >>
           paths:
             - C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>
       - run:
@@ -340,11 +329,11 @@ jobs:
             echo "active python is $pversion ; executing in $pmode -bit mode"
             # in contrast with fmt, we need to set lfp_DIR
             # fmt is found automatically because of default path (C:/Program Files/FMT/lib/cmake)
-            $env:lfp_DIR = $env:programfilesdir + "/layered-file-protocols/share/lfp/cmake"
+            $env:lfp_DIR = "<< parameters.install_dir >>//layered-file-protocols/share/lfp/cmake"
             cmake -G "Visual Studio 16 2019" `
                   -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS" `
                   -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
-                  -A $env:generatorplatform `
+                  -A << parameters.generator_platform >> `
                   ..
             cmake --build . --target install --config << parameters.build_type >>
       - run:
@@ -381,6 +370,15 @@ jobs:
         description: x86 or x64
         type: enum
         enum: ["x86", "x64"]
+      install_dir:
+        description: where installation is performed (platform dependent)
+        type: string
+      generator_platform:
+        description: cmake generator to use (platform dependent)
+        type: string
+      conda_force_32bit:
+        description: conda bit parameter (platform dependent)
+        type: integer
     steps:
       - run:
           name: do not run deploy command, but report that it was called
@@ -476,35 +474,89 @@ workflows:
   windows:
     jobs:
       - windows_build:
-          name: build-python-<< matrix.python >>-win-<< matrix.platform >>
+          name: build-python-<< matrix.python >>-win-x86
           matrix:
             parameters:
               python: ["3.8"]
-              platform: ["x86", "x64"]
+              # parameters below should always stay singular
+              platform: ["x86"]
+              install_dir: ["C:/Program Files (x86)"]
+              generator_platform: ['Win32']
+              conda_force_32bit: [1]
           # filters on the "build" jobs are not accidental, CircleCI needs them
           filters:
             tags:
               only: /.*/
-#       - deploy:
-#           name: deploy-python-<< matrix.python >>-win-<< matrix.platform >>
-#           matrix:
-#             parameters:
-#               python: ["3.5", "3.6", "3.7", "3.8"]
-#               platform: ["x86", "x64"]
-#           requires:
-#             - build-python-<< matrix.python >>-win-<< matrix.platform >>
-#           filters:
-#             tags:
-#               only: /^v.*/
-#             branches:
-#               ignore: /.*/
-#       - windows_build:
-#           name: debug-build-python-<< matrix.python >>-win-<< matrix.platform >>
-#           matrix:
-#             parameters:
-#               python: ["3.8"]
-#               platform: ["x86", "x64"]
-#               build_type: ["Debug"]
+      - deploy:
+          name: deploy-python-<< matrix.python >>-win-x86
+          matrix:
+            parameters:
+              python: ["3.8"]
+              # parameters below should always stay singular
+              platform: ["x86"]
+              install_dir: ["C:/Program Files (x86)"]
+              generator_platform: ['Win32']
+              conda_force_32bit: [1]
+          requires:
+            - build-python-<< matrix.python >>-win-x86
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - windows_build:
+          name: build-python-<< matrix.python >>-win-x64
+          matrix:
+            parameters:
+              python: ["3.8"]
+              # parameters below should always stay singular
+              platform: ["x64"]
+              install_dir: ["C:/Program Files"]
+              generator_platform: ['x64']
+              conda_force_32bit: [0]
+          # filters on the "build" jobs are not accidental, CircleCI needs them
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          name: deploy-python-<< matrix.python >>-win-x64
+          matrix:
+            parameters:
+              python: ["3.8"]
+              # parameters below should always stay singular
+              platform: ["x64"]
+              install_dir: ["C:/Program Files"]
+              generator_platform: ['x64']
+              conda_force_32bit: [0]
+          requires:
+            - build-python-<< matrix.python >>-win-x64
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - windows_build:
+          name: debug-build-python-<< matrix.python >>-win-x86
+          matrix:
+            parameters:
+              python: ["3.8"]
+              build_type: ["Debug"]
+              # parameters below should always stay singular
+              platform: ["x86"]
+              install_dir: ["C:/Program Files (x86)"]
+              generator_platform: ['Win32']
+              conda_force_32bit: [1]
+      - windows_build:
+          name: debug-build-python-<< matrix.python >>-win-x64
+          matrix:
+            parameters:
+              python: ["3.8"]
+              build_type: ["Debug"]
+              # parameters below should always stay singular
+              platform: ["x64"]
+              install_dir: ["C:/Program Files"]
+              generator_platform: ['x64']
+              conda_force_32bit: [0]
 #   arch:
 #     jobs:
 #       - bigendian
