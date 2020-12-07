@@ -238,7 +238,7 @@ jobs:
               $generatorplatform = 'Win32'
               $CONDA_FORCE_32BIT = 1
             } else {
-              $install_dir = "C:/Program Files (x86)"
+              $install_dir = "C:/Program Files"
               $generatorplatform = 'x64'
               $CONDA_FORCE_32BIT = 0
             }
@@ -249,7 +249,7 @@ jobs:
             [Environment]::SetEnvironmentVariable("CONDA_FORCE_32BIT", $CONDA_FORCE_32BIT,  `
                                                   [EnvironmentVariableTarget]::Machine)
       - restore_cache:
-          key: vers3-cmake
+          key: vers6-cmake
       - run:
           name: install cmake
           command: |
@@ -261,11 +261,11 @@ jobs:
             }
             refreshenv
       - save_cache:
-          key: vers3-cmake
+          key: vers6-cmake
           paths:
             - C:\Program Files\CMake
       - restore_cache:
-          key: vers3-fmt-<< parameters.platform >>
+          key: vers6-fmt-<< parameters.platform >>
       - run:
           name: install fmtlib
           command: |
@@ -282,9 +282,12 @@ jobs:
               cmake --build . --config Release --target install
             }
       - save_cache:
-          key: vers3-fmt-<< parameters.platform >>
+          key: vers6-fmt-<< parameters.platform >>
           paths:
+            # 'install_dir' variable is not accessible in configuration, so need to mark both options
+            # if directory doesn't exist, it simply won't be saved
             - C:/Program Files (x86)/FMT
+            - C:/Program Files/FMT
       - run:
           name: install layered-file-protocol
           command: |
@@ -300,7 +303,7 @@ jobs:
             cmake --build . --config Release --target install
       - pull_submodules
       - restore_cache:
-          key: vers3-miniconda-<< parameters.python >>-<< parameters.platform >>
+          key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
       - run:
           name: create python version with miniconda
           command: |
@@ -317,7 +320,7 @@ jobs:
             python -m pip install --upgrade setuptools
             python -m pip install -r python/requirements-dev.txt
       - save_cache:
-          key: vers3-miniconda-<< parameters.python >>-<< parameters.platform >>
+          key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
           paths:
             - C:\tools\miniconda3\envs\py-<< parameters.python >>-<< parameters.platform >>
       - run:
