@@ -21,7 +21,9 @@ target_include_directories(dlisio
 )
 target_compile_options(dlisio
     BEFORE
-    PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
+    PRIVATE
+        $<$<CONFIG:Debug>:${warnings-c++}>
+        $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
 )
 
 install(TARGETS dlisio
@@ -42,7 +44,9 @@ target_include_directories(dlisio-extension
 )
 target_compile_options(dlisio-extension
     BEFORE
-    PRIVATE $<$<CONFIG:Debug>:${warnings-c++}>
+    PRIVATE
+        $<$<CONFIG:Debug>:${warnings-c++}>
+        $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
 )
 target_compile_definitions(dlisio
     PRIVATE
