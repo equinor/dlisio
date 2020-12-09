@@ -7,7 +7,7 @@ set(CMAKE_C_VISIBILITY_PRESET   "hidden")
 
 find_package(PythonExtensions REQUIRED)
 find_package(dlisio REQUIRED)
-find_package(mpark REQUIRED)
+find_package(mpark_variant REQUIRED)
 find_package(lfp REQUIRED)
 
 add_library(core MODULE dlisio/ext/core.cpp)
@@ -16,7 +16,7 @@ target_include_directories(core
         ${PYBIND11_INCLUDE_DIRS}
 )
 python_extension_module(core)
-target_link_libraries(core dlisio dlisio-extension mpark::variant)
+target_link_libraries(core dlisio dlisio-extension mpark_variant)
 
 if (MSVC)
     target_compile_options(core

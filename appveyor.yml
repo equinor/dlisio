@@ -56,9 +56,19 @@ before_build:
             -DCMAKE_BUILD_TYPE=Release
             -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
     - cmake --build .  --config %configuration% --target install
+    - ps: popd
     - set install-dir=C:/Program Files
     - IF "%platform%" == "x86" set install-dir=C:/Program Files (x86)
     - set lfp_DIR=%install-dir%/layered-file-protocols/share/lfp/cmake
+    - git clone https://github.com/mpark/variant.git
+    - ps: mkdir variant/build
+    - ps: pushd variant/build
+    - cmake -G %generator%
+            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS"
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+    - cmake --build .  --config %configuration% --target install
+    - set mpark_variant_DIR=%install-dir%/Mpark.Variant/lib/cmake/mpark_variant
     - ps: popd
 
 build_script:

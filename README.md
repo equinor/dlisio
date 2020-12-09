@@ -55,6 +55,7 @@ To develop dlisio, or to build a particular revision from source, you need:
 * [CMake](https://cmake.org/) version 3.5 or greater
 * [Python](https://python.org) version 3.5 or greater
 * [fmtlib](http://fmtlib.net/) tested mainly with 5.3.0
+* [mpark_variant](https://github.com/mpark/variant)
 * [pybind11](https://github.com/pybind/pybind11) version 2.3 or greater
 * [setuptools](https://pypi.python.org/pypi/setuptools) version 28 or greater
 * [layered-file-protocols](https://github.com/equinor/layered-file-protocols)

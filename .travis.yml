@@ -101,6 +101,12 @@ before_install:
     - make
     - sudo make install
     - popd
+    - git clone https://github.com/mpark/variant.git
+    - mkdir variant/build && pushd variant/build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make
+    - sudo make install
+    - popd
     - git clone https://github.com/matthew-brett/multibuild
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh

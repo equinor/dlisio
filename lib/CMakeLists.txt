@@ -55,7 +55,7 @@ target_compile_definitions(dlisio
 )
 target_link_libraries(dlisio-extension
     PUBLIC dlisio
-           mpark::variant
+           mpark_variant
            endianness
            lfp::lfp
 
@@ -75,7 +75,6 @@ export(
     TARGETS
         dlisio
         dlisio-extension
-        variant
         fmt-header-only
         endianness
     FILE

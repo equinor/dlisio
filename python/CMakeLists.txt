@@ -59,7 +59,6 @@ add_custom_target(
             ${DLISIO_PYTHON_BUILD_TYPE}
         -- # cmake to the extension
             -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
-            -Dmpark_DIR=${MPARK_LIB_BINARY_DIR}
             # "install" to the python/dlisio dir with rpath, so there's no need
             # to fiddle with environment in ctest to load the core library from
             # the build tree
