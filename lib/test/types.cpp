@@ -10,7 +10,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <dlisio/types.h>
+#include <dlisio/types.hpp>
 
 /*
  * Custom type for byte arrays, for nicely printing mismatch between expected
@@ -132,7 +132,7 @@ TEST_CASE("signed short (8-bit)", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::int8_t v;
-            dlis_sshort( inputs[ i ], &v );
+            dl::sshort_frombytes( inputs[ i ], &v );
             CHECK( int(v) == int(expected[ i ]) );
         }
     }
@@ -140,7 +140,7 @@ TEST_CASE("signed short (8-bit)", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::int8_t v;
-            dlis_sshorto( &v, expected[ i ] );
+            dl::sshort_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
         }
     }
@@ -172,7 +172,7 @@ TEST_CASE("signed normal (16-bit)", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::int16_t v;
-            dlis_snorm( inputs[ i ], &v );
+            dl::snorm_frombytes( inputs[ i ], &v );
             CHECK( v == expected[ i ] );
         }
     }
@@ -180,7 +180,7 @@ TEST_CASE("signed normal (16-bit)", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::int16_t v;
-            dlis_snormo( &v, expected[ i ] );
+            dl::snorm_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
         }
     }
@@ -212,7 +212,7 @@ TEST_CASE("signed long (32-bit)", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::int32_t v;
-            dlis_slong( inputs[ i ], &v );
+            dl::slong_frombytes( inputs[ i ], &v );
             CHECK( v == expected[ i ] );
         }
     }
@@ -220,7 +220,7 @@ TEST_CASE("signed long (32-bit)", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::int32_t v;
-            dlis_slongo( &v, expected[ i ] );
+            dl::slong_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
         }
     }
@@ -250,7 +250,7 @@ TEST_CASE("unsigned short (8-bit)", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::uint8_t v;
-            dlis_ushort( inputs[ i ], &v );
+            dl::ushort_frombytes( inputs[ i ], &v );
             CHECK( int(v) == int(expected[ i ]) );
         }
     }
@@ -258,7 +258,7 @@ TEST_CASE("unsigned short (8-bit)", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::uint8_t v;
-            dlis_ushorto( &v, expected[ i ] );
+            dl::ushort_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
         }
     }
@@ -290,7 +290,7 @@ TEST_CASE("unsigned normal (16-bit)", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::uint16_t v;
-            dlis_unorm( inputs[ i ], &v );
+            dl::unorm_frombytes( inputs[ i ], &v );
             CHECK( v == expected[ i ] );
         }
     }
@@ -298,7 +298,7 @@ TEST_CASE("unsigned normal (16-bit)", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::uint16_t v;
-            dlis_unormo( &v, expected[ i ] );
+            dl::unorm_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
         }
     }
@@ -330,7 +330,7 @@ TEST_CASE("unsigned long (32-bit)", "[type]") {
     SECTION( "to native" ) {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::uint32_t v;
-            dlis_ulong( inputs[ i ], &v );
+            dl::ulong_frombytes( inputs[ i ], &v );
             CHECK( v == expected[ i ] );
         }
     }
@@ -338,7 +338,7 @@ TEST_CASE("unsigned long (32-bit)", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             std::uint32_t v;
-            dlis_ulongo( &v, expected[ i ] );
+            dl::ulong_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
         }
     }
@@ -363,7 +363,7 @@ TEST_CASE("variable-length unsigned int", "[type]") {
         SECTION("to native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int32_t v;
-                const char* end = dlis_uvari( in[ i ], &v );
+                const char* end = dl::uvari_frombytes( in[ i ], &v );
                 CHECK( v == expected[ i ] );
                 CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 1) );
             }
@@ -372,7 +372,7 @@ TEST_CASE("variable-length unsigned int", "[type]") {
         SECTION("from native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int8_t v;
-                const void* end = dlis_uvario( &v, expected[ i ], 1 );
+                const void* end = dl::uvari_tobytes( &v, expected[ i ], 1 );
                 CHECK_THAT( in[ i ], BytesEquals( v ) );
                 CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
             }
@@ -403,7 +403,7 @@ TEST_CASE("variable-length unsigned int", "[type]") {
         SECTION("to native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int32_t v;
-                const char* end = dlis_uvari( in[ i ], &v );
+                const char* end = dl::uvari_frombytes( in[ i ], &v );
                 CHECK( v == expected[ i ] );
                 CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 2) );
             }
@@ -412,7 +412,7 @@ TEST_CASE("variable-length unsigned int", "[type]") {
         SECTION("from native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int16_t v;
-                const void* end = dlis_uvario( &v, expected[ i ], 2 );
+                const void* end = dl::uvari_tobytes( &v, expected[ i ], 2 );
                 CHECK_THAT( in[ i ], BytesEquals( v ) );
                 CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
             }
@@ -447,7 +447,7 @@ TEST_CASE("variable-length unsigned int", "[type]") {
         SECTION("to native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int32_t v;
-                const char* end = dlis_uvari( in[ i ], &v );
+                const char* end = dl::uvari_frombytes( in[ i ], &v );
                 CHECK( v == expected[ i ] );
                 CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 4) );
             }
@@ -456,7 +456,7 @@ TEST_CASE("variable-length unsigned int", "[type]") {
         SECTION("from native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int32_t v;
-                const void* end = dlis_uvario( &v, expected[ i ], 4 );
+                const void* end = dl::uvari_tobytes( &v, expected[ i ], 4 );
                 CHECK_THAT( in[ i ], BytesEquals( v ) );
                 CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
             }
@@ -487,7 +487,7 @@ TEST_CASE("short float (16-bit)", "[type]") {
 
     for( std::size_t i = 0; i < expected.size(); ++i ) {
         float v;
-        dlis_fshort( (char*)inputs[ i ], &v );
+        dl::fshort_frombytes( (char*)inputs[ i ], &v );
         CHECK( v == Approx( expected[ i ] ).epsilon(0.001) );
     }
 }
@@ -517,7 +517,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
         SECTION("to native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 float v;
-                dlis_fsingl( inputs[ i ], &v );
+                dl::fsingl_frombytes( inputs[ i ], &v );
                 CHECK( v == expected[ i ] );
             }
         }
@@ -525,7 +525,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
         SECTION("from native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 float v;
-                const void* end = dlis_fsinglo( &v, expected[ i ] );
+                const void* end = dl::fsingl_tobytes( &v, expected[ i ] );
                 CHECK_THAT( inputs[ i ], BytesEquals( v ) );
                 CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
             }
@@ -542,7 +542,7 @@ TEST_CASE("IEEE 754 single precision float (32-bit)", "[type]") {
 
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v;
-            dlis_fsingl( (char*)inputs[ i ], &v );
+            dl::fsingl_frombytes( (char*)inputs[ i ], &v );
             CHECK( std::isnan( v ) );
         }
     }
@@ -573,7 +573,7 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
         SECTION( "to native" ) {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 double v;
-                dlis_fdoubl( inputs[ i ], &v );
+                dl::fdoubl_frombytes( inputs[ i ], &v );
                 CHECK( v == expected[ i ] );
             }
         }
@@ -581,7 +581,7 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
         SECTION( "from native" ) {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 double v;
-                const void* end = dlis_fdoublo( &v, expected[ i ] );
+                const void* end = dl::fdoubl_tobytes( &v, expected[ i ] );
                 CHECK_THAT( inputs[ i ], BytesEquals( v ) );
                 CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
             }
@@ -598,7 +598,7 @@ TEST_CASE("IEEE 754 double precision float (64-bit)", "[type]") {
 
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double v;
-            dlis_fdoubl( (char*)inputs[ i ], &v );
+            dl::fdoubl_frombytes( (char*)inputs[ i ], &v );
             CHECK( std::isnan( v ) );
         }
     }
@@ -622,7 +622,7 @@ TEST_CASE("ibm single precision float", "[type]") {
     SECTION( "to native" ) {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v;
-            dlis_isingl( inputs[ i ], &v );
+            dl::isingl_frombytes( inputs[ i ], &v );
             CHECK( v == expected[ i ] );
         }
     }
@@ -630,7 +630,7 @@ TEST_CASE("ibm single precision float", "[type]") {
     SECTION( "from native" ) {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             float v;
-            const void* end = dlis_isinglo( &v, expected[ i ] );
+            const void* end = dl::isingl_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
         }
@@ -677,7 +677,7 @@ TEST_CASE("vax single precision float", "[type]") {
     SECTION( "to native" ) {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v;
-            dlis_vsingl( inputs[ i ], &v );
+            dl::vsingl_frombytes( inputs[ i ], &v );
             CHECK( v == Approx(expected[ i ]).epsilon(0.0000001));
         }
     }
@@ -686,7 +686,7 @@ TEST_CASE("vax single precision float", "[type]") {
         bytes<4> vax_undef = { 0x00, 0x80, 0x01, 0x00 }; // s=1, e=0, m=!0
 
         float v;
-        dlis_vsingl( vax_undef, &v );
+        dl::vsingl_frombytes( vax_undef, &v );
         CHECK( std::isnan(v) );
     }
 
@@ -695,14 +695,14 @@ TEST_CASE("vax single precision float", "[type]") {
         float expected = 0.0;
 
         float v;
-        dlis_vsingl( vax_undef, &v );
+        dl::vsingl_frombytes( vax_undef, &v );
         CHECK( v == expected);
     }
 
     SECTION( "from native" ) {
         for( std::size_t i = 0; i < expected.size(); ++i ) {
             float v;
-            const void* end = dlis_vsinglo( &v, expected[ i ] );
+            const void* end = dl::vsingl_tobytes( &v, expected[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( v ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
         }
@@ -738,7 +738,7 @@ TEST_CASE("validated single precision float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v, a;
-            dlis_fsing1( inputs[ i ], &v, &a );
+            dl::fsing1_frombytes( inputs[ i ], &v, &a );
             CHECK( v == expectedV[ i ] );
             CHECK( a == expectedA[ i ] );
         }
@@ -747,7 +747,7 @@ TEST_CASE("validated single precision float", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double x;
-            const void* end = dlis_fsing1o( &x, expectedV[ i ], expectedA[ i ] );
+            const void* end = dl::fsing1_tobytes( &x, expectedV[ i ], expectedA[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( x ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
@@ -790,7 +790,7 @@ TEST_CASE("two-way validated single precision float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v, a, b;
-            dlis_fsing2( inputs[ i ], &v, &a, &b );
+            dl::fsing2_frombytes( inputs[ i ], &v, &a, &b );
             CHECK( v == expectedV[ i ] );
             CHECK( a == expectedA[ i ] );
             CHECK( b == expectedB[ i ] );
@@ -800,10 +800,10 @@ TEST_CASE("two-way validated single precision float", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             bytes< 12 > x;
-            const void* end = dlis_fsing2o( &x,
-                                            expectedV[ i ],
-                                            expectedA[ i ],
-                                            expectedB[ i ] );
+            const void* end = dl::fsing2_tobytes( &x,
+                                                  expectedV[ i ],
+                                                  expectedA[ i ],
+                                                  expectedB[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( x ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
@@ -839,7 +839,7 @@ TEST_CASE("single precision complex float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float V, A;
-            dlis_csingl( inputs[ i ], &V, &A );
+            dl::csingl_frombytes( inputs[ i ], &V, &A );
             CHECK( V == expectedR[ i ] );
             CHECK( A == expectedI[ i ] );
         }
@@ -848,9 +848,9 @@ TEST_CASE("single precision complex float", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double x;
-            const void* end = dlis_csinglo( &x,
-                                            expectedR[ i ],
-                                            expectedI[ i ] );
+            const void* end = dl::csingl_tobytes( &x,
+                                                  expectedR[ i ],
+                                                  expectedI[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( x ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
@@ -890,7 +890,7 @@ TEST_CASE("validated double precision float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double v, a;
-            dlis_fdoub1( inputs[ i ], &v, &a );
+            dl::fdoub1_frombytes( inputs[ i ], &v, &a );
             CHECK( v == expectedV[ i ] );
             CHECK( a == expectedA[ i] );
         }
@@ -899,9 +899,9 @@ TEST_CASE("validated double precision float", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             bytes< 16 > x;
-            const void* end = dlis_fdoub1o( &x,
-                                            expectedV[ i ],
-                                            expectedA[ i ] );
+            const void* end = dl::fdoub1_tobytes( &x,
+                                                  expectedV[ i ],
+                                                  expectedA[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( x ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
@@ -952,7 +952,7 @@ TEST_CASE("two-way validated double precision float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double v, a, b;
-            dlis_fdoub2( inputs[ i ], &v, &a, &b );
+            dl::fdoub2_frombytes( inputs[ i ], &v, &a, &b );
             CHECK( v == expectedV[ i ] );
             CHECK( a == expectedA[ i ] );
             CHECK( b == expectedB[ i ] );
@@ -962,10 +962,10 @@ TEST_CASE("two-way validated double precision float", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             bytes< 24 > x;
-            const void* end = dlis_fdoub2o( &x,
-                                            expectedV[ i ],
-                                            expectedA[ i ],
-                                            expectedB[ i ] );
+            const void* end = dl::fdoub2_tobytes( &x,
+                                                  expectedV[ i ],
+                                                  expectedA[ i ],
+                                                  expectedB[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( x ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
@@ -1005,7 +1005,7 @@ TEST_CASE("double precision complex float", "[type]") {
     SECTION("to native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             double re, im;
-            dlis_cdoubl( inputs[ i ], &re, &im );
+            dl::cdoubl_frombytes( inputs[ i ], &re, &im );
             CHECK( re == expectedR[ i ] );
             CHECK( im == expectedI[ i ] );
         }
@@ -1014,9 +1014,9 @@ TEST_CASE("double precision complex float", "[type]") {
     SECTION("from native") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             bytes< 16 > x;
-            const void* end = dlis_cdoublo( &x,
-                                            expectedR[ i ],
-                                            expectedI[ i ] );
+            const void* end = dl::cdoubl_tobytes( &x,
+                                                  expectedR[ i ],
+                                                  expectedI[ i ] );
             CHECK_THAT( inputs[ i ], BytesEquals( x ) );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof(x) );
         }
@@ -1027,26 +1027,26 @@ TEST_CASE("identifier (var-length string)", "[type]") {
     std::int32_t len;
 
     SECTION("empty string has zero length") {
-        dlis_ident( "\0", &len, nullptr );
+        dl::ident_frombytes( "\0", &len, nullptr );
         CHECK( len == 0 );
     }
 
     SECTION("empty string does not affect output") {
         char str[] = "foobar";
-        dlis_ident( "\0", &len, str );
+        dl::ident_frombytes( "\0", &len, str );
         CHECK( str == std::string("foobar") );
     }
 
     SECTION("single-char string has length 1") {
         char str[] = "    ";
-        dlis_ident( "\x01""a", &len, str );
+        dl::ident_frombytes( "\x01""a", &len, str );
         CHECK( str == std::string("a   ") );
         CHECK( len == 1 );
     }
 
     SECTION("single-char string has length 1") {
         char str[] = "    ";
-        dlis_ident( "\x01""a", &len, str );
+        dl::ident_frombytes( "\x01""a", &len, str );
         CHECK( str == std::string("a   ") );
         CHECK( len == 1 );
     }
@@ -1062,9 +1062,9 @@ TEST_CASE("identifier (var-length string)", "[type]") {
 
         const std::string in = "\xFF" + expected;
 
-        dlis_ident( in.c_str(), &len, nullptr );
+        dl::ident_frombytes( in.c_str(), &len, nullptr );
         CHECK( len == 255 );
-        dlis_ident( in.c_str(), &len, str.data() );
+        dl::ident_frombytes( in.c_str(), &len, str.data() );
         CHECK( std::string( str.begin(), str.end() ) == expected );
 
     }
@@ -1073,12 +1073,12 @@ TEST_CASE("identifier (var-length string)", "[type]") {
         const char in[] = "\x32"
                           "Lorem ipsum dolor sit amet, consectetur adipiscing";
 
-        const char* noread = dlis_ident( in, &len, nullptr );
+        const char* noread = dl::ident_frombytes( in, &len, nullptr );
         CHECK( len == 50 );
         CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
 
         char out[ 50 ] = {};
-        const char* withread = dlis_ident( in, &len, out );
+        const char* withread = dl::ident_frombytes( in, &len, out );
         CHECK( len == 50 );
         CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
     }
@@ -1092,7 +1092,7 @@ TEST_CASE("identifier (var-length string)", "[type]") {
         }};
 
         std::array< char, 7 > x;
-        const void* end = dlis_idento( &x, length, in.c_str() );
+        const void* end = dl::ident_tobytes( &x, length, in.c_str() );
         CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
         CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
     }
@@ -1102,26 +1102,26 @@ TEST_CASE("units (var-length string)", "[type]") {
     std::int32_t len;
 
     SECTION("empty string has zero length") {
-        dlis_units( "\0", &len, nullptr );
+        dl::units_frombytes( "\0", &len, nullptr );
         CHECK( len == 0 );
     }
 
     SECTION("empty string does not affect output") {
         char str[] = "foobar";
-        dlis_units( "\0", &len, str );
+        dl::units_frombytes( "\0", &len, str );
         CHECK( str == std::string("foobar") );
     }
 
     SECTION("single-char string has length 1") {
         char str[] = "    ";
-        dlis_units( "\x01""a", &len, str );
+        dl::units_frombytes( "\x01""a", &len, str );
         CHECK( str == std::string("a   ") );
         CHECK( len == 1 );
     }
 
     SECTION("single-char string has length 1") {
         char str[] = "    ";
-        dlis_units( "\x01""a", &len, str );
+        dl::units_frombytes( "\x01""a", &len, str );
         CHECK( str == std::string("a   ") );
         CHECK( len == 1 );
     }
@@ -1137,9 +1137,9 @@ TEST_CASE("units (var-length string)", "[type]") {
 
         const std::string in = "\xFF" + expected;
 
-        dlis_units( in.c_str(), &len, nullptr );
+        dl::units_frombytes( in.c_str(), &len, nullptr );
         CHECK( len == 255 );
-        dlis_units( in.c_str(), &len, str.data() );
+        dl::units_frombytes( in.c_str(), &len, str.data() );
         CHECK( std::string( str.begin(), str.end() ) == expected );
 
     }
@@ -1148,12 +1148,12 @@ TEST_CASE("units (var-length string)", "[type]") {
         const char in[] = "\x32"
                           "Lorem ipsum dolor sit amet, consectetur adipiscing";
 
-        const char* noread = dlis_units( in, &len, nullptr );
+        const char* noread = dl::units_frombytes( in, &len, nullptr );
         CHECK( len == 50 );
         CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
 
         char out[ 50 ] = {};
-        const char* withread = dlis_units( in, &len, out );
+        const char* withread = dl::units_frombytes( in, &len, out );
         CHECK( len == 50 );
         CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
     }
@@ -1167,7 +1167,7 @@ TEST_CASE("units (var-length string)", "[type]") {
         }};
 
         std::array< char, 7 > x;
-        const void* end = dlis_unitso( &x, length, in.c_str() );
+        const void* end = dl::units_tobytes( &x, length, in.c_str() );
         CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
         CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
     }
@@ -1202,7 +1202,7 @@ TEST_CASE("origin", "[type]") {
         SECTION("to native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int32_t v;
-                const char* end = dlis_origin( in[ i ], &v );
+                const char* end = dl::origin_frombytes( in[ i ], &v );
                 CHECK( v == expected[ i ] );
                 CHECK( std::intptr_t(end) == std::intptr_t(in[ i ] + 4) );
             }
@@ -1211,7 +1211,7 @@ TEST_CASE("origin", "[type]") {
         SECTION("from native") {
             for( std::size_t i = 0; i < expected.size(); ++i ) {
                 std::int32_t v;
-                const void* end = dlis_origino( &v, expected[ i ] );
+                const void* end = dl::origin_tobytes( &v, expected[ i ] );
                 CHECK_THAT( in[ i ], BytesEquals( v ) );
                 CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
             }
@@ -1225,26 +1225,26 @@ TEST_CASE("ascii (var-length string)", "[type]") {
     SECTION("to native") {
 
         SECTION("empty string has zero length") {
-            dlis_ascii( "\0", &len, nullptr );
+            dl::ascii_frombytes( "\0", &len, nullptr );
             CHECK( len == 0 );
         }
 
         SECTION("empty string does not affect output") {
             char str[] = "foobar";
-            dlis_ascii( "\0", &len, str );
+            dl::ascii_frombytes( "\0", &len, str );
             CHECK( str == std::string("foobar") );
         }
 
         SECTION("single-char string has length 1") {
             char str[] = "    ";
-            dlis_ascii( "\x01""a", &len, str );
+            dl::ascii_frombytes( "\x01""a", &len, str );
             CHECK( str == std::string("a   ") );
             CHECK( len == 1 );
         }
 
         SECTION("single-char string has length 1") {
             char str[] = "    ";
-            dlis_ascii( "\x01""a", &len, str );
+            dl::ascii_frombytes( "\x01""a", &len, str );
             CHECK( str == std::string("a   ") );
             CHECK( len == 1 );
         }
@@ -1265,9 +1265,9 @@ TEST_CASE("ascii (var-length string)", "[type]") {
 
             const std::string in = "\x81\xFE" + expected;
 
-            dlis_ascii( in.c_str(), &len, nullptr );
+            dl::ascii_frombytes( in.c_str(), &len, nullptr );
             CHECK( len == 510 );
-            dlis_ascii( in.c_str(), &len, str.data() );
+            dl::ascii_frombytes( in.c_str(), &len, str.data() );
             CHECK( std::string( str.begin(), str.end() ) == expected );
         }
 
@@ -1275,12 +1275,12 @@ TEST_CASE("ascii (var-length string)", "[type]") {
             const char in[] = "\x32"
                             "Lorem ipsum dolor sit amet, consectetur adipiscing";
 
-            const char* noread = dlis_ascii( in, &len, nullptr );
+            const char* noread = dl::ascii_frombytes( in, &len, nullptr );
             CHECK( len == 50 );
             CHECK( std::intptr_t(noread) == std::intptr_t(in + sizeof( in ) - 1) );
 
             char out[ 50 ] = {};
-            const char* withread = dlis_ascii( in, &len, out );
+            const char* withread = dl::ascii_frombytes( in, &len, out );
             CHECK( len == 50 );
             CHECK( std::intptr_t(withread) == std::intptr_t(noread) );
         }
@@ -1297,7 +1297,7 @@ TEST_CASE("ascii (var-length string)", "[type]") {
             }};
 
             std::array< char, 7 > x;
-            const void* end = dlis_asciio( &x, length, in.c_str(), 1 );
+            const void* end = dl::ascii_tobytes( &x, length, in.c_str(), 1 );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
             CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
         }
@@ -1311,7 +1311,7 @@ TEST_CASE("ascii (var-length string)", "[type]") {
             }};
 
             std::array< char, 8 > x;
-            const void* end = dlis_asciio( &x, length, in.c_str(), 2 );
+            const void* end = dl::ascii_tobytes( &x, length, in.c_str(), 2 );
             CHECK( std::intptr_t(end) == std::intptr_t(&x) + sizeof( x ) );
             CHECK_THAT( expected[ 0 ], BytesEquals( x ) );
 
@@ -1334,11 +1334,11 @@ TEST_CASE("date-time", "[type]") {
     int Y, TZ, M, D, H, MN, S, MS;
 
     SECTION("to native") {
-        dlis_dtime( input, &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
+        dl::dtime_frombytes( input, &Y, &TZ, &M, &D, &H, &MN, &S, &MS );
 
         CHECK( Y  == 87 );
-        CHECK( dlis_year( Y ) == 1987 );
-        CHECK( TZ == DLIS_TZ_DST );
+        CHECK( Y + dl::YEAR_ZERO == 1987 );
+        CHECK( TZ == dl::TZ_DST );
         CHECK( M  == 4 );
         CHECK( D  == 19 );
         CHECK( H  == 21 );
@@ -1349,15 +1349,15 @@ TEST_CASE("date-time", "[type]") {
 
     SECTION("from native") {
         bytes< 8 > x;
-        const void* end = dlis_dtimeo( &x,
-                                       dlis_yearo( 1987 ),
-                                       DLIS_TZ_DST,
-                                       4,
-                                       19,
-                                       21,
-                                       20,
-                                       15,
-                                       620 );
+        const void* end = dl::dtime_tobytes( &x,
+                                             1987 - dl::YEAR_ZERO,
+                                             dl::TZ_DST,
+                                             4,
+                                             19,
+                                             21,
+                                             20,
+                                             15,
+                                             620 );
         CHECK( intptr_t(end) == intptr_t(&x) + sizeof( x ) );
         CHECK_THAT( input, BytesEquals( x ) );
     }
@@ -1382,10 +1382,10 @@ TEST_CASE( "obname", "[type]" ) {
     std::vector< char > ident( 6, ' ' );
 
     SECTION("to native") {
-        const char* end = dlis_obname( in[ 0 ], &origin,
-                                                &copynumber,
-                                                &idlen,
-                                                ident.data() );
+        const char* end = dl::obname_frombytes( in[ 0 ], &origin,
+                                                         &copynumber,
+                                                         &idlen,
+                                                         ident.data() );
         CHECK( origin     == originOut );
         CHECK( copynumber == copynumberOut );
         CHECK( idlen      == idlenOut );
@@ -1396,10 +1396,10 @@ TEST_CASE( "obname", "[type]" ) {
     SECTION("from native") {
         bytes< 12 > v;
         const std::uint8_t idlen = 6;
-        const void* end = dlis_obnameo( &v, originOut,
-                                            copynumberOut,
-                                            idlen,
-                                            identOut.c_str() );
+        const void* end = dl::obname_tobytes( &v, originOut,
+                                                  copynumberOut,
+                                                  idlen,
+                                                  identOut.c_str() );
 
         CHECK_THAT( in[ 0 ], BytesEquals( v ) );
         CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
@@ -1428,12 +1428,12 @@ TEST_CASE( "objref", "[type]" ) {
     std::vector< char > ident2( 6, ' ' );
 
     SECTION("to native") {
-        const char* end = dlis_objref( in[ 0 ], &idlen1,
-                                                ident1.data(),
-                                                &origin,
-                                                &copynumber,
-                                                &idlen2,
-                                                ident2.data() );
+        const char* end = dl::objref_frombytes( in[ 0 ], &idlen1,
+                                                         ident1.data(),
+                                                         &origin,
+                                                         &copynumber,
+                                                         &idlen2,
+                                                         ident2.data() );
 
         CHECK( idlen1     == idlenOut );
         CHECK( idlen2     == idlenOut );
@@ -1447,12 +1447,12 @@ TEST_CASE( "objref", "[type]" ) {
     SECTION("from native") {
         bytes< 19 > v;
         const std::uint8_t idlen = 6;
-        const void* end = dlis_objrefo( &v, idlen,
-                                            identOut.c_str(),
-                                            originOut,
-                                            copynumberOut,
-                                            idlen,
-                                            identOut.c_str() );
+        const void* end = dl::objref_tobytes( &v, idlen,
+                                                  identOut.c_str(),
+                                                  originOut,
+                                                  copynumberOut,
+                                                  idlen,
+                                                  identOut.c_str() );
 
         CHECK_THAT( in[ 0 ], BytesEquals( v ) );
         CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
@@ -1484,14 +1484,14 @@ TEST_CASE( "attref", "[type]" ) {
     std::vector< char > ident3( 6, ' ' );
 
     SECTION("to native") {
-        const char* end = dlis_attref( in[ 0 ], &idlen1,
-                                                ident1.data(),
-                                                &origin,
-                                                &copynumber,
-                                                &idlen2,
-                                                ident2.data(),
-                                                &idlen3,
-                                                ident3.data() );
+        const char* end = dl::attref_frombytes( in[ 0 ], &idlen1,
+                                                         ident1.data(),
+                                                         &origin,
+                                                         &copynumber,
+                                                         &idlen2,
+                                                         ident2.data(),
+                                                         &idlen3,
+                                                         ident3.data() );
 
         CHECK( idlen1     == idlenOut );
         CHECK( idlen2     == idlenOut );
@@ -1507,14 +1507,14 @@ TEST_CASE( "attref", "[type]" ) {
     SECTION("from native") {
         bytes< 26 > v;
         const std::uint8_t idlen = 6;
-        const void* end = dlis_attrefo( &v, idlen,
-                                            identOut.c_str(),
-                                            originOut,
-                                            copynumberOut,
-                                            idlen,
-                                            identOut.c_str(),
-                                            idlen,
-                                            identOut.c_str() );
+        const void* end = dl::attref_tobytes( &v, idlen,
+                                                  identOut.c_str(),
+                                                  originOut,
+                                                  copynumberOut,
+                                                  idlen,
+                                                  identOut.c_str(),
+                                                  idlen,
+                                                  identOut.c_str() );
 
         CHECK_THAT( in[ 0 ], BytesEquals( v ) );
         CHECK( std::intptr_t(end) == std::intptr_t(&v) + sizeof(v) );
@@ -1522,31 +1522,31 @@ TEST_CASE( "attref", "[type]" ) {
 }
 
 TEST_CASE( "size-of", "[type]" ) {
-    CHECK( dlis_sizeof_type( DLIS_FSHORT ) == 2 );
-    CHECK( dlis_sizeof_type( DLIS_FSINGL ) == 4 );
-    CHECK( dlis_sizeof_type( DLIS_FSING1 ) == 8 );
-    CHECK( dlis_sizeof_type( DLIS_FSING2 ) == 12 );
-    CHECK( dlis_sizeof_type( DLIS_ISINGL ) == 4 );
-    CHECK( dlis_sizeof_type( DLIS_VSINGL ) == 4 );
-    CHECK( dlis_sizeof_type( DLIS_FDOUBL ) == 8 );
-    CHECK( dlis_sizeof_type( DLIS_FDOUB1 ) == 16 );
-    CHECK( dlis_sizeof_type( DLIS_FDOUB2 ) == 24 );
-    CHECK( dlis_sizeof_type( DLIS_CSINGL ) == 8 );
-    CHECK( dlis_sizeof_type( DLIS_CDOUBL ) == 16 );
-    CHECK( dlis_sizeof_type( DLIS_SSHORT ) == 1 );
-    CHECK( dlis_sizeof_type( DLIS_SNORM  ) == 2 );
-    CHECK( dlis_sizeof_type( DLIS_SLONG  ) == 4 );
-    CHECK( dlis_sizeof_type( DLIS_USHORT ) == 1 );
-    CHECK( dlis_sizeof_type( DLIS_UNORM  ) == 2 );
-    CHECK( dlis_sizeof_type( DLIS_ULONG  ) == 4 );
-    CHECK( dlis_sizeof_type( DLIS_UVARI  ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_IDENT  ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_ASCII  ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_DTIME  ) == 8 );
-    CHECK( dlis_sizeof_type( DLIS_ORIGIN ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_OBNAME ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_OBJREF ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_ATTREF ) == 0 );
-    CHECK( dlis_sizeof_type( DLIS_STATUS ) == 1 );
-    CHECK( dlis_sizeof_type( DLIS_UNITS  ) == 0 );
+    CHECK( dl::sizeof_type( dl::FSHORT ) == 2 );
+    CHECK( dl::sizeof_type( dl::FSINGL ) == 4 );
+    CHECK( dl::sizeof_type( dl::FSING1 ) == 8 );
+    CHECK( dl::sizeof_type( dl::FSING2 ) == 12 );
+    CHECK( dl::sizeof_type( dl::ISINGL ) == 4 );
+    CHECK( dl::sizeof_type( dl::VSINGL ) == 4 );
+    CHECK( dl::sizeof_type( dl::FDOUBL ) == 8 );
+    CHECK( dl::sizeof_type( dl::FDOUB1 ) == 16 );
+    CHECK( dl::sizeof_type( dl::FDOUB2 ) == 24 );
+    CHECK( dl::sizeof_type( dl::CSINGL ) == 8 );
+    CHECK( dl::sizeof_type( dl::CDOUBL ) == 16 );
+    CHECK( dl::sizeof_type( dl::SSHORT ) == 1 );
+    CHECK( dl::sizeof_type( dl::SNORM  ) == 2 );
+    CHECK( dl::sizeof_type( dl::SLONG  ) == 4 );
+    CHECK( dl::sizeof_type( dl::USHORT ) == 1 );
+    CHECK( dl::sizeof_type( dl::UNORM  ) == 2 );
+    CHECK( dl::sizeof_type( dl::ULONG  ) == 4 );
+    CHECK( dl::sizeof_type( dl::UVARI  ) == 0 );
+    CHECK( dl::sizeof_type( dl::IDENT  ) == 0 );
+    CHECK( dl::sizeof_type( dl::ASCII  ) == 0 );
+    CHECK( dl::sizeof_type( dl::DTIME  ) == 8 );
+    CHECK( dl::sizeof_type( dl::ORIGIN ) == 0 );
+    CHECK( dl::sizeof_type( dl::OBNAME ) == 0 );
+    CHECK( dl::sizeof_type( dl::OBJREF ) == 0 );
+    CHECK( dl::sizeof_type( dl::ATTREF ) == 0 );
+    CHECK( dl::sizeof_type( dl::STATUS ) == 1 );
+    CHECK( dl::sizeof_type( dl::UNITS  ) == 0 );
 }

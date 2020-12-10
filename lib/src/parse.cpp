@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#include <dlisio/dlisio.h>
+#include <dlisio/dlisio.hpp>
 #include <dlisio/ext/types.hpp>
 
 namespace {
@@ -20,27 +20,27 @@ struct set_descriptor {
 
 set_descriptor parse_set_descriptor( const char* cur ) noexcept (false) {
     std::uint8_t attr;
-    std::memcpy( &attr, cur, DLIS_DESCRIPTOR_SIZE );
+    std::memcpy( &attr, cur, dl::DESCRIPTOR_SIZE );
 
     set_descriptor flags;
-    dlis_component( attr, &flags.role );
+    dl::component( attr, &flags.role );
 
     int type, name;
-    const auto err = dlis_component_set( attr, flags.role, &type, &name );
+    const auto err = dl::component_set( attr, flags.role, &type, &name );
 
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             break;
-        case DLIS_UNEXPECTED_VALUE: {
+        case dl::ERROR_UNEXPECTED_VALUE: {
                 const auto bits = std::bitset< 8 >{ attr }.to_string();
-                const auto role = dlis_component_str(flags.role);
+                const auto role = dl::component_str(flags.role);
                 const auto msg  = "error parsing object set descriptor: "
                                 "expected SET, RSET or RDSET, was {} ({})"
                                 ;
                 throw std::invalid_argument(fmt::format(msg, role, bits));
             }
         default:
-            throw std::runtime_error("unhandled error in dlis_component_set");
+            throw std::runtime_error("unhandled error in dl::component_set");
     }
 
     flags.type = type;
@@ -64,22 +64,22 @@ struct attribute_descriptor {
 
 attribute_descriptor parse_attribute_descriptor( const char* cur ) {
     std::uint8_t attr;
-    std::memcpy( &attr, cur, DLIS_DESCRIPTOR_SIZE );
+    std::memcpy( &attr, cur, dl::DESCRIPTOR_SIZE );
 
     int role;
-    dlis_component( attr, &role );
+    dl::component( attr, &role );
 
     attribute_descriptor flags;
     switch (role) {
-        case DLIS_ROLE_ABSATR:
+        case dl::COMP_ROLE_ABSATR:
             flags.absent = true;
             break;
 
-        case DLIS_ROLE_OBJECT:
+        case dl::COMP_ROLE_OBJECT:
             flags.object = true;
             break;
 
-        case DLIS_ROLE_INVATR:
+        case dl::COMP_ROLE_INVATR:
             flags.invariant = true;
             break;
 
@@ -90,18 +90,18 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
     if (flags.object || flags.absent) return flags;
 
     int label, count, reprc, units, value;
-    const auto err = dlis_component_attrib( attr, role, &label,
-                                                        &count,
-                                                        &reprc,
-                                                        &units,
-                                                        &value );
+    const auto err = dl::component_attrib( attr, role, &label,
+                                                       &count,
+                                                       &reprc,
+                                                       &units,
+                                                       &value );
 
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             break;
-        case DLIS_UNEXPECTED_VALUE: {
+        case dl::ERROR_UNEXPECTED_VALUE: {
             const auto bits = std::bitset< 8 >(role).to_string();
-            const auto was  = dlis_component_str(role);
+            const auto was  = dl::component_str(role);
             const auto msg  = "error parsing attribute descriptor: "
                               "expected ATTRIB, INVATR, ABSATR or OBJECT, "
                               "was {} ({})";
@@ -109,7 +109,7 @@ attribute_descriptor parse_attribute_descriptor( const char* cur ) {
             }
         default:
             throw std::runtime_error( "unhandled error in "
-                                      "dlis_component_attrib" );
+                                      "dl::component_attrib" );
     }
 
     flags.label = label;
@@ -127,20 +127,20 @@ struct object_descriptor {
 
 object_descriptor parse_object_descriptor( const char* cur ) {
     std::uint8_t attr;
-    std::memcpy( &attr, cur, DLIS_DESCRIPTOR_SIZE );
+    std::memcpy( &attr, cur, dl::DESCRIPTOR_SIZE );
 
     int role;
-    dlis_component( attr, &role );
+    dl::component( attr, &role );
 
     int name;
-    const auto err = dlis_component_object( attr, role, &name );
+    const auto err = dl::component_object( attr, role, &name );
 
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             break;
-        case DLIS_UNEXPECTED_VALUE: {
+        case dl::ERROR_UNEXPECTED_VALUE: {
             const auto bits = std::bitset< 8 >{ attr }.to_string();
-            const auto was  = dlis_component_str(role);
+            const auto was  = dl::component_str(role);
             const auto msg  = "error parsing object descriptor: "
                             "expected OBJECT, was {} ({})"
                             ;
@@ -148,7 +148,7 @@ object_descriptor parse_object_descriptor( const char* cur ) {
             }
         default:
             throw std::runtime_error("unhandled error in "
-                                     "dlis_component_object");
+                                     "dl::component_object");
     }
 
     object_descriptor flags;
@@ -160,7 +160,7 @@ object_descriptor parse_object_descriptor( const char* cur ) {
 using std::swap;
 const char* cast( const char* xs, dl::sshort& i ) noexcept (true) {
     std::int8_t x;
-    xs = dlis_sshort( xs, &x );
+    xs = dl::sshort_frombytes( xs, &x );
 
     dl::sshort tmp{ x };
     swap( i, tmp );
@@ -170,7 +170,7 @@ const char* cast( const char* xs, dl::sshort& i ) noexcept (true) {
 
 const char* cast( const char* xs, dl::snorm& i ) noexcept (true) {
     std::int16_t x;
-    xs = dlis_snorm( xs, &x );
+    xs = dl::snorm_frombytes( xs, &x );
 
     dl::snorm tmp{ x };
     swap( i, tmp );
@@ -180,7 +180,7 @@ const char* cast( const char* xs, dl::snorm& i ) noexcept (true) {
 
 const char* cast( const char* xs, dl::slong& i ) noexcept (true) {
     std::int32_t x;
-    xs = dlis_slong( xs, &x );
+    xs = dl::slong_frombytes( xs, &x );
 
     dl::slong tmp{ x };
     swap( i, tmp );
@@ -189,7 +189,7 @@ const char* cast( const char* xs, dl::slong& i ) noexcept (true) {
 
 const char* cast( const char* xs, dl::ushort& i ) noexcept (true) {
     std::uint8_t x;
-    xs = dlis_ushort( xs, &x );
+    xs = dl::ushort_frombytes( xs, &x );
 
     dl::ushort tmp{ x };
     swap( tmp, i );
@@ -199,7 +199,7 @@ const char* cast( const char* xs, dl::ushort& i ) noexcept (true) {
 
 const char* cast( const char* xs, dl::unorm& i ) noexcept (true) {
     std::uint16_t x;
-    xs = dlis_unorm( xs, &x );
+    xs = dl::unorm_frombytes( xs, &x );
 
     dl::unorm tmp{ x };
     swap( tmp, i );
@@ -208,98 +208,98 @@ const char* cast( const char* xs, dl::unorm& i ) noexcept (true) {
 
 const char* cast( const char* xs, dl::ulong& i ) noexcept (true) {
     std::uint32_t x;
-    xs = dlis_ulong( xs, &x );
+    xs = dl::ulong_frombytes( xs, &x );
     i = dl::ulong{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::uvari& i ) noexcept (true) {
     std::int32_t x;
-    xs = dlis_uvari( xs, &x );
+    xs = dl::uvari_frombytes( xs, &x );
     i = dl::uvari{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fshort& f ) noexcept (true) {
     float x;
-    xs = dlis_fshort( xs, &x );
+    xs = dl::fshort_frombytes( xs, &x );
     f = dl::fshort{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fsingl& f ) noexcept (true) {
     float x;
-    xs = dlis_fsingl( xs, &x );
+    xs = dl::fsingl_frombytes( xs, &x );
     f = dl::fsingl{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fdoubl& f ) noexcept (true) {
     double x;
-    xs = dlis_fdoubl( xs, &x );
+    xs = dl::fdoubl_frombytes( xs, &x );
     f = dl::fdoubl{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fsing1& f ) noexcept (true) {
     float v, a;
-    xs = dlis_fsing1( xs, &v, &a );
+    xs = dl::fsing1_frombytes( xs, &v, &a );
     f = dl::fsing1{ v, a };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fsing2& f ) noexcept (true) {
     float v, a, b;
-    xs = dlis_fsing2( xs, &v, &a, &b );
+    xs = dl::fsing2_frombytes( xs, &v, &a, &b );
     f = dl::fsing2{ v, a, b };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fdoub1& f ) noexcept (true) {
     double v, a;
-    xs = dlis_fdoub1( xs, &v, &a );
+    xs = dl::fdoub1_frombytes( xs, &v, &a );
     f = dl::fdoub1{ v, a };
     return xs;
 }
 
 const char* cast( const char* xs, dl::fdoub2& f ) noexcept (true) {
     double v, a, b;
-    xs = dlis_fdoub2( xs, &v, &a, &b );
+    xs = dl::fdoub2_frombytes( xs, &v, &a, &b );
     f = dl::fdoub2{ v, a, b };
     return xs;
 }
 
 const char* cast( const char* xs, dl::csingl& f ) noexcept (true) {
     float re, im;
-    xs = dlis_csingl( xs, &re, &im );
+    xs = dl::csingl_frombytes( xs, &re, &im );
     f = dl::csingl{ std::complex< float >{ re, im } };
     return xs;
 }
 
 const char* cast( const char* xs, dl::cdoubl& f ) noexcept (true) {
     double re, im;
-    xs = dlis_cdoubl( xs, &re, &im );
+    xs = dl::cdoubl_frombytes( xs, &re, &im );
     f = dl::cdoubl{ std::complex< double >{ re, im } };
     return xs;
 }
 
 const char* cast( const char* xs, dl::isingl& f ) noexcept (true) {
     float x;
-    xs = dlis_isingl( xs, &x );
+    xs = dl::isingl_frombytes( xs, &x );
     f = dl::isingl{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::vsingl& f ) noexcept (true) {
     float x;
-    xs = dlis_vsingl( xs, &x );
+    xs = dl::vsingl_frombytes( xs, &x );
     f = dl::vsingl{ x };
     return xs;
 }
 
 const char* cast( const char* xs, dl::status& s ) noexcept (true) {
     dl::status::value_type x;
-    xs = dlis_status( xs, &x );
+    xs = dl::status_frombytes( xs, &x );
     s = dl::status{ x };
     return xs;
 }
@@ -309,7 +309,7 @@ const char* parse_ident( const char* xs, T& out ) noexcept (false) {
     char str[ 256 ];
     std::int32_t len;
 
-    xs = dlis_ident( xs, &len, str );
+    xs = dl::ident_frombytes( xs, &len, str );
 
     T tmp{ std::string{ str, str + len } };
     swap( out, tmp );
@@ -328,9 +328,9 @@ const char* cast( const char* xs, dl::ascii& ascii ) noexcept (false) {
     std::vector< char > str;
     std::int32_t len;
 
-    dlis_ascii( xs, &len, nullptr );
+    dl::ascii_frombytes( xs, &len, nullptr );
     str.resize( len );
-    xs = dlis_ascii( xs, &len, str.data() );
+    xs = dl::ascii_frombytes( xs, &len, str.data() );
 
     dl::ascii tmp{ std::string{ str.begin(), str.end() } };
     swap( ascii, tmp );
@@ -339,7 +339,7 @@ const char* cast( const char* xs, dl::ascii& ascii ) noexcept (false) {
 
 const char* cast( const char* xs, dl::origin& origin ) noexcept (true) {
     dl::origin::value_type x;
-    xs = dlis_origin( xs, &x );
+    xs = dl::origin_frombytes( xs, &x );
     origin = dl::origin{ x };
     return xs;
 }
@@ -351,7 +351,7 @@ const char* cast( const char* xs, dl::obname& obname ) noexcept (false) {
     std::int32_t orig;
     std::uint8_t copy;
 
-    xs = dlis_obname( xs, &orig, &copy, &len, str );
+    xs = dl::obname_frombytes( xs, &orig, &copy, &len, str );
 
     dl::obname tmp{ dl::origin{ orig },
                     dl::ushort{ copy },
@@ -368,12 +368,12 @@ const char* cast( const char* xs, dl::objref& objref ) noexcept (false) {
     std::uint8_t copy_number;
     std::int32_t obname_len;
 
-    xs = dlis_objref( xs, &ident_len,
-                          iden,
-                          &origin,
-                          &copy_number,
-                          &obname_len,
-                          name );
+    xs = dl::objref_frombytes( xs, &ident_len,
+                                   iden,
+                                   &origin,
+                                   &copy_number,
+                                   &obname_len,
+                                   name );
 
     dl::objref tmp{ dl::ident{ std::string{ iden, iden + ident_len } },
                     dl::obname{
@@ -397,14 +397,14 @@ const char* cast( const char* xs, dl::attref& attref ) noexcept (false) {
     std::int32_t obname_len;
     std::int32_t ident2_len;
 
-    xs = dlis_attref( xs, &ident1_len,
-                          id1,
-                          &origin,
-                          &copy_number,
-                          &obname_len,
-                          obj,
-                          &ident2_len,
-                          id2 );
+    xs = dl::attref_frombytes( xs, &ident1_len,
+                                   id1,
+                                   &origin,
+                                   &copy_number,
+                                   &obname_len,
+                                   obj,
+                                   &ident2_len,
+                                   id2 );
 
     dl::attref tmp{ dl::ident{ std::string{ id1, id1 + ident1_len } },
                     dl::obname{
@@ -422,15 +422,15 @@ const char* cast( const char* xs, dl::attref& attref ) noexcept (false) {
 
 const char* cast( const char* xs, dl::dtime& dtime ) noexcept (true) {
     dl::dtime dt;
-    xs = dlis_dtime( xs, &dt.Y,
-                         &dt.TZ,
-                         &dt.M,
-                         &dt.D,
-                         &dt.H,
-                         &dt.MN,
-                         &dt.S,
-                         &dt.MS );
-    dt.Y = dlis_year( dt.Y );
+    xs = dl::dtime_frombytes( xs, &dt.Y,
+                                  &dt.TZ,
+                                  &dt.M,
+                                  &dt.D,
+                                  &dt.H,
+                                  &dt.MN,
+                                  &dt.S,
+                                  &dt.MS );
+    dt.Y += dl::YEAR_ZERO;
     swap( dtime, dt );
     return xs;
 }
@@ -441,7 +441,7 @@ const char* cast( const char* xs,
     dl::ushort x{ 0 };
     xs = cast( xs, x );
 
-    if (x < DLIS_FSHORT || x > DLIS_UNITS) {
+    if (x < dl::FSHORT || x > dl::UNITS) {
         reprc = dl::representation_code::undef;
     } else {
         reprc = static_cast< dl::representation_code >( x );
@@ -593,25 +593,25 @@ const noexcept (false) {
     const auto& id = dl::decay(this->id);
 
     int size;
-    auto err = dlis_object_fingerprint_size(type.size(),
-                                            type.data(),
-                                            id.size(),
-                                            id.data(),
-                                            origin,
-                                            copy,
-                                            &size);
+    auto err = dl::object_fingerprint_size(type.size(),
+                                           type.data(),
+                                           id.size(),
+                                           id.data(),
+                                           origin,
+                                           copy,
+                                           &size);
 
     if (err)
         throw std::invalid_argument("invalid argument");
 
     auto str = std::vector< char >(size);
-    err = dlis_object_fingerprint(type.size(),
-                                  type.data(),
-                                  id.size(),
-                                  id.data(),
-                                  origin,
-                                  copy,
-                                  str.data());
+    err = dl::object_fingerprint(type.size(),
+                                 type.data(),
+                                 id.size(),
+                                 id.data(),
+                                 origin,
+                                 copy,
+                                 str.data());
 
     if (err)
         throw std::runtime_error("fingerprint: something went wrong");
@@ -704,7 +704,7 @@ const char* object_set::parse_template(const char* cur) noexcept (false) {
         }
 
         /* decriptor read, so advance the cursor */
-        cur += DLIS_DESCRIPTOR_SIZE;
+        cur += dl::DESCRIPTOR_SIZE;
 
         if (flags.absent) {
             dlis_error err {
@@ -939,7 +939,7 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
             throw std::out_of_range( "unexpected end-of-record" );
 
         auto object_flags = parse_object_descriptor( cur );
-        cur += DLIS_DESCRIPTOR_SIZE;
+        cur += dl::DESCRIPTOR_SIZE;
 
         auto current = default_object;
         current.type = type;
@@ -971,7 +971,7 @@ const char* object_set::parse_objects(const char* cur) noexcept (false) {
              * only advance after this is surely not a new object, because if
              * it's the next object we want to read it again
              */
-            cur += DLIS_DESCRIPTOR_SIZE;
+            cur += dl::DESCRIPTOR_SIZE;
 
             auto attr = template_attr;
             // absent means no meaning, so *unset* whatever is there
@@ -1076,7 +1076,7 @@ const char* object_set::parse_set_component(const char* cur) noexcept (false) {
         throw std::out_of_range( "eflr must be non-empty" );
 
     const auto flags = parse_set_descriptor( cur );
-    cur += DLIS_DESCRIPTOR_SIZE;
+    cur += dl::DESCRIPTOR_SIZE;
 
     if (std::distance( cur, end ) <= 0) {
         const auto msg = "unexpected end-of-record after SET descriptor";
@@ -1084,7 +1084,7 @@ const char* object_set::parse_set_component(const char* cur) noexcept (false) {
     }
 
     switch (flags.role) {
-        case DLIS_ROLE_RDSET: {
+        case dl::COMP_ROLE_RDSET: {
             dlis_error err {
                 dl::error_severity::MINOR,
                 "Redundant sets are not supported by dlisio",
@@ -1096,7 +1096,7 @@ const char* object_set::parse_set_component(const char* cur) noexcept (false) {
             this->log.push_back(err);
             break;
         }
-        case DLIS_ROLE_RSET: {
+        case dl::COMP_ROLE_RSET: {
             dlis_error err {
                 dl::error_severity::MAJOR,
                 "Replacement sets are not supported by dlisio",

@@ -11,7 +11,7 @@
 
 #include <mpark/variant.hpp>
 
-#include <dlisio/types.h>
+#include <dlisio/types.hpp>
 
 #include "strong-typedef.hpp"
 
@@ -30,34 +30,34 @@ struct not_found : public std::runtime_error {
 };
 
 enum class representation_code : std::uint8_t {
-    fshort = DLIS_FSHORT,
-    fsingl = DLIS_FSINGL,
-    fsing1 = DLIS_FSING1,
-    fsing2 = DLIS_FSING2,
-    isingl = DLIS_ISINGL,
-    vsingl = DLIS_VSINGL,
-    fdoubl = DLIS_FDOUBL,
-    fdoub1 = DLIS_FDOUB1,
-    fdoub2 = DLIS_FDOUB2,
-    csingl = DLIS_CSINGL,
-    cdoubl = DLIS_CDOUBL,
-    sshort = DLIS_SSHORT,
-    snorm  = DLIS_SNORM,
-    slong  = DLIS_SLONG,
-    ushort = DLIS_USHORT,
-    unorm  = DLIS_UNORM,
-    ulong  = DLIS_ULONG,
-    uvari  = DLIS_UVARI,
-    ident  = DLIS_IDENT,
-    ascii  = DLIS_ASCII,
-    dtime  = DLIS_DTIME,
-    origin = DLIS_ORIGIN,
-    obname = DLIS_OBNAME,
-    objref = DLIS_OBJREF,
-    attref = DLIS_ATTREF,
-    status = DLIS_STATUS,
-    units  = DLIS_UNITS,
-    undef  = DLIS_UNDEF,
+    fshort = FSHORT,
+    fsingl = FSINGL,
+    fsing1 = FSING1,
+    fsing2 = FSING2,
+    isingl = ISINGL,
+    vsingl = VSINGL,
+    fdoubl = FDOUBL,
+    fdoub1 = FDOUB1,
+    fdoub2 = FDOUB2,
+    csingl = CSINGL,
+    cdoubl = CDOUBL,
+    sshort = SSHORT,
+    snorm  = SNORM,
+    slong  = SLONG,
+    ushort = USHORT,
+    unorm  = UNORM,
+    ulong  = ULONG,
+    uvari  = UVARI,
+    ident  = IDENT,
+    ascii  = ASCII,
+    dtime  = DTIME,
+    origin = ORIGIN,
+    obname = OBNAME,
+    objref = OBJREF,
+    attref = ATTREF,
+    status = STATUS,
+    units  = UNITS,
+    undef  = UNDEF,
 };
 
 /*
@@ -483,7 +483,7 @@ using object_template = std::vector< object_attribute >;
  * well-specified object types (such as CHANNEL) can be absent. Because of
  * this, every attribute is an Optional. The lack of a value in the optional
  * means either that the attribute is explicitly marked absent (see
- * DLIS_ROLE_ABSATR), or not present at all in the object template. It is
+ * COMP_ROLE_ABSATR), or not present at all in the object template. It is
  * impossible to distinguish these cases without consulting the template
  * itself.
  *

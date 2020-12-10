@@ -7,7 +7,7 @@
 
 #include <endianness/endianness.h>
 
-#include <dlisio/types.h>
+#include <dlisio/types.hpp>
 
 namespace {
 
@@ -68,14 +68,15 @@ T ntoh( T value ) noexcept {
 
 }
 
+namespace dl {
 
-const char* dlis_sshort( const char* xs, std::int8_t* x ) {
+const char* sshort_frombytes( const char* xs, std::int8_t* x ) {
     /* assume two's complement platform - insert check to support */
     std::memcpy( x, xs, sizeof( std::int8_t ) );
     return xs + sizeof( std::int8_t );
 }
 
-const char* dlis_snorm( const char* xs, std::int16_t* x ) {
+const char* snorm_frombytes( const char* xs, std::int16_t* x ) {
     std::uint16_t ux;
     std::memcpy( &ux, xs, sizeof( std::int16_t ) );
     ux = ntoh( ux );
@@ -83,7 +84,7 @@ const char* dlis_snorm( const char* xs, std::int16_t* x ) {
     return xs + sizeof( std::int16_t );
 }
 
-const char* dlis_slong( const char* xs, std::int32_t* x ) {
+const char* slong_frombytes( const char* xs, std::int32_t* x ) {
     std::uint32_t ux;
     std::memcpy( &ux, xs, sizeof( std::int32_t ) );
     ux = ntoh( ux );
@@ -91,24 +92,24 @@ const char* dlis_slong( const char* xs, std::int32_t* x ) {
     return xs + sizeof( std::int32_t );
 }
 
-const char* dlis_ushort( const char* xs, std::uint8_t* x ) {
+const char* ushort_frombytes( const char* xs, std::uint8_t* x ) {
     std::memcpy( x, xs, sizeof( std::uint8_t ) );
     return xs + sizeof( std::uint8_t );
 }
 
-const char* dlis_unorm( const char* xs, std::uint16_t* x ) {
+const char* unorm_frombytes( const char* xs, std::uint16_t* x ) {
     std::memcpy( x, xs, sizeof( std::uint16_t ) );
     *x = ntoh( *x );
     return xs + sizeof( std::uint16_t );
 }
 
-const char* dlis_ulong( const char* xs, std::uint32_t* x ) {
+const char* ulong_frombytes( const char* xs, std::uint32_t* x ) {
     std::memcpy( x, xs, sizeof( std::uint32_t ) );
     *x = ntoh( *x );
     return xs + sizeof( std::uint32_t );
 }
 
-const char* dlis_uvari( const char* xs, std::int32_t* out ) {
+const char* uvari_frombytes( const char* xs, std::int32_t* out ) {
     /*
      * extract the two high bits. (length-encoding)
      * 0x: 1-byte
@@ -166,36 +167,32 @@ const char* dlis_uvari( const char* xs, std::int32_t* out ) {
     return xs + len;
 }
 
-const char* dlis_ident( const char* xs, std::int32_t* len, char* out ) {
+const char* ident_frombytes( const char* xs, std::int32_t* len, char* out ) {
     std::uint8_t ln;
-    xs = dlis_ushort( xs, &ln );
+    xs = ushort_frombytes( xs, &ln );
 
     if( len ) *len = ln;
     if( out ) std::memcpy( out, xs, ln );
     return xs + ln;
 }
 
-const char* dlis_ascii( const char* xs, std::int32_t* len, char* out ) {
+const char* ascii_frombytes( const char* xs, std::int32_t* len, char* out ) {
     std::int32_t ln;
-    xs = dlis_uvari( xs, &ln );
+    xs = uvari_frombytes( xs, &ln );
 
     if( len ) *len = ln;
     if( out ) std::memcpy( out, xs, ln );
     return xs + ln;
 }
 
-int dlis_year( int Y ) {
-    return Y + DLIS_YEAR_ZERO;
-}
-
-const char* dlis_dtime( const char* xs, int* Y,
-                                        int* TZ,
-                                        int* M,
-                                        int* D,
-                                        int* H,
-                                        int* MN,
-                                        int* S,
-                                        int* MS ) {
+const char* dtime_frombytes( const char* xs, int* Y,
+                                             int* TZ,
+                                             int* M,
+                                             int* D,
+                                             int* H,
+                                             int* MN,
+                                             int* S,
+                                             int* MS ) {
     std::uint8_t x[ 6 ];
     std::memcpy( x, xs, sizeof( x ) );
     *Y  = x[ 0 ];
@@ -224,45 +221,45 @@ const char* dlis_dtime( const char* xs, int* Y,
     return xs + sizeof( ms );
 }
 
-const char* dlis_origin( const char* xs, std::int32_t* out ) {
-    return dlis_uvari( xs, out );
+const char* origin_frombytes( const char* xs, std::int32_t* out ) {
+    return uvari_frombytes( xs, out );
 }
 
-const char* dlis_obname( const char* xs, std::int32_t* origin,
-                                         std::uint8_t* copy_number,
-                                         std::int32_t* idlen,
-                                         char* identifier ) {
-    xs = dlis_origin( xs, origin );
-    xs = dlis_ushort( xs, copy_number );
-    return dlis_ident( xs, idlen, identifier );
+const char* obname_frombytes( const char* xs, std::int32_t* origin,
+                                              std::uint8_t* copy_number,
+                                              std::int32_t* idlen,
+                                              char* identifier ) {
+    xs = origin_frombytes( xs, origin );
+    xs = ushort_frombytes( xs, copy_number );
+    return ident_frombytes( xs, idlen, identifier );
 }
 
-const char* dlis_objref( const char* xs, std::int32_t* ident_len,
-                                         char* ident,
-                                         std::int32_t* origin,
-                                         std::uint8_t* copy_number,
-                                         std::int32_t* objname_len,
-                                         char* identifier ) {
-    xs = dlis_ident( xs, ident_len, ident );
-    return dlis_obname( xs, origin, copy_number, objname_len, identifier );
+const char* objref_frombytes( const char* xs, std::int32_t* ident_len,
+                                              char* ident,
+                                              std::int32_t* origin,
+                                              std::uint8_t* copy_number,
+                                              std::int32_t* objname_len,
+                                              char* identifier ) {
+    xs = ident_frombytes( xs, ident_len, ident );
+    return obname_frombytes( xs, origin, copy_number, objname_len, identifier );
 }
 
-const char* dlis_attref( const char* xs, std::int32_t* ident_len,
-                                         char* ident,
-                                         std::int32_t* origin,
-                                         std::uint8_t* copy_number,
-                                         std::int32_t* objname_len,
-                                         char* identifier,
-                                         std::int32_t* ident2_len,
-                                         char* ident2 ) {
-    xs = dlis_ident( xs, ident_len, ident );
-    xs = dlis_obname( xs, origin, copy_number, objname_len, identifier );
-    return dlis_ident( xs, ident2_len, ident2 );
+const char* attref_frombytes( const char* xs, std::int32_t* ident_len,
+                                              char* ident,
+                                              std::int32_t* origin,
+                                              std::uint8_t* copy_number,
+                                              std::int32_t* objname_len,
+                                              char* identifier,
+                                              std::int32_t* ident2_len,
+                                              char* ident2 ) {
+    xs = ident_frombytes( xs, ident_len, ident );
+    xs = obname_frombytes( xs, origin, copy_number, objname_len, identifier );
+    return ident_frombytes( xs, ident2_len, ident2 );
 }
 
-const char* dlis_fshort( const char* xs, float* out ) {
+const char* fshort_frombytes( const char* xs, float* out ) {
     std::uint16_t v;
-    const char* newptr = dlis_unorm( xs, &v );
+    const char* newptr = unorm_frombytes( xs, &v );
 
     std::uint16_t sign_bit = v & 0x8000;
     std::uint16_t exp_bits = v & 0x000F;
@@ -278,7 +275,7 @@ const char* dlis_fshort( const char* xs, float* out ) {
     return newptr;
 }
 
-const char* dlis_fsingl( const char* xs, float* out ) {
+const char* fsingl_frombytes( const char* xs, float* out ) {
     static_assert(
         std::numeric_limits< float >::is_iec559 && sizeof( float ) == 4,
         "Function assumes IEEE 754 32-bit float" );
@@ -288,7 +285,7 @@ const char* dlis_fsingl( const char* xs, float* out ) {
     return xs + sizeof( float );
 }
 
-const char* dlis_fdoubl( const char* xs, double* out ) {
+const char* fdoubl_frombytes( const char* xs, double* out ) {
     static_assert(
         std::numeric_limits< double >::is_iec559 && sizeof( double ) == 8,
         "Function assumes IEEE 754 64-bit float" );
@@ -298,7 +295,7 @@ const char* dlis_fdoubl( const char* xs, double* out ) {
     return xs + sizeof( double );
 }
 
-const char* dlis_isingl( const char* xs, float* out ) {
+const char* isingl_frombytes( const char* xs, float* out ) {
     static const std::uint32_t ieeemax = 0x7FFFFFFF;
     static const std::uint32_t iemaxib = 0x611FFFFF;
     static const std::uint32_t ieminib = 0x21200000;
@@ -327,7 +324,7 @@ const char* dlis_isingl( const char* xs, float* out ) {
     return xs + sizeof( std::uint32_t );
 }
 
-const char* dlis_vsingl( const char* xs, float* out ) {
+const char* vsingl_frombytes( const char* xs, float* out ) {
     std::uint8_t x[4];
     std::memcpy( &x, xs, 4 );
 
@@ -373,51 +370,51 @@ const char* dlis_vsingl( const char* xs, float* out ) {
     return xs + sizeof( std::uint32_t );
 }
 
-const char* dlis_fsing1( const char* xs, float* V, float* A ) {
-    const char* ys = dlis_fsingl( xs, V );
-    const char* zs = dlis_fsingl( ys, A );
+const char* fsing1_frombytes( const char* xs, float* V, float* A ) {
+    const char* ys = fsingl_frombytes( xs, V );
+    const char* zs = fsingl_frombytes( ys, A );
     return zs;
 }
 
-const char* dlis_fsing2( const char* xs, float* V, float* A, float* B ) {
-    const char* ys = dlis_fsingl( xs, V );
-    const char* zs = dlis_fsingl( ys, A );
-    const char* ws = dlis_fsingl( zs, B );
+const char* fsing2_frombytes( const char* xs, float* V, float* A, float* B ) {
+    const char* ys = fsingl_frombytes( xs, V );
+    const char* zs = fsingl_frombytes( ys, A );
+    const char* ws = fsingl_frombytes( zs, B );
     return ws;
 }
 
-const char* dlis_csingl( const char* xs, float* R, float* I ) {
-    const char* ys = dlis_fsingl( xs, R );
-    const char* zs = dlis_fsingl( ys, I );
+const char* csingl_frombytes( const char* xs, float* R, float* I ) {
+    const char* ys = fsingl_frombytes( xs, R );
+    const char* zs = fsingl_frombytes( ys, I );
     return zs;
 }
 
-const char* dlis_fdoub1( const char* xs, double* V, double* A ) {
-    const char* ys = dlis_fdoubl( xs, V );
-    const char* zs = dlis_fdoubl( ys, A );
+const char* fdoub1_frombytes( const char* xs, double* V, double* A ) {
+    const char* ys = fdoubl_frombytes( xs, V );
+    const char* zs = fdoubl_frombytes( ys, A );
     return zs;
 }
 
-const char* dlis_fdoub2( const char* xs, double* V, double* A, double* B ) {
-    const char* ys = dlis_fdoubl( xs, V );
-    const char* zs = dlis_fdoubl( ys, A );
-    const char* ws = dlis_fdoubl( zs, B );
+const char* fdoub2_frombytes( const char* xs, double* V, double* A, double* B ) {
+    const char* ys = fdoubl_frombytes( xs, V );
+    const char* zs = fdoubl_frombytes( ys, A );
+    const char* ws = fdoubl_frombytes( zs, B );
     return ws;
 }
 
-const char* dlis_cdoubl( const char* xs, double* R, double* I ) {
-    const char* ys = dlis_fdoubl( xs, R );
-    const char* zs = dlis_fdoubl( ys, I );
+const char* cdoubl_frombytes( const char* xs, double* R, double* I ) {
+    const char* ys = fdoubl_frombytes( xs, R );
+    const char* zs = fdoubl_frombytes( ys, I );
     return zs;
 }
 
-const char* dlis_status( const char* xs, std::uint8_t* x ) {
-    return dlis_ushort( xs, x );
+const char* status_frombytes( const char* xs, std::uint8_t* x ) {
+    return ushort_frombytes( xs, x );
 }
 
-const char* dlis_units( const char* xs, std::int32_t* len, char* out ) {
+const char* units_frombytes( const char* xs, std::int32_t* len, char* out ) {
     std::uint8_t ln;
-    xs = dlis_ushort( xs, &ln );
+    xs = ushort_frombytes( xs, &ln );
 
     if( len ) *len = ln;
     if( out ) std::memcpy( out, xs, ln );
@@ -428,48 +425,48 @@ const char* dlis_units( const char* xs, std::int32_t* len, char* out ) {
  * output functions
  */
 
-void* dlis_sshorto( void* xs, std::int8_t x ) {
-    return dlis_ushorto( xs, x );
+void* sshort_tobytes( void* xs, std::int8_t x ) {
+    return ushort_tobytes( xs, x );
 }
 
-void* dlis_snormo( void* xs, std::int16_t x ) {
-    return dlis_unormo( xs, x );
+void* snorm_tobytes( void* xs, std::int16_t x ) {
+    return unorm_tobytes( xs, x );
 }
 
-void* dlis_slongo( void* xs, std::int32_t x ) {
-    return dlis_ulongo( xs, x );
+void* slong_tobytes( void* xs, std::int32_t x ) {
+    return ulong_tobytes( xs, x );
 }
 
-void* dlis_ushorto( void* xs, std::uint8_t x ) {
+void* ushort_tobytes( void* xs, std::uint8_t x ) {
     std::memcpy( xs, &x, sizeof( x ) );
     return (char*)xs + sizeof( x );
 }
 
-void* dlis_unormo( void* xs, std::uint16_t x ) {
+void* unorm_tobytes( void* xs, std::uint16_t x ) {
     x = hton( x );
     std::memcpy( xs, &x, sizeof( x ) );
     return (char*)xs + sizeof( x );;
 }
 
-void* dlis_ulongo( void* xs, std::uint32_t x ) {
+void* ulong_tobytes( void* xs, std::uint32_t x ) {
     x = hton( x );
     std::memcpy( xs, &x, sizeof( x ) );
     return (char*)xs + sizeof( x );
 }
 
-void* dlis_fsinglo( void* xs, float x ) {
+void* fsingl_tobytes( void* xs, float x ) {
     x = hton( x );
     std::memcpy( xs, &x, sizeof( x ) );
     return (char*)xs + sizeof( x );
 }
 
-void* dlis_fdoublo( void* xs, double x ) {
+void* fdoubl_tobytes( void* xs, double x ) {
     x = hton( x );
     std::memcpy( xs, &x, sizeof( x ) );
     return (char*)xs + sizeof( x );
 }
 
-void* dlis_isinglo( void* xs, float x ) {
+void* isingl_tobytes( void* xs, float x ) {
     static int it[4] = { 0x21200000, 0x21400000, 0x21800000, 0x22100000 };
     static int mt[4] = { 2, 4, 8, 1 };
     unsigned int manthi, iexp, ix;
@@ -488,7 +485,7 @@ void* dlis_isinglo( void* xs, float x ) {
     return (char*)xs + sizeof( x );
 }
 
-void* dlis_vsinglo( void* xs, float x ) {
+void* vsingl_tobytes( void* xs, float x ) {
     std::uint32_t u;
     std::memcpy( &u, &x, sizeof( x ) );
 
@@ -518,45 +515,45 @@ void* dlis_vsinglo( void* xs, float x ) {
     return (char*)xs + sizeof( v );
 }
 
-void* dlis_fsing1o( void* xs, float v, float a ) {
-    void* ys = dlis_fsinglo( xs, v );
-    void* zs = dlis_fsinglo( ys, a );
+void* fsing1_tobytes( void* xs, float v, float a ) {
+    void* ys = fsingl_tobytes( xs, v );
+    void* zs = fsingl_tobytes( ys, a );
     return zs;
 }
 
-void* dlis_fsing2o( void* xs, float V, float A, float B ) {
-    void* ys = dlis_fsinglo( xs, V );
-    void* zs = dlis_fsinglo( ys, A );
-    void* ws = dlis_fsinglo( zs, B );
+void* fsing2_tobytes( void* xs, float V, float A, float B ) {
+    void* ys = fsingl_tobytes( xs, V );
+    void* zs = fsingl_tobytes( ys, A );
+    void* ws = fsingl_tobytes( zs, B );
     return ws;
 }
 
-void* dlis_csinglo( void* xs, float R, float I ) {
-    void* ys = dlis_fsinglo( xs, R );
-    void* zs = dlis_fsinglo( ys, I );
+void* csingl_tobytes( void* xs, float R, float I ) {
+    void* ys = fsingl_tobytes( xs, R );
+    void* zs = fsingl_tobytes( ys, I );
     return zs;
 }
 
-void* dlis_fdoub1o( void* xs, double V, double A ) {
-    void* ys = dlis_fdoublo( xs, V );
-    void* zs = dlis_fdoublo( ys, A );
+void* fdoub1_tobytes( void* xs, double V, double A ) {
+    void* ys = fdoubl_tobytes( xs, V );
+    void* zs = fdoubl_tobytes( ys, A );
     return zs;
 }
 
-void* dlis_fdoub2o( void* xs, double V, double A, double B ) {
-    void* ys = dlis_fdoublo( xs, V );
-    void* zs = dlis_fdoublo( ys, A );
-    void* ws = dlis_fdoublo( zs, B );
+void* fdoub2_tobytes( void* xs, double V, double A, double B ) {
+    void* ys = fdoubl_tobytes( xs, V );
+    void* zs = fdoubl_tobytes( ys, A );
+    void* ws = fdoubl_tobytes( zs, B );
     return ws;
 }
 
-void* dlis_cdoublo( void* xs, double R, double I ) {
-    void* ys = dlis_fdoublo( xs, R );
-    void* zs = dlis_fdoublo( ys, I );
+void* cdoubl_tobytes( void* xs, double R, double I ) {
+    void* ys = fdoubl_tobytes( xs, R );
+    void* zs = fdoubl_tobytes( ys, I );
     return zs;
 }
 
-void* dlis_uvario( void* xs, std::int32_t x, int width ) {
+void* uvari_tobytes( void* xs, std::int32_t x, int width ) {
     if( x <= 0x7F && width <= 1 ) {
         std::int8_t v = x;
         std::memcpy( xs, &v, sizeof( v ) );
@@ -578,40 +575,36 @@ void* dlis_uvario( void* xs, std::int32_t x, int width ) {
     return (char*)xs + sizeof( v );
 }
 
-void* dlis_idento( void* xs, std::uint8_t len, const char* in ) {
-    void* ys = dlis_ushorto( xs, len );
+void* ident_tobytes( void* xs, std::uint8_t len, const char* in ) {
+    void* ys = ushort_tobytes( xs, len );
     std::memcpy( ys, in, (size_t)len );
     return (char*)ys + len;
 }
 
-void* dlis_asciio( void* xs, std::int32_t len,
+void* ascii_tobytes( void* xs, std::int32_t len,
                              const char* in,
                              std::uint8_t l ) {
-    void* ys = dlis_uvario( xs, len, l );
+    void* ys = uvari_tobytes( xs, len, l );
     std::memcpy( ys, in, (size_t)len );
     return (char*)ys + len;
 }
 
-void* dlis_origino( void* xs, std::int32_t x ) {
-    return dlis_uvario( xs, x, 4 );
+void* origin_tobytes( void* xs, std::int32_t x ) {
+    return uvari_tobytes( xs, x, 4 );
 }
 
-void* dlis_statuso( void* xs, std::uint8_t x ) {
-    return dlis_ushorto( xs, x );
+void* status_tobytes( void* xs, std::uint8_t x ) {
+    return ushort_tobytes( xs, x );
 }
 
-int dlis_yearo( int Y ) {
-    return Y - DLIS_YEAR_ZERO;
-}
-
-void* dlis_dtimeo( void* xs, int Y,
-                             int TZ,
-                             int M,
-                             int D,
-                             int H,
-                             int MN,
-                             int S,
-                             int MS ) {
+void* dtime_tobytes( void* xs, int Y,
+                               int TZ,
+                               int M,
+                               int D,
+                               int H,
+                               int MN,
+                               int S,
+                               int MS ) {
 
     // OBS: no overflow protection
     std::uint8_t tz = TZ;
@@ -634,88 +627,90 @@ void* dlis_dtimeo( void* xs, int Y,
     return (char*)ys + sizeof( ms );
 }
 
-void* dlis_obnameo( void* xs, std::int32_t origin,
-                              std::uint8_t copy_number,
-                              std::uint8_t idlen,
-                              const char* identifier ) {
-    void* ys = dlis_origino( xs, origin );
-    void* zs = dlis_ushorto( ys, copy_number );
-    void* ws = dlis_idento( zs, idlen, identifier );
+void* obname_tobytes( void* xs, std::int32_t origin,
+                                std::uint8_t copy_number,
+                                std::uint8_t idlen,
+                                const char* identifier ) {
+    void* ys = origin_tobytes( xs, origin );
+    void* zs = ushort_tobytes( ys, copy_number );
+    void* ws = ident_tobytes( zs, idlen, identifier );
     return ws;
 }
 
-void* dlis_objrefo( void* xs, std::uint8_t ident_len,
-                              const char* ident,
-                              std::int32_t origin,
-                              std::uint8_t copy_number,
-                              std::uint8_t objname_len,
-                              const char* identifier ) {
+void* objref_tobytes( void* xs, std::uint8_t ident_len,
+                                const char* ident,
+                                std::int32_t origin,
+                                std::uint8_t copy_number,
+                                std::uint8_t objname_len,
+                                const char* identifier ) {
 
-    void* ys = dlis_idento( xs, ident_len, ident );
-    void* zs = dlis_obnameo( ys, origin,
-                                 copy_number,
-                                 objname_len,
-                                 identifier );
+    void* ys = ident_tobytes( xs, ident_len, ident );
+    void* zs = obname_tobytes( ys, origin,
+                                   copy_number,
+                                   objname_len,
+                                   identifier );
     return zs;
 }
 
-void* dlis_attrefo( void* xs, std::uint8_t ident1_len,
-                              const char* ident1,
-                              std::int32_t origin,
-                              std::uint8_t copy_number,
-                              std::uint8_t objname_len,
-                              const char* identifier,
-                              std::uint8_t ident2_len,
-                              const char* ident2 ) {
+void* attref_tobytes( void* xs, std::uint8_t ident1_len,
+                                const char* ident1,
+                                std::int32_t origin,
+                                std::uint8_t copy_number,
+                                std::uint8_t objname_len,
+                                const char* identifier,
+                                std::uint8_t ident2_len,
+                                const char* ident2 ) {
 
-    void* ys = dlis_idento( xs, ident1_len, ident1 );
-    void* zs = dlis_obnameo( ys, origin,
-                                 copy_number,
-                                 objname_len,
-                                 identifier );
+    void* ys = ident_tobytes( xs, ident1_len, ident1 );
+    void* zs = obname_tobytes( ys, origin,
+                                   copy_number,
+                                   objname_len,
+                                   identifier );
 
-    void* ws = dlis_idento( zs, ident2_len, ident2 );
+    void* ws = ident_tobytes( zs, ident2_len, ident2 );
     return ws;
 }
 
-void* dlis_unitso( void* xs, std::uint8_t len, const char* in ) {
-    void* ys = dlis_ushorto( xs, len );
+void* units_tobytes( void* xs, std::uint8_t len, const char* in ) {
+    void* ys = ushort_tobytes( xs, len );
     std::memcpy( ys, in, (size_t)len );
     return (char*)ys + len;
 }
 
-int dlis_sizeof_type( int x ) {
-    if ( x < DLIS_FSHORT || x > DLIS_UNITS ) return -1;
+int sizeof_type( int x ) {
+    if ( x < FSHORT || x > UNITS ) return -1;
 
     constexpr const int sizes[] = {
-        DLIS_SIZEOF_FSHORT,
-        DLIS_SIZEOF_FSINGL,
-        DLIS_SIZEOF_FSING1,
-        DLIS_SIZEOF_FSING2,
-        DLIS_SIZEOF_ISINGL,
-        DLIS_SIZEOF_VSINGL,
-        DLIS_SIZEOF_FDOUBL,
-        DLIS_SIZEOF_FDOUB1,
-        DLIS_SIZEOF_FDOUB2,
-        DLIS_SIZEOF_CSINGL,
-        DLIS_SIZEOF_CDOUBL,
-        DLIS_SIZEOF_SSHORT,
-        DLIS_SIZEOF_SNORM,
-        DLIS_SIZEOF_SLONG,
-        DLIS_SIZEOF_USHORT,
-        DLIS_SIZEOF_UNORM,
-        DLIS_SIZEOF_ULONG,
-        DLIS_SIZEOF_UVARI,
-        DLIS_SIZEOF_IDENT,
-        DLIS_SIZEOF_ASCII,
-        DLIS_SIZEOF_DTIME,
-        DLIS_SIZEOF_ORIGIN,
-        DLIS_SIZEOF_OBNAME,
-        DLIS_SIZEOF_OBJREF,
-        DLIS_SIZEOF_ATTREF,
-        DLIS_SIZEOF_STATUS,
-        DLIS_SIZEOF_UNITS,
+        dl::SIZEOF_FSHORT,
+        dl::SIZEOF_FSINGL,
+        dl::SIZEOF_FSING1,
+        dl::SIZEOF_FSING2,
+        dl::SIZEOF_ISINGL,
+        dl::SIZEOF_VSINGL,
+        dl::SIZEOF_FDOUBL,
+        dl::SIZEOF_FDOUB1,
+        dl::SIZEOF_FDOUB2,
+        dl::SIZEOF_CSINGL,
+        dl::SIZEOF_CDOUBL,
+        dl::SIZEOF_SSHORT,
+        dl::SIZEOF_SNORM,
+        dl::SIZEOF_SLONG,
+        dl::SIZEOF_USHORT,
+        dl::SIZEOF_UNORM,
+        dl::SIZEOF_ULONG,
+        dl::SIZEOF_UVARI,
+        dl::SIZEOF_IDENT,
+        dl::SIZEOF_ASCII,
+        dl::SIZEOF_DTIME,
+        dl::SIZEOF_ORIGIN,
+        dl::SIZEOF_OBNAME,
+        dl::SIZEOF_OBJREF,
+        dl::SIZEOF_ATTREF,
+        dl::SIZEOF_STATUS,
+        dl::SIZEOF_UNITS,
     };
 
     return sizes[ x - 1 ];
 }
+
+} // namespace dl

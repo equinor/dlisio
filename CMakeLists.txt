@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(dlisio LANGUAGES C CXX)
+project(dlisio LANGUAGES CXX)
 
 include(CheckIncludeFile)
 include(CTest)

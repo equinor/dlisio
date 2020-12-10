@@ -12,8 +12,8 @@
 #include <lfp/rp66.h>
 #include <lfp/tapeimage.h>
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.h>
+#include <dlisio/dlisio.hpp>
+#include <dlisio/types.hpp>
 
 #include <dlisio/ext/io.hpp>
 
@@ -68,25 +68,25 @@ long long findsul( stream& file ) noexcept (false) {
     file.seek(0);
     auto bytes_read = file.read(buffer, 200);
 
-    const auto err = dlis_find_sul(buffer, bytes_read, &offset);
+    const auto err = dl::find_sul(buffer, bytes_read, &offset);
 
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             return offset;
 
-        case DLIS_NOTFOUND: {
+        case dl::ERROR_NOTFOUND: {
             auto msg = "searched {} bytes, but could not find storage label";
             throw dl::not_found(fmt::format(msg, bytes_read));
         }
 
-        case DLIS_INCONSISTENT: {
+        case dl::ERROR_INCONSISTENT: {
             auto msg = "found something that could be parts of a SUL, "
                        "file may be corrupted";
             throw std::runtime_error(msg);
         }
 
         default:
-            throw std::runtime_error("dlis_find_sul: unknown error");
+            throw std::runtime_error("dl::find_sul: unknown error");
     }
 }
 
@@ -101,28 +101,28 @@ long long findvrl( stream& file, long long from ) noexcept (false) {
     char buffer[ 200 ];
     file.seek(from);
     auto bytes_read = file.read(buffer, 200);
-    const auto err = dlis_find_vrl(buffer, bytes_read, &offset);
+    const auto err = dl::find_vrl(buffer, bytes_read, &offset);
 
     // TODO: error messages could maybe be pulled from core library
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             return from + offset;
 
-        case DLIS_NOTFOUND: {
+        case dl::ERROR_NOTFOUND: {
             const auto msg = "searched {} bytes, but could not find "
                              "visible record envelope pattern [0xFF 0x01]"
             ;
             throw dl::not_found(fmt::format(msg, bytes_read));
         }
 
-        case DLIS_INCONSISTENT: {
+        case dl::ERROR_INCONSISTENT: {
             const auto msg = "found [0xFF 0x01] but len field not intact, "
                              "file may be corrupted";
             throw std::runtime_error(msg);
         }
 
         default:
-            throw std::runtime_error("dlis_find_vrl: unknown error");
+            throw std::runtime_error("dl::find_vrl: unknown error");
     }
 }
 
@@ -135,26 +135,26 @@ bool hastapemark(stream& file) noexcept (false) {
     if (bytes_read < TAPEMARK_SIZE)
         throw std::runtime_error("hastapemark: unable to read full tapemark");
 
-    const auto err = dlis_tapemark(buffer, TAPEMARK_SIZE);
+    const auto err = dl::tapemark(buffer, TAPEMARK_SIZE);
 
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             return true;
 
-        case DLIS_NOTFOUND:
+        case dl::ERROR_NOTFOUND:
             return false;
 
         default:
-            throw std::runtime_error("dlis_tapemark: unknown error");
+            throw std::runtime_error("dl::tapemark: unknown error");
     }
 }
 
 bool record::isexplicit() const noexcept (true) {
-    return this->attributes & DLIS_SEGATTR_EXFMTLR;
+    return this->attributes & dl::SEGATTR_EXFMTLR;
 }
 
 bool record::isencrypted() const noexcept (true) {
-    return this->attributes & DLIS_SEGATTR_ENCRYPT;
+    return this->attributes & dl::SEGATTR_ENCRYPT;
 }
 
 namespace {
@@ -182,15 +182,15 @@ void trim_segment(std::uint8_t attrs,
 noexcept (false) {
     int trim = 0;
     const auto* end = begin + segment_size;
-    const auto err = dlis_trim_record_segment(attrs, begin, end, &trim);
+    const auto err = dl::trim_record_segment(attrs, begin, end, &trim);
 
     switch (err) {
-        case DLIS_OK:
+        case dl::ERROR_OK:
             segment.resize(segment.size() - trim);
             return;
 
-        case DLIS_BAD_SIZE: {
-            if (trim - segment_size != DLIS_LRSH_SIZE) {
+        case dl::ERROR_BAD_SIZE: {
+            if (trim - segment_size != dl::LRSH_SIZE) {
                 const auto msg =
                     "bad segment trim: trim size (which is {}) "
                     ">= segment.size() (which is {})";
@@ -212,7 +212,7 @@ noexcept (false) {
         }
 
         default:
-            throw std::invalid_argument("dlis_trim_record_segment");
+            throw std::invalid_argument("dl::trim_record_segment");
     }
 }
 
@@ -323,16 +323,16 @@ record& extract(stream& file, long long tell, long long bytes, record& rec,
     file.seek(tell);
 
     while (true) {
-        char buffer[ DLIS_LRSH_SIZE ];
-        auto nread = file.read( buffer, DLIS_LRSH_SIZE );
-        if ( nread < DLIS_LRSH_SIZE )
+        char buffer[ dl::LRSH_SIZE ];
+        auto nread = file.read( buffer, dl::LRSH_SIZE );
+        if ( nread < dl::LRSH_SIZE )
             throw std::runtime_error("extract: unable to read LRSH, file truncated");
 
         int len, type;
         std::uint8_t attrs;
-        dlis_lrsh( buffer, &len, &attrs, &type );
+        dl::lrsh( buffer, &len, &attrs, &type );
 
-        len -= DLIS_LRSH_SIZE;
+        len -= dl::LRSH_SIZE;
 
         attributes.push_back( attrs );
         types.push_back( type );
@@ -346,9 +346,9 @@ record& extract(stream& file, long long tell, long long bytes, record& rec,
          * can get away with reading a partial LRS as long as there is no
          * padding, checksum or trailing length.
          */
-        if ( not (attrs & DLIS_SEGATTR_PADDING) and
-             not (attrs & DLIS_SEGATTR_TRAILEN) and
-             not (attrs & DLIS_SEGATTR_CHCKSUM) and
+        if ( not (attrs & dl::SEGATTR_PADDING) and
+             not (attrs & dl::SEGATTR_TRAILEN) and
+             not (attrs & dl::SEGATTR_CHCKSUM) and
              remaining < len ) {
 
             to_read = remaining;
@@ -375,7 +375,7 @@ record& extract(stream& file, long long tell, long long bytes, record& rec,
          * caused by encryption
          */
 
-        const auto has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
+        const auto has_successor = attrs & dl::SEGATTR_SUCCSEG;
         const long long bytes_left = bytes - rec.data.size();
         if (has_successor and bytes_left > 0) continue;
 
@@ -384,7 +384,7 @@ record& extract(stream& file, long long tell, long long bytes, record& rec,
          * extract those for checking consistency. Nothing else is interesting
          * to users, as it only describes how to read this specific segment
          */
-        static const auto fmtenc = DLIS_SEGATTR_EXFMTLR | DLIS_SEGATTR_ENCRYPT;
+        static const auto fmtenc = dl::SEGATTR_EXFMTLR | dl::SEGATTR_ENCRYPT;
         rec.attributes = attributes.front() & fmtenc;
         rec.type = types.front();
 
@@ -404,7 +404,7 @@ noexcept (false) {
     std::int64_t lrs_offset = 0;
 
     bool has_successor = false;
-    char buffer[ DLIS_LRSH_SIZE ];
+    char buffer[ dl::LRSH_SIZE ];
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dl::findoffsets (indexing logical file)";
@@ -420,7 +420,7 @@ noexcept (false) {
 
     while (true) {
         try {
-            read = file.read(buffer, DLIS_LRSH_SIZE);
+            read = file.read(buffer, dl::LRSH_SIZE);
         } catch (std::exception& e) {
             handle(e.what());
             break;
@@ -456,7 +456,7 @@ noexcept (false) {
 
         int type;
         std::uint8_t attrs;
-        dlis_lrsh( buffer, &len, &attrs, &type );
+        dl::lrsh( buffer, &len, &attrs, &type );
         if (len < 4) {
             const auto problem =
                 "Too short logical record. Length can't be less than 4, "
@@ -465,8 +465,8 @@ noexcept (false) {
             break;
         }
 
-        bool isexplicit      = attrs & DLIS_SEGATTR_EXFMTLR;
-        bool has_predecessor = attrs & DLIS_SEGATTR_PREDSEG;
+        bool isexplicit      = attrs & dl::SEGATTR_EXFMTLR;
+        bool has_predecessor = attrs & dl::SEGATTR_PREDSEG;
 
         if (not (has_predecessor)) {
             if (isexplicit and type == 0 and ofs.explicits.size()) {
@@ -492,7 +492,7 @@ noexcept (false) {
             }
         }
 
-        has_successor = attrs & DLIS_SEGATTR_SUCCSEG;
+        has_successor = attrs & dl::SEGATTR_SUCCSEG;
         lrs_offset += len;
 
         /*
@@ -568,7 +568,10 @@ dl::error_handler& errorhandler) noexcept (false) {
         uint8_t copy;
         int32_t idlen;
         char id[ 256 ];
-        const char* cur = dlis_obname(rec.data.data(), &origin, &copy, &idlen, id);
+        const char* cur = dl::obname_frombytes(rec.data.data(), &origin,
+                                                                &copy,
+                                                                &idlen,
+                                                                id);
 
         std::size_t obname_size = cur - rec.data.data();
         if (obname_size > rec.data.size()) {
