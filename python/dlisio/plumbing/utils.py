@@ -185,7 +185,9 @@ def remove_empties(d):
     clean = OrderedDict()
     for key, value in d.items():
         if issequence(value):
-            if np.array_equal(np.array(value), np.empty(0)): continue
+            if all(not entry and entry != 0
+                   for entry in np.array(value).flatten()) :
+                continue
         else:
             if not value and value != 0: continue
 

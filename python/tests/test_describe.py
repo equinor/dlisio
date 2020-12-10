@@ -43,6 +43,50 @@ def test_replist(f):
     assert reprs == [str(x) for x in elems]
 
 
+def test_remove_empties():
+    d = {
+        "good value"   : "val",
+        "empty string" : "",
+        "string 0"     : "0",
+        "int 0"        : 0,
+        "float 0"      : 0.0,
+        "None"         : None,
+
+        "good list"              : [2],
+        "empty list"             : [],
+        "list with empty string" : [""],
+        "list with 0"            : [0],
+        "list with None"         : [None],
+
+        "good numpy array"              : np.array([5.6]),
+        "empty numpy array"             : np.empty(0),
+        "numpy array with emtpy string" : np.array([""]),
+        "numpy array with 0"            : np.array([0]),
+        "numpy array with None"         : np.array(None),
+
+        "empty multidimensional array"     : np.array([['', None], [None, '']]),
+        "multidimensional array with zero" : np.array([['', None], [0, '']]),
+    }
+
+    expected = [
+        "good value",
+        "string 0",
+        "int 0",
+        "float 0",
+
+        "good list",
+        "list with 0",
+
+        "good numpy array",
+        "numpy array with 0",
+
+        "multidimensional array with zero",
+    ]
+
+    clean = remove_empties(d)
+    assert clean.keys() == set(expected)
+
+
 def test_sampled_attrs(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'sampled-attrs.dlis')
     content = [
