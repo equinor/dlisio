@@ -17,18 +17,6 @@
 
 namespace dl {
 
-struct not_implemented : public std::logic_error {
-    explicit not_implemented( const std::string& msg ) :
-        logic_error( "Not implemented yet: " + msg )
-    {}
-};
-
-struct not_found : public std::runtime_error {
-    explicit not_found( const std::string& msg )
-        : runtime_error( msg )
-    {}
-};
-
 enum class representation_code : std::uint8_t {
     fshort = DLIS_FSHORT,
     fsingl = DLIS_FSINGL,

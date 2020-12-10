@@ -1,4 +1,29 @@
 #ifndef DLISIO_PYTHON_EXCEPTION_HPP
 #define DLISIO_PYTHON_EXCEPTION_HPP
 
+namespace dl {
+
+struct eof_error : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
+struct io_error : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+    explicit io_error( int no ) : runtime_error( std::strerror( no ) ) {}
+};
+
+struct not_implemented : public std::logic_error {
+    explicit not_implemented( const std::string& msg ) :
+        logic_error( "Not implemented yet: " + msg )
+    {}
+};
+
+struct not_found : public std::runtime_error {
+    explicit not_found( const std::string& msg )
+        : runtime_error( msg )
+    {}
+};
+
+}
+
 #endif // DLISIO_PYTHON_EXCEPTION_HPP

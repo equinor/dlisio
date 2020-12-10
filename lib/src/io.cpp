@@ -16,6 +16,7 @@
 #include <dlisio/types.h>
 
 #include <dlisio/ext/io.hpp>
+#include <dlisio/ext/exception.hpp>
 
 namespace dl {
 

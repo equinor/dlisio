@@ -13,16 +13,6 @@
 
 namespace dl {
 
-
-struct eof_error : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-
-struct io_error : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-    explicit io_error( int no ) : runtime_error( std::strerror( no ) ) {}
-};
-
 /* Stream - wrapper for lfp_protocol
  *
  * The main purpose of stream is to handle lfp return codes in a manner that
