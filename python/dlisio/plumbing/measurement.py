@@ -226,30 +226,31 @@ class Measurement(BasicObject):
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Type of measurement']       = self.mtype
-        d['Calibration standard']      = self.standard
-        d['Phase in job sequence']     = self.phase
-        d['Start time of acquisition'] = self.begin_time
-        d['Duration time']             = self.duration
-        d['Data source']               = self.source
+        d['Type of measurement']       = 'TYPE'
+        d['Calibration standard']      = 'STANDARD'
+        d['Phase in job sequence']     = 'PHASE'
+        # TODO: translate begin-times which are presented as numbers to dates
+        d['Start time of acquisition'] = 'BEGIN-TIME'
+        d['Duration time']             = 'DURATION'
+        d['Data source']               = 'MEASUREMENT-SOURCE'
 
         describe_header(buf, 'Metadata', width, indent, lvl=2)
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         d = OrderedDict()
-        d['Dimensions']       = self.dimension
-        d['Axis labels']      = self.axis
+        d['Dimensions']  = 'DIMENSION'
+        d['Axis labels'] = 'AXIS'
         try:
             samplecount = len(self.samples)
         except ValueError:
             samplecount = 0
         d['Number of values'] = samplecount
         samples = 'Samples used to compute std/max-dev'
-        d[samples] = self.samplecount
+        d[samples] = 'SAMPLE-COUNT'
 
         if exclude['empty']: d = remove_empties(d)
         if d: describe_header(buf, 'Samples', width, indent, lvl=2)
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         d = OrderedDict()
         d['Reference']       = 'REFERENCE'

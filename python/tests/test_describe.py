@@ -3,6 +3,7 @@ Testing 'describe' functionality
 """
 from io import StringIO
 import os
+import pytest
 
 import dlisio
 from dlisio.plumbing import *
@@ -174,6 +175,28 @@ def test_sampled_attrs_wrong_value(tmpdir, merge_files_oneLR):
         assert str(buf.getvalue()) == ref
 
 
+def test_describe_attributes(f):
+    obj = f.object('LONG-NAME', 'SHORT-LONG-NAME', 10, 0)
+
+    exclude = parseoptions('')
+    buf = StringIO()
+
+    d = OrderedDict()
+    d['Simple'] = 'QUANTITY'
+    d['Default value'] = 'ENTITY'
+    d['Leave as is'] = 'NOT-IN-ATTIC'
+    d['Not a string'] = 1
+
+    describe_attributes( buf, d, obj, width=40, indent=' ', exclude=exclude)
+
+    ref = (' Simple        : diameter and stuff\n'
+           ' Default value : None\n'
+           ' Leave as is   : NOT-IN-ATTIC\n'
+           ' Not a string  : 1\n\n'
+           )
+
+    assert str(buf.getvalue()) == ref
+
 def test_describe_header():
     # top level header, indented with one whitespace
     case1 = (' -------\n'
@@ -311,3 +334,34 @@ def test_describe_ndarray():
     describe_array(buf, arr, width=20, indent=' ')
     assert str(buf.getvalue()) == case1
 
+
+@pytest.mark.parametrize('exclude, units', [
+    (parseoptions('u'), ''),
+    (parseoptions(''),  ' [°]'),
+])
+def test_describe_attribute_units(f, exclude, units):
+    eq = f.object('EQUIPMENT', 'EQUIP1', 10, 0)
+    d = OrderedDict()
+    d['With units'] = 'TEMPERATURE'
+
+    buf = StringIO()
+    describe_attributes( buf, d, eq, width=30, indent=' ', exclude=exclude)
+    expected = ' With units : 17{}\n\n'.format(units)
+    assert str(buf.getvalue()) == expected
+
+
+@pytest.mark.parametrize('exclude, units', [
+    (parseoptions('u'), ''),
+    (parseoptions(''),  ' [units]'),
+])
+def test_describe_sampled_attribute_units(f, exclude, units):
+    param = f.object('PARAMETER', 'PARAM2', 10, 0)
+    d = OrderedDict()
+    d['With units'] = 'VALUES'
+
+    buf = StringIO()
+    describe_sampled_attrs(buf, param.attic, param.dimension, 'VALUES',
+        {}, 80, ' ', exclude
+    )
+    expected = ' Value(s) : [[131  69]]{}\n\n'.format(units)
+    assert str(buf.getvalue()) == expected

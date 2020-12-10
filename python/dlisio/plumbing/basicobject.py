@@ -316,6 +316,7 @@ class BasicObject():
         'h'    header
         'a'    known attributes
         's'    attributes from stash
+        'u'    units
         'i'    attributes that violates the standard  [1]
         'e'    attributes with empty values (default) [2]
         ====== ==========================================
@@ -341,7 +342,8 @@ class BasicObject():
         if not exclude['stash']:
             if len(self.stash) > 0:
                 describe_header(buf, 'Unknown attributes', width, indent, lvl=2)
-                describe_dict(buf, self.stash, width, indent, exclude)
+                d = {k : k for k in self.stash.keys()}
+                describe_attributes(buf, d, self, width, indent, exclude)
 
         return Summary(info=buf.getvalue())
 

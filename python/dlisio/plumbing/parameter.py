@@ -137,19 +137,12 @@ class Parameter(BasicObject):
     def describe_attr(self, buf, width, indent, exclude):
         describe_description(buf, self.long_name, width, indent, exclude)
 
-        units = ''
-        try:
-            units = self.attic['VALUES'].units
-        except:
-            pass
-
         d = OrderedDict()
-        d['Sample dimensions'] = self.dimension
-        d['Axis labels']       = self.axis
-        d['Zones']             = self.zones
-        d['Units']             = units
+        d['Sample dimensions'] = 'DIMENSION'
+        d['Axis labels']       = 'AXIS'
+        d['Zones']             = 'ZONES'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         describe_sampled_attrs(
                 buf,

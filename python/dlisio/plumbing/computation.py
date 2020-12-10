@@ -158,12 +158,12 @@ class Computation(BasicObject):
         describe_description(buf, self.long_name, width, indent, exclude)
 
         d = OrderedDict()
-        d['Sample dimensions']   = self.dimension
-        d['Axis labels']         = self.axis
-        d['Zones']               = self.zones
-        d['Property indicators'] = self.properties
-        d['Source object']       = self.source
-        describe_dict(buf, d, width, indent, exclude)
+        d['Sample dimensions']   = 'DIMENSION'
+        d['Axis labels']         = 'AXIS'
+        d['Zones']               = 'ZONES'
+        d['Property indicators'] = 'PROPERTIES'
+        d['Source object']       = 'SOURCE'
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         describe_sampled_attrs(
                 buf,

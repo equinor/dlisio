@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar
-from .utils import describe_dict
+from .utils import describe_attributes
 
 from collections import OrderedDict
 
@@ -65,7 +65,8 @@ class Zone(BasicObject):
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
         d['Description'] = self.description
-        d['Domain']      = self.domain
-        d['Interval']    = '[{}, {})'.format(self.minimum, self.maximum)
+        d['Domain']      = 'DOMAIN'
+        d['Minimum']     = 'MINIMUM'
+        d['Maximum']     = 'MAXIMUM'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)

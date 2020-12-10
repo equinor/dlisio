@@ -484,22 +484,19 @@ class Frame(BasicObject):
             if self.index_type is not None:
 
                 index = self.channels[0]
-                index_min = self.index_min, self.attic['INDEX-MIN'].units
-                index_max = self.index_max, self.attic['INDEX-MAX'].units
-
                 d = OrderedDict()
-                d['Description']      = self.description
-                d['Indexed by']       = self.index_type
+
+                d['Description']      = 'DESCRIPTION'
+                d['Indexed by']       = 'INDEX-TYPE'
                 d['Index units']      = index.units
-                d['Index min']        = '{} [{}]'.format(*index_min)
-                d['Index max']        = '{} [{}]'.format(*index_max)
-                d['Direction']        = self.direction
-                d['Constant spacing'] = self.spacing
+                d['Index min']        = 'INDEX-MIN'
+                d['Index max']        = 'INDEX-MAX'
+                d['Direction']        = 'DIRECTION'
+                d['Constant spacing'] = 'SPACING'
                 d['Index channel']    = index
 
                 describe_header(buf, 'Channel indexing', width, indent, lvl=2)
-                describe_dict(buf, d, width, indent, exclude)
-
+                describe_attributes(buf, d, self, width, indent, exclude)
             else:
                 index  = 'There is no index channel, channels are indexed '
                 index += 'by samplenumber, i.e [1,2,3,..,n]'

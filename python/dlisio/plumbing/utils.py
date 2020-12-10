@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from collections import OrderedDict, Sequence
+from collections import OrderedDict, Sequence, namedtuple
 from textwrap import fill
 
 
@@ -164,6 +164,7 @@ def parseoptions(fmt):
         'stash' : False,
         'inv'   : False,
         'refs'  : False,
+        'units' : False
     }
 
     if 'e' in modes: options['empty'] = True
@@ -172,6 +173,7 @@ def parseoptions(fmt):
     if 'i' in modes: options['inv']   = True
     if 's' in modes: options['stash'] = True
     if 'r' in modes: options['refs']  = True
+    if 'u' in modes: options['units'] = True
     return options
 
 def issequence(obj):
@@ -183,7 +185,12 @@ def issequence(obj):
 def remove_empties(d):
     """Drop entries with no value. '0' is considered to be a valid value."""
     clean = OrderedDict()
-    for key, value in d.items():
+    for key, attr in d.items():
+        try:
+            value = attr.value
+        except AttributeError:
+            value = attr
+
         if issequence(value):
             if all(not entry and entry != 0
                    for entry in np.array(value).flatten()) :
@@ -191,7 +198,7 @@ def remove_empties(d):
         else:
             if not value and value != 0: continue
 
-        clean[key] = value
+        clean[key] = attr
 
     return clean
 
@@ -286,6 +293,9 @@ def describe_description(buf, description, width, indent, exclude):
             d = {'Description' : description}
             describe_dict(buf, d, width, indent, exclude)
 
+# performance is twice better if this is defined outside of all functions
+object_attribute = namedtuple('ObjectAttribute', 'value, units')
+
 def describe_sampled_attrs(buf, attic, dims, valuekey, extras, width, indent,
         exclude, single=True):
     """Describe attributes that needs to be sampled (re-shaped)"""
@@ -293,23 +303,26 @@ def describe_sampled_attrs(buf, attic, dims, valuekey, extras, width, indent,
     valids, invs = OrderedDict(), OrderedDict()
     try:
         value = attic[valuekey].value
+        units = attic[valuekey].units
         shape = validshape(value, dims)
-        valids['Value(s)'] = sampling(value, shape)
+        valids['Value(s)'] = object_attribute(sampling(value, shape), units)
     except KeyError:
         pass
     except ValueError:
-        invs['Value(s)'] = value
+        invs['Value(s)'] = object_attribute(value, units)
 
     if extras:
         for label, key in extras.items():
             try:
                 value = attic[key].value
+                units = attic[key].units
                 shape = validshape(value, dims)
-                valids[label] = sampling(value, shape, single=single)
+                valids[label] = object_attribute(
+                    sampling(value, shape, single=single), units)
             except KeyError:
                 pass
             except ValueError:
-                invs[label] = value
+                invs[label] = object_attribute(value, units)
 
     if valids:
         describe_dict(buf, valids, width, indent, exclude)
@@ -317,6 +330,26 @@ def describe_sampled_attrs(buf, attic, dims, valuekey, extras, width, indent,
     if not exclude['inv'] and invs:
         describe_header(buf, 'Invalid dimensions', width, indent, lvl=2)
         describe_dict(buf, invs, width, indent, exclude)
+
+def describe_attributes(buf, d, obj, width, indent, exclude=None):
+    """Describe attributes that first need to be retrieved from object.
+    If value is not found in objects attribute dictionary, it is assumed to be
+    a simple value and will be printed without any changes
+    """
+    for key, label in d.items():
+        if label not in obj.attic.keys():
+            try:
+                if label in obj.attributes.keys():
+                    # key is valid, but not present. Retrieve default
+                    d[key] = obj[label]
+            except TypeError:
+                continue
+        else:
+            value = obj[label]
+            units = obj.attic[label].units
+            d[key] = object_attribute(value, units)
+
+    describe_dict(buf, d, width, indent, exclude)
 
 def describe_dict(buf, d, width, indent, exclude=None):
     """Print a dict nicely into the buffer"""
@@ -329,17 +362,24 @@ def describe_dict(buf, d, width, indent, exclude=None):
     keylen = len(max(list(d.keys()), key=len))
     subindent = ''.ljust(keylen)
 
-    for key, value in d.items():
+    for key, attr in d.items():
+        units = ""
+        try:
+            value = attr.value
+            if not exclude['units']:
+                units = attr.units.strip()
+        except AttributeError:
+            value = attr
         prefix    = ''.join([indent, key.ljust(keylen), ' : '])
         subindent = ''.ljust(len(prefix))
 
         if issequence(value):
-            describe_array(buf, value, width, prefix, subindent=subindent, writeempty=True)
+            describe_array(buf, value, width, prefix, subindent=subindent, writeempty=True, units=units)
         else:
-            describe_text(buf, value, width, prefix, subindent=subindent)
+            describe_text(buf, value, width, prefix, subindent=subindent, units=units)
     buf.write('\n')
 
-def describe_text(buf, text, width, indent, subindent=None):
+def describe_text(buf, text, width, indent, subindent=None, units=''):
     """Wrap text with textwrapper and write to the buffer"""
 
     if subindent is None: subindent = indent
@@ -350,7 +390,7 @@ def describe_text(buf, text, width, indent, subindent=None):
     if len(text) == 0: text = '""'
 
     wrapped = fill(
-        text,
+        '{}{units}'.format(text, units=" [{}]".format(units) if units else ""),
         width             = width,
         initial_indent    = indent,
         subsequent_indent = subindent
@@ -358,7 +398,7 @@ def describe_text(buf, text, width, indent, subindent=None):
     buf.write(wrapped)
     buf.write('\n')
 
-def describe_array(buf, a, width, indent, subindent=None, writeempty=False):
+def describe_array(buf, a, width, indent, subindent=None, writeempty=False, units=''):
     """Write a list into the buffer in a nice printable way"""
     if subindent is None: subindent = indent
 
@@ -367,11 +407,11 @@ def describe_array(buf, a, width, indent, subindent=None, writeempty=False):
         return
 
     if len(a) == 0 and writeempty:
-        describe_text(buf, [], width, indent, subindent)
+        describe_text(buf, [], width, indent, subindent, units=units)
         return
 
     if a.size == 1:
-        describe_text(buf, a[0], width, indent, subindent)
+        describe_text(buf, a[0], width, indent, subindent, units=units)
         return
 
     sep = ' '
@@ -385,6 +425,10 @@ def describe_array(buf, a, width, indent, subindent=None, writeempty=False):
             max_line_width = width
         )
         buf.write(samples)
+        # TODO:
+        # 1) units might make length > width
+        # 2) default [] might not look very nice with multidimensional values
+        buf.write(" [{}]".format(units) if units else "")
         buf.write('\n')
         return
 
@@ -392,4 +436,4 @@ def describe_array(buf, a, width, indent, subindent=None, writeempty=False):
 
     maxlen = len(max(reprs, key=len))
     text = sep.join([x.ljust(maxlen) for x in reprs])
-    describe_text(buf, text, width, indent, subindent=subindent)
+    describe_text(buf, text, width, indent, subindent=subindent, units=units)
