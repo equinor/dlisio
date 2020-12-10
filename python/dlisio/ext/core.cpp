@@ -24,6 +24,22 @@
 namespace py = pybind11;
 using namespace py::literals;
 
+namespace dl {
+/*
+ * Explicitly make the custom exceptions visible, by forward declarling them
+ * with pybind's export macro. Otherwise they can be considered different
+ * symbols in parse.cpp and in the python extension, making exception
+ * translation impossible.
+ *
+ * https://github.com/pybind/pybind11/issues/1272
+ */
+
+class PYBIND11_EXPORT io_error;
+class PYBIND11_EXPORT eof_error;
+class PYBIND11_EXPORT not_implemented;
+class PYBIND11_EXPORT not_found;
+}
+
 #include <dlisio/ext/exception.hpp>
 #include <dlisio/ext/io.hpp>
 #include <dlisio/ext/types.hpp>
