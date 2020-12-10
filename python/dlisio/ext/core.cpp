@@ -262,6 +262,12 @@ template <> struct type_caster< dl::units  > : dlis_caster< dl::units  > {};
 
 namespace {
 
+void runtime_warning( const char* msg ) {
+    int err = PyErr_WarnEx( PyExc_RuntimeWarning, msg, 1 );
+    if( err ) throw py::error_already_set();
+}
+
+
 py::dict storage_label( py::buffer b ) {
     auto info = b.request();
     if (info.size < DLIS_SUL_SIZE) {
