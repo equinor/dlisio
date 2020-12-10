@@ -17,21 +17,13 @@
 
 namespace dl {
 
-/*
- * Explicitly make the custom exceptions visible, otherwise they can be
- * considered different symbols in parse.cpp and in the python extension,
- * making exception translation impossible.
- *
- * https://github.com/pybind/pybind11/issues/1272
- */
-
-struct DLISIO_API not_implemented : public std::logic_error {
+struct not_implemented : public std::logic_error {
     explicit not_implemented( const std::string& msg ) :
         logic_error( "Not implemented yet: " + msg )
     {}
 };
 
-struct DLISIO_API not_found : public std::runtime_error {
+struct not_found : public std::runtime_error {
     explicit not_found( const std::string& msg )
         : runtime_error( msg )
     {}
