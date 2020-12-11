@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
-from .utils import describe_array, describe_dict
+from .utils import describe_array, describe_attributes
 
 from collections import OrderedDict
 
@@ -88,13 +88,13 @@ class Message(BasicObject):
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Message type'] = self.message_type
-        d['Time of recording'] = self.time
+        d['Message type']      = 'TYPE'
+        d['Time of recording'] = 'TIME'
 
-        d['Borehole drift'] = self.borehole_drift
-        d['Vertical depth'] = self.vertical_depth
-        d['Radial drift']   = self.radial_drift
-        d['Angular drift']  = self.angular_drift
+        d['Borehole drift'] = 'BOREHOLE-DRIFT'
+        d['Vertical depth'] = 'VERTICAL-DEPTH'
+        d['Radial drift']   = 'RADIAL-DRIFT'
+        d['Angular drift']  = 'ANGULAR-DRIFT'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
         describe_array(buf, self.text, width, indent)

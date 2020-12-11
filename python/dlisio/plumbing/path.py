@@ -1,7 +1,7 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname
-from .utils import describe_dict, replist
+from .utils import describe_dict, describe_attributes, replist
 
 from collections import OrderedDict
 
@@ -153,15 +153,15 @@ class Path(BasicObject):
         describe_dict(buf, d, width, indent, exclude)
 
         d = OrderedDict()
-        d['Borehole depth'] = self.borehole_depth
-        d['Vertical depth'] = self.vertical_depth
-        d['Radial drift']   = self.radial_drift
-        d['Angular drift']  = self.angular_drift
-        describe_dict(buf, d, width, indent, exclude)
+        d['Borehole depth'] = 'BOREHOLE-DEPTH'
+        d['Vertical depth'] = 'VERTICAL-DEPTH'
+        d['Radial drift']   = 'RADIAL-DRIFT'
+        d['Angular drift']  = 'ANGULAR-DRIFT'
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         d = OrderedDict()
-        d['Time']                 = self.time
-        d['Depth offset']         = self.depth_offset
-        d['Measure point offset'] = self.measure_point_offset
-        d['Tool zero offset']     = self.tool_zero_offset
-        describe_dict(buf, d, width, indent, exclude)
+        d['Time']                 = 'TIME'
+        d['Depth offset']         = 'DEPTH-OFFSET'
+        d['Measure point offset'] = 'MEASURE-POINT-OFFSET'
+        d['Tool zero offset']     = 'TOOL-ZERO-OFFSET'
+        describe_attributes(buf, d, self, width, indent, exclude)

@@ -109,13 +109,15 @@ class Wellref(BasicObject):
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Permanent datum']           =  self.permanent_datum
-        d['Vertical zero']             =  self.vertical_zero
-        d['Permanent datum elevation'] =  self.permanent_datum_elevation
-        d['Above permanent datum']     =  self.above_permanent_datum
-        d['Magnetic declination']      =  self.magnetic_declination
+        d['Permanent datum']           =  'PERMANENT-DATUM'
+        d['Vertical zero']             =  'VERTICAL-ZERO'
+        d['Permanent datum elevation'] =  'PERMANENT-DATUM-ELEVATION'
+        d['Above permanent datum']     =  'ABOVE-PERMANENT-DATUM'
+        d['Magnetic declination']      =  'MAGNETIC-DECLINATION'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
 
+        # TODO: print units for coordinates
+        # Postponed as wellref object hasn't been seen in real files
         describe_header(buf, 'Coordinates', width, indent, lvl=2)
         describe_dict(buf, self.coordinates, width, indent, exclude)

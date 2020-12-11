@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
-from .utils import describe_dict
+from .utils import describe_attributes
 
 from collections import OrderedDict
 
@@ -59,8 +59,8 @@ class Axis(BasicObject):
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Description'] = self.axis_id
-        d['Spacing']     = self.spacing
-        d['Coordinates'] = self.coordinates
+        d['Description'] = 'AXIS-ID'
+        d['Spacing']     = 'SPACING'
+        d['Coordinates'] = 'COORDINATES'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)

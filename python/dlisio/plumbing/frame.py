@@ -482,17 +482,21 @@ class Frame(BasicObject):
     def describe_attr(self, buf, width=80, indent='', exclude=''):
         if len(self.channels) > 0:
             if self.index_type is not None:
+
+                index = self.channels[0]
                 d = OrderedDict()
-                d['Description']      =  self.description
-                d['Indexed by']       =  self.index_type
-                d['Interval']         =  str([self.index_min, self.index_max])
-                d['Direction']        =  self.direction
-                d['Constant spacing'] =  self.spacing
-                d['Index channel']    =  self.channels[0]
+
+                d['Description']      = 'DESCRIPTION'
+                d['Indexed by']       = 'INDEX-TYPE'
+                d['Index units']      = index.units
+                d['Index min']        = 'INDEX-MIN'
+                d['Index max']        = 'INDEX-MAX'
+                d['Direction']        = 'DIRECTION'
+                d['Constant spacing'] = 'SPACING'
+                d['Index channel']    = index
 
                 describe_header(buf, 'Channel indexing', width, indent, lvl=2)
-                describe_dict(buf, d, width, indent, exclude)
-
+                describe_attributes(buf, d, self, width, indent, exclude)
             else:
                 index  = 'There is no index channel, channels are indexed '
                 index += 'by samplenumber, i.e [1,2,3,..,n]'

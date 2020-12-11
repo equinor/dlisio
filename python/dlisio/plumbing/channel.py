@@ -254,11 +254,11 @@ class Channel(BasicObject):
         describe_description(buf, self.long_name, width, indent, exclude)
 
         d = OrderedDict()
-        d['Physical unit of sample']   = self.units
-        d['Sample dimensions']         = self.dimension
-        d['Axis']                      = self.axis
-        d['Maximum sample dimensions'] = self.element_limit
-        d['Property indicators']       = self.properties
-        d['Source']                    = self.source
+        d['Physical unit of sample']   = 'UNITS'
+        d['Sample dimensions']         = 'DIMENSION'
+        d['Axis']                      = 'AXIS'
+        d['Maximum sample dimensions'] = 'ELEMENT-LIMIT'
+        d['Property indicators']       = 'PROPERTIES'
+        d['Source']                    = 'SOURCE'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)

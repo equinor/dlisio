@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, boolean
-from .utils import describe_dict
+from .utils import describe_attributes
 
 from collections import OrderedDict
 
@@ -171,31 +171,34 @@ class Equipment(BasicObject):
 
     def describe_attr(self, buf, width, indent, exclude):
         d = OrderedDict()
-        d['Trademark name']     = self.trademark_name
-        d['Generic type']       = self.generic_type
-        d['Operational status'] = self.status
-        d['Serial number']      = self.serial_number
-        d['Location']           = self.location
-        describe_dict(buf, d, width, indent, exclude)
+
+        d['Trademark name']     = 'TRADEMARK-NAME'
+        d['Generic type']       = 'TYPE'
+        d['Operational status'] = 'STATUS'
+        d['Serial number']      = 'SERIAL-NUMBER'
+        d['Location']           = 'LOCATION'
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         d = OrderedDict()
-        d['Height, Length']      = [self.height, self.length]
-        d['Diameter (min, max)'] = [self.diameter_min, self.diameter_max]
-        d['Volume']              = self.volume
-        d['Weight']              = self.weight
+        d['Height']         = 'HEIGHT'
+        d['Length']         = 'LENGTH'
+        d['Diameter (min)'] = 'MINIMUM-DIAMETER'
+        d['Diameter (max)'] = 'MAXIMUM-DIAMETER'
+        d['Volume']         = 'VOLUME'
+        d['Weight']         = 'WEIGHT'
 
-        describe_dict(buf, d, width, indent, exclude)
-
-        d = OrderedDict()
-        d['Minimum borehole size'] = self.hole_size
-        d['Max pressure']          = self.pressure
-        d['Max temperature']       = self.temperature
-
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
 
         d = OrderedDict()
-        d['Vertical depth'] = self.vertical_depth
-        d['Radial drift ']  = self.radial_drift
-        d['Angular drift']  = self.angular_drift
+        d['Minimum borehole size'] = 'HOLE-SIZE'
+        d['Max pressure']          = 'PRESSURE'
+        d['Max temperature']       = 'TEMPERATURE'
 
-        describe_dict(buf, d, width, indent, exclude)
+        describe_attributes(buf, d, self, width, indent, exclude)
+
+        d = OrderedDict()
+        d['Vertical depth'] = 'VERTICAL-DEPTH'
+        d['Radial drift ']  = 'RADIAL-DRIFT'
+        d['Angular drift']  = 'ANGULAR-DRIFT'
+
+        describe_attributes(buf, d, self, width, indent, exclude)
