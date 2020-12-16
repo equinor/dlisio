@@ -6,6 +6,19 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.2.6_ - 2020.12.16
+-------------------
+* Fixes a bug that caused ``dlisio.load`` to fail on files >2GB on Windows.
+* dlisio can now read data from truncated files, this feature is opt-in.
+* dlisio can now read data from files that are padded at the end, this feature
+  is opt-in.
+* How dlisio handles spec-violations in files is now customisable.
+* ``describe()`` includes attributes units
+* ``Batch`` has been renamed to ``physicalfile``.
+* ``dlis`` has been renamed to ``logicalfile``
+* ``dlis.match`` (now ``logicalfile.match``) is deprecated in favor of
+  ``logicalfile.find``
+
 0.2.5_ - 2020.10.20
 -------------------
 * Fixed a bug where dlisio silently misinterpreted vax-floats.
@@ -169,6 +182,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.2.6: https://github.com/equinor/dlisio/compare/v0.2.5...v0.2.6
 .. _0.2.5: https://github.com/equinor/dlisio/compare/v0.2.4...v0.2.5
 .. _0.2.4: https://github.com/equinor/dlisio/compare/v0.2.3...v0.2.4
 .. _0.2.3: https://github.com/equinor/dlisio/compare/v0.2.2...v0.2.3
