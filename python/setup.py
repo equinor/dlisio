@@ -25,7 +25,8 @@ def getversion():
         return {
             'use_scm_version': {
                 # look for git in ../
-                'relative_to' : src(''),
+                'root': '..',
+                'relative_to' : __file__,
                 # write to ./python
                 'write_to'    : os.path.join(src(''), versionfile),
             }
