@@ -21,7 +21,7 @@ Logical files
     :member-order: bysource
     :undoc-members:
 
-    .. autoinstanceattribute:: types
+    .. autoattribute:: types
         :annotation: = {}
 
 .. currentmodule:: dlisio.plumbing
