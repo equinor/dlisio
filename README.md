@@ -64,12 +64,6 @@ To develop dlisio, or to build a particular revision from source, you need:
 If you do not have pybind11 installed on your system, the easiest way to get a
 working copy is to `pip3 install pybind11` (NP! pybind11, not pybind)
 
-If you do not have fmtlib installed on your system, you can obtain a copy by
-either:
-
-* `git clone --recursive https://github.com/equinor/dlisio`
-* `git submodule update --init external/fmt`
-
 layered-file-protocols has to be installed from source if you don't already
 have it on your system:
 

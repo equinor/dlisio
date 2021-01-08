@@ -4,14 +4,6 @@ orbs:
   win: circleci/windows@2.2.0
 
 commands:
-  pull_submodules:
-    steps:
-      - run :
-          name: Pull submodules
-          command: |
-            git submodule init
-            git submodule update --remote
-
   install_build_deps:
     parameters:
       sudo:
@@ -66,7 +58,6 @@ commands:
       - checkout
       - install_build_deps:
           sudo: true
-      - pull_submodules
       - run:
           name: install core
           command: |
@@ -133,7 +124,6 @@ jobs:
     steps:
       - checkout
       - install_build_deps
-      - pull_submodules
       - cmake_build
 
   clang:
@@ -146,7 +136,6 @@ jobs:
       - checkout
       - install_build_deps:
           extra: clang
-      - pull_submodules
       - cmake_build
 
   debug:
@@ -155,7 +144,6 @@ jobs:
     steps:
       - checkout
       - install_build_deps
-      - pull_submodules
       - cmake_build:
           type: Debug
 
@@ -166,7 +154,6 @@ jobs:
       - checkout
       - install_build_deps:
           extra: clang clang-tools libfindbin-libs-perl
-      - pull_submodules
       - cmake_build:
           scan: scan-build --status-bugs
 
@@ -179,7 +166,6 @@ jobs:
       - checkout
       - install_build_deps:
           extra: cppcheck
-      - pull_submodules
       - run:
           name: run cppcheck
           command: |
@@ -334,7 +320,6 @@ jobs:
                   ..
             # lfp must be build with the same build config as dlisio or build will fail
             cmake --build . --config << parameters.build_type >>  --target install
-      - pull_submodules
       - restore_cache:
           key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
       - run:
@@ -441,7 +426,6 @@ jobs:
         default: ci_dlisio_bigendian_setup
     steps:
       - checkout
-      - pull_submodules
       - run:
           name: Setup
           command: |

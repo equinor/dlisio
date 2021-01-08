@@ -37,7 +37,7 @@ target_link_libraries(dlisio
     PUBLIC mpark_variant
            lfp::lfp
 
-    PRIVATE fmt-header-only
+    PRIVATE fmt::fmt-header-only
 )
 install(TARGETS dlisio
         EXPORT dlisio
@@ -51,7 +51,6 @@ install(EXPORT dlisio DESTINATION share/dlisio/cmake FILE dlisio-config.cmake)
 export(
     TARGETS
         dlisio
-        fmt-header-only
         endianness
     FILE
         dlisio-config.cmake
