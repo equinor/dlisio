@@ -1,5 +1,5 @@
-#ifndef DLISIO_PYTHON_EXCEPTION_HPP
-#define DLISIO_PYTHON_EXCEPTION_HPP
+#ifndef DLISIO_EXCEPTION_HPP
+#define DLISIO_EXCEPTION_HPP
 
 namespace dl {
 
@@ -26,4 +26,4 @@ struct not_found : public std::runtime_error {
 
 }
 
-#endif // DLISIO_PYTHON_EXCEPTION_HPP
+#endif // DLISIO_EXCEPTION_HPP

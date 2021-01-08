@@ -1,5 +1,5 @@
-#ifndef DLISIO_PYTHON_IO_HPP
-#define DLISIO_PYTHON_IO_HPP
+#ifndef DLISIO_IO_HPP
+#define DLISIO_IO_HPP
 
 #include <array>
 #include <string>
@@ -9,8 +9,8 @@
 
 #include <lfp/lfp.h>
 
-#include <dlisio/ext/types.hpp>
-#include <dlisio/ext/records.hpp>
+#include <dlisio/types.hpp>
+#include <dlisio/records.hpp>
 
 namespace dl {
 
@@ -64,4 +64,4 @@ noexcept (false);
 
 }
 
-#endif // DLISIO_PYTHON_IO_HPP
+#endif // DLISIO_IO_HPP

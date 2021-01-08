@@ -8,8 +8,8 @@
 #include <fmt/core.h>
 
 #include <dlisio/dlisio.h>
-#include <dlisio/ext/types.hpp>
-#include <dlisio/ext/records.hpp>
+#include <dlisio/types.hpp>
+#include <dlisio/records.hpp>
 
 namespace {
 

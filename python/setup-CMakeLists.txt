@@ -16,7 +16,7 @@ target_include_directories(core
         ${PYBIND11_INCLUDE_DIRS}
 )
 python_extension_module(core)
-target_link_libraries(core dlisio dlisio-extension mpark_variant)
+target_link_libraries(core dlisio mpark_variant)
 
 if (MSVC)
     target_compile_options(core

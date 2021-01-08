@@ -1,6 +1,5 @@
-
-#ifndef DLISIO_EXT_TYPES_HPP
-#define DLISIO_EXT_TYPES_HPP
+#ifndef DLISIO_TYPES_HPP
+#define DLISIO_TYPES_HPP
 
 #include <complex>
 #include <cstdint>
@@ -355,4 +354,4 @@ template <> struct typeinfo< dl::units > {
 
 }
 
-#endif //DLISIO_EXT_TYPES_HPP
+#endif //DLISIO_TYPES_HPP

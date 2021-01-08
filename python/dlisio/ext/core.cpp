@@ -18,9 +18,6 @@
 #include <pybind11/stl.h>
 #include <datetime.h>
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.h>
-
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -40,10 +37,12 @@ struct PYBIND11_EXPORT not_implemented;
 struct PYBIND11_EXPORT not_found;
 }
 
-#include <dlisio/ext/exception.hpp>
-#include <dlisio/ext/io.hpp>
-#include <dlisio/ext/types.hpp>
-#include <dlisio/ext/records.hpp>
+#include <dlisio/dlisio.h>
+#include <dlisio/types.h>
+#include <dlisio/types.hpp>
+#include <dlisio/exception.hpp>
+#include <dlisio/io.hpp>
+#include <dlisio/records.hpp>
 
 namespace {
 /*

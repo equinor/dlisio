@@ -68,7 +68,7 @@ add_custom_target(
             ${DLISIO_GENERATOR_PLATFORM}
 )
 
-add_dependencies(dlisio-python dlisio dlisio-extension)
+add_dependencies(dlisio-python dlisio)
 
 install(CODE "
     if (DEFINED ENV{DESTDIR})

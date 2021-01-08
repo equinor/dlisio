@@ -1,5 +1,5 @@
-#ifndef DLISIO_EXT_RECORDS_HPP
-#define DLISIO_EXT_RECORDS_HPP
+#ifndef DLISIO_RECORDS_HPP
+#define DLISIO_RECORDS_HPP
 
 #include <complex>
 #include <cstdint>
@@ -289,4 +289,4 @@ private:
 
 }
 
-#endif //DLISIO_EXT_RECORDS_HPP
+#endif //DLISIO_RECORDS_HPP
