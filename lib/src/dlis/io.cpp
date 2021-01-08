@@ -443,7 +443,12 @@ noexcept (false) {
          */
 
         char tmp;
-        file.seek(lrs_offset - 1);
+        try {
+            file.seek(lrs_offset - 1);
+        } catch (std::exception& e) {
+            handle(e.what());
+            break;
+        }
         try {
             file.read(&tmp, 1);
         } catch (const std::runtime_error& e) {
