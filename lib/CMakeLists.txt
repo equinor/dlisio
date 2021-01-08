@@ -35,7 +35,7 @@ install(TARGETS dlisio
 install(DIRECTORY include/ DESTINATION include)
 install(EXPORT dlisio DESTINATION share/dlisio/cmake FILE dlisio-config.cmake)
 
-add_library(dlisio-extension src/parse.cpp
+add_library(dlisio-extension src/records.cpp
                              src/io.cpp
 )
 target_include_directories(dlisio-extension

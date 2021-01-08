@@ -10,6 +10,7 @@
 #include <lfp/lfp.h>
 
 #include <dlisio/ext/types.hpp>
+#include <dlisio/ext/records.hpp>
 
 namespace dl {
 

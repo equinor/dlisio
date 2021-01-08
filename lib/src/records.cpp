@@ -9,6 +9,7 @@
 
 #include <dlisio/dlisio.h>
 #include <dlisio/ext/types.hpp>
+#include <dlisio/ext/records.hpp>
 
 namespace {
 
@@ -584,43 +585,6 @@ const noexcept (true) {
         // invariant doesn't matter for attribute equality,
         // so ignore it
         && value_variant_eq(this->value, o.value);
-}
-
-dl::ident obname::fingerprint(const std::string& type)
-const noexcept (false) {
-    const auto& origin = dl::decay(this->origin);
-    const auto& copy = dl::decay(this->copy);
-    const auto& id = dl::decay(this->id);
-
-    int size;
-    auto err = dlis_object_fingerprint_size(type.size(),
-                                            type.data(),
-                                            id.size(),
-                                            id.data(),
-                                            origin,
-                                            copy,
-                                            &size);
-
-    if (err)
-        throw std::invalid_argument("invalid argument");
-
-    auto str = std::vector< char >(size);
-    err = dlis_object_fingerprint(type.size(),
-                                  type.data(),
-                                  id.size(),
-                                  id.data(),
-                                  origin,
-                                  copy,
-                                  str.data());
-
-    if (err)
-        throw std::runtime_error("fingerprint: something went wrong");
-
-    return dl::ident( std::string(str.begin(), str.end()) );
-}
-
-dl::ident objref::fingerprint() const noexcept (false) {
-    return this->name.fingerprint(dl::decay(this->type));
 }
 
 void basic_object::set( const object_attribute& attr ) noexcept (false) {
