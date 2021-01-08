@@ -281,7 +281,8 @@ def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
 
 
 def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
-                                                    assert_info):
+                                                    assert_info,
+                                                    assert_message_count):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template-fixed.dlis')
 
     # template for attribute 'INVALID':
@@ -315,6 +316,9 @@ def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
         assert_info("Problem:      Invalid representation code 0\n"
                     "Where:        "
                     "T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1-A.INVALID")
+
+        assert_message_count("Invalid representation code", 1)
+        assert_message_count("One or more attributes", 2)
 
 def test_repcode_invalid_in_template_no_value_not_fixed(tmpdir,
                                                         merge_files_oneLR,
@@ -406,7 +410,7 @@ def test_repcode_invalid_in_objects_value(tmpdir, merge_files_oneLR):
     assert "unknown representation code" in str(excinfo.value)
 
 def test_repcode_invalid_in_objects_no_value(tmpdir, merge_files_oneLR,
-                                             assert_log):
+                                             assert_log, assert_message_count):
     path = os.path.join(str(tmpdir), 'invalid-repcode-object-no-value.dlis')
 
     # template for attribute 'GLOBAL_DEFAULT_ATTRIBUTE' is empty
@@ -437,6 +441,9 @@ def test_repcode_invalid_in_objects_no_value(tmpdir, merge_files_oneLR,
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
         attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
         assert attr.value == [1, 2, 3, 4]
+
+        assert_message_count("value is not explicitly set", 1)
+        assert_message_count("One or more attributes", 1)
 
 def test_repcode_different_no_value(tmpdir, merge_files_oneLR, assert_log,
                                     assert_info):
