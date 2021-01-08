@@ -564,6 +564,24 @@ def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR, assert_log):
                    "named ''")
 
 
+def test_set_name_bit_set_name_not_present(tmpdir, merge_files_oneLR, assert_log):
+    # based on frequent situation for FILE-HEADER sets
+    path = os.path.join(str(tmpdir), 'name-bit-set-name-not-present.dlis')
+    content = [
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/name-bit-set-no-name.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = f.object('FILE-HEADER', 'N', 2, 0)
+        err = "object set of type 'FILE-HEADER' named 'SEQUENCE-NUMBER4ID"
+        assert err in str(excinfo.value)
+
+
 def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR,
                                            assert_log):
     path = os.path.join(str(tmpdir), 'no-object-name-bit.dlis')
