@@ -12,6 +12,7 @@
 #include <vector>
 #include <limits>
 #include <functional>
+#include <stdexcept>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
