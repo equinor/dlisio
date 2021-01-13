@@ -13,8 +13,9 @@
 
 #include <dlisio/types.h>
 
-namespace dl {
+namespace dl = dlis;
 
+namespace dlis {
 /*
  * Parsing and parsing input
  *
@@ -123,7 +124,7 @@ struct record {
  *      It is the consumers responsibility to check the state of the
  *      object before using its content.
  *
- * object_attribute.log contains a list of dl::dlis_error, which provide
+ * object_attribute.log contains a list of dlis::dlis_error, which provide
  * human-readable explanation of the problem
  */
 struct object_attribute {
@@ -287,6 +288,6 @@ private:
     std::vector< dl::object_set > eflrs;
 };
 
-}
+} // namespace dlis
 
 #endif //DLISIO_RECORDS_HPP

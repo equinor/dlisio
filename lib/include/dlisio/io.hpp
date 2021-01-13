@@ -13,7 +13,9 @@
 #include <dlisio/types.hpp>
 #include <dlisio/records.hpp>
 
-namespace dl {
+namespace dl = dlis;
+
+namespace dlis {
 
 struct stream_offsets {
     std::vector< long long > explicits;
@@ -39,6 +41,6 @@ std::map< dl::ident, std::vector< long long > >
 findfdata(dl::stream&, const std::vector< long long >&, dl::error_handler&)
 noexcept (false);
 
-}
+} // namespace dlis
 
 #endif // DLISIO_IO_HPP

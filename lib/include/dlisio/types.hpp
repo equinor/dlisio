@@ -12,7 +12,9 @@
 
 #include "strong-typedef.hpp"
 
-namespace dl {
+namespace dl = dlis;
+
+namespace dlis {
 
 enum class representation_code : std::uint8_t {
     fshort = DLIS_FSHORT,
@@ -47,7 +49,7 @@ enum class representation_code : std::uint8_t {
 
 /*
  * It's _very_ often necessary to access the raw underlying type of the strong
- * type aliases for comparisons, literals, or conversions. dl::decay inspects
+ * type aliases for comparisons, literals, or conversions. dlis::decay inspects
  * the argument type and essentially static casts it, regardless of which dl
  * type comes in - it's an automation of static_cast<const value_type&>(x)
  * which otherwise would be repeated a million times
@@ -352,6 +354,6 @@ template <> struct typeinfo< dl::units > {
     constexpr static const char name[] = "units";
 };
 
-}
+} // namespace dlis
 
 #endif //DLISIO_TYPES_HPP

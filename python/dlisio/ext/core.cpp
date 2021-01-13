@@ -22,7 +22,7 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-namespace dl {
+namespace dlis {
 /*
  * Explicitly make the custom exceptions visible, by forward declarling them
  * with pybind's export macro. Otherwise they can be considered different
@@ -45,6 +45,8 @@ struct PYBIND11_EXPORT not_found;
 #include <dlisio/io.hpp>
 #include <dlisio/stream.hpp>
 #include <dlisio/records.hpp>
+
+namespace dl = dlis;
 
 namespace {
 /*
@@ -99,7 +101,7 @@ struct type_caster< mpark::variant< T... > > :
 
 /*
  * Automate the conversion of strong typedefs to python type that corresponds
- * to the underlying data type (as returned by dl::decay).
+ * to the underlying data type (as returned by dlis::decay).
  */
 template < typename T >
 struct dlis_caster {
@@ -727,7 +729,7 @@ noexcept (false) {
     auto record_dst = dst;
 
     const auto handle = [&]( const std::string& problem ) {
-        const auto context = "dl::read_fdata: reading curves";
+        const auto context = "dlis::read_fdata: reading curves";
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
                          "Record is skipped");
         // we update the buffer as we go. Hence if error happened we need to
@@ -777,14 +779,14 @@ noexcept (false) {
     return dstobj;
 }
 
-/** trampoline helper class for dl::matcher bindings
+/** trampoline helper class for dlis::matcher bindings
  *
  * Creating the binding code for a abstract c++ class that we want do derive
  * new classes from in python requires some extra boilerplate code in the form
  * of this "trampoline" class [1].
  *
  * This class helps redirect virtual calls back to python and is *not* intended
- * to be used for anything other than creating valid bindings for dl::matcher.
+ * to be used for anything other than creating valid bindings for dlis::matcher.
  *
  * [1] https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtual-functions-in-python
  */
@@ -806,7 +808,7 @@ public:
     }
 };
 
-/** trampoline helper class for dl::error_handler bindings */
+/** trampoline helper class for dlis::error_handler bindings */
 class PyErrorHandler : public dl::error_handler {
 public:
     /* Inherit the constructor */
@@ -1096,7 +1098,7 @@ PYBIND11_MODULE(core, m) {
                 rec = dl::extract(s, tell, errorhandler);
             } catch (const std::exception& e) {
                 const auto context =
-                    "dl::extract: Reading raw bytes from record";
+                    "dlis::extract: Reading raw bytes from record";
                 errorhandler.log(dl::error_severity::CRITICAL, context,
                                  e.what(), "", "Record is skipped");
                 continue;

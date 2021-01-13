@@ -18,7 +18,9 @@
 #include <dlisio/stream.hpp>
 #include <dlisio/exception.hpp>
 
-namespace dl {
+namespace dl = dlis;
+
+namespace dlis {
 
 stream open(const std::string& path, std::int64_t offset) noexcept (false) {
     auto* file = std::fopen(path.c_str(), "rb");
@@ -331,7 +333,7 @@ noexcept (false) {
     char buffer[ DLIS_LRSH_SIZE ];
 
     const auto handle = [&]( const std::string& problem ) {
-        const auto context = "dl::findoffsets (indexing logical file)";
+        const auto context = "dlis::findoffsets (indexing logical file)";
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
                          "Indexing is suspended at last valid Logical Record");
         ofs.broken.push_back( lr_offset );
@@ -471,7 +473,7 @@ dl::error_handler& errorhandler) noexcept (false) {
     rec.data.reserve( OBNAME_SIZE_MAX );
 
     const auto handle = [&]( const std::string& problem ) {
-        const auto context = "dl::findfdata: Indexing implicit records";
+        const auto context = "dlis::findfdata: Indexing implicit records";
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
                          "Record is skipped");
     };

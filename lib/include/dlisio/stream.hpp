@@ -5,7 +5,7 @@
 
 #include <lfp/lfp.h>
 
-namespace dl {
+namespace dlis {
 
 /* Stream - C++ wrapper for lfp's API.
  *
@@ -68,6 +68,6 @@ private:
     lfp_protocol* f;
 };
 
-}
+} // namespace dlis
 
 #endif // DLISIO_STREAM_HPP

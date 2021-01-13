@@ -11,6 +11,8 @@
 #include <dlisio/types.hpp>
 #include <dlisio/records.hpp>
 
+namespace dl = dlis;
+
 namespace {
 
 struct set_descriptor {
@@ -572,9 +574,9 @@ noexcept (true) {
     return mpark::visit(variant_equal{}, lhs, rhs);
 }
 
-}
+} // namespace
 
-namespace dl {
+namespace dlis {
 
 bool object_attribute::operator == (const object_attribute& o)
 const noexcept (true) {
@@ -891,7 +893,7 @@ void report_set_errors(const dl::object_set& eflr,
     }
 }
 
-}
+} // namespace
 
 const char* object_set::parse_objects(const char* cur) noexcept (false) {
 
@@ -1190,4 +1192,4 @@ noexcept (false) {
     return objs;
 }
 
-}
+} // namespace dlis

@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace dl {
+namespace dlis {
 namespace detail {
 
 using std::swap;
@@ -152,8 +152,8 @@ void swap( strong_typedef< Tag, T >& a,
 {
 }
 
-}
+} // namespace detail
 
-}
+} // namespace dlis
 
 #endif // DLISIO_EXT_STRONG_TYPEDEF
