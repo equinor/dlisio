@@ -55,7 +55,7 @@ public:
 
     lfp_protocol* protocol() const noexcept (true);
 
-    void close();
+    void close() noexcept (true);
     int eof() const noexcept (true);
 private:
     lfp_protocol* f;

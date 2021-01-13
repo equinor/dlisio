@@ -72,7 +72,7 @@ lfp_protocol* stream::protocol() const noexcept (true) {
     return this->f;
 }
 
-void stream::close() {
+void stream::close() noexcept (true) {
     lfp_close(this->f);
 }
 
