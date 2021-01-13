@@ -184,10 +184,12 @@ def test_broken_utf8_set(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     prev_encodings = dlisio.get_encodings()
-    dlisio.set_encodings([])
 
     try:
+        # at the moment load uses object_pool.types, so set encoding after load
         f, = dlisio.load(path)
+        dlisio.set_encodings([])
+
         with pytest.warns(UnicodeWarning):
             _ = f.object_pool.types
 
@@ -219,7 +221,8 @@ def test_access_to_object_with_non_utf8_name(tmpdir, merge_files_oneLR):
         # Can't expect to find an object with an encoded string
         # if the encoding is not given to dlisio
         with pytest.raises(ValueError):
-            _ = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
+            with pytest.warns(UnicodeWarning):
+                _ = f.object('VERY_MUCH_TESTY_SET', 'КАДР')
 
         # However it can be found by matching the bytes
         with pytest.warns(UnicodeWarning):
