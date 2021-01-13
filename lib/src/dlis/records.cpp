@@ -7,9 +7,9 @@
 
 #include <fmt/core.h>
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.hpp>
-#include <dlisio/records.hpp>
+#include <dlisio/dlis/dlisio.h>
+#include <dlisio/dlis/types.hpp>
+#include <dlisio/dlis/records.hpp>
 
 namespace dl = dlisio::dlis;
 

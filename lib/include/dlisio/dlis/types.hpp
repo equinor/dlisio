@@ -8,9 +8,9 @@
 #include <utility>
 #include <vector>
 
-#include <dlisio/types.h>
+#include <dlisio/dlis/types.h>
 
-#include "strong-typedef.hpp"
+#include "../strong-typedef.hpp"
 
 namespace dlisio { namespace dlis {
 

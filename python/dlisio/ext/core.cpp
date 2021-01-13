@@ -38,13 +38,14 @@ struct PYBIND11_EXPORT not_implemented;
 struct PYBIND11_EXPORT not_found;
 }
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.h>
-#include <dlisio/types.hpp>
-#include <dlisio/exception.hpp>
-#include <dlisio/io.hpp>
 #include <dlisio/stream.hpp>
-#include <dlisio/records.hpp>
+#include <dlisio/exception.hpp>
+
+#include <dlisio/dlis/dlisio.h>
+#include <dlisio/dlis/types.h>
+#include <dlisio/dlis/types.hpp>
+#include <dlisio/dlis/io.hpp>
+#include <dlisio/dlis/records.hpp>
 
 namespace dl = dlisio::dlis;
 

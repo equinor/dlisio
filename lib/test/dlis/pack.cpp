@@ -6,7 +6,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <dlisio/dlisio.h>
+#include <dlisio/dlis/dlisio.h>
 
 
 namespace {

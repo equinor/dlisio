@@ -10,8 +10,8 @@
 #include <lfp/lfp.h>
 
 #include <dlisio/stream.hpp>
-#include <dlisio/types.hpp>
-#include <dlisio/records.hpp>
+#include <dlisio/dlis/types.hpp>
+#include <dlisio/dlis/records.hpp>
 
 namespace dl = dlisio::dlis;
 

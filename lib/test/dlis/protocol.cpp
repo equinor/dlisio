@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <dlisio/dlisio.h>
+#include <dlisio/dlis/dlisio.h>
 
 
 TEST_CASE("A well-formatted logical record segment header", "[lrsh][v1]") {

@@ -1,9 +1,9 @@
 set(DLISIO_LIB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
 
-add_library(dlisio src/dlisio.cpp
-                   src/types.cpp
-                   src/records.cpp
-                   src/io.cpp
+add_library(dlisio src/dlis/dlisio.cpp
+                   src/dlis/types.cpp
+                   src/dlis/records.cpp
+                   src/dlis/io.cpp
                    src/stream.cpp
 )
 target_include_directories(dlisio
@@ -69,10 +69,10 @@ if(NOT BUILD_TESTING)
 endif()
 
 add_executable(test-dlis test/testsuite.cpp
-                         test/protocol.cpp
-                         test/types.cpp
-                         test/sul.cpp
-                         test/pack.cpp
+                         test/dlis/protocol.cpp
+                         test/dlis/types.cpp
+                         test/dlis/sul.cpp
+                         test/dlis/pack.cpp
 )
 target_link_libraries(test-dlis dlisio catch2)
 add_test(NAME dlis-core COMMAND test-dlis)

@@ -10,7 +10,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <dlisio/types.h>
+#include <dlisio/dlis/types.h>
 
 /*
  * Custom type for byte arrays, for nicely printing mismatch between expected

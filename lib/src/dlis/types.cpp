@@ -7,7 +7,7 @@
 
 #include <endianness/endianness.h>
 
-#include <dlisio/types.h>
+#include <dlisio/dlis/types.h>
 
 namespace {
 

@@ -12,11 +12,12 @@
 #include <lfp/rp66.h>
 #include <lfp/tapeimage.h>
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.h>
-#include <dlisio/io.hpp>
 #include <dlisio/stream.hpp>
 #include <dlisio/exception.hpp>
+
+#include <dlisio/dlis/dlisio.h>
+#include <dlisio/dlis/types.h>
+#include <dlisio/dlis/io.hpp>
 
 namespace dl = dlisio::dlis;
 
