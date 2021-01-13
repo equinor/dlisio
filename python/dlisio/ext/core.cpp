@@ -43,6 +43,7 @@ struct PYBIND11_EXPORT not_found;
 #include <dlisio/types.hpp>
 #include <dlisio/exception.hpp>
 #include <dlisio/io.hpp>
+#include <dlisio/stream.hpp>
 #include <dlisio/records.hpp>
 
 namespace {

@@ -4,6 +4,7 @@ add_library(dlisio src/dlisio.cpp
                    src/types.cpp
                    src/records.cpp
                    src/io.cpp
+                   src/stream.cpp
 )
 target_include_directories(dlisio
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
