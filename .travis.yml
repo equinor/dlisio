@@ -130,7 +130,7 @@ before_script:
 script:
     - pushd build
     - make
-    - ctest --output-on-failure
+    - ctest --verbose
     - sudo make install
     - popd
     # install works, so remove the _skbuild because it having root permissions

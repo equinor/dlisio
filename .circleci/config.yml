@@ -115,7 +115,7 @@ commands:
           name: test
           command: |
             cd build
-            ctest --output-on-failure
+            ctest --verbose
 
 jobs:
   gcc:
@@ -365,7 +365,7 @@ jobs:
           command: |
             cd build
             conda activate py-<< parameters.python >>-<< parameters.platform >>
-            ctest -C << parameters.build_type >> --output-on-failure
+            ctest -C << parameters.build_type >> --verbose
       - run:
           name: build python
           command: |
