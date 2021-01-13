@@ -14,7 +14,7 @@ namespace dl {
  */
 class stream {
 public:
-    explicit stream( lfp_protocol* p ) noexcept (false);
+    explicit stream( lfp_protocol* p ) noexcept (true) : f(p) {};
 
     void seek( std::int64_t offset ) noexcept (false);
     std::int64_t tell() const noexcept(true);

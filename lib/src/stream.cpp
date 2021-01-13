@@ -7,10 +7,6 @@
 
 namespace dl {
 
-stream::stream( lfp_protocol* f ) noexcept (false){
-    this->f = f;
-}
-
 void stream::seek( std::int64_t offset ) noexcept (false) {
     const auto err = lfp_seek(this->f, offset);
     switch (err) {
