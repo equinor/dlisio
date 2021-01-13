@@ -68,11 +68,11 @@ if(NOT BUILD_TESTING)
     return()
 endif()
 
-add_executable(testsuite test/testsuite.cpp
+add_executable(test-dlis test/testsuite.cpp
                          test/protocol.cpp
                          test/types.cpp
                          test/sul.cpp
                          test/pack.cpp
 )
-target_link_libraries(testsuite dlisio catch2)
-add_test(NAME core COMMAND testsuite)
+target_link_libraries(test-dlis dlisio catch2)
+add_test(NAME dlis-core COMMAND test-dlis)
