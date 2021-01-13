@@ -1065,7 +1065,7 @@ PYBIND11_MODULE(core, m) {
     ;
 
     py::class_< dl::stream >( m, "stream" )
-        .def_property_readonly("absolute_tell", &dl::stream::absolute_tell)
+        .def_property_readonly("ptell", &dl::stream::ptell)
         .def("seek", &dl::stream::seek)
         .def("eof", &dl::stream::eof)
         .def( "close", &dl::stream::close )

@@ -19,13 +19,13 @@ void stream::seek( std::int64_t offset ) noexcept (false) {
     }
 }
 
-std::int64_t stream::tell() const noexcept (true) {
+std::int64_t stream::ltell() const noexcept (true) {
     std::int64_t tell;
     lfp_tell(this->f, &tell);
     return tell;
 }
 
-std::int64_t stream::absolute_tell() const noexcept (false) {
+std::int64_t stream::ptell() const noexcept (false) {
     auto* outer = this->f;
     lfp_protocol* inner;
 
