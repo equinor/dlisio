@@ -22,7 +22,7 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-namespace dlis {
+namespace dlisio {
 /*
  * Explicitly make the custom exceptions visible, by forward declarling them
  * with pybind's export macro. Otherwise they can be considered different
@@ -46,7 +46,7 @@ struct PYBIND11_EXPORT not_found;
 #include <dlisio/stream.hpp>
 #include <dlisio/records.hpp>
 
-namespace dl = dlis;
+namespace dl = dlisio::dlis;
 
 namespace {
 /*
@@ -660,7 +660,7 @@ noexcept (false) {
 py::object read_fdata(const char* pre_fmt,
                       const char* fmt,
                       const char* post_fmt,
-                      dl::stream& file,
+                      dlisio::stream& file,
                       const std::vector< long long >& indices,
                       std::size_t itemsize,
                       py::object alloc,
@@ -842,11 +842,11 @@ PYBIND11_MODULE(core, m) {
     py::register_exception_translator( []( std::exception_ptr p ) {
         try {
             if( p ) std::rethrow_exception( p );
-        } catch( const dl::not_implemented& e ) {
+        } catch( const dlisio::not_implemented& e ) {
             PyErr_SetString( PyExc_NotImplementedError, e.what() );
-        } catch( const dl::io_error& e ) {
+        } catch( const dlisio::io_error& e ) {
             PyErr_SetString( PyExc_IOError, e.what() );
-        } catch( const dl::eof_error& e ) {
+        } catch( const dlisio::eof_error& e ) {
             PyErr_SetString( PyExc_EOFError, e.what() );
         }
     });
@@ -1066,12 +1066,12 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
-    py::class_< dl::stream >( m, "stream" )
-        .def_property_readonly("ptell", &dl::stream::ptell)
-        .def("seek", &dl::stream::seek)
-        .def("eof", &dl::stream::eof)
-        .def( "close", &dl::stream::close )
-        .def( "get", []( dl::stream& s, py::buffer b, long long off, int n ) {
+    py::class_< dlisio::stream >( m, "stream" )
+        .def_property_readonly("ptell", &dlisio::stream::ptell)
+        .def( "seek", &dlisio::stream::seek   )
+        .def( "eof",   &dlisio::stream::eof   )
+        .def( "close", &dlisio::stream::close )
+        .def( "get", []( dlisio::stream& s, py::buffer b, long long off, int n ) {
             auto info = b.request();
             if (info.size < n) {
                 std::string msg =
@@ -1087,7 +1087,7 @@ PYBIND11_MODULE(core, m) {
         })
     ;
 
-    m.def( "extract", [](dl::stream& s,
+    m.def( "extract", [](dlisio::stream& s,
                         const std::vector< long long >& tells,
                         dl::error_handler& errorhandler) {
         std::vector< dl::record > recs;
@@ -1134,7 +1134,7 @@ PYBIND11_MODULE(core, m) {
     m.def( "hastapemark", dl::hastapemark );
     m.def("findfdata", dl::findfdata);
 
-    m.def( "findoffsets", []( dl::stream& file,
+    m.def( "findoffsets", []( dlisio::stream& file,
                               dl::error_handler& errorhandler) {
         const auto ofs = dl::findoffsets( file, errorhandler );
         return py::make_tuple( ofs.explicits, ofs.implicits, ofs.broken );

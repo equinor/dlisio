@@ -11,7 +11,7 @@
 #include <dlisio/types.hpp>
 #include <dlisio/records.hpp>
 
-namespace dl = dlis;
+namespace dl = dlisio::dlis;
 
 namespace {
 
@@ -576,7 +576,7 @@ noexcept (true) {
 
 } // namespace
 
-namespace dlis {
+namespace dlisio { namespace dlis {
 
 bool object_attribute::operator == (const object_attribute& o)
 const noexcept (true) {
@@ -1193,3 +1193,5 @@ noexcept (false) {
 }
 
 } // namespace dlis
+
+} // namespace dlisio

@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace dlis {
+namespace dlisio {
 namespace detail {
 
 using std::swap;

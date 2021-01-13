@@ -18,53 +18,54 @@
 #include <dlisio/stream.hpp>
 #include <dlisio/exception.hpp>
 
-namespace dl = dlis;
+namespace dl = dlisio::dlis;
 
-namespace dlis {
+namespace dlisio { namespace dlis {
 
-stream open(const std::string& path, std::int64_t offset) noexcept (false) {
+dlisio::stream open(const std::string& path, std::int64_t offset)
+noexcept (false) {
     auto* file = std::fopen(path.c_str(), "rb");
     if (!file) {
         auto msg = "unable to open file for path {} : {}";
-        throw dl::io_error(fmt::format(msg, path, strerror(errno)));
+        throw dlisio::io_error(fmt::format(msg, path, strerror(errno)));
     }
     auto* protocol = lfp_cfile(file);
     if ( protocol == nullptr  )
-        throw io_error("lfp: unable to open lfp protocol cfile");
+        throw dlisio::io_error("lfp: unable to open lfp protocol cfile");
 
     auto err = lfp_seek(protocol, offset);
     switch (err) {
             case LFP_OK: break;
             default:
-                throw io_error(lfp_errormsg(protocol));
+                throw dlisio::io_error(lfp_errormsg(protocol));
         }
-    return stream(protocol);
+    return dlisio::stream(protocol);
 }
 
-stream open_rp66(const stream& f) noexcept (false) {
+dlisio::stream open_rp66(const dlisio::stream& f) noexcept (false) {
     auto* protocol = lfp_rp66_open(f.protocol());
     if ( protocol == nullptr ) {
         if ( lfp_eof(f.protocol()) )
-            throw eof_error("lfp: cannot open file past eof");
+            throw dlisio::eof_error("lfp: cannot open file past eof");
         else
-            throw io_error("lfp: unable to apply rp66 protocol");
+            throw dlisio::io_error("lfp: unable to apply rp66 protocol");
     }
 
-    return stream(protocol);
+    return dlisio::stream(protocol);
 }
 
-stream open_tapeimage(const stream& f) noexcept (false) {
+dlisio::stream open_tapeimage(const dlisio::stream& f) noexcept (false) {
     auto* protocol = lfp_tapeimage_open(f.protocol());
     if ( protocol == nullptr ) {
         if ( lfp_eof(f.protocol()) )
-            throw eof_error("lfp: cannot open file past eof");
+            throw dlisio::eof_error("lfp: cannot open file past eof");
         else
-            throw io_error("lfp: unable to apply tapeimage protocol");
+            throw dlisio::io_error("lfp: unable to apply tapeimage protocol");
     }
-    return stream(protocol);
+    return dlisio::stream(protocol);
 }
 
-long long findsul( stream& file ) noexcept (false) {
+long long findsul( dlisio::stream& file ) noexcept (false) {
     long long offset;
 
     char buffer[ 200 ];
@@ -79,7 +80,7 @@ long long findsul( stream& file ) noexcept (false) {
 
         case DLIS_NOTFOUND: {
             auto msg = "searched {} bytes, but could not find storage label";
-            throw dl::not_found(fmt::format(msg, bytes_read));
+            throw dlisio::not_found(fmt::format(msg, bytes_read));
         }
 
         case DLIS_INCONSISTENT: {
@@ -93,7 +94,7 @@ long long findsul( stream& file ) noexcept (false) {
     }
 }
 
-long long findvrl( stream& file, long long from ) noexcept (false) {
+long long findvrl( dlisio::stream& file, long long from ) noexcept (false) {
     if (from < 0) {
         const auto msg = "expected from (which is {}) >= 0";
         throw std::out_of_range(fmt::format(msg, from));
@@ -115,7 +116,7 @@ long long findvrl( stream& file, long long from ) noexcept (false) {
             const auto msg = "searched {} bytes, but could not find "
                              "visible record envelope pattern [0xFF 0x01]"
             ;
-            throw dl::not_found(fmt::format(msg, bytes_read));
+            throw dlisio::not_found(fmt::format(msg, bytes_read));
         }
 
         case DLIS_INCONSISTENT: {
@@ -129,7 +130,7 @@ long long findvrl( stream& file, long long from ) noexcept (false) {
     }
 }
 
-bool hastapemark(stream& file) noexcept (false) {
+bool hastapemark(dlisio::stream& file) noexcept (false) {
     constexpr int TAPEMARK_SIZE = 12;
     file.seek(0);
 
@@ -231,7 +232,7 @@ template < typename T >
 using shortvec = std::basic_string< T >;
 
 
-record extract(stream& file, long long tell, error_handler& errorhandler)
+record extract(dlisio::stream& file, long long tell, error_handler& errorhandler)
 noexcept (false) {
     record rec;
     rec.data.reserve( 8192 );
@@ -239,7 +240,7 @@ noexcept (false) {
     return extract(file, tell, nbytes, rec, errorhandler);
 }
 
-record& extract(stream& file, long long tell, long long bytes, record& rec,
+record& extract(dlisio::stream& file, long long tell, long long bytes, record& rec,
                 error_handler& errorhandler) noexcept (false) {
     shortvec< std::uint8_t > attributes;
     shortvec< int > types;
@@ -322,7 +323,7 @@ record& extract(stream& file, long long tell, long long bytes, record& rec,
     }
 }
 
-stream_offsets findoffsets( dl::stream& file, dl::error_handler& errorhandler)
+stream_offsets findoffsets( dlisio::stream& file, dl::error_handler& errorhandler)
 noexcept (false) {
     stream_offsets ofs;
 
@@ -463,7 +464,7 @@ noexcept (false) {
 }
 
 std::map< dl::ident, std::vector< long long > >
-findfdata(dl::stream& file, const std::vector< long long >& tells,
+findfdata(dlisio::stream& file, const std::vector< long long >& tells,
 dl::error_handler& errorhandler) noexcept (false) {
     std::map< dl::ident, std::vector< long long > > xs;
 
@@ -512,4 +513,6 @@ dl::error_handler& errorhandler) noexcept (false) {
     return xs;
 }
 
-}
+} // namespace dlis
+
+} // namespace dlisio

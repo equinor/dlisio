@@ -13,9 +13,9 @@
 #include <dlisio/types.hpp>
 #include <dlisio/records.hpp>
 
-namespace dl = dlis;
+namespace dl = dlisio::dlis;
 
-namespace dlis {
+namespace dlisio { namespace dlis {
 
 struct stream_offsets {
     std::vector< long long > explicits;
@@ -23,24 +23,26 @@ struct stream_offsets {
     std::vector< long long > broken;
 };
 
-stream open(const std::string&, std::int64_t) noexcept (false);
-stream open_rp66(const stream&) noexcept (false);
-stream open_tapeimage(const stream&) noexcept (false);
+dlisio::stream open(const std::string&, std::int64_t) noexcept (false);
+dlisio::stream open_rp66(const dlisio::stream&) noexcept (false);
+dlisio::stream open_tapeimage(const dlisio::stream&) noexcept (false);
 
-long long findsul(stream&) noexcept (false);
-long long findvrl(stream&, long long) noexcept (false);
-bool hastapemark(stream&) noexcept (false);
+long long findsul(dlisio::stream&) noexcept (false);
+long long findvrl(dlisio::stream&, long long) noexcept (false);
+bool hastapemark(dlisio::stream&) noexcept (false);
 
-dl::record extract(stream&, long long, dl::error_handler&) noexcept (false);
-dl::record& extract(stream&, long long, long long, dl::record&,
+dl::record extract(dlisio::stream&, long long, dl::error_handler&) noexcept (false);
+dl::record& extract(dlisio::stream&, long long, long long, dl::record&,
     dl::error_handler&) noexcept (false);
 
-stream_offsets findoffsets(dl::stream&, dl::error_handler&) noexcept (false);
+stream_offsets findoffsets(dlisio::stream&, dl::error_handler&) noexcept (false);
 
 std::map< dl::ident, std::vector< long long > >
-findfdata(dl::stream&, const std::vector< long long >&, dl::error_handler&)
+findfdata(dlisio::stream&, const std::vector< long long >&, dl::error_handler&)
 noexcept (false);
 
 } // namespace dlis
+
+} // namespace dlisio
 
 #endif // DLISIO_IO_HPP

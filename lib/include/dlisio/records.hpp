@@ -13,9 +13,9 @@
 
 #include <dlisio/types.h>
 
-namespace dl = dlis;
+namespace dl = dlisio::dlis;
 
-namespace dlis {
+namespace dlisio { namespace dlis {
 /*
  * Parsing and parsing input
  *
@@ -289,5 +289,7 @@ private:
 };
 
 } // namespace dlis
+
+} // namespace dlisio
 
 #endif //DLISIO_RECORDS_HPP

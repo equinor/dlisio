@@ -1,7 +1,7 @@
 #ifndef DLISIO_EXCEPTION_HPP
 #define DLISIO_EXCEPTION_HPP
 
-namespace dlis {
+namespace dlisio {
 
 struct eof_error : public std::runtime_error {
     using std::runtime_error::runtime_error;
@@ -24,6 +24,6 @@ struct not_found : public std::runtime_error {
     {}
 };
 
-} // namespace dlis
+} // namespace dlisio
 
 #endif // DLISIO_EXCEPTION_HPP

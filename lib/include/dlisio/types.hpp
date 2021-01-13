@@ -12,9 +12,9 @@
 
 #include "strong-typedef.hpp"
 
-namespace dl = dlis;
+namespace dlisio { namespace dlis {
 
-namespace dlis {
+namespace dl = dlisio::dlis;
 
 enum class representation_code : std::uint8_t {
     fshort = DLIS_FSHORT,
@@ -355,5 +355,7 @@ template <> struct typeinfo< dl::units > {
 };
 
 } // namespace dlis
+
+} // namespace dlisio
 
 #endif //DLISIO_TYPES_HPP
