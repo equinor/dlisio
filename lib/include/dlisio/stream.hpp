@@ -7,10 +7,16 @@
 
 namespace dl {
 
-/* Stream - wrapper for lfp_protocol
+/* Stream - C++ wrapper for lfp's API.
  *
- * The main purpose of stream is to handle lfp return codes in a manner that
- * suits dlisio and make a more ergonomic interface for caller functions.
+ * The main purpose of stream is to wrap lfp's C API into something more
+ * C++-ish. lfp return codes are translated into exceptions. All functions
+ * except ptell work on the logical file as presented by the current
+ * lfp_protocol. E.g. take a stream-instance with the protocol stack lfp_cfile,
+ * lfp_tapeimage and lfp_rp66 opened on a dlis-file. This stream will only
+ * "see" bytes corresponding to the Logical Record Segments. I.e. the file will
+ * look like a series of LRS from start to finish. All bytes corresponding to
+ * tapemarks or the visible envelope are abstracted away.
  */
 class stream {
 public:
@@ -53,6 +59,7 @@ public:
 
     std::int64_t read( char* dst, int n ) noexcept (false);
 
+    /* return a pointer to the current lfp_protocol */
     lfp_protocol* protocol() const noexcept (true);
 
     void close() noexcept (true);
