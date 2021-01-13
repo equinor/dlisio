@@ -183,7 +183,7 @@ void trim_segment(std::uint8_t attrs,
                   const char* begin,
                   int segment_size,
                   std::vector< char >& segment,
-                  dl::error_handler& errorhandler)
+                  const dl::error_handler& errorhandler)
 noexcept (false) {
     int trim = 0;
     const auto* end = begin + segment_size;
