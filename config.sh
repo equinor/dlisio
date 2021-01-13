@@ -35,6 +35,15 @@ function pre_build {
         popd;
     fi
 
+    if [ -z "$IS_OSX" ]; then
+        pushd variant/build;
+        rm -rf *;
+        cmake -DCMAKE_BUILD_TYPE=Release ..;
+        make;
+        make install;
+        popd;
+    fi
+
     mkdir build-centos5
     pushd build-centos5
 
@@ -46,10 +55,8 @@ function pre_build {
 
     if [ -n "$IS_OSX" ]; then
         sudo make install;
-        sudo cp -r ../external/mpark/mpark /usr/local/include;
     else
         make install;
-        cp -r ../external/mpark/mpark /usr/local/include;
     fi
 
     popd

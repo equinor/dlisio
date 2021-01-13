@@ -12,21 +12,38 @@
 #include <vector>
 #include <limits>
 #include <functional>
+#include <stdexcept>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 #include <datetime.h>
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.h>
-
 namespace py = pybind11;
 using namespace py::literals;
 
-#include <dlisio/ext/exception.hpp>
-#include <dlisio/ext/io.hpp>
-#include <dlisio/ext/types.hpp>
+namespace dl {
+/*
+ * Explicitly make the custom exceptions visible, by forward declarling them
+ * with pybind's export macro. Otherwise they can be considered different
+ * symbols in parse.cpp and in the python extension, making exception
+ * translation impossible.
+ *
+ * https://github.com/pybind/pybind11/issues/1272
+ */
+
+struct PYBIND11_EXPORT io_error;
+struct PYBIND11_EXPORT eof_error;
+struct PYBIND11_EXPORT not_implemented;
+struct PYBIND11_EXPORT not_found;
+}
+
+#include <dlisio/dlisio.h>
+#include <dlisio/types.h>
+#include <dlisio/types.hpp>
+#include <dlisio/exception.hpp>
+#include <dlisio/io.hpp>
+#include <dlisio/records.hpp>
 
 namespace {
 /*
@@ -245,6 +262,12 @@ template <> struct type_caster< dl::units  > : dlis_caster< dl::units  > {};
 }} // namespace pybind11::detail
 
 namespace {
+
+void runtime_warning( const char* msg ) {
+    int err = PyErr_WarnEx( PyExc_RuntimeWarning, msg, 1 );
+    if( err ) throw py::error_already_set();
+}
+
 
 py::dict storage_label( py::buffer b ) {
     auto info = b.request();

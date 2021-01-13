@@ -3,6 +3,14 @@ RUN apt-get update
 # some needed python libraries are installed as part of recommendations
 RUN apt-get install -y make cmake g++ python3 python3-pip python3-setuptools git
 
+#mpark variant
+WORKDIR /home/ci
+RUN git clone https://github.com/mpark/variant.git
+WORKDIR /home/ci/variant/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release ..
+RUN make -j4
+RUN make install
+
 #fmt
 WORKDIR /home/ci
 RUN git clone https://github.com/fmtlib/fmt.git

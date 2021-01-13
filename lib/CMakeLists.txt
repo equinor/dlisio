@@ -2,6 +2,8 @@ set(DLISIO_LIB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
 
 add_library(dlisio src/dlisio.cpp
                    src/types.cpp
+                   src/records.cpp
+                   src/io.cpp
 )
 target_include_directories(dlisio
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -26,6 +28,17 @@ target_compile_options(dlisio
         $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
 )
 
+target_compile_definitions(dlisio
+    PRIVATE
+    $<$<BOOL:${BIG_ENDIAN}>:HOST_BIG_ENDIAN>
+    $<$<NOT:$<BOOL:${BIG_ENDIAN}>>:HOST_LITTLE_ENDIAN>
+)
+target_link_libraries(dlisio
+    PUBLIC mpark_variant
+           lfp::lfp
+
+    PRIVATE fmt::fmt-header-only
+)
 install(TARGETS dlisio
         EXPORT dlisio
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -35,48 +48,9 @@ install(TARGETS dlisio
 install(DIRECTORY include/ DESTINATION include)
 install(EXPORT dlisio DESTINATION share/dlisio/cmake FILE dlisio-config.cmake)
 
-add_library(dlisio-extension src/parse.cpp
-                             src/io.cpp
-)
-target_include_directories(dlisio-extension
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/extension>
-           $<INSTALL_INTERFACE:extension>
-)
-target_compile_options(dlisio-extension
-    BEFORE
-    PRIVATE
-        $<$<CONFIG:Debug>:${warnings-c++}>
-        $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
-)
-target_compile_definitions(dlisio
-    PRIVATE
-    $<$<BOOL:${BIG_ENDIAN}>:HOST_BIG_ENDIAN>
-    $<$<NOT:$<BOOL:${BIG_ENDIAN}>>:HOST_LITTLE_ENDIAN>
-)
-target_link_libraries(dlisio-extension
-    PUBLIC dlisio
-           mpark::variant
-           endianness
-           lfp::lfp
-
-    PRIVATE fmt-header-only
-)
-
-# for now, also install the -extension targets, however, they're not publically
-# supported and they're considered private.
-install(TARGETS dlisio-extension
-        EXPORT dlisio-extension
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-install(DIRECTORY extension/ DESTINATION include)
 export(
     TARGETS
         dlisio
-        dlisio-extension
-        variant
-        fmt-header-only
         endianness
     FILE
         dlisio-config.cmake
@@ -99,5 +73,5 @@ add_executable(testsuite test/testsuite.cpp
                          test/sul.cpp
                          test/pack.cpp
 )
-target_link_libraries(testsuite dlisio dlisio-extension catch2)
+target_link_libraries(testsuite dlisio catch2)
 add_test(NAME core COMMAND testsuite)

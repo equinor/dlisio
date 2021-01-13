@@ -4,14 +4,6 @@ orbs:
   win: circleci/windows@2.2.0
 
 commands:
-  pull_submodules:
-    steps:
-      - run :
-          name: Pull submodules
-          command: |
-            git submodule init
-            git submodule update --remote
-
   install_build_deps:
     parameters:
       sudo:
@@ -48,6 +40,14 @@ commands:
                   -DCMAKE_BUILD_TYPE=Release ..
             make
             <<#parameters.sudo >> sudo <</parameters.sudo >> make install
+      - run:
+          name: install mpark::variant
+          command: |
+            git clone https://github.com/mpark/variant.git
+            mkdir variant/build && cd variant/build
+            cmake -DCMAKE_BUILD_TYPE=Release ..
+            make
+            <<#parameters.sudo >> sudo <</parameters.sudo >> make install
 
   python_build:
     parameters:
@@ -58,7 +58,6 @@ commands:
       - checkout
       - install_build_deps:
           sudo: true
-      - pull_submodules
       - run:
           name: install core
           command: |
@@ -73,7 +72,6 @@ commands:
             make
             sudo make install
             sudo ldconfig /usr/local/lib
-            echo "export mpark_DIR=$PWD/external/mpark" >> $BASH_ENV
       - run:
           name: install python dependencies
           command: python -m pip install --user -r python/requirements-dev.txt
@@ -126,7 +124,6 @@ jobs:
     steps:
       - checkout
       - install_build_deps
-      - pull_submodules
       - cmake_build
 
   clang:
@@ -139,7 +136,6 @@ jobs:
       - checkout
       - install_build_deps:
           extra: clang
-      - pull_submodules
       - cmake_build
 
   debug:
@@ -148,7 +144,6 @@ jobs:
     steps:
       - checkout
       - install_build_deps
-      - pull_submodules
       - cmake_build:
           type: Debug
 
@@ -159,7 +154,6 @@ jobs:
       - checkout
       - install_build_deps:
           extra: clang clang-tools libfindbin-libs-perl
-      - pull_submodules
       - cmake_build:
           scan: scan-build --status-bugs
 
@@ -172,7 +166,6 @@ jobs:
       - checkout
       - install_build_deps:
           extra: cppcheck
-      - pull_submodules
       - run:
           name: run cppcheck
           command: |
@@ -293,6 +286,26 @@ jobs:
             # if directory doesn't exist, it simply won't be saved
             - C:/Program Files (x86)/FMT
             - C:/Program Files/FMT
+      - restore_cache:
+          key: vers6-variant-<< parameters.platform >>
+      - run:
+          name: install mpark::variant
+          command: |
+            $variantpath = $env:install_dir + "/Mpark.Variant"
+            if (!(Test-Path $variantpath)) {
+              git clone https://github.com/mpark/variant.git
+              mkdir variant/build
+              cd variant/build
+              cmake -A $env:generatorplatform ..
+              cmake --build . --target install --config Release
+            }
+      - save_cache:
+          key: vers6-variant-<< parameters.platform >>
+          paths:
+            # 'install_dir' variable is not accessible in configuration, so need to mark both options
+            # if directory doesn't exist, it simply won't be saved
+            - C:/Program Files (x86)/MPark.Variant
+            - C:/Program Files/MPark.Variant
       - run:
           name: install layered-file-protocol
           command: |
@@ -307,7 +320,6 @@ jobs:
                   ..
             # lfp must be build with the same build config as dlisio or build will fail
             cmake --build . --config << parameters.build_type >>  --target install
-      - pull_submodules
       - restore_cache:
           key: vers6-miniconda-<< parameters.python >>-<< parameters.platform >>
       - run:
@@ -338,9 +350,10 @@ jobs:
             $pversion = (python --version | Out-String).trim()
             $pmode = (python -c "import struct;print(struct.calcsize('P') * 8)" | Out-String).trim()
             echo "active python is $pversion ; executing in $pmode -bit mode"
-            # in contrast with fmt, we need to set lfp_DIR
+            # in contrast with fmt, we need to set lfp_DIR and mpark_DIR
             # fmt is found automatically because of default path (C:/Program Files/FMT/lib/cmake)
             $env:lfp_DIR = $env:install_dir + "/layered-file-protocols/share/lfp/cmake"
+            $env:mpark_variant_DIR = $env:install_dir + "/Mpark.Variant/lib/cmake/mpark_variant"
             cmake -G "Visual Studio 16 2019" `
                   -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS" `
                   -DCMAKE_BUILD_TYPE=<< parameters.build_type >> `
@@ -413,7 +426,6 @@ jobs:
         default: ci_dlisio_bigendian_setup
     steps:
       - checkout
-      - pull_submodules
       - run:
           name: Setup
           command: |

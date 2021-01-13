@@ -43,22 +43,40 @@ install:
 before_build:
     - set generator="Visual Studio 14 2015"
     - IF "%platform%" == "x64" set generator="Visual Studio 14 2015 Win64"
-    - git submodule update --init --recursive
     - git fetch --tags
-    - vcpkg integrate install
-    - vcpkg install fmt:%platform%-windows
+
+    - set install-dir=C:/Program Files
+    - IF "%platform%" == "x86" set install-dir=C:/Program Files (x86)
+
+    - git clone https://github.com/fmtlib/fmt.git
+    - ps: mkdir fmt/build
+    - ps: pushd fmt/build
+    - cmake -G %generator%
+            -DFMT_TEST=OFF
+            -DFMT_DOC=OFF ..
+    - cmake --build .  --config %configuration% --target install
+      #- set fmt_DIR=%install-dir%/fmt/lib/cmake/fmt
+    - ps: popd
+
     - git clone https://github.com/equinor/layered-file-protocols.git
     - ps: mkdir layered-file-protocols/build
     - ps: pushd layered-file-protocols/build
     - cmake -G %generator%
             -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS"
             -DLFP_FMT_HEADER_ONLY=ON
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+            -DCMAKE_BUILD_TYPE=Release ..
     - cmake --build .  --config %configuration% --target install
-    - set install-dir=C:/Program Files
-    - IF "%platform%" == "x86" set install-dir=C:/Program Files (x86)
     - set lfp_DIR=%install-dir%/layered-file-protocols/share/lfp/cmake
+    - ps: popd
+
+    - git clone https://github.com/mpark/variant.git
+    - ps: mkdir variant/build
+    - ps: pushd variant/build
+    - cmake -G %generator%
+            -DCMAKE_CXX_FLAGS="/D_CRT_SECURE_NO_WARNINGS"
+            -DCMAKE_BUILD_TYPE=Release ..
+    - cmake --build .  --config %configuration% --target install
+    - set mpark_variant_DIR=%install-dir%/Mpark.Variant/lib/cmake/mpark_variant
     - ps: popd
 
 build_script:

@@ -36,14 +36,10 @@ test_big_endian(BIG_ENDIAN)
 
 add_subdirectory(external/endianness)
 add_subdirectory(external/catch2)
-add_subdirectory(external/mpark)
-add_subdirectory(external/fmt)
 
-find_package(lfp REQUIRED)
-
-if (NOT TARGET fmt)
-    find_package(fmt REQUIRED)
-endif ()
+find_package(fmt           REQUIRED)
+find_package(lfp           REQUIRED)
+find_package(mpark_variant REQUIRED)
 
 add_subdirectory(lib)
 add_subdirectory(python)

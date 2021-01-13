@@ -1,5 +1,5 @@
-#ifndef DLISIO_PYTHON_IO_HPP
-#define DLISIO_PYTHON_IO_HPP
+#ifndef DLISIO_IO_HPP
+#define DLISIO_IO_HPP
 
 #include <array>
 #include <string>
@@ -9,27 +9,10 @@
 
 #include <lfp/lfp.h>
 
-#include <dlisio/ext/types.hpp>
+#include <dlisio/types.hpp>
+#include <dlisio/records.hpp>
 
 namespace dl {
-
-
-/*
- * Explicitly make the custom exceptions visible, otherwise they can be
- * considered different symbols in parse.cpp and in the python extension,
- * making exception translation impossible.
- *
- * https://github.com/pybind/pybind11/issues/1272
- */
-
-struct DLISIO_API eof_error : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-
-struct DLISIO_API io_error : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-    explicit io_error( int no ) : runtime_error( std::strerror( no ) ) {}
-};
 
 /* Stream - wrapper for lfp_protocol
  *
@@ -81,4 +64,4 @@ noexcept (false);
 
 }
 
-#endif // DLISIO_PYTHON_IO_HPP
+#endif // DLISIO_IO_HPP
