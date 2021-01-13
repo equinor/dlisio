@@ -872,11 +872,10 @@ noexcept (false)
 }
 
 bool is_log_clear( const std::vector< dlis_error >& log ) noexcept (true) {
-    for (const auto& entry : log) {
-        if (entry.severity >= dl::error_severity::MINOR)
-            return false;
-    }
-    return true;
+    auto iserror = [] (const dlis_error& entry) noexcept (true) {
+        return entry.severity >= dl::error_severity::MINOR;
+    };
+    return !std::any_of(log.begin(), log.end(), iserror);
 }
 
 void report_set_errors(const dl::object_set& eflr,
