@@ -43,6 +43,7 @@ struct PYBIND11_EXPORT not_found;
 #include <dlisio/types.hpp>
 #include <dlisio/exception.hpp>
 #include <dlisio/io.hpp>
+#include <dlisio/stream.hpp>
 #include <dlisio/records.hpp>
 
 namespace {
@@ -1064,7 +1065,7 @@ PYBIND11_MODULE(core, m) {
     ;
 
     py::class_< dl::stream >( m, "stream" )
-        .def_property_readonly("absolute_tell", &dl::stream::absolute_tell)
+        .def_property_readonly("ptell", &dl::stream::ptell)
         .def("seek", &dl::stream::seek)
         .def("eof", &dl::stream::eof)
         .def( "close", &dl::stream::close )

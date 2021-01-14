@@ -127,7 +127,7 @@ def load(path, error_handler = None):
             stream = core.open_rp66(stream)
 
             explicits, implicits, broken = core.findoffsets(stream, error_handler)
-            hint = rewind(stream.absolute_tell, tapemarks)
+            hint = rewind(stream.ptell, tapemarks)
 
             recs  = core.extract(stream, explicits, error_handler)
             sets  = core.parse_objects(recs, error_handler)
