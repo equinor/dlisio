@@ -5,7 +5,7 @@
 
 #include <dlisio/stream.hpp>
 
-namespace dl {
+namespace dlisio {
 
 void stream::seek( std::int64_t offset ) noexcept (false) {
     const auto err = lfp_seek(this->f, offset);
@@ -80,4 +80,4 @@ int stream::eof() const noexcept (true) {
     return lfp_eof(this->f);
 }
 
-}
+} // namespace dlisio

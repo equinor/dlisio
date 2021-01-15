@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include <dlisio/dlisio.h>
-#include <dlisio/types.h>
+#include <dlisio/dlis/dlisio.h>
+#include <dlisio/dlis/types.h>
 
 namespace {
 
