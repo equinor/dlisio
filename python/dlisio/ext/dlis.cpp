@@ -884,7 +884,7 @@ void init_dlis_extension(py::module_ &m) {
         )) &dl::pool::get )
     ;
 
-    py::enum_< dl::representation_code >( m, "reprc" )
+    py::enum_< dl::representation_code >( m, "dlis_reprc" )
         .value( "fshort", dl::representation_code::fshort )
         .value( "fsingl", dl::representation_code::fsingl )
         .value( "fsing1", dl::representation_code::fsing1 )
