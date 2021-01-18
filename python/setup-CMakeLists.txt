@@ -11,7 +11,10 @@ find_package(mpark_variant    REQUIRED)
 find_package(lfp              REQUIRED)
 find_package(fmt              REQUIRED)
 
-add_library(core MODULE dlisio/ext/core.cpp)
+add_library(core MODULE
+    dlisio/ext/core.cpp
+    dlisio/ext/dlis.cpp
+)
 target_include_directories(core
     PRIVATE
         ${PYBIND11_INCLUDE_DIRS}
