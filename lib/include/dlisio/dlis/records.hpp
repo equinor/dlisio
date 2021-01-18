@@ -12,6 +12,7 @@
 #include <mpark/variant.hpp>
 
 #include <dlisio/dlis/types.h>
+#include <dlisio/dlis/types.hpp>
 
 namespace dl = dlisio::dlis;
 

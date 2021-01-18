@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <dlisio/dlis/types.h>
+#include <dlisio/dlis/dlisio.h>
 
 #include "../strong-typedef.hpp"
 
