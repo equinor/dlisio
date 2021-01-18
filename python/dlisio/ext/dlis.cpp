@@ -914,7 +914,7 @@ void init_dlis_extension(py::module_ &m) {
         .value( "units" , dl::representation_code::units  )
     ;
 
-    py::class_< dl::record >( m, "record", py::buffer_protocol() )
+    py::class_< dl::record >( m, "dlis_record", py::buffer_protocol() )
         .def_property_readonly( "explicit",  &dl::record::isexplicit )
         .def_property_readonly( "encrypted", &dl::record::isencrypted )
         .def_readonly( "consistent", &dl::record::consistent )
