@@ -14,9 +14,9 @@
 #include <dlisio/dlis/types.h>
 #include <dlisio/dlis/types.hpp>
 
+namespace dlisio { namespace dlis {
 namespace dl = dlisio::dlis;
 
-namespace dlisio { namespace dlis {
 /*
  * Parsing and parsing input
  *

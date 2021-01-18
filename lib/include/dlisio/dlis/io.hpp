@@ -13,9 +13,9 @@
 #include <dlisio/dlis/types.hpp>
 #include <dlisio/dlis/records.hpp>
 
-namespace dl = dlisio::dlis;
-
 namespace dlisio { namespace dlis {
+
+namespace dl = dlisio::dlis;
 
 struct stream_offsets {
     std::vector< long long > explicits;
