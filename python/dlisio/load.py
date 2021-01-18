@@ -107,8 +107,11 @@ def load(path, error_handler = None):
     except:
         offset = 0
         sul = None
+
     try:
-        tapemarks = core.hastapemark(stream)
+        stream.seek(0)
+        tm = core.read_tapemark(stream)
+        tapemarks = core.valid_tapemark(tm)
         offset = core.findvrl(stream, offset)
 
         # Layered File Protocol does not currently offer support for re-opening

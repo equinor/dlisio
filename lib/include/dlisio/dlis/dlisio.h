@@ -65,11 +65,6 @@ int dlis_find_vrl(const char* from,
                   long long search_limit,
                   long long* offset);
 
-/*
- * Check if the 12 next bytes looks like a tapemark.
- */
-int dlis_tapemark(const char* buffer, int size);
-
 #define DLIS_VRL_SIZE 4
 DLISIO_API
 int dlis_vrl( const char* xs,
