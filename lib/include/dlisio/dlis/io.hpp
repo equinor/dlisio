@@ -29,7 +29,6 @@ dlisio::stream open_tapeimage(const dlisio::stream&) noexcept (false);
 
 long long findsul(dlisio::stream&) noexcept (false);
 long long findvrl(dlisio::stream&, long long) noexcept (false);
-bool hastapemark(dlisio::stream&) noexcept (false);
 
 dl::record extract(dlisio::stream&, long long, dl::error_handler&) noexcept (false);
 dl::record& extract(dlisio::stream&, long long, long long, dl::record&,

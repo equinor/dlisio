@@ -131,29 +131,6 @@ long long findvrl( dlisio::stream& file, long long from ) noexcept (false) {
     }
 }
 
-bool hastapemark(dlisio::stream& file) noexcept (false) {
-    constexpr int TAPEMARK_SIZE = 12;
-    file.seek(0);
-
-    char buffer[ TAPEMARK_SIZE ];
-    auto bytes_read = file.read(buffer, TAPEMARK_SIZE);
-    if (bytes_read < TAPEMARK_SIZE)
-        throw std::runtime_error("hastapemark: unable to read full tapemark");
-
-    const auto err = dlis_tapemark(buffer, TAPEMARK_SIZE);
-
-    switch (err) {
-        case DLIS_OK:
-            return true;
-
-        case DLIS_NOTFOUND:
-            return false;
-
-        default:
-            throw std::runtime_error("dlis_tapemark: unknown error");
-    }
-}
-
 bool record::isexplicit() const noexcept (true) {
     return this->attributes & DLIS_SEGATTR_EXFMTLR;
 }
