@@ -74,5 +74,10 @@ add_executable(test-dlis test/testsuite.cpp
                          test/dlis/sul.cpp
                          test/dlis/pack.cpp
 )
+target_compile_options(test-dlis
+    BEFORE
+    PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
+)
 target_link_libraries(test-dlis dlisio catch2)
 add_test(NAME dlis-core COMMAND test-dlis)
