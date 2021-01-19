@@ -887,7 +887,7 @@ void report_set_errors(const dl::object_set& eflr,
                              dl::decay(eflr.name) +"'";
         for (const auto &err : eflr.log) {
             errorhandler.log(err.severity, context, err.problem,
-                             err.specification, err.action);
+                             err.specification, err.action, "");
         }
     }
 }

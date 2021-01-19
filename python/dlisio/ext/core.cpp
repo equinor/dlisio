@@ -123,7 +123,7 @@ public:
     /* Trampoline (need one for each virtual function) */
     void log(const dl::error_severity& level, const std::string& context,
              const std::string& problem, const std::string& specification,
-             const std::string& action)
+             const std::string& action, const std::string& debug)
     const noexcept(false) override {
         PYBIND11_OVERLOAD_PURE(
             void,              /* Return type */
@@ -133,7 +133,8 @@ public:
             context,
             problem,
             specification,
-            action
+            action,
+            debug
         );
     }
 };

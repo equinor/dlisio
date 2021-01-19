@@ -205,7 +205,7 @@ class BasicObject():
             for error in self.attic.log:
                 self.logicalfile.error_handler.log(
                     error.severity, context, error.problem,
-                    error.specification, error.action)
+                    error.specification, error.action, "")
 
         try:
             attribute = self.attic[key]
@@ -220,7 +220,7 @@ class BasicObject():
             for error in attribute.log:
                 self.logicalfile.error_handler.log(
                     error.severity, context, error.problem,
-                    error.specification, error.action)
+                    error.specification, error.action, "")
 
         if rp66value is None: return defaultvalue(parse_as)
         if rp66value == []  : return defaultvalue(parse_as)

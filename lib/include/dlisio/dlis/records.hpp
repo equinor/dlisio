@@ -90,9 +90,9 @@ struct dlis_error {
 };
 
 struct error_handler {
-    virtual void log(const error_severity &level, const std::string &context,
-                     const std::string &problem,const std::string &specification,
-                     const std::string &action)
+    virtual void log(const error_severity& level, const std::string& context,
+                     const std::string& problem,const std::string& specification,
+                     const std::string& action, const std::string& debug)
         const noexcept(false) = 0;
 
     virtual ~error_handler() = default;

@@ -638,17 +638,22 @@ noexcept (false) {
     assert(std::string(post_fmt) == "");
 
     auto record_dst = dst;
+    int frames = 0;
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dlis::read_fdata: reading curves";
+        const auto abs_msg = "Physical tell (end of the record): " +
+                             std::to_string(file.ptell()) + " (dec)";
+        const auto frames_msg =
+            "Processed number of frames: " + std::to_string(frames);
+        const auto debug = abs_msg + ", " + frames_msg;
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
-                         "Record is skipped");
+                         "Record is skipped", debug);
         // we update the buffer as we go. Hence if error happened we need to
         // go back and start rewriting updated data
         dst = record_dst;
     };
 
-    int frames = 0;
     for (auto i : indices) {
         record_dst = dst;
 
@@ -972,8 +977,10 @@ void init_dlis_extension(py::module_ &m) {
             } catch (const std::exception& e) {
                 const auto context =
                     "dlis::extract: Reading raw bytes from record";
+                const auto debug = "Physical tell (end of the record): " +
+                                   std::to_string(s.ptell()) + " (dec)";
                 errorhandler.log(dl::error_severity::CRITICAL, context,
-                                 e.what(), "", "Record is skipped");
+                                 e.what(), "", "Record is skipped", debug);
                 continue;
             }
             if (rec.data.size() > 0) {
@@ -995,7 +1002,7 @@ void init_dlis_extension(py::module_ &m) {
                 const auto context =
                     "core.parse_objects: Construct object sets";
                 errorhandler.log(dl::error_severity::CRITICAL, context,
-                                 e.what(), "", "Set is skipped");
+                                 e.what(), "", "Set is skipped", "");
                 continue;
             }
         }

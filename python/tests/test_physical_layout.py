@@ -148,6 +148,9 @@ def test_zeroed_in_1st_lr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/zeroed-in-1st-lr.dlis')
     assert "Too short logical record" in str(excinfo.value)
+    dbg = "Physical tell: 188 (dec), Logical Record tell: 100 (dec), " \
+          "Logical Record Segment tell: 100 (dec)"
+    assert dbg in str(excinfo.value)
 
 def test_zeroed_in_2nd_lr():
     with pytest.raises(RuntimeError) as excinfo:
