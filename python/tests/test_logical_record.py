@@ -4,7 +4,7 @@ Testing logical record data representation level - Chapter 3.
 
 import pytest
 from datetime import datetime
-import os
+import os, sys
 
 import dlisio
 from dlisio.core import dlis_reprc as reprc
@@ -237,10 +237,6 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
         #assert attr.reprc == attr_reprc
         assert attr.value == [attr_v]
 
-@pytest.mark.xfail(reason="Behaviour unspecified. Doesn't cause a problem in"
-                          "python 3.5, fails in higher versions on object"
-                          "access. We might want fail on attribute access only",
-                   strict=True)
 def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid_dtime.dlis')
     content = [
@@ -252,9 +248,13 @@ def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        with pytest.raises(RuntimeError) as excinfo:
-            _ = obj.attic['DTIME']
-        assert "month must be" in str(excinfo.value)
+
+        # run this test from python 3.6 only as code doesn't fail on python 3.5
+        # check might be removed once we remove support for python 3.5
+        if sys.version_info.major >= 3 and sys.version_info.minor > 5:
+            with pytest.raises(ValueError) as excinfo:
+                _ = obj.attic['DTIME'].value
+            assert "month must be in 1..12" in str(excinfo.value)
 
 def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template-value.dlis')

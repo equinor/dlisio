@@ -433,7 +433,6 @@ const char* cast( const char* xs, dl::dtime& dtime ) noexcept (true) {
                          &dt.MN,
                          &dt.S,
                          &dt.MS );
-    dt.Y = dlis_year( dt.Y );
     swap( dtime, dt );
     return xs;
 }
