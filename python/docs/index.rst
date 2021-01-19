@@ -58,6 +58,13 @@ Standard (DLIS)`.
    beginner
    errors
 
+.. toctree::
+   :caption: Advanced
+   :name: Advanced
+   :maxdepth: 0
+
+   investigation
+
 Indices and tables
 ==================
 
