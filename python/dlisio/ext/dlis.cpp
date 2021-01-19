@@ -552,7 +552,7 @@ noexcept (false) {
             dst += (frames * itemsize);
         }
 
-        int src_skip, dst_skip;
+        int src_skip;
 
         dlis_packflen(pre_fmt, ptr, &src_skip, nullptr);
         assert_overflow(ptr, end, src_skip);
