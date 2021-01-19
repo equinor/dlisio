@@ -56,6 +56,7 @@ Standard (DLIS)`.
    :maxdepth: 1
 
    beginner
+   errors
 
 Indices and tables
 ==================
