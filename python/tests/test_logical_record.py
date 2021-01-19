@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 
 import dlisio
-from dlisio.core import reprc
+from dlisio.core import dlis_reprc as reprc
 
 @pytest.mark.future_test_attributes
 def test_default_attribute(tmpdir, merge_files_oneLR):

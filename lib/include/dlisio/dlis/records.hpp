@@ -12,10 +12,11 @@
 #include <mpark/variant.hpp>
 
 #include <dlisio/dlis/types.h>
-
-namespace dl = dlisio::dlis;
+#include <dlisio/dlis/types.hpp>
 
 namespace dlisio { namespace dlis {
+namespace dl = dlisio::dlis;
+
 /*
  * Parsing and parsing input
  *
