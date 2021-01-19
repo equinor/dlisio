@@ -97,7 +97,8 @@ def update_envelope_LRSL(b, lrs_offset = 0):
     b[lrs_offset + 1] = lrsl %  256
 
 def assert_caplog(caplog, level):
-    caplog.set_level(level)
+    # setting lowest level allows us to record everything
+    caplog.set_level(logging.DEBUG)
     def assert_message(message_id):
         assert any([message_id in r.message
                     for r in caplog.records if r.levelno == level])
@@ -118,6 +119,13 @@ def assert_info(caplog):
 @pytest.fixture
 def assert_debug(caplog):
     return assert_caplog(caplog, logging.DEBUG)
+
+@pytest.fixture
+def assert_message_count(caplog):
+    def assert_message_count(message_id, count):
+        mcount = [message_id in r.message for r in caplog.records].count(True)
+        assert count == mcount
+    return assert_message_count
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_files_manyLR):

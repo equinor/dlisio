@@ -28,6 +28,22 @@ namespace dl = dlisio::dlis;
 namespace py = pybind11;
 using namespace py::literals;
 
+namespace {
+
+/*
+ * Convert dlis datetime to python datetime
+ */
+PyObject* to_pydatetime(const dl::dtime& dt) {
+    // TODO: add TZ info
+    const auto Y = dlis_year(dt.Y);
+    const auto US = dt.MS * 1000;
+    auto p = PyDateTime_FromDateAndTime( Y, dt.M, dt.D, dt.H, dt.MN, dt.S, US );
+    if (!p) throw py::error_already_set();
+    return p;
+}
+
+} // namespace
+
 namespace pybind11 { namespace detail {
 
 /*
@@ -77,14 +93,7 @@ struct type_caster< mpark::monostate > {
 template <>
 handle dlis_caster< dl::dtime >::cast( const dl::dtime& src, return_value_policy, handle )
 {
-    // TODO: add TZ info
-    return PyDateTime_FromDateAndTime( src.Y,
-                                       src.M,
-                                       src.D,
-                                       src.H,
-                                       src.MN,
-                                       src.S,
-                                       src.MS * 1000);
+    return to_pydatetime(src);
 }
 
 template <>
@@ -495,16 +504,14 @@ void read_curve_sample(const char* f, const char*& ptr, const char* end,
     }
 
     if (*f == DLIS_FMT_DTIME) {
-        int Y, TZ, M, D, H, MN, S, MS;
-        ptr = dlis_dtime(ptr, &Y, &TZ, &M, &D, &H, &MN, &S, &MS);
-        Y = dlis_year(Y);
-        const auto US = MS * 1000;
+        dl::dtime dt;
+        ptr = dlis_dtime(ptr, &dt.Y, &dt.TZ, &dt.M, &dt.D, &dt.H, &dt.MN, &dt.S,
+                         &dt.MS);
 
         PyObject* p;
         std::memcpy(&p, dst, sizeof(p));
         Py_DECREF(p);
-        p = PyDateTime_FromDateAndTime(Y, M, D, H, MN, S, US);
-        if (!p) throw py::error_already_set();
+        p = to_pydatetime(dt);
         std::memcpy(dst, &p, sizeof(p));
         dst += sizeof(p);
         return;
@@ -631,17 +638,22 @@ noexcept (false) {
     assert(std::string(post_fmt) == "");
 
     auto record_dst = dst;
+    int frames = 0;
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dlis::read_fdata: reading curves";
+        const auto abs_msg = "Physical tell (end of the record): " +
+                             std::to_string(file.ptell()) + " (dec)";
+        const auto frames_msg =
+            "Processed number of frames: " + std::to_string(frames);
+        const auto debug = abs_msg + ", " + frames_msg;
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
-                         "Record is skipped");
+                         "Record is skipped", debug);
         // we update the buffer as we go. Hence if error happened we need to
         // go back and start rewriting updated data
         dst = record_dst;
     };
 
-    int frames = 0;
     for (auto i : indices) {
         record_dst = dst;
 
@@ -965,8 +977,10 @@ void init_dlis_extension(py::module_ &m) {
             } catch (const std::exception& e) {
                 const auto context =
                     "dlis::extract: Reading raw bytes from record";
+                const auto debug = "Physical tell (end of the record): " +
+                                   std::to_string(s.ptell()) + " (dec)";
                 errorhandler.log(dl::error_severity::CRITICAL, context,
-                                 e.what(), "", "Record is skipped");
+                                 e.what(), "", "Record is skipped", debug);
                 continue;
             }
             if (rec.data.size() > 0) {
@@ -988,7 +1002,7 @@ void init_dlis_extension(py::module_ &m) {
                 const auto context =
                     "core.parse_objects: Construct object sets";
                 errorhandler.log(dl::error_severity::CRITICAL, context,
-                                 e.what(), "", "Set is skipped");
+                                 e.what(), "", "Set is skipped", "");
                 continue;
             }
         }

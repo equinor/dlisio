@@ -1,6 +1,9 @@
 #ifndef DLISIO_EXCEPTION_HPP
 #define DLISIO_EXCEPTION_HPP
 
+#include <stdexcept>
+#include <string>
+
 namespace dlisio {
 
 struct eof_error : public std::runtime_error {

@@ -162,9 +162,9 @@ class ErrorHandler(core.error_handler):
         self.major    = major
         self.critical = critical
 
-    def log(self, severity, context, problem, spec, action):
+    def log(self, severity, context, problem, spec, action, debug):
         msg = ErrorHandler.format_error(
-            severity, context, problem, spec, action)
+            severity, context, problem, spec, action, debug)
 
         """ Overrides dl::error_handler::log """
         if   severity == core.error_severity.info:     handler = self.info
@@ -188,7 +188,7 @@ class ErrorHandler(core.error_handler):
     # TODO: check if that helps for named fileheader issue
     # TODO: nested format
     @staticmethod
-    def format_error(severity, context, problem, spec, action):
+    def format_error(severity, context, problem, spec, action, debug):
         format = '\n{:<{align}} {}'
         severity = ErrorHandler.format_severity(severity)
 
@@ -202,5 +202,8 @@ class ErrorHandler(core.error_handler):
         if action:
             action = format.format('Action taken:', action, align=13)
 
-        msg = "{}{}{}{}{}"
-        return msg.format(problem, context, severity, spec, action)
+        if debug:
+            debug = format.format("Debug info:", debug, align=13)
+
+        msg = "{}{}{}{}{}{}"
+        return msg.format(problem, context, severity, spec, action, debug)

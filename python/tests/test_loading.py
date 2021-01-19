@@ -149,14 +149,19 @@ def test_context_manager_with():
 def test_load_nonexisting_file():
     with pytest.raises(OSError) as exc:
         _ = dlisio.load("this_file_does_not_exist.dlis")
-    assert "this_file_does_not_exist.dlis : No such file" in str(exc.value)
+    msg = "'this_file_does_not_exist.dlis' is not an existing regular file"
+    assert msg in str(exc.value)
 
-@pytest.mark.xfail(strict=False)
+def test_load_directory():
+    with pytest.raises(OSError) as exc:
+        _ = dlisio.load(".")
+    msg = "'.' is not an existing regular file"
+    assert msg in str(exc.value)
+
 def test_invalid_attribute_in_load():
     # Error in one attribute shouldn't prevent whole file from loading
-    # This is based on common enough error in creation time property in
-    # origin.
-    # It loads just fine on python 3.5, but fails in higher versions
+    # This is based on common enough error in creation time property in origin.
     path = 'data/chap4-7/invalid-date-in-origin.dlis'
-    with dlisio.load(path):
-        pass
+    with dlisio.load(path) as files:
+        for f in files:
+            f.load()

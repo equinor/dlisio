@@ -210,7 +210,7 @@ noexcept (false) {
                 "[from 2.2.2.1 Logical Record Segment Header (LRSH) and "
                     "2.2.2.4 Logical Record Segment Trailer (LRST) situation "
                     "should be impossible]",
-                "Segment is skipped");
+                "Segment is skipped", "");
 
             segment.resize(segment.size() - segment_size);
             return;
@@ -336,8 +336,16 @@ noexcept (false) {
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dlis::findoffsets (indexing logical file)";
-        errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
-                         "Indexing is suspended at last valid Logical Record");
+
+        const auto debug = "Physical tell: {} (dec), "
+                           "Logical Record tell: {} (dec), "
+                           "Logical Record Segment tell: {} (dec)";
+
+        errorhandler.log(
+            dl::error_severity::CRITICAL, context, problem, "",
+            "Indexing is suspended at last valid Logical Record",
+            fmt::format(debug, file.ptell(), lr_offset, lrs_offset));
+
         ofs.broken.push_back( lr_offset );
     };
 
@@ -435,7 +443,12 @@ noexcept (false) {
          */
 
         char tmp;
-        file.seek(lrs_offset - 1);
+        try {
+            file.seek(lrs_offset - 1);
+        } catch (std::exception& e) {
+            handle(e.what());
+            break;
+        }
         try {
             file.read(&tmp, 1);
         } catch (const std::runtime_error& e) {
@@ -476,8 +489,10 @@ dl::error_handler& errorhandler) noexcept (false) {
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dlis::findfdata: Indexing implicit records";
+        const auto abs_tell = "Physical tell (end of the record): {} (dec)";
+        const auto debug = fmt::format(abs_tell, file.ptell());
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
-                         "Record is skipped");
+                         "Record is skipped", debug);
     };
 
     for (auto tell : tells) {

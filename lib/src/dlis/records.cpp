@@ -433,7 +433,6 @@ const char* cast( const char* xs, dl::dtime& dtime ) noexcept (true) {
                          &dt.MN,
                          &dt.S,
                          &dt.MS );
-    dt.Y = dlis_year( dt.Y );
     swap( dtime, dt );
     return xs;
 }
@@ -888,7 +887,7 @@ void report_set_errors(const dl::object_set& eflr,
                              dl::decay(eflr.name) +"'";
         for (const auto &err : eflr.log) {
             errorhandler.log(err.severity, context, err.problem,
-                             err.specification, err.action);
+                             err.specification, err.action, "");
         }
     }
 }

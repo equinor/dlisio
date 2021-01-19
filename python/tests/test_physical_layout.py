@@ -32,7 +32,7 @@ def test_lr_in_2vrs():
 def test_vrl_and_lrsh_mismatch():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/wrong-lrhs.dlis')
-    assert "Incorrect format version" in str(excinfo.value)
+    assert "Problem:      rp66: Incorrect format version" in str(excinfo.value)
 
 @pytest.mark.xfail(reason="We do not fail when attributes are inconsistent "
                           "between lrs of same lr, but maybe we should",
@@ -148,12 +148,15 @@ def test_zeroed_in_1st_lr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/zeroed-in-1st-lr.dlis')
     assert "Too short logical record" in str(excinfo.value)
+    dbg = "Physical tell: 188 (dec), Logical Record tell: 100 (dec), " \
+          "Logical Record Segment tell: 100 (dec)"
+    assert dbg in str(excinfo.value)
 
 def test_zeroed_in_2nd_lr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/zeroed-in-2nd-lr.dlis')
     # message propagated from lfp
-    assert "Incorrect format version" in str(excinfo.value)
+    assert "Problem:      rp66: Incorrect format version" in str(excinfo.value)
 
 def test_sul():
     label = ''.join([

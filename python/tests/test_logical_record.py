@@ -4,7 +4,7 @@ Testing logical record data representation level - Chapter 3.
 
 import pytest
 from datetime import datetime
-import os
+import os, sys
 
 import dlisio
 from dlisio.core import dlis_reprc as reprc
@@ -237,10 +237,6 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
         #assert attr.reprc == attr_reprc
         assert attr.value == [attr_v]
 
-@pytest.mark.xfail(reason="Behaviour unspecified. Doesn't cause a problem in"
-                          "python 3.5, fails in higher versions on object"
-                          "access. We might want fail on attribute access only",
-                   strict=True)
 def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid_dtime.dlis')
     content = [
@@ -252,9 +248,13 @@ def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
 
     with dlisio.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
-        with pytest.raises(RuntimeError) as excinfo:
-            _ = obj.attic['DTIME']
-        assert "month must be" in str(excinfo.value)
+
+        # run this test from python 3.6 only as code doesn't fail on python 3.5
+        # check might be removed once we remove support for python 3.5
+        if sys.version_info.major >= 3 and sys.version_info.minor > 5:
+            with pytest.raises(ValueError) as excinfo:
+                _ = obj.attic['DTIME'].value
+            assert "month must be in 1..12" in str(excinfo.value)
 
 def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template-value.dlis')
@@ -281,7 +281,8 @@ def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
 
 
 def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
-                                                    assert_info):
+                                                    assert_info,
+                                                    assert_message_count):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template-fixed.dlis')
 
     # template for attribute 'INVALID':
@@ -315,6 +316,9 @@ def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
         assert_info("Problem:      Invalid representation code 0\n"
                     "Where:        "
                     "T.VERY_MUCH_TESTY_SET-I.OBJECT-O.1-C.1-A.INVALID")
+
+        assert_message_count("Invalid representation code", 1)
+        assert_message_count("One or more attributes", 2)
 
 def test_repcode_invalid_in_template_no_value_not_fixed(tmpdir,
                                                         merge_files_oneLR,
@@ -406,7 +410,7 @@ def test_repcode_invalid_in_objects_value(tmpdir, merge_files_oneLR):
     assert "unknown representation code" in str(excinfo.value)
 
 def test_repcode_invalid_in_objects_no_value(tmpdir, merge_files_oneLR,
-                                             assert_log):
+                                             assert_log, assert_message_count):
     path = os.path.join(str(tmpdir), 'invalid-repcode-object-no-value.dlis')
 
     # template for attribute 'GLOBAL_DEFAULT_ATTRIBUTE' is empty
@@ -437,6 +441,9 @@ def test_repcode_invalid_in_objects_no_value(tmpdir, merge_files_oneLR,
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT2', 1, 1)
         attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
         assert attr.value == [1, 2, 3, 4]
+
+        assert_message_count("value is not explicitly set", 1)
+        assert_message_count("One or more attributes", 1)
 
 def test_repcode_different_no_value(tmpdir, merge_files_oneLR, assert_log,
                                     assert_info):
@@ -562,6 +569,24 @@ def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR, assert_log):
         assert_log("Problem:      SET:type not set\n"
                    "Where:        object set of type 'VERY_MUCH_TESTY_SET' "
                    "named ''")
+
+
+def test_set_name_bit_set_name_not_present(tmpdir, merge_files_oneLR, assert_log):
+    # based on frequent situation for FILE-HEADER sets
+    path = os.path.join(str(tmpdir), 'name-bit-set-name-not-present.dlis')
+    content = [
+        'data/chap3/sul.dlis.part',
+        'data/chap3/set/name-bit-set-no-name.dlis.part',
+        'data/chap3/template/default.dlis.part',
+        'data/chap3/object/object.dlis.part',
+    ]
+    merge_files_oneLR(path, content)
+
+    with dlisio.load(path) as (f, *_):
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = f.object('FILE-HEADER', 'N', 2, 0)
+        err = "object set of type 'FILE-HEADER' named 'SEQUENCE-NUMBER4ID"
+        assert err in str(excinfo.value)
 
 
 def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR,
