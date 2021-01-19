@@ -539,7 +539,7 @@ void read_fdata_record(const char* pre_fmt,
                        const char* ptr,
                        const char* end,
                        unsigned char*& dst,
-                       int& frames,
+                       std::size_t& frames,
                        const std::size_t& itemsize,
                        std::size_t allocated_rows,
                        std::function<void (std::size_t)> resize)
@@ -638,7 +638,7 @@ noexcept (false) {
     assert(std::string(post_fmt) == "");
 
     auto record_dst = dst;
-    int frames = 0;
+    std::size_t frames = 0;
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dlis::read_fdata: reading curves";
