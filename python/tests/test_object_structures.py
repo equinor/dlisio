@@ -410,6 +410,12 @@ def test_comment(f):
     assert com.text == ['Trust me, this is a very nice comment',
                         "What, you don't believe me?", ':-(']
 
+def test_noformat(f):
+    noformat = f.object('NO-FORMAT', 'NOFORMAT-IMAGE', 10, 0)
+
+    assert noformat.consumer_name == "PNG image"
+    assert noformat.description   == "dlisio logo"
+
 def test_update_just_warning(fpath, assert_log):
     with dlisio.load(fpath) as _:
         assert_log('contains UPDATE-object')

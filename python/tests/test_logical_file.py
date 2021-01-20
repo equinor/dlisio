@@ -314,6 +314,7 @@ def test_dlis_types(f):
     assert len(f.calibrations) == 1
     assert len(f.comments)     == 1
     assert len(f.messages)     == 1
+    assert len(f.noformats)    == 2
 
 def test_load_unknowns():
     with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):

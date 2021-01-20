@@ -79,6 +79,7 @@ class logicalfile(object):
         'PATH'                   : plumbing.Path,
         'MESSAGE'                : plumbing.Message,
         'COMMENT'                : plumbing.Comment,
+        'NO-FORMAT'              : plumbing.Noformat,
     }
 
     """dict: Dispatch-table for turning :py:class:`dlisio.core.basic_objects`
@@ -204,6 +205,7 @@ class logicalfile(object):
     tools        = IndexedObjectDescriptor("TOOL")
     wellrefs     = IndexedObjectDescriptor("WELL-REFERENCE")
     zones        = IndexedObjectDescriptor("ZONE")
+    noformats    = IndexedObjectDescriptor("NO-FORMAT")
 
     @property
     def unknowns(self):
