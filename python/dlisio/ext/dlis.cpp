@@ -196,11 +196,12 @@ py::dict storage_label( py::buffer b ) {
         throw std::invalid_argument( msg );
     }
 
-    int seqnum;
-    int major;
-    int minor;
-    int layout;
-    std::int64_t maxlen;
+    /* dlis_sul does nothing if values are incorrect, hence initialization  */
+    int seqnum          = -1;
+    int major           = -1;
+    int minor           = -1;
+    int layout          = DLIS_STRUCTURE_UNKNOWN;
+    std::int64_t maxlen = 0;
     char id[ 61 ] = {};
     auto err = dlis_sul( static_cast< const char* >( info.ptr ),
                          &seqnum,
@@ -222,7 +223,7 @@ py::dict storage_label( py::buffer b ) {
         case DLIS_INCONSISTENT:
             runtime_warning(
                 "storage unit label inconsistent with "
-                "specification - falling back to assuming DLIS v1"
+                "specification. Inconsistent values defaulted"
             );
             break;
     }
@@ -539,7 +540,7 @@ void read_fdata_record(const char* pre_fmt,
                        const char* ptr,
                        const char* end,
                        unsigned char*& dst,
-                       int& frames,
+                       std::size_t& frames,
                        const std::size_t& itemsize,
                        std::size_t allocated_rows,
                        std::function<void (std::size_t)> resize)
@@ -552,7 +553,7 @@ noexcept (false) {
             dst += (frames * itemsize);
         }
 
-        int src_skip, dst_skip;
+        int src_skip;
 
         dlis_packflen(pre_fmt, ptr, &src_skip, nullptr);
         assert_overflow(ptr, end, src_skip);
@@ -638,7 +639,7 @@ noexcept (false) {
     assert(std::string(post_fmt) == "");
 
     auto record_dst = dst;
-    int frames = 0;
+    std::size_t frames = 0;
 
     const auto handle = [&]( const std::string& problem ) {
         const auto context = "dlis::read_fdata: reading curves";

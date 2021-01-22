@@ -1,16 +1,10 @@
 language: python
-python:
-  - 3.5
-  - 3.6
+os: linux
+dist: xenial
 
-os:
-    - linux
-
-compiler:
-    - gcc
-
+# compiler directive is unused as specified language is python
+compiler: gcc
 services: docker
-sudo: required
 
 env:
     global:
@@ -27,17 +21,16 @@ addons:
             - cmake
             - cmake-data
 
-matrix:
+jobs:
     fast_finish: true
     include:
+        - python: 3.5
+        - python: 3.6
         - python: 3.7
-          dist: xenial
-          sudo: true
         - python: 3.8
-          dist: xenial
-          sudo: true
         - os: linux
           compiler: clang
+          python: 3.8
           env:
               - MATRIX_EVAL="CC=clang && CXX=clang++"
               - SCAN="scan-build --status-bugs"
@@ -130,7 +123,7 @@ before_script:
 script:
     - pushd build
     - make
-    - ctest --output-on-failure
+    - ctest --verbose
     - sudo make install
     - popd
     # install works, so remove the _skbuild because it having root permissions

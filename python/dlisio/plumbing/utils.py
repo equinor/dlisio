@@ -1,7 +1,8 @@
 import logging
 import numpy as np
 
-from collections import OrderedDict, Sequence, namedtuple
+from collections import OrderedDict, namedtuple
+from collections.abc import Sequence
 from textwrap import fill
 
 
