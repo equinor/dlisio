@@ -4,6 +4,9 @@ add_library(dlisio src/dlis/dlisio.cpp
                    src/dlis/types.cpp
                    src/dlis/records.cpp
                    src/dlis/io.cpp
+                   src/lis/protocol.cpp
+                   src/lis/types.cpp
+                   src/lis/io.cpp
                    src/stream.cpp
                    src/tapemark.cpp
 )
@@ -77,3 +80,11 @@ add_executable(test-dlis test/testsuite.cpp
 )
 target_link_libraries(test-dlis dlisio catch2)
 add_test(NAME dlis-core COMMAND test-dlis)
+
+add_executable(test-lis test/testsuite.cpp
+                        test/lis/types.cpp
+                        test/lis/protocol.cpp
+                        test/lis/io.cpp
+)
+target_link_libraries(test-lis dlisio catch2)
+add_test(NAME lis-core COMMAND test-lis)

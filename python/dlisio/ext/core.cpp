@@ -151,6 +151,7 @@ public:
  *
  * [1] https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-reduce-the-build-time
  */
+void init_lis_extension(py::module_ &m);
 void init_dlis_extension(py::module_ &m);
 
 
@@ -171,6 +172,7 @@ PYBIND11_MODULE(core, m) {
         }
     });
 
+    init_lis_extension(m);
     init_dlis_extension(m);
 
     m.def( "read_tapemark",  dlisio::read_tapemark );
