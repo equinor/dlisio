@@ -13,6 +13,7 @@ find_package(fmt              REQUIRED)
 
 add_library(core MODULE
     dlisio/ext/core.cpp
+    dlisio/ext/lis.cpp
     dlisio/ext/dlis.cpp
 )
 target_include_directories(core
