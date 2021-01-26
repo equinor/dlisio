@@ -1,4 +1,5 @@
 #include <cstring>
+#include <ciso646>
 
 #include <dlisio/tapemark.hpp>
 #include <dlisio/stream.hpp>
@@ -7,7 +8,7 @@
 namespace dlisio {
 
 bool valid_tapemark( const dlisio::tapemark& tm ) noexcept (false) {
-    if ( tm.type != 0 and tm.type != 1 ) return false;
+    if ( (tm.type != 0) and (tm.type != 1) ) return false;
     if ( tm.prev >= tm.next  )           return false;
 
     return true;
