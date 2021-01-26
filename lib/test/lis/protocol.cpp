@@ -104,12 +104,41 @@ TEST_CASE("Spec Block", "[protocol]") {
 
 }
 TEST_CASE("Data Format Specification Record", "[protocol]") {
+    lis::record rec;
+    rec.data = std::vector< char > {
+        // Entry Block
+        0x00, // Type
+        0x04, // Size
+        0x41, // Representation code 65 (lis::string)
+        0x2E, 0x31, 0x49, 0x4E,  // Entry
+        // Spec Block
+        0x44, 0x45, 0x50, 0x54,                         // "DEPT"
+        0x53, 0x4C, 0x42, 0x20, 0x20, 0x20,             // "SLB     " (blank)
+        0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x35, 0x34, // "      54"
+        0x2E, 0x31, 0x49, 0x4E,                         // ".1IN"
+        0x30, 0x31, 0x32, 0x33,                         // 0123
+        0x00, 0x01,                                     // 1
+        0x00, 0x08,                                     // size
+        0x20, 0x20,                                     // pad-byte
+        0x20,                                           // pad-bytes/plevel
+        0x02,                                           // nb size
+        0x44,                                           // reprc (F32)
+        0x20, 0x20, 0x20, 0x20, 0x20,                   // pad-bytes/pindicators
+    };
 
+    const auto formatspec = lis::parse_dfsr( rec );
 
+    CHECK( formatspec.entries.size() == 1 );
+    CHECK( formatspec.specs.size()   == 1 );
 
+    const auto entry = formatspec.entries.at(0);
+    const auto spec  = formatspec.specs.at(0);
 
-
-
-
-
+    CHECK( lis::decay(entry.type)  == 0  );
+    CHECK( lis::decay(entry.size)  == 4  );
+    CHECK( lis::decay(entry.reprc) == 65 );
+    CHECK( lis::decay(spec.mnemonic)         == std::string("DEPT")     );
+    CHECK( lis::decay(spec.service_id)       == std::string("SLB   ")   );
+    CHECK( lis::decay(spec.service_order_nr) == std::string("      54") );
+    CHECK( lis::decay(spec.units)            == std::string(".1IN")     );
 }

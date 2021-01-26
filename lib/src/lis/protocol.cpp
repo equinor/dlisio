@@ -18,6 +18,9 @@
 namespace dlisio { namespace lis79 {
 namespace lis = dlisio::lis79;
 
+constexpr const int lis::spec_block1::size;
+constexpr const int lis::spec_block0::size;
+
 bool padbytes(const char* xs, std::uint16_t size) {
     constexpr int PADBYTE_NULL  = 0x00;
     constexpr int PADBYTE_SPACE = 0x20;
@@ -180,10 +183,11 @@ noexcept (true) {
  */
 const char* cast(const char* xs, lis::string& s, std::int32_t len)
 noexcept (true) {
-    char str[len];
-    xs = lis_string( xs, len, str );
+    std::vector< char > str;
+    str.resize( len );
+    xs = lis_string( xs, len, str.data() );
 
-    lis::string tmp{ std::string{ str, str + len } };
+    lis::string tmp{ std::string{ str.begin(), str.end() } };
     swap( s, tmp );
     return xs;
 }
@@ -200,10 +204,11 @@ noexcept (true) {
 
 const char* cast(const char* xs, lis::mask& s, std::int32_t len)
 noexcept (true) {
-    char str[len];
-    xs = lis_mask( xs, len, str );
+    std::vector< char > str;
+    str.resize( len );
+    xs = lis_mask( xs, len, str.data() );
 
-    lis::mask tmp{ std::string{ str, str + len } };
+    lis::mask tmp{ std::string{ str.begin(), str.end() } };
     swap( s, tmp );
     return xs;
 }
@@ -281,7 +286,10 @@ noexcept (false) {
     if (offset) cur += *offset;
 
     if ( std::distance(cur, end) < SB_MINIMUM_SIZE ) {
-        throw std::runtime_error("Not enough bytes");
+        const auto msg = "lis::entry_block: "
+                         "{} bytes left in record, expected at least {} more";
+        const auto left = std::distance(cur, end);
+        throw std::runtime_error(fmt::format(msg, left, SB_MINIMUM_SIZE));
     }
 
     lis::entry_block entry;
@@ -290,8 +298,11 @@ noexcept (false) {
     cur = cast( cur, entry.size  );
     cur = cast( cur, entry.reprc ); // TODO verify reprc
 
-    if ( (end - cur) < lis::decay( entry.size ) ) {
-        throw std::runtime_error("Not enough bytes");
+    if ( std::distance(cur, end) < lis::decay( entry.size ) ) {
+        const auto msg = "lis::entry_block: "
+                         "{} bytes left in record, expected at least {} more";
+        const auto left = std::distance(cur, end);
+        throw std::runtime_error(fmt::format(msg, left, lis::decay(entry.size)));
     }
 
     auto repr = static_cast< lis::representation_code>( lis::decay(entry.reprc) );
@@ -313,7 +324,10 @@ noexcept (false) {
     if (offset) cur += *offset;
 
     if ( std::distance(cur, end) < T::size ) {
-        throw std::runtime_error("Not enough bytes");
+        const auto msg = "lis::spec_block: "
+                         "{} bytes left in record, expected at least {} more";
+        const auto left = std::distance(cur, end);
+        throw std::runtime_error(fmt::format(msg, left, T::size));
     }
 
     cur = cast( cur, spec.mnemonic,         4 );
@@ -328,7 +342,7 @@ noexcept (false) {
     cur = cast( cur, spec.reprc );
     cur += 5;                       // Skip padding / Process indicators
 
-    if (offset) *offset = T::size;
+    if (offset) *offset += T::size;
 }
 
 } // namespace
@@ -350,7 +364,7 @@ lis::dfsr parse_dfsr( const lis::record& rec ) noexcept (false) {
     formatspec.info = rec.info; //carry over the header information of the record
 
     std::uint8_t subtype = 0;
-    std::size_t offset;
+    std::size_t offset = 0;
 
     while (true) {
         const auto entry = read_entry_block(rec, &offset);
@@ -359,7 +373,7 @@ lis::dfsr parse_dfsr( const lis::record& rec ) noexcept (false) {
         formatspec.entries.push_back( std::move(entry) );
         // TODO swich on subtype based on entry block
 
-        if ( type == lis::entry_type::terminator)
+        if ( type == lis::entry_type::terminator )
             break;
     }
 
@@ -564,6 +578,8 @@ noexcept (true)
     return interpret( cur, f, init< typename bless< Args >::type >() ... );
 }
 
+} // namespace
+
 cursor packf(const char* fmt, const char* src, char* dst) noexcept (true) {
     /*
      * The public lis_packf function assumes both src and dst are valid
@@ -651,5 +667,3 @@ int lis_pack_size(const char* fmt, int* src, int* dst) {
         }
     }
 }
-
-} // namespace

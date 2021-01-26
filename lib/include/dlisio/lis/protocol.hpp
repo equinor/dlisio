@@ -239,8 +239,6 @@ struct entry_block {
 
 entry_block read_entry_block(const record&, std::size_t*) noexcept (false);
 
-namespace {
-
 struct spec_block {
     lis::string mnemonic;
     lis::string service_id;
@@ -251,8 +249,6 @@ struct spec_block {
     lis::byte   samples;
     lis::representation_code reprc;
 };
-
-}
 
 /** Data Specification Block - subtype 0 (DSB0)
  */

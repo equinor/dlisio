@@ -42,4 +42,3 @@ def test_read_curves():
         ch = curves['BDIA'][0:5]
         expected = np.array([36.0, 36.0, 36.0, 36.0, 36.0])
         np.testing.assert_array_equal(expected, ch)
-

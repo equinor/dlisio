@@ -198,9 +198,25 @@ noexcept (false) {
         dstb = py::buffer(dstobj);
         info = dstb.request(true);
         dst = static_cast< unsigned char* >(info.ptr);
-        dst += (size * itemsize);
     };
 
+    int frames = 0;
+
+    for ( const auto& head : implicits ) {
+        /* get record */
+        auto record = file.read_record( head );
+        read_fdata_record( fmt,
+                           record,
+                           dst,
+                           frames,
+                           itemsize,
+                           allocated_rows,
+                           resize );
+    }
+
+    assert(allocated_rows >= frames);
+    if (allocated_rows > frames)
+        resize(frames);
 
     return dstobj;
 }
@@ -362,7 +378,7 @@ void init_lis_extension(py::module_ &m) {
         .def_readonly( "value", &lis::entry_block::value )
     ;
 
-    py::class_< lis::spec_block0 >( m, "spec_block0" )
+    py::class_< lis::spec_block >( m, "spec_block" )
         .def_readonly( "mnemonic",         &lis::spec_block::mnemonic         )
         .def_readonly( "service_id",       &lis::spec_block::service_id       )
         .def_readonly( "service_order_nr", &lis::spec_block::service_order_nr )
@@ -384,5 +400,4 @@ void init_lis_extension(py::module_ &m) {
     /* end - parse.hpp */
 
     m.def("read_fdata", read_fdata);
-
 }
