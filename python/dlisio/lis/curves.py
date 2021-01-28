@@ -20,6 +20,67 @@ nptype = {
 
 
 def curves(f, dfsr, strict=True):
+    """ Read curves
+
+    Read the curves described by Data Format Spec Record (DFSR). This the
+    curves are read into a Numpy Structured Array [1]. The mnemonics - as
+    described by the DFSR - of the channels are used as column names.
+
+    [1] https://numpy.org/doc/stable/user/basics.rec.html
+
+    Parameters
+    ----------
+
+    f : logical_file
+        The logcal file that the dfsr belongs too
+
+    dfsr: dlisio.core.dfsr
+        Data Format Specification Record
+
+    strict : boolean, optional
+        By default (strict=True) curves() raises a ValueError if there are
+        multiple channels with the same mnemonic. Setting strict=False lifts
+        this restriction and dlisio will append numerical values (i.e. 0, 1, 2
+        ..) to the labels used for column-names in the returned array.
+
+    Returns
+    -------
+
+    curves : np.ndarray
+        Numpy structured ndarray with mnemonics as column names
+
+    Raises
+    ------
+
+    ValueError
+        If the DFSR contains the same mnemonic multiple times. Numpy Structured
+        Arrays requires all column names to be unique. See paramter `strict`
+        for workaround
+
+    Examples
+    --------
+
+    The returned array supports both horizontal- and vertical slicing.
+    Slice on a subset of channels:
+
+    >>> curves = dlisio.lis.curves(f, dfsr)
+    >>> curves[['CHANN2', 'CHANN3']]
+    array([
+        (16677259., 852606.),
+        (16678259., 852606.),
+        (16679259., 852606.),
+        (16680259., 852606.)
+    ])
+
+    Or slice a subset of the samples:
+
+    >>> curves = dlisio.lis.curves(f, dfsr)
+    >>> curves[0:2]
+    array([
+        (16677259., 852606., 2233., 852606.),
+        (16678259., 852606., 2237., 852606.)])
+
+    """
     fmt   = core.dfs_formatstring(dfsr)
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)

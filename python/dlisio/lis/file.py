@@ -1,17 +1,31 @@
+import logging
+
 from .. import core
 
 class logical_file():
     """ Logical File (LF)
 
-    A LIS file is typically segmented into multiple logical files. LF's are
-    just a way to group information that logically belongs together. LF's are
-    completely independent of each other and can generally be treated as if
-    they were different files on disk. In fact - that's just what dlisio does.
-    Each logical file gets its own io-device and is completely segmented from
-    other LF's.
+    This class is the main interface for working with a single LF. A LF is
+    essentially a series of Logical Records (LR). There are many different LR
+    types, each designed to carry a specific piece of information. For example
+    a Logical File Header Record contains static information about the file,
+    while the Data Format Specification Records contain information about
+    curve-data, and how that should be parsed.
+
+    This class provides an interface for easy interaction and extraction of the
+    various Logical Records within the Logical File. It is completely
+    independent of other LF's, and even has it's own IO-device. It stores a
+    pre-built index of all LR's for random access when reading from disk.
+
+    Notes
+    -----
+
+    No parsed records are cached by this class. Thus it's advisable that the
+    result of each record read is cached locally.
     """
-    def __init__(self, io, index):
-        self.io = io
+    def __init__(self, path, io, index):
+        self.path  = path
+        self.io    = io
         self.index = index
 
     def close(self):
@@ -24,7 +38,8 @@ class logical_file():
         self.close()
 
     def __repr__(self):
-        return 'logical_file'
+        msg = 'logical_file(path="{}", io={}, index={})'
+        return msg.format(self.path, self.io, self.index)
 
     @property
     def header(self):

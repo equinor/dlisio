@@ -366,6 +366,11 @@ void init_lis_extension(py::module_ &m) {
         .def( "explicits", &lis::record_index::explicits )
         .def( "implicits", &lis::record_index::implicits )
         .def( "size",      &lis::record_index::size )
+        .def( "__repr__", [](const lis::record_index& x) {
+            return "lis::record_info(size={})"_s.format(
+                x.size()
+            );
+        })
     ;
     /* end - io.hpp */
 

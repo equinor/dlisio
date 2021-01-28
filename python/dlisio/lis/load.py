@@ -4,7 +4,22 @@ from .. import core
 from .file import logical_file, physical_reel
 
 def load(path):
-    """ Loads a file and returns one filehead
+    """ Loads and indexes a file
+
+    A LIS file are typically segmented into multiple Logical Files (LF). LF's
+    are just a way to group information that logically belongs together. LF's
+    are completely independent of each other and can generally be treated as if
+    they where different files on disk. In fact - that's just what load does.
+    Each logical file gets it's own io-device and is completely segmented from
+    other LF's.
+
+    Notes
+    -----
+
+    It's not uncommon that LIS files are stored with different file extensions
+    than `.LIS`. For example `.LTI` or `.TIF`. Load does not care about file
+    extension at all. As long as the content adheres to the Log Interchange
+    Standard, load will read it as such.
 
     Parameters
     ----------
@@ -12,12 +27,10 @@ def load(path):
     path : str_like
         path to lis-file
 
-
     Returns
     -------
 
     lis : dlisio.lis.physical_reel
-
     """
     f = core.open(path, 0)
     tm = core.read_tapemark(f)
@@ -35,7 +48,7 @@ def load(path):
         except EOFError:
             break
         index = f.index_records()
-        files.append( logical_file(f, index) )
+        files.append( logical_file(path, f, index) )
 
         if f.istruncated():
             msg = 'logical file nr {} is truncated'
