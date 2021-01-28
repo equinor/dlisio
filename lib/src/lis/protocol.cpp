@@ -283,7 +283,7 @@ noexcept (false) {
 
 lis::entry_block read_entry_block( const lis::record& rec, std::size_t* offset )
 noexcept (false) {
-    constexpr std::size_t SB_MINIMUM_SIZE = 3;
+    constexpr int SB_MINIMUM_SIZE = 3;
 
     const auto* cur = rec.data.data();
     const auto* end = cur + rec.data.size();
