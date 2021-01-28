@@ -1,5 +1,6 @@
 #include <cstring>
 #include <ciso646>
+#include <algorithm>
 
 #include <dlisio/tapemark.hpp>
 #include <dlisio/stream.hpp>
