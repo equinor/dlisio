@@ -3,11 +3,11 @@ from .. import core
 class logical_file():
     """ Logical File (LF)
 
-    A LIS file are typically segmented into multiple logical files. LF's are
+    A LIS file is typically segmented into multiple logical files. LF's are
     just a way to group information that logically belongs together. LF's are
     completely independent of each other and can generally be treated as if
-    they where different files on disk. In fact - that's just what dlisio does.
-    Each logical file gets it's own io-device and is completly segmented from
+    they were different files on disk. In fact - that's just what dlisio does.
+    Each logical file gets its own io-device and is completely segmented from
     other LF's.
     """
     def __init__(self, io, index):
@@ -72,9 +72,7 @@ class logical_file():
         parsed = []
         for recinfo in self.explicits:
             if recinfo.type != core.lis_rectype.format_spec: continue
-            print(recinfo)
             rec = self.io.read_record(recinfo)
-            print(rec)
             parsed.append( core.parse_dfsr(rec) )
 
         return parsed

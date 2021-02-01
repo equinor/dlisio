@@ -18,11 +18,6 @@
 namespace dlisio { namespace lis79 {
 namespace lis = dlisio::lis79;
 
-/* record_info */
-record_type record_info::type() const noexcept (false) {
-    return static_cast< record_type >( lis::decay(this->lrh.type));
-}
-
 /* range */
 range::iterator range::begin() const noexcept (true) {
     return this->start;
@@ -76,8 +71,8 @@ noexcept (false) {
         }
     );
 
-    auto gt = [](std::int64_t tell, const record_info& cur) {
-        return cur.ltell > tell;
+    auto lt = [](std::int64_t tell, const record_info& cur) {
+        return tell < cur.ltell;
     };
 
     // Find the first implicit record after curr_dfsr
@@ -85,13 +80,13 @@ noexcept (false) {
                     this->impls.begin(),
                     this->impls.end(),
                     curr_dfsr->ltell,
-                    gt
+                    lt
                 );
 
     // Find the last implicit record before next_dfsr (or implicits.end())
     std::vector< record_info >::const_iterator end;
     if (next_dfsr < this->expls.end())
-        end = std::upper_bound( begin, this->impls.end(), next_dfsr->ltell, gt );
+        end = std::upper_bound( begin, this->impls.end(), next_dfsr->ltell, lt );
     else
         end = this->impls.end();
 
@@ -157,14 +152,15 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
      * | PRH | PRdata | padding | PRH | PRdata |
      *  ---------------------------------------
      *
-     * Thus lisio will have to seek for the next physical header. After reading
-     * the first 4 bytes (PRH size), the first two bytes are inspected, which
-     * we would normally believe to be the PR length. If these are *not* null or
-     * space characters we assume no padding and simply parse the read buffer
-     * as the next header. If both those bytes are null or space characters, we
-     * are in padland:
+     * Thus dlisio will have to seek for the next physical header. After
+     * reading the first 4 bytes (PRH size), the first two bytes are inspected,
+     * which we would normally believe to be the PR length. If these are *not*
+     * null or space characters we assume no padding and simply parse the read
+     * buffer as the next header. If both those bytes are null or space
+     * characters, we are in padland:
      *
-     *  To be able to deal effectively with padding lisio makes one key assumption;
+     * To be able to deal effectively with padding dlisio makes one key
+     * assumption:
      *
      *    The next header, after the padding (if any) *always* start on a even
      *    tell that is divisible by 4 (PRH len).
@@ -197,7 +193,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
      * function does a bit ceremony to establish the correct context and then
      * throws the appropriate error.
      */
-    auto read_error = [this]( const char* buf, int bufsize, int nread ) {
+    auto error = [this]( const char* buf, int bufsize, int nread ) {
         const auto where = "iodevice::read_physical_header: {}";
         if ( this->eof() and (nread == 0 or lis::padbytes(buf, bufsize)) ) {
             const auto what = "end-of-file";
@@ -218,9 +214,9 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
     };
 
     auto nread = this->read(buf, lis::prheader::size);
-    if ( nread < lis::prheader::size )
-        read_error( buf, nread, nread );
-
+    if ( nread < lis::prheader::size ) {
+        error( buf, nread, nread );
+    }
 
     /* Check if the first to bytes - which we believe to be the prh length
      * is in fact a valid length, or padbytes */
@@ -235,7 +231,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
 
             nread = this->read(tmp + alignment, padbytes);
             if ( nread < padbytes )
-                read_error( tmp, alignment + nread, nread );
+                error( tmp, alignment + nread, nread );
 
             std::memcpy(buf, tmp, lis::prheader::size);
         }
@@ -246,7 +242,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
 
             nread = this->read(buf, lis::prheader::size);
             if ( nread < lis::prheader::size )
-                read_error( buf, nread, nread );
+                error( buf, nread, nread );
         }
     }
 
@@ -255,7 +251,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
     /* Minimum valid length (mvl) depends on whether this is the first PR in a
      * series of assosiated PR's or not. The first PR must contain a LR, while
      * the remaining PR's have no requirements w.r.t. content - and hence
-     * lenght.
+     * length.
      *
      *      - mvl for the first header is 6 bytes (PRH size + LRH size)
      *      - mvl for other PR's is 4 bytes (PRH size)
@@ -278,10 +274,10 @@ lis::lrheader iodevice::read_logical_header() noexcept (false) {
 
     if (nread == 0 and this->eof()) {
         throw dlisio::eof_error("iodevice::read_logical_header: "
-								"unexpected end-of-file");
+                                "unexpected end-of-file");
     } else if (nread < lis::lrheader::size){
         throw dlisio::io_error("iodevice::read_logical_header: "
-							   "file truncated in LRH");
+                               "could not read full header from disk");
     }
     return lis::read_lrh(buf);
 }
@@ -294,6 +290,10 @@ lis::record_info iodevice::index_record() noexcept (false) {
      * A logical file is terminated when an exhausted record is followed by
      * EOF. Hence hitting EOF when trying to read the *next* record is a valid
      * termination of the file.
+     *
+     * Note that recording the logical tell _after_ reading the PRH here is
+     * important. This is to ensure a correct ltell regardless of the presence
+     * of padbytes.
      */
     rec_info.prh   = this->read_physical_header();
     rec_info.ltell = this->ltell() - lis::prheader::size;
@@ -305,13 +305,16 @@ lis::record_info iodevice::index_record() noexcept (false) {
     } catch( const dlisio::eof_error& e ) {
         const auto msg =  "iodevice::index_record: {}";
         throw dlisio::truncation_error( fmt::format(msg, e.what()) );
+    } catch( const dlisio::io_error& e ) {
+        const auto msg =  "iodevice::index_record: {}";
+        throw dlisio::truncation_error( fmt::format(msg, e.what()) );
     }
 
     if ( not lis::valid_rectype( rec_info.lrh.type ) ) {
         /* There is really no way of telling if the LRH is zero'd out, as 0 is
         * valid record_type and the second byte is undefined.
         *
-        * Thus we rely on a fully zero'd out record to be caugth else-where.
+        * Thus we rely on a fully zero'd out record to be caught elsewhere.
         */
         const auto msg = "iodevice::index_record: "
                          "Found invalid record type ({}) when reading  "
@@ -322,7 +325,8 @@ lis::record_info iodevice::index_record() noexcept (false) {
 
     auto prh = rec_info.prh;
     while ( true ) {
-        //TODO Read PR trailer
+        // TODO Should consider to read the PR trailer too - and possible
+        //      include in index
         if ( not (prh.attributes & lis::prheader::succses) ) {
             /* Before returning, verify that the record is not truncated
              * by attempting to read the last byte in the record.
@@ -346,7 +350,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
             prh = this->read_physical_header();
             length += prh.length;
         } catch( const dlisio::eof_error& e ) {
-            const auto msg =  "iodevice::index_record: {}";
+            const auto msg = "iodevice::index_record: Missing next PRH. ({})";
             throw dlisio::truncation_error( fmt::format(msg, e.what()) );
         }
     }
@@ -414,9 +418,9 @@ record iodevice::read_record(const record_info& info) noexcept (false) {
         if ( prh.attributes & lis::prheader::filenum ) trlen += 2;
         if ( prh.attributes & lis::prheader::chcksum ) trlen += 2;
 
-        /* LR's spanning multiple PR's: The LRH is not repeated successive PRs.
-         * I.e. LRH is only present in the first PR -sSkip past logical record
-         * header
+        /* LRs spanning multiple PRs: The LRH is only present in the first PRH,
+         * i.e. when the predecessor attribute is not set. The LRH is already
+         * read, and is a part of record_info, so just skip past it.
          */
         std::int64_t toread = prh.length - lis::prheader::size - trlen;
         if ( not (prh.attributes & lis::prheader::predces) ) {
@@ -461,8 +465,10 @@ noexcept (false) {
     auto err = lfp_seek(protocol, offset);
     switch (err) {
         case LFP_OK: break;
-        default:
+        default: {
+            lfp_close( protocol );
             throw dlisio::io_error( lfp_errormsg(protocol) );
+        }
     }
 
     if ( tapeimage ) {
@@ -478,15 +484,29 @@ noexcept (false) {
     auto device = iodevice( protocol );
 
     /* Verify that the device is not opened at EOF by attempting to read one byte */
-    char tmp;
-    device.read(&tmp, 1);
-    if ( device.eof() ) {
+    try {
+        char tmp;
+        device.read(&tmp, 1);
+    } catch ( ... ) {
         device.close();
-        const auto msg = "open: handle is opened at EOF (ptell={})";
-        throw dlisio::eof_error( fmt::format(msg, device.poffset() ) );
+        const auto msg = "lis::open: Cannot open lis::iodevice at ptell {}";
+        throw dlisio::io_error( fmt::format(msg, offset ));
     }
 
-    device.seek( 0 );
+    if ( device.eof() ) {
+        const auto poffset = device.poffset();
+        device.close();
+        const auto msg = "open: handle is opened at EOF (ptell={})";
+        throw dlisio::eof_error( fmt::format(msg, poffset) );
+    }
+    try {
+        device.seek( 0 );
+    } catch ( ... ) {
+        const auto msg = "lis::open: "
+                         "Could not rewind lis::iodevice to ptell {}";
+        throw dlisio::io_error( fmt::format(msg, offset ));
+    }
+
     return device;
 }
 

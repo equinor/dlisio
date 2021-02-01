@@ -22,10 +22,11 @@ extern "C" {
  * 70           f32fixed    32-bit fixed point
  * 65           ascii       Alphanumeric
  * 66           bytes       Byte Format
- * 77           mask        mast
+ * 77           mask        variable-length bitmask
  * -------------------------------------------------------------
  *
  */
+
 /* (reprc 56) 8-bit signed integer */
 DLISIO_API
 const char* lis_i8(const char*, std::int8_t*);
@@ -57,7 +58,7 @@ const char* lis_f32fix(const char*, float*);
 
 /* (reprc 65) String (Alphanumeric)  - variable length string
  *
- * The alphanumeric type does not contain it's own length. Rather, the length
+ * The alphanumeric type does not contain its own length. Rather, the length
  * is either implied by the standard or explicitly stated by some other type in
  * the file.
  *
@@ -65,7 +66,7 @@ const char* lis_f32fix(const char*, float*);
  * the theoretical max length is the max value of the biggest int in the
  * standard, which is 2,147,483,647 (reprc 73).
  *
- * In practise it seams like the length typically is represented by reprc 66
+ * In practice it seems like the length typically is represented by reprc 66
  * (byte), which essentially is a uint8_t, limiting the max length to a more
  * reasonable 256 characters.
  */

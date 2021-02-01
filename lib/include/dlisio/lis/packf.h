@@ -15,11 +15,11 @@ extern "C" {
  * inserted, which means the data can be read from this array by computing the
  * correct offset and memcpy'd into a typed variable.
  *
- * fmt is a sscanf-inspired format string of conversion specifiers
- * (LIS_FMT_*). The size of each type depends on the most natural corresponding
- * C type, e.g. SSHORT is int8_t, and UNORM is uint16_t. The arguments to a
- * lis_type() function in lisio/primitives.h is the type being used as a target
- * type for a conversion specifier.
+ * fmt is a sscanf-inspired format string of conversion specifiers (LIS_FMT_*).
+ * The size of each type depends on the most natural corresponding C type, e.g.
+ * I8 is int8_t, and F32 is float. The arguments to a lis_type() function in
+ * lisio/types.h is the type being used as a target type for a conversion
+ * specifier.
  *
  * String types are always written as int32_t + len bytes, without a zero
  * terminator.
@@ -27,16 +27,16 @@ extern "C" {
  * Example:
  *
  * Extracting a frame with three channels:
- * C1 -> 1x1 unorm   (i16)
- * C2 -> 2x1 fsingle (f32)
- * C3 -> 1x1 uvari   (yields i32)
+ * C1 -> 1x1 i16     (int32_t)
+ * C2 -> 2x1 f32     (float)
+ * C3 -> 1x1 byte    (uint8_t)
  *
- * int16_t C1;
- * float C2[2];
- * int32_t C3;
+ * int32_t C1;
+ * float   C2[2];
+ * uint8_t C3;
  *
  * unsigned char bytes[2 + 2*4 + 4];
- * err = lis_packf("Uffi", src, bytes);
+ * err = lis_packf("iffb", src, bytes);
  * if (err) exit(1);
  *
  * memcpy(&C1, bytes,      sizeof(C1));

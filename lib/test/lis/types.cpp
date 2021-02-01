@@ -252,7 +252,7 @@ TEST_CASE("Byte - unsigned 8-bit integer", "[type]") {
     for( std::size_t i = 0; i < expected.size(); ++i ) {
         std::uint8_t v;
         lis_byte( inputs[ i ], &v );
-        CHECK( int(v) == int(expected[ i ]) );
+        CHECK( v == expected[ i ] );
     }
 }
 

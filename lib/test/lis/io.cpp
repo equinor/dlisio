@@ -147,13 +147,6 @@ TEST_CASE("A PRH can start at uneven tell when no padding", "[iodevice]" ) {
 }
 
 TEST_CASE("A PRH can be found when file is padded", "[iodevice]") {
-    const auto contents = std::vector< unsigned char > {
-        0x20, 0x20, 0x20, 0x20,
-        0x20, 0x20, 0x20, 0x20, //padbytes
-
-        0x00, 0x04, 0x00, 0x02, // prh(len=4, pred=1, succ=0)
-    };
-
     SECTION("When n-padbytes == 1") {
         const auto contents = std::vector< unsigned char > {
             0x00, 0x07, 0x00, 0x00, // prh(len=7, pred=0, succ=0)
@@ -178,7 +171,7 @@ TEST_CASE("A PRH can be found when file is padded", "[iodevice]") {
         file.close();
     }
 
-    SECTION("When n-padbytes == 2") {
+    SECTION("When padbytes == 2") {
         const auto contents = std::vector< unsigned char > {
             0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
             0x01, 0x02,
@@ -202,7 +195,7 @@ TEST_CASE("A PRH can be found when file is padded", "[iodevice]") {
         file.close();
     }
 
-    SECTION("When n-padbytes == 3") {
+    SECTION("When padbytes == 3") {
         const auto contents = std::vector< unsigned char > {
             0x00, 0x05, 0x00, 0x00, // prh(len=5, pred=0, succ=0)
             0x01,
@@ -226,7 +219,7 @@ TEST_CASE("A PRH can be found when file is padded", "[iodevice]") {
         file.close();
     }
 
-    SECTION("When n-padbytes == 4") {
+    SECTION("When padbytes == 4") {
         const auto contents = std::vector< unsigned char > {
             0x00, 0x00, 0x00, 0x00, // Padbyte
             0x00, 0x06, 0x00, 0x01, // prh(len=6, pred=0, succ=1)
@@ -247,7 +240,7 @@ TEST_CASE("A PRH can be found when file is padded", "[iodevice]") {
         file.close();
     }
 
-    SECTION("When n-padbytes > 4") {
+    SECTION("When padbytes > 4") {
         const auto contents = std::vector< unsigned char > {
             0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
             0x01, 0x02,
@@ -505,9 +498,9 @@ TEST_CASE("Padbytes can be identified and skipped") {
 
         0x00, 0x00, 0x00, 0x00, // Padding
 
-        0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
-        0x84, 0x00,             // lrh(type=132)
-        0x03, 0x04,             // dummy data
+        0x00, 0x07, 0x00, 0x00, // prh(len=7, pred=0, succ=0)
+        0x82, 0x00,             // lrh(type=130)
+        0x03,                   // dummy data
     };
 
     auto* cfile = lfp_cfile( tempfile( contents ) );
@@ -517,7 +510,7 @@ TEST_CASE("Padbytes can be identified and skipped") {
         file.seek(8);
         const auto prh = file.read_physical_header();
 
-        CHECK( prh.length == 8 );
+        CHECK( prh.length == 7 );
     }
 
     SECTION(" A record after padbytes is indexed correctly") {
@@ -525,8 +518,8 @@ TEST_CASE("Padbytes can be identified and skipped") {
         const auto recinfo = file.index_record();
 
         CHECK( recinfo.ltell  == 12 );
-        CHECK( recinfo.size   ==  8 );
-        CHECK( recinfo.type() == lis::record_type::reelheader );
+        CHECK( recinfo.size   ==  7 );
+        CHECK( recinfo.type() == lis::record_type::tapeheader );
     }
 
     SECTION("PR after padding is included in the index") {
@@ -599,7 +592,7 @@ TEST_CASE("Size of the indexed file") {
             0x40, 0x00,             // lrh(type=64) DFSR
             0x01, 0x02,             // dummy data
 
-            0x00, 0x00,             // truncated
+            0x00, 0x00,             // padding
         };
 
         auto* cfile = lfp_cfile( tempfile( contents ) );
@@ -723,7 +716,7 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
     auto index = file.index_records();
     auto explicits = index.explicits();
 
-    SECTION("No implicits are found for a DFSR whene next record is also DFSR") {
+    SECTION("No implicits are found for a DFSR where next record is also DFSR") {
         auto dfsr = explicits[0];
         CHECK( dfsr.ltell == 0 );
         CHECK( dfsr.type() == lis::record_type::format_spec );

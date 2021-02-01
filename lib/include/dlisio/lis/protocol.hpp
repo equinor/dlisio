@@ -32,7 +32,7 @@ struct lrheader {
  * Read and parse the next lis::lrheader::size bytes into a lis::lrheader
  * instance.
  */
-lrheader read_lrh(const char* xs) noexcept (false);
+lrheader read_lrh(const char* xs) noexcept (true);
 
 /** Physical Record Header (PRH)
  *
@@ -75,7 +75,7 @@ prheader read_prh(char* xs) noexcept (false);
 /** Check if all bytes in the buffer are pad-bytes
  *
  * The spec allows for an unspecified number of pad-bytes between Physical
- * Records. Because there is no hint if and now many pad-bytes are present, it
+ * Records. Because there is no hint if and how many pad-bytes are present, it
  * must be checked manually between each PR. This function checks if the next n
  * bytes of a buffer are all pad-bytes.
  *
@@ -133,16 +133,16 @@ bool valid_rectype(lis::byte type);
 /** (Logical) Record Info
  *
  * A Logical Record (LR) always starts on a new Physical Record (PR) and may
- * span multiple PR's. While each PR has it's own header (PRH), the LR Header
+ * span multiple PR's. While each PR has its own header (PRH), the LR Header
  * (LRH) is only recorded once - At the start of the *first* PR.
  *
  * record_info contains all information needed in order to find and extract
  * the content of the Logical Record.
  */
 struct record_info {
-    std::int64_t  ltell; // offset to the *first* PR
+    std::int64_t  ltell; // Logical offset to the *first* PR
     lis::lrheader lrh;   // Logical Record Header
-    lis::prheader prh;   // The _first_ Physical Record Headers
+    lis::prheader prh;   // The _first_ Physical Record Header
 
     bool consistent = true; // TODO implement succ/pred check
     std::size_t size;
@@ -152,7 +152,7 @@ struct record_info {
 /** Logical Record (LR)
  *
  * A raw buffer of the Logical Record. This buffer is a contiguous sequence of
- * all bytes that constitutes the _full_ Logical Record, ready to be parsed.
+ * all bytes that constitute the full [1] Logical Record, ready to be parsed.
  * That is:
  *
  *                   -----------------------------------------------
@@ -162,6 +162,11 @@ struct record_info {
  *                   -----------------------
  * record.data:     | data0 | data1 | data2 |
  *                   -----------------------
+ *
+ * [1] The Logical Record Header (LRH) is not part of the raw buffer, as it's
+ *     part of the record_info. The parsed LRH provides clues to the contentent
+ *     of the record through it's type-field. Hence it makes sense to keep the
+ *     parsed header seperate from the unparsed record.
  */
 struct record {
     record_info         info;
@@ -222,10 +227,10 @@ enum class entry_type : std::uint8_t {
  *
  * General information about the "frame".
  *
- * A Entry Block can be one of the types defined in lis::entry_type. All types
- * are equally structured, but differ in semantic meaning. Often the mere
- * presence/absence of a given type has semantic meaning. Such behavior should be
- * enforced on a higher level, such as lis::dfsr
+ * An Entry Block can be of one of the types defined in lis::entry_type. All
+ * types are equally structured, but differ in semantic meaning. Often the mere
+ * presence/absence of a given type has semantic meaning. Such behavior should
+ * be enforced on a higher level, such as lis::dfsr
  *
  * spec ref: LIS79 ch 4.1.6
  */
@@ -256,7 +261,8 @@ struct spec_block0 : spec_block {
     lis::byte api_log_type;
     lis::byte api_curve_type;
     lis::byte api_curve_class;
-    lis::byte api_modifiers;
+    lis::byte api_modifier;
+    lis::byte process_level;
 
     static constexpr const int size = 40;
 };
@@ -264,10 +270,8 @@ struct spec_block0 : spec_block {
 /** Data Specification Block - subtype 1 (DSB1)
  */
 struct spec_block1 : public spec_block {
-    lis::byte api_log_type;
-    lis::byte Vapi_curve_type;
-    lis::byte api_curve_class;
-    lis::byte api_modifiers;
+    lis::i32  api_codes;
+    lis::mask process_indicators;
 
     static constexpr const int size = 40;
 };

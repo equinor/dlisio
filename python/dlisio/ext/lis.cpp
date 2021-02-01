@@ -92,7 +92,7 @@ template <> struct type_caster< lis::f32low > : lis_caster< lis::f32low > {};
 template <> struct type_caster< lis::f32fix > : lis_caster< lis::f32fix > {};
 template <> struct type_caster< lis::string > : lis_caster< lis::string > {};
 template <> struct type_caster< lis::byte   > : lis_caster< lis::byte   > {};
-//template <> struct type_caster< lis::mask   > : lis_caster< lis::mask   > {};
+template <> struct type_caster< lis::mask   > : lis_caster< lis::mask   > {};
 
 }} // namespace pybind11::detail
 
@@ -127,7 +127,7 @@ void read_fdata_record( const std::string& fmt,
                         const std::size_t& itemsize,
                         std::size_t allocated_rows,
                         std::function<void (std::size_t)> resize )
-noexcept (false){
+noexcept (false) {
 
     const auto* ptr = src.data.data();
     const auto* end = ptr + src.data.size();
@@ -190,7 +190,6 @@ noexcept (false) {
      * and then carefully restored to the new memory.
      */
     auto resize = [&](std::size_t n) {
-        auto size = dstobj.attr("size").cast< std::size_t >();
         info = py::buffer_info {};
         dstb = py::buffer {};
         dstobj.attr("resize")(n);
@@ -323,8 +322,8 @@ void init_lis_extension(py::module_ &m) {
             return x.length;
         })
         .def( "__repr__", [](const lis::prheader& x) {
-            bool prev = ( x.attributes & lis::prheader::predces  ) ? true : false;
-            bool succ = ( x.attributes & lis::prheader::succses  ) ? true : false;
+            bool prev = x.attributes & lis::prheader::predces;
+            bool succ = x.attributes & lis::prheader::succses;
             return "lis::prheader(length={}, pred={}, succ={})"_s.format(
                 x.length,
                 prev,
@@ -390,7 +389,7 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::dfsr >( m, "dfsr" )
-        .def_readonly( "info",   &lis::dfsr::info )
+        .def_readonly( "info",    &lis::dfsr::info    )
         .def_readonly( "entries", &lis::dfsr::entries )
         .def_readonly( "specs",   &lis::dfsr::specs   )
     ;

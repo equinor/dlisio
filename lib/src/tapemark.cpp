@@ -7,9 +7,9 @@
 
 namespace dlisio {
 
-bool valid_tapemark( const dlisio::tapemark& tm ) noexcept (false) {
+bool valid_tapemark( const dlisio::tapemark& tm ) noexcept (true) {
     if ( (tm.type != 0) and (tm.type != 1) ) return false;
-    if ( tm.prev >= tm.next  )           return false;
+    if ( tm.prev >= tm.next  )               return false;
 
     return true;
 }

@@ -25,6 +25,10 @@ bool padbytes(const char* xs, std::uint16_t size) {
     constexpr int PADBYTE_NULL  = 0x00;
     constexpr int PADBYTE_SPACE = 0x20;
 
+    /* Calling this function with size=0 is nonsensical. We regard this special
+     * case as: "In this buffer of zero bytes, there are no padbytes". So the
+     * function returns false.
+     */
     if (size == 0) return false;
 
     auto* cur = xs;
@@ -55,7 +59,7 @@ lis::prheader read_prh(char* xs) noexcept (false) {
     return head;
 }
 
-lis::lrheader read_lrh(const char* xs) noexcept (false) {
+lis::lrheader read_lrh(const char* xs) noexcept (true) {
     lis::lrheader head;
 
     std::memcpy(&head.type,      xs + 0, sizeof( std::uint8_t ));
@@ -106,6 +110,12 @@ bool valid_rectype(lis::byte type) {
             return false;
     }
 }
+
+/* record_info */
+record_type record_info::type() const noexcept (false) {
+    return static_cast< record_type >( lis::decay(this->lrh.type));
+}
+
 namespace {
 
 using std::swap;
@@ -173,13 +183,8 @@ noexcept (true) {
 }
 
 /* string- or alphanumeric (reprc 65) is a bit special in that it doesn't
- * contain it's own length. I don't see a nice way around this, other than to
+ * contain its own length. I don't see a nice way around this, other than to
  * break the cast's interface by adding length as a parameter.
- *
- * We can define lis::alphanum as a char, but that makes reading rather
- * cumbersome in general. We would still have to assosiate the appropriate
- * length and then manually create a string from the char array we would
- * produce.
  */
 const char* cast(const char* xs, lis::string& s, std::int32_t len)
 noexcept (true) {
@@ -410,14 +415,8 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
              *
              * repcode 65 and 77 are variable length, but the length is not
              * encoded in the type itself. Rather, it must come from an
-             * external source. It doesn't seam like DFSR and IFLR have a
+             * external source. It doesn't seem like DFSR and IFLR have a
              * mechanism of specifying such sizes.
-             *
-             * The only option would be if the size where implicitly 1, i.e.
-             * lis::string == char and lis::mask is a one-byte mask. However, I
-             * have yet to find anything in the LI79 spec that support this
-             * claim.
-             *
              */
             default: {
                 std::string msg = "lis::dfs_fmtstr: Cannot create formatstring"
@@ -451,15 +450,15 @@ namespace {
 
 /*
  * The lis_packf function uses a dispatch table for interpreting and expanding
- * raw bytes into native C++ data types. There are 27 primary data types
- * specified by RP66 (Appendix B).
+ * raw bytes into native C++ data types. There are 10 primary data types
+ * specified by LIS79 (Appendix B).
  *
  * Instead of populating the dispatch table by hand, generate it with the
  * interpret function. The interpret() function essentially generates this code
  * for all RP66 data types:
  *
  * float f;
- * src = lis_fsingl( src, &f );
+ * src = lis_f32( src, &f );
  * memcpy( dst, &f, 4 );
  * dst += 4;
  */
@@ -604,7 +603,9 @@ cursor packf(const char* fmt, const char* src, char* dst) noexcept (true) {
             case LIS_FMT_F32LOW : cur = interpret(cur, lis_f32low); break;
             case LIS_FMT_F32FIX : cur = interpret(cur, lis_f32fix); break;
             case LIS_FMT_BYTE   : cur = interpret(cur, lis_byte);   break;
-
+            /* Because lis_string and lis_mask does not encode it's own length
+             * we currently assume that these can't be used as types in IFLRs
+             */
             default:
                 return cur.invalidate();
         }

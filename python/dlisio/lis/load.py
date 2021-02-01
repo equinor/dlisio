@@ -16,7 +16,7 @@ def load(path):
     Returns
     -------
 
-    lis : dlisio.lis.physicalfile
+    lis : dlisio.lis.physical_reel
 
     """
     f = core.open(path, 0)
@@ -42,8 +42,6 @@ def load(path):
             logging.info(msg.format(len(files)))
             break
 
-        offset += f.psize()
-
-
+        offset = f.poffset() + f.psize()
 
     return physical_reel(files)

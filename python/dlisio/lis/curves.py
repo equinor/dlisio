@@ -40,7 +40,7 @@ def dfsr_dtype(dfsr, strict=True):
         for ch in dfsr.specs
     ]
 
-    if any([x for x in dfsr.specs if x.samples > 1]):
+    if any(x for x in dfsr.specs if x.samples > 1):
         raise RuntimeError("Fast channel not implemented")
 
     try:

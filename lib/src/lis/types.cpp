@@ -118,7 +118,7 @@ const char* lis_f32(const char* xs, float* x) {
      * The sign (S) and the exponent (E) is trivial. The mantissa is in theory
      * easy too, but a couple of optimizations can be applied:
      *
-     * The straight forward way of calculating the value of the mantissa (which
+     * The straightforward way of calculating the value of the mantissa (which
      * is a binary fraction) is to take the sum of all bits, each multiplied
      * by 2^n, where n = [-1, -nbits]:
      *
@@ -131,8 +131,8 @@ const char* lis_f32(const char* xs, float* x) {
      *               = 0.5 + 0.125 = 0.625
      *
      * This is the same as reading the binary fraction as a signed 2's
-     * compliment [2][3] and multiply it by the precision/resolution. Where the
-     * precision is the value of rightmost bit in the fraction:
+     * compliment [2][3] and multiplying it by the precision/resolution, where
+     * the precision is the value of rightmost bit in the fraction:
      *
      *      mantissa = (std::int8_t)bf * precision
      *               = 160 * 2^-8
@@ -161,7 +161,7 @@ const char* lis_f32(const char* xs, float* x) {
      * buffers. When trying to interpret the _value_ of the buffer as a signed
      * 2'compliments integer we need to be a bit cautious.
      *
-     * For positive 2's compliment numbers, leading zeros does not count towards
+     * For positive 2's compliment numbers, leading zeros do not count towards
      * the value so just make sure all excess bits are set to zero.
      *
      * For negative 2's compliment numbers the opposite is true. Leading ones
