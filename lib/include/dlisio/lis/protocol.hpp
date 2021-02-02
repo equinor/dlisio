@@ -186,22 +186,6 @@ using value_type = mpark::variant<
     lis::mask
 >;
 
-/** A base class for for all parsed record types
- *
- * The purpose of this class is to carry over the header information and the
- * tell from the raw records.  The tell is a unique identifier for lis::record
- * and serves as a light-weight reference such that the source of the object is
- * not lost. This information is _especially_ important when dealing with DFS
- * records and their implicit relationship to the following implicit records.
- *
- * If this class is going to live in it's current for remains to see, but as a
- * short-term solution it serves as nicely as a bridge between unparsed- and
- * parsed data.
- */
-struct parsed_record {
-    lis::record_info info;
-};
-
 enum class entry_type : std::uint8_t {
     terminator         = 0,
     data_rec_type      = 1,
@@ -291,7 +275,8 @@ spec_block1 read_spec_block1(const record&, std::size_t*) noexcept (false);
  *
  * spec ref: LIS79 ch 4.1.6
  */
-struct dfsr : public parsed_record {
+struct dfsr {
+    record_info info;
     std::vector< entry_block > entries;
     std::vector< spec_block > specs;
 };
