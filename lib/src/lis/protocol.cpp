@@ -637,34 +637,3 @@ int lis_packflen(const char* fmt, const void* src, int* nread, int* nwrite) {
     if (nwrite) *nwrite = cur.written;
     return DLIS_OK;
 }
-
-int lis_pack_size(const char* fmt, int* src, int* dst) {
-    bool varsrc = false;
-    int correction = 0;
-    int size = 0;
-    while (true) {
-        switch (*fmt++) {
-            case DLIS_FMT_EOL:
-                if (varsrc) correction = size;
-                if (src) *src = size - correction;
-                if (dst) *dst = size;
-                return DLIS_OK;
-
-            case LIS_FMT_F16:
-                correction += sizeof(float) - LIS_SIZEOF_F16;
-                size += sizeof(float);
-                break;
-
-            case LIS_FMT_I8     : size += LIS_SIZEOF_I8    ; break;
-            case LIS_FMT_I16    : size += LIS_SIZEOF_I16   ; break;
-            case LIS_FMT_I32    : size += LIS_SIZEOF_I32   ; break;
-            case LIS_FMT_F32    : size += LIS_SIZEOF_F32   ; break;
-            case LIS_FMT_F32LOW : size += LIS_SIZEOF_F32LOW; break;
-            case LIS_FMT_F32FIX : size += LIS_SIZEOF_F32FIX; break;
-            case LIS_FMT_BYTE   : size += LIS_SIZEOF_STRING; break;
-            // string and mask cannot be uses as type in frames
-            default:
-                return DLIS_INVALID_ARGS;
-        }
-    }
-}

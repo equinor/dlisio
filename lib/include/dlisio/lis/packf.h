@@ -58,42 +58,6 @@ int lis_packf( const char* fmt, const void* src, void* dst );
 DLISIO_API
 int lis_packflen(const char* fmt, const void* src, int* nread, int* nwrite);
 
-/*
- * Check if a format string for packing is var-size or fixed-size
- *
- * This function is intended for checking if format strings built from
- * inspecting records is fixed-sized or not, which in turn can guide if it's
- * possible to random-access onto variables. The output variables are booleans
- * - the src output is true if the format is variable-size on disk, and the dst
- * output is true if the format is variable-size *in memory*. This is
- * determined by the presence of UVARI and ORIGIN which are variable-sized on
- * disk, but fixed-size in memory.
- *
- * This functionality can be implemented by manually checking if the format
- * string contains any of "sSoOAQ", but is provided for convenience.
- *
- * Returns LIS_OK on success, and LIS_INVALID_ARGS if the format strings
- * contain any invalid format specifier. The output params are non-zero if
- * there are any variable-length values in the format specifier, and 0 if all
- * types are fixed-length. If the function fails, the output variable is
- * untouched.
- *
- * To compute the length of a fixed-size string, use lis_pack_size. src is the
- * size of the pack on disk, and dst the length of the packed string in memory,
- * i.e.  UVARI is 4 bytes, not inconsistent. For individual object sizes, refer
- * to the LIS_SIZEOF constants in lisio/primitives.h
- *
- * NOTE:
- * lis_pack_size considers the src variable-size when fmt has UVARI, but the
- * dst fixed-size. This will return LIS_OK, but set src to
- * LIS_VARIABLE_LENGTH (= 0).
- *
- * For both functions, both src and dst can be NULL, in which case no data will
- * be written.
- */
-DLISIO_API
-int lis_pack_size(const char* fmt, int* src, int* dst);
-
 #ifdef __cplusplus
 }
 #endif
