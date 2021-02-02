@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:se="http://svg-edit.googlecode.com" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="390" height="140" style="">
+  <title>dlisio logo</title>
+  <style>
+    @import url(https://eds-static.equinor.com/font/equinor-font.css);
+  </style>
+  <!-- Created with Vector Paint - http://www.vectorpaint.yaks.com/ https://chrome.google.com/webstore/detail/hnbpdiengicdefcjecjbnjnoifekhgdo -->
+  <rect id="background" width="100%" height="100%" x="0" y="0" fill="none" stroke="none"/>
+  <path fill="#ed8d10" stroke="#242424" stroke-width="2" stroke-linejoin="round" stroke-dashoffset="" fill-rule="nonzero" marker-start="" marker-mid="" marker-end="" id="svg_icon" transform="translate(-130 -120)" d="M194.7052297937189,151.31816169346712 C173.50067183272404,151.31816169346712 156.3110809326172,168.50775259357397 156.3110809326172,189.72079444088013 C156.3110809326172,210.92540060577448 173.50067183272404,228.11375427246094 194.7052297937189,228.11375427246094 C215.90983595861326,228.11375427246094 233.106673511611,210.92540060577448 233.106673511611,189.72079444088013 C233.106673511611,168.50775259357397 215.90983595861326,151.31816169346712 194.7052297937189,151.31816169346712 zM216.86097923550187,186.98686207706487 C213.03167752750596,191.39729392941808 207.0726150640112,192.85652237496106 201.84016211355265,191.1800228864231 L182.85324061683787,213.0209205246647 C180.82983373159368,215.34338440238207 177.30569484334046,215.58517516225402 174.9841147037805,213.56176827700983 S172.41261341330028,208.01417429961293 174.43602029854446,205.69171042189555 L193.4474936480692,183.82661442610697 C191.09321519668447,178.90051332491203 191.71347083946603,172.82905543575907 195.52697773639375,168.44288621281885 C199.13899233342818,164.28277721054837 204.65469139732522,162.75868238425028 209.65296980403218,164.01641852989997 L202.3810098658978,172.5066677559298 L204.7586190046386,179.43287719094587 L211.9508496930066,180.8275606150637 L219.24710439648698,172.3212594905017 C221.2228697610626,177.1104133132285 220.49749748144677,182.81066904032923 216.86097923550187,186.98686207706487 z" style="color: rgb(0, 0, 0);" class="" fill-opacity="1" stroke-opacity="1"/>
+
+<!--
+There is an issue with displaying custom fonts in .svg file on various devices, for example on Mac. We are affected by it as we use Equinor font.
+So in case text is ever updated, we need to convert font to a path, which can be done with any Vector Graphics Editor, such as Inkscape.
+With Equinor font installed on the system, select 'dlisio' text - Path Menu - Object to Path, save as Plain SVG and put graphics in the original file to prevent Github from complaining.
+-->
+  
+<!-- Original text. Could be used if any changes are needed.
+  <text fill="rgb(72, 72, 72)" stroke="#222222" stroke-width="0"  stroke-linejoin="round" stroke-dashoffset="" fill-rule="nonzero" font-size="110" font-family="Equinor" letter-spacing="0" word-spacing="0" marker-start="" marker-mid="" marker-end="" id="svg_text" x="120" y="105" width="315" height="114">dlisio</text>
+-->
+  <g
+     id="svg_text"
+     style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+     aria-label="dlisio">
+    <path
+       id="path45"
+       style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+       d="m 150.69,106.32 q -7.26,0 -13.2,-3.52 -5.83,-3.52 -9.24,-9.79 -3.3,-6.38 -3.3,-14.52 0,-8.36 3.63,-14.63 3.63,-6.38 9.57,-9.68 5.94,-3.3 12.76,-3.3 6.38,0 11.44,2.75 5.17,2.75 7.7,7.26 V 30.2 q 0,-0.99 0.99,-1.43 l 4.29,-1.54 q 0.22,-0.11 0.55,-0.11 0.88,0 0.88,1.1 v 75.46 q 0,0.55 -0.44,0.99 -0.33,0.33 -0.88,0.33 h -4.18 q -1.21,0 -1.21,-1.32 v -7.37 q -2.53,4.29 -7.81,7.15 -5.17,2.86 -11.55,2.86 z m 0.33,-6.71 q 8.14,0 13.53,-5.28 5.5,-5.28 5.5,-15.84 0,-6.82 -2.64,-11.55 -2.53,-4.73 -6.93,-7.04 -4.29,-2.42 -9.46,-2.42 -5.06,0 -9.46,2.42 -4.4,2.42 -7.15,7.26 -2.64,4.73 -2.64,11.33 0,6.6 2.64,11.44 2.75,4.73 7.15,7.26 4.4,2.42 9.46,2.42 z" />
+    <path
+       id="path47"
+       style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+       d="m 192.60344,105 q -0.55,0 -0.99,-0.33 -0.33,-0.44 -0.33,-0.99 V 30.31 q 0,-1.1 0.99,-1.43 l 4.29,-1.65 q 0.22,-0.11 0.55,-0.11 0.88,0 0.88,1.21 v 75.35 q 0,1.32 -1.21,1.32 z" />
+    <path
+       id="path49"
+       style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+       d="m 213.76297,44.83 q -0.22,0.11 -0.55,0.11 -0.88,0 -0.88,-1.1 v -7.26 q 0,-0.99 0.99,-1.43 l 4.84,-1.87 q 0.22,-0.11 0.55,-0.11 0.33,0 0.55,0.33 0.33,0.33 0.33,0.77 v 7.48 q 0,1.1 -0.99,1.43 z m 0.11,60.17 q -0.55,0 -0.99,-0.33 -0.33,-0.44 -0.33,-0.99 V 54.62 q 0,-1.1 0.99,-1.43 l 4.29,-1.65 q 0.22,-0.11 0.55,-0.11 0.88,0 0.88,1.21 v 51.04 q 0,1.32 -1.21,1.32 z" />
+    <path
+       id="path51"
+       style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+       d="m 251.0925,106.32 q -5.83,0 -11.22,-2.2 -5.39,-2.2 -8.69,-6.38 -0.33,-0.33 -0.33,-0.77 0,-0.33 0.44,-0.99 l 2.31,-3.08 q 0.55,-0.55 0.99,-0.55 0.22,0 0.88,0.44 6.6,7.04 15.84,7.04 5.5,0 8.69,-2.31 3.3,-2.42 3.3,-6.38 0,-3.96 -3.08,-6.05 -3.08,-2.2 -9.57,-3.85 -8.58,-2.09 -13.2,-5.28 -4.51,-3.19 -4.51,-9.79 0,-4.18 2.2,-7.7 2.2,-3.52 6.38,-5.5 4.18,-2.09 9.68,-2.09 4.73,0 8.91,1.54 4.29,1.54 7.26,4.18 0.44,0.33 0.44,0.88 0,0.44 -0.44,0.88 l -2.42,3.08 q -0.88,0.99 -1.76,0.22 -2.42,-1.98 -5.61,-3.08 -3.08,-1.21 -6.38,-1.21 -5.06,0 -8.25,2.42 -3.19,2.31 -3.19,5.94 0,3.63 3.08,5.72 3.08,1.98 10.01,3.63 8.47,2.09 12.76,5.61 4.4,3.52 4.4,9.9 0,7.92 -5.61,11.88 -5.5,3.85 -13.31,3.85 z" />
+    <path
+       id="path53"
+       style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+       d="m 283.1575,44.83 q -0.22,0.11 -0.55,0.11 -0.88,0 -0.88,-1.1 v -7.26 q 0,-0.99 0.99,-1.43 l 4.84,-1.87 q 0.22,-0.11 0.55,-0.11 0.33,0 0.55,0.33 0.33,0.33 0.33,0.77 v 7.48 q 0,1.1 -0.99,1.43 z m 0.11,60.17 q -0.55,0 -0.99,-0.33 -0.33,-0.44 -0.33,-0.99 V 54.62 q 0,-1.1 0.99,-1.43 l 4.29,-1.65 q 0.22,-0.11 0.55,-0.11 0.88,0 0.88,1.21 v 51.04 q 0,1.32 -1.21,1.32 z" />
+    <path
+       id="path55"
+       style="font-size:110px;font-family:Equinor;letter-spacing:0;word-spacing:0;fill:#484848;fill-rule:nonzero;stroke:#222222;stroke-width:0;stroke-linejoin:round;marker-start:;marker-mid:;marker-end:"
+       d="m 327.19703,106.32 q -7.48,0 -13.53,-3.52 -6.05,-3.63 -9.46,-9.9 -3.3,-6.38 -3.3,-14.3 0,-7.92 3.3,-14.19 3.41,-6.38 9.46,-9.9 6.05,-3.63 13.53,-3.63 7.48,0 13.42,3.63 6.05,3.52 9.35,9.9 3.41,6.27 3.41,14.19 0,7.92 -3.41,14.3 -3.3,6.27 -9.35,9.9 -5.94,3.52 -13.42,3.52 z m 0,-6.6 q 5.72,0 10.12,-2.75 4.4,-2.86 6.82,-7.59 2.42,-4.84 2.42,-10.78 0,-5.94 -2.42,-10.78 -2.42,-4.84 -6.82,-7.59 -4.4,-2.75 -10.12,-2.75 -5.83,0 -10.23,2.75 -4.4,2.75 -6.82,7.59 -2.42,4.84 -2.42,10.78 0,5.94 2.42,10.78 2.42,4.73 6.82,7.59 4.4,2.75 10.23,2.75 z" />
+  </g>
+  <path fill="none" fill-opacity="1" stroke="#222222" stroke-opacity="1" stroke-width="3" stroke-dasharray="none" stroke-linejoin="round" stroke-linecap="butt" stroke-dashoffset="" fill-rule="nonzero" opacity="1" marker-start="" marker-mid="" marker-end="" d="M10,120 L375,120 " id="svg_line"/>
+</svg>
