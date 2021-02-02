@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 #include <mpark/variant.hpp>
 
-#include <dlisio/lis/packf.h>
+#include <dlisio/lis/pack.h>
 #include <dlisio/lis/types.h>
 #include <dlisio/lis/types.hpp>
 #include <dlisio/lis/io.hpp>
