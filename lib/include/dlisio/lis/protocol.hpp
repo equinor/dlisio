@@ -81,7 +81,7 @@ prheader read_prh(char* xs) noexcept (false);
  * Returns true if all bytes are pad-bytes, that is, all bytes are
  * either 0x20 or 0x00.
  */
-bool padbytes(const char* xs, std::uint16_t n);
+bool is_padbytes(const char* xs, std::uint16_t n);
 
 /** Record types
  *

@@ -21,7 +21,7 @@ namespace lis = dlisio::lis79;
 constexpr const int lis::spec_block1::size;
 constexpr const int lis::spec_block0::size;
 
-bool padbytes(const char* xs, std::uint16_t size) {
+bool is_padbytes(const char* xs, std::uint16_t size) {
     constexpr int PADBYTE_NULL  = 0x00;
     constexpr int PADBYTE_SPACE = 0x20;
 

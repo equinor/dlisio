@@ -195,7 +195,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
      */
     auto error = [this]( const char* buf, int bufsize, int nread ) {
         const auto where = "iodevice::read_physical_header: {}";
-        if ( this->eof() and (nread == 0 or lis::padbytes(buf, bufsize)) ) {
+        if ( this->eof() and (nread == 0 or lis::is_padbytes(buf, bufsize)) ) {
             const auto what = "end-of-file";
             throw dlisio::eof_error( fmt::format( where, what ) );
         }
@@ -220,7 +220,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
 
     /* Check if the first to bytes - which we believe to be the prh length
      * is in fact a valid length, or padbytes */
-    if ( lis::padbytes( buf, 2 ) ) {
+    if ( lis::is_padbytes( buf, 2 ) ) {
         auto alignment = this->ptell() % lis::prheader::size;
 
         /* Reposition the buffer if necessary */
@@ -238,7 +238,7 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
 
         // Read 4 bytes at the time until a new PRH is found or EOF is hit
         while (true) {
-            if ( not lis::padbytes( buf, lis::prheader::size ) ) break;
+            if ( not lis::is_padbytes( buf, lis::prheader::size ) ) break;
 
             nread = this->read(buf, lis::prheader::size);
             if ( nread < lis::prheader::size )
