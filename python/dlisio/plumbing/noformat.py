@@ -1,6 +1,7 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar
 from .utils import describe_attributes
+from ..dlisutils import noformat
 
 from collections import OrderedDict
 
@@ -53,3 +54,82 @@ class Noformat(BasicObject):
         d['Description']   = 'DESCRIPTION'
 
         describe_attributes(buf, d, self, width, indent, exclude)
+
+    def data(self):
+        """Raw data
+
+        A raw byte buffer of all the records corresponding to the noform-object.
+        Content of this data is not defined by rp66v1. However, the name and
+        description of the no-format object might give an indication about its
+        content.
+
+        Returns
+        -------
+        data : bytes
+            Raw bytes
+
+        Examples
+        --------
+        Look at the description of the no-format object to see if it contains
+        information about nature of the data
+
+        >>> print(noformat.describe())
+        ---------
+        No-format
+        ---------
+        name   : 2
+        origin : 0
+        copy   : 0
+        ---
+        Consumer name : FILE
+        Description   : /home/files.txt
+
+        Save the data
+
+        >>> out = open('noformat.txt', 'wb')
+        >>> out.write(noformat.data())
+        >>> out.close()
+
+        It is not uncommon that the no-format object itself is not enough to
+        understand its content. Some vendors store additional information in
+        other custom object types. In that case some manual digging into the
+        file might reveal the information necessary to correctly understand
+        the no-format content:
+
+        >>> images = f.find('.*IMAGE.*', matcher=dlisio.plumbing.regex_matcher())
+        >>> for image in images:
+        >>>     print(image.describe())
+        ---------
+        my_image
+        ---------
+        name   : MYIMAGE
+        origin : 0
+        copy   : 0
+        ---
+        Unknown attributes
+        --
+        NAME          : MYIMAGE.PNG
+        NOFORMAT-NAME : dlisio.core.obname(id='MYIMAGE', origin=0, copynum=0)
+
+        Check for no-format records:
+
+        >>> for noformat in f.noformats:
+        >>>     print(noformat.describe())
+        ---------
+        No-format
+        ---------
+        name   : NOFORMAT-MYIMAGE
+        origin : 0
+        copy   : 0
+        ---
+        Consumer name : MYIMAGE
+        Description   : My very important image
+
+        Store the result:
+
+        >>> noformat = f.object("NO-FORMAT", "NOFORMAT-MYIMAGE")
+        >>> out = open('MYIMAGE.PNG', 'wb')
+        >>> out.write(noformat.data())
+        >>> out.close()
+        """
+        return noformat(self)

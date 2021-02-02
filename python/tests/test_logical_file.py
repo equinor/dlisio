@@ -4,10 +4,7 @@ Testing Logical file class (also known as dlis)
 
 import dlisio
 import pytest
-
-from dlisio.plumbing.channel import Channel
-from dlisio.plumbing.frame import Frame
-from dlisio.plumbing.unknown import Unknown
+import os
 
 from dlisio import core
 
@@ -334,3 +331,26 @@ def test_unknowns_multiple_sets(tmpdir_factory, merge_files_manyLR):
 
     with dlisio.load(fpath) as (f, *_):
         assert len(f.unknowns['UNKNOWN_SET']) == 2
+
+def test_noform_data(tmpdir):
+    fpath = 'data/chap4-7/iflr/noform.dlis'
+    with dlisio.load(fpath) as (f, *_):
+
+        assert len(f.fdata_index) == 3
+
+        noform_text = f.object('NO-FORMAT', 'NOFORMAT-TEXT', 10, 0)
+        expected_text = "This is a test data and it has no meaning."
+        actual_text = noform_text.data()
+        assert actual_text.decode("utf-8") == expected_text
+
+        # handling of images is essentially same as handling of text
+        # it's present only because text and images are common noform
+        noform_image = f.object('NO-FORMAT', 'NOFORMAT-IMAGE', 10, 0)
+        imagepath = str(tmpdir.join("dlisio-logo.png"))
+        out = open(imagepath, 'wb')
+        out.write(noform_image.data())
+        out.close()
+        assert os.path.getsize(imagepath) == 12977
+
+        noform_unused = f.object('NO-FORMAT', 'NOFORMAT-UNUSED', 10, 0)
+        assert len(noform_unused.data()) == 0
