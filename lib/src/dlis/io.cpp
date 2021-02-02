@@ -504,7 +504,7 @@ dl::error_handler& errorhandler) noexcept (false) {
         }
 
         if (rec.isencrypted()) continue;
-        if (rec.type != 0) continue;
+        if (rec.type != 0 and rec.type != 1) continue;
         if (rec.data.size() == 0) continue;
 
         int32_t origin;
@@ -524,7 +524,10 @@ dl::error_handler& errorhandler) noexcept (false) {
                         dl::ushort{ copy },
                         dl::ident{ std::string{ id, id + idlen } } };
 
-        xs[tmp.fingerprint("FRAME")].push_back( tell );
+        if (rec.type == 0)
+            xs[tmp.fingerprint("FRAME")].push_back( tell );
+        if (rec.type == 1)
+            xs[tmp.fingerprint("NO-FORMAT")].push_back( tell );
     }
     return xs;
 }

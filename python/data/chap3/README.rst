@@ -35,7 +35,8 @@ fdata-many-in-same-vr.dlis             Several fdata segments in same vr,
                                        including fdata with obname of min and
                                        max length
 
-fdtata-non-0-type.dlis                 Contains implicit record of non-0 type
+fdtata-non-0-non-1-type.dlis           Contains implicit record of non-0 and
+                                       non-1type
 
 fdata-vr-aligned-padding.dlis          Simple fdata aligned with Visible Record
                                        border but with present padbytes
