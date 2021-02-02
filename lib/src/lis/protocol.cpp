@@ -62,8 +62,8 @@ lis::prheader read_prh(char* xs) noexcept (false) {
 lis::lrheader read_lrh(const char* xs) noexcept (true) {
     lis::lrheader head;
 
-    std::memcpy(&head.type,      xs + 0, sizeof( std::uint8_t ));
-    std::memcpy(&head.undefined, xs + 1, sizeof( std::uint8_t ));
+    std::memcpy(&head.type,       xs + 0, sizeof( std::uint8_t ));
+    std::memcpy(&head.attributes, xs + 1, sizeof( std::uint8_t ));
 
     return head;
 }

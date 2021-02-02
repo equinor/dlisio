@@ -15,14 +15,13 @@ namespace dlisio { namespace lis79 {
  *
  * A Logical Record starts with LRH. This header defines the type of the
  * record. It should be one of the values defined in `lis::record_type`.  The
- * field undefined is - as the name suggest - undefined and unused by the LIS79
- * standard.
+ * field attributes is undefined and unused by the LIS79 standard.
  *
  * spec ref: LIS79 ch 2.2.1.1
  */
 struct lrheader {
     lis::byte    type;
-    std::uint8_t undefined;
+    std::uint8_t attributes;
 
     static constexpr const int size = 2;
 };
