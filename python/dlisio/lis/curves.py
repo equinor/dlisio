@@ -22,9 +22,9 @@ nptype = {
 def curves(f, dfsr, strict=True):
     """ Read curves
 
-    Read the curves described by Data Format Spec Record (DFSR). This the
-    curves are read into a Numpy Structured Array [1]. The mnemonics - as
-    described by the DFSR - of the channels are used as column names.
+    Read the curves described by Data Format Spec Record (DFSR). The curves are
+    read into a Numpy Structured Array [1]. The mnemonics - as described by the
+    DFSR - of the channels are used as column names.
 
     [1] https://numpy.org/doc/stable/user/basics.rec.html
 
@@ -32,7 +32,7 @@ def curves(f, dfsr, strict=True):
     ----------
 
     f : logical_file
-        The logcal file that the dfsr belongs too
+        The logcal file that the dfsr belongs to
 
     dfsr: dlisio.core.dfsr
         Data Format Specification Record
@@ -54,7 +54,7 @@ def curves(f, dfsr, strict=True):
 
     ValueError
         If the DFSR contains the same mnemonic multiple times. Numpy Structured
-        Arrays requires all column names to be unique. See paramter `strict`
+        Array requires all column names to be unique. See parameter `strict`
         for workaround
 
     Examples

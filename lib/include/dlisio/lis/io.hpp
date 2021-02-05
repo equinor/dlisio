@@ -154,14 +154,14 @@ public:
 
     /** Create an index of all the logical records in the file
      *
-     * The returned record_index is a lightweigth logical record index which
+     * The returned record_index is a lightweight logical record index which
      * essentially provides random-access to logical records.
      */
     record_index index_records() noexcept (true);
 
     /** Index the next record
      *
-     * Assumes that the next none-padbyte is the start of a PRH
+     * Assumes that the next non-padbyte is the start of a PRH
      *
      * @throw lis::eof_error
      *      function called at EOF or if all remaining bytes are padding.

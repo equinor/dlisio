@@ -164,7 +164,7 @@ struct record_info {
  *
  * [1] The Logical Record Header (LRH) is not part of the raw buffer, as it's
  *     part of the record_info. The parsed LRH provides clues to the contentent
- *     of the record through it's type-field. Hence it makes sense to keep the
+ *     of the record through its type-field. Hence it makes sense to keep the
  *     parsed header seperate from the unparsed record.
  */
 struct record {

@@ -218,8 +218,8 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
         error( buf, nread, nread );
     }
 
-    /* Check if the first to bytes - which we believe to be the prh length
-     * is in fact a valid length, or padbytes */
+    /* Check if the first two bytes - which we believe to be the prh length
+     * are in fact a valid length, or padbytes */
     if ( lis::is_padbytes( buf, 2 ) ) {
         auto alignment = this->ptell() % lis::prheader::size;
 

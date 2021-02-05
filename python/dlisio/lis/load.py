@@ -6,11 +6,11 @@ from .file import logical_file, physical_reel
 def load(path):
     """ Loads and indexes a file
 
-    A LIS file are typically segmented into multiple Logical Files (LF). LF's
+    A LIS file is typically segmented into multiple Logical Files (LF). LF's
     are just a way to group information that logically belongs together. LF's
     are completely independent of each other and can generally be treated as if
-    they where different files on disk. In fact - that's just what load does.
-    Each logical file gets it's own io-device and is completely segmented from
+    they were different files on disk. In fact - that's just what load does.
+    Each logical file gets its own io-device and is completely segmented from
     other LF's.
 
     Notes

@@ -14,7 +14,7 @@ class logical_file():
 
     This class provides an interface for easy interaction and extraction of the
     various Logical Records within the Logical File. It is completely
-    independent of other LF's, and even has it's own IO-device. It stores a
+    independent of other LF's, and even has its own IO-device. It stores a
     pre-built index of all LR's for random access when reading from disk.
 
     Notes
@@ -52,7 +52,7 @@ class logical_file():
     def trailer(self):
         """ Logical File Trailer
 
-        Returns the Logical File Trailer - if present. Othervise returns None.
+        Returns the Logical File Trailer - if present. Otherwise returns None.
 
         Returns
         -------

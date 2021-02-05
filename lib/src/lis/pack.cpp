@@ -137,7 +137,7 @@ cursor packf(const char* fmt, const char* src, char* dst) noexcept (true) {
             case LIS_FMT_F32LOW : cur = interpret(cur, lis_f32low); break;
             case LIS_FMT_F32FIX : cur = interpret(cur, lis_f32fix); break;
             case LIS_FMT_BYTE   : cur = interpret(cur, lis_byte);   break;
-            /* Because lis_string and lis_mask does not encode it's own length
+            /* Because lis_string and lis_mask do not encode their own length
              * we currently assume that these can't be used as types in IFLRs
              */
             default:

@@ -147,7 +147,7 @@ TEST_CASE("A PRH can start at uneven tell when no padding", "[iodevice]" ) {
 }
 
 TEST_CASE("A PRH can be found when file is padded", "[iodevice]") {
-    SECTION("When n-padbytes == 1") {
+    SECTION("When padbytes == 1") {
         const auto contents = std::vector< unsigned char > {
             0x00, 0x07, 0x00, 0x00, // prh(len=7, pred=0, succ=0)
             0x01, 0x02, 0x03,

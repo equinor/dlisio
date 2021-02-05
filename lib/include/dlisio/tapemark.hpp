@@ -5,8 +5,8 @@
 
 /** tapemark.hpp - Tape Image Format
  *
- * dlisio uses Layered File Protocols (LFP) as it's io-device. Thanks to lfp,
- * dlisio does not need to concern it self with tapemarks and the Tape Image
+ * dlisio uses Layered File Protocols (LFP) as its io-device. Thanks to lfp,
+ * dlisio does not need to concern itself with tapemarks and the Tape Image
  * Format.
  *
  * However, lfp does not provide any tooling for determining if a file has
