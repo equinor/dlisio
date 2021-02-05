@@ -54,14 +54,14 @@ struct prheader {
 
     static constexpr const int size = 4;
 
-    static constexpr const int rectype = 1 << 14;
-    static constexpr const int chcksum = 1 << 13 | 1 << 12;
-    static constexpr const int filenum = 1 << 10;
-    static constexpr const int reconum = 1 << 9;
-    static constexpr const int parierr = 1 << 6;
-    static constexpr const int chckerr = 1 << 5;
-    static constexpr const int predces = 1 << 1;
-    static constexpr const int succses = 1 << 0;
+    static constexpr const std::uint32_t rectype = 1 << 14;
+    static constexpr const std::uint32_t chcksum = 1 << 13 | 1 << 12;
+    static constexpr const std::uint32_t filenum = 1 << 10;
+    static constexpr const std::uint32_t reconum = 1 << 9;
+    static constexpr const std::uint32_t parierr = 1 << 6;
+    static constexpr const std::uint32_t chckerr = 1 << 5;
+    static constexpr const std::uint32_t predces = 1 << 1;
+    static constexpr const std::uint32_t succses = 1 << 0;
 };
 
 /** Read Physical Record Header
