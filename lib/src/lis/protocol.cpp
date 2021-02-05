@@ -222,17 +222,6 @@ noexcept (true) {
     return xs;
 }
 
-const char* cast( const char* xs, lis::representation_code& reprc )
-noexcept (false) {
-
-    std::uint8_t x;
-    xs = lis_byte( xs, &x );
-
-    // TODO: validate representation code
-    reprc = static_cast< lis::representation_code >( x );
-    return xs;
-}
-
 template < typename T >
 const char* extract( const char* xs, T& val )
 noexcept (false) {
@@ -256,12 +245,13 @@ T& reset( lis::value_type& value ) noexcept (false) {
 template < typename T >
 const char* element( const char* xs,
                      T size,
-                     lis::representation_code reprc,
+                     lis::byte reprc,
                      lis::value_type& val )
 noexcept (false) {
 
+    auto repr = static_cast< lis::representation_code>( lis::decay(reprc) );
     using rpc = lis::representation_code;
-    switch (reprc) {
+    switch (repr) {
         case rpc::i8 :    return extract( xs, reset< lis::i8     >(val) );
         case rpc::i16:    return extract( xs, reset< lis::i16    >(val) );
         case rpc::i32:    return extract( xs, reset< lis::i32    >(val) );
@@ -275,7 +265,7 @@ noexcept (false) {
         default: {
             const auto msg = "unable to interpret attribute: "
                              "unknown representation code {}";
-            const auto code = static_cast< int >(reprc);
+            const auto code = static_cast< int >(repr);
             throw std::runtime_error(fmt::format(msg, code));
         }
     }
@@ -311,8 +301,7 @@ noexcept (false) {
         throw std::runtime_error(fmt::format(msg, left, lis::decay(entry.size)));
     }
 
-    auto repr = static_cast< lis::representation_code>( lis::decay(entry.reprc) );
-    element(cur, entry.size, repr, entry.value);
+    element(cur, entry.size, entry.reprc, entry.value);
 
     return entry;
 }
@@ -402,8 +391,10 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
     for (const auto& spec : dfs.specs) {
         std::uint8_t s; // size of one entry
         char f;
+
         using rpc = lis::representation_code;
-        switch (spec.reprc) {
+        auto reprc = static_cast< rpc >( lis::decay( spec.reprc ) );
+        switch (reprc) {
             case rpc::i8:     { f=LIS_FMT_I8;     s=LIS_SIZEOF_I8;     break; }
             case rpc::i16:    { f=LIS_FMT_I16;    s=LIS_SIZEOF_I16;    break; }
             case rpc::i32:    { f=LIS_FMT_I32;    s=LIS_SIZEOF_I32;    break; }
@@ -424,7 +415,7 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
             default: {
                 std::string msg = "lis::dfs_fmtstr: Cannot create formatstring"
                                   ". Invalid repcode ({}) in channel ({})";
-                const auto code = static_cast< int >(spec.reprc);
+                const auto code = lis::decay(spec.reprc);
                 const auto mnem = lis::decay(spec.mnemonic);
                 throw std::runtime_error(fmt::format(msg, code, mnem));
             }
@@ -434,7 +425,7 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
         if( size % s ) {
             std::string msg  = "lis::dfs_fmtstr: Cannot compute an integral "
                 "number of entries from size ({}) / repcode({}) for channel {}";
-            const auto code = static_cast< int >(spec.reprc);
+            const auto code = lis::decay(spec.reprc);
             const auto mnem = lis::decay(spec.mnemonic);
             throw std::runtime_error(fmt::format(msg, size, code, mnem));
         }

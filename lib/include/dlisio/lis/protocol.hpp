@@ -239,7 +239,7 @@ struct spec_block {
     lis::i16    filenr;
     lis::i16    ssize;
     lis::byte   samples;
-    lis::representation_code reprc;
+    lis::byte   reprc;  // TODO: should be sanity-checked somewhere
 
     static constexpr const int size = 40;
 };

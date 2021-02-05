@@ -85,17 +85,16 @@ TEST_CASE("Spec Block", "[protocol]") {
         CHECK( lis::decay(spec.service_order_nr) == std::string("      54") );
         CHECK( lis::decay(spec.units)            == std::string(".1IN")     );
         // TODO API codes
-        CHECK( lis::decay(spec.filenr)  ==  1 );
-        CHECK( lis::decay(spec.ssize)   ==  8 );
-        CHECK( lis::decay(spec.samples) ==  2 );
-        CHECK( lis::decay(spec.reprc)   == lis::representation_code::f32 );
+        CHECK( lis::decay(spec.filenr)  == 1 );
+        CHECK( lis::decay(spec.ssize)   == 8 );
+        CHECK( lis::decay(spec.samples) == 2 );
+        CHECK( lis::decay(spec.reprc)   == 68 );
     }
 
     SECTION("Well-formatted sub-type 1 can be read") {}
     SECTION("Too little data to parse entry") { /* TODO */ }
-
-
 }
+
 TEST_CASE("Data Format Specification Record", "[protocol]") {
     lis::record rec;
     rec.data = std::vector< char > {
