@@ -1,8 +1,7 @@
-.. raw:: html
-
-  <p align="center">
-    <img src="../../dlisio-logo.svg" alt="dlisio logo" width="400"/>
-  </p>
+.. image:: ../../dlisio-logo.svg
+   :width: 400
+   :alt: dlisio logo
+   :align: center
 
 Welcome to dlisio's documentation!
 ==================================
