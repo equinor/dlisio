@@ -1,3 +1,9 @@
+.. raw:: html
+
+  <p align="center">
+    <img src="../../dlisio-logo.svg" alt="dlisio logo" width="400"/>
+  </p>
+
 Welcome to dlisio's documentation!
 ==================================
 

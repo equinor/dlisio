@@ -1,10 +1,24 @@
-# dlisio #
+<p align="center">
+  <img src="dlisio-logo.svg" alt="dlisio logo" width="400"/>
+</p>
 
-[![Travis](https://travis-ci.com/equinor/dlisio.svg?branch=master)](https://travis-ci.com/equinor/dlisio)
-[![CircleCI](https://circleci.com/gh/equinor/dlisio/tree/master.svg?style=svg)](https://circleci.com/gh/equinor/dlisio/tree/master)
-[![Appveyor](https://ci.appveyor.com/api/projects/status/jdhagpm7jkga07j1?svg=true)](https://ci.appveyor.com/project/jokva/dlisio/branch/master)
-[![PyPI version](https://badge.fury.io/py/dlisio.svg)](https://badge.fury.io/py/dlisio)
-[![RTD](https://img.shields.io/readthedocs/dlisio)](http://dlisio.readthedocs.io/)
+<p align="center">
+  <a href="https://travis-ci.com/equinor/dlisio">
+    <img src="https://travis-ci.com/equinor/dlisio.svg?branch=master" alt="Travis"/>
+  </a>
+  <a href="https://circleci.com/gh/equinor/dlisio/tree/master">
+    <img src="https://circleci.com/gh/equinor/dlisio/tree/master.svg?style=svg" alt="CircleCI"/>
+  </a>
+  <a href="https://ci.appveyor.com/project/jokva/dlisio/branch/master">
+    <img src="https://ci.appveyor.com/api/projects/status/jdhagpm7jkga07j1?svg=true" alt="Appveyor"/>
+  </a>
+  <a href="https://pypi.org/project/dlisio/">
+    <img src="https://badge.fury.io/py/dlisio.svg" alt="PyPI version"/>
+  </a>
+  <a href="http://dlisio.readthedocs.io/">
+    <img src="https://img.shields.io/readthedocs/dlisio" alt="Read the Docs"/>
+  </a>
+</p>
 
 ## Index ##
 
