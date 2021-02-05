@@ -377,7 +377,7 @@ record_index iodevice::index_records() noexcept (true) {
              * report EOF until we try to read _past_ the last byte.
              */
             break;
-        } catch ( ... ) {
+        } catch ( const std::exception& ) {
             /* For now just treat any other error as a truncation error - which
              * it probably means anyway. However, the error should in the future
              * be properly communitcated downstream, either by logging it or
@@ -487,10 +487,12 @@ noexcept (false) {
     try {
         char tmp;
         device.read(&tmp, 1);
-    } catch ( ... ) {
+    } catch ( const std::exception& e ) {
+        const auto poffset = device.poffset();
         device.close();
-        const auto msg = "lis::open: Cannot open lis::iodevice at ptell {}";
-        throw dlisio::io_error( fmt::format(msg, offset ));
+        const auto msg = "lis::open: "
+                            "Cannot open lis::iodevice (ptell={}): {}";
+        throw dlisio::io_error( fmt::format(msg, poffset, e.what() ));
     }
 
     if ( device.eof() ) {
@@ -499,12 +501,15 @@ noexcept (false) {
         const auto msg = "open: handle is opened at EOF (ptell={})";
         throw dlisio::eof_error( fmt::format(msg, poffset) );
     }
+
     try {
         device.seek( 0 );
-    } catch ( ... ) {
+    } catch ( const std::exception& e ) {
+        const auto poffset = device.poffset();
+        device.close();
         const auto msg = "lis::open: "
-                         "Could not rewind lis::iodevice to ptell {}";
-        throw dlisio::io_error( fmt::format(msg, offset ));
+                         "Could not rewind lis::iodevice to ptell {}: {}";
+        throw dlisio::io_error( fmt::format(msg, poffset, e.what()) );
     }
 
     return device;
