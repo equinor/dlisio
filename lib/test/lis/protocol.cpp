@@ -25,10 +25,8 @@ TEST_CASE("Entry Block", "[protocol]") {
             0x00, // Entry
         };
 
-        std::size_t offset = 0;
-        const auto entry = lis::read_entry_block( rec, &offset );
+        const auto entry = lis::read_entry_block( rec, 0 );
 
-        CHECK( offset == 4 );
         CHECK( lis::decay(entry.type)  == 1  );
         CHECK( lis::decay(entry.size)  == 1  );
         CHECK( lis::decay(entry.reprc) == 56 );
@@ -47,10 +45,8 @@ TEST_CASE("Entry Block", "[protocol]") {
             0x2E, 0x31, 0x49, 0x4E  // Entry
         };
 
-        std::size_t offset = 0;
-        const auto entry = lis::read_entry_block( rec, &offset );
+        const auto entry = lis::read_entry_block( rec, 0 );
 
-        CHECK( offset == 7 );
         CHECK( lis::decay(entry.type)  == 9  );
         CHECK( lis::decay(entry.size)  == 4  );
         CHECK( lis::decay(entry.reprc) == 65 );
@@ -82,10 +78,7 @@ TEST_CASE("Spec Block", "[protocol]") {
     };
 
     SECTION("Well-formatted sub-type 0 can be read") {
-        std::size_t offset = 0;
-        const auto spec = lis::read_spec_block0( rec, &offset );
-
-        CHECK( offset == 40 );
+        const auto spec = lis::read_spec_block0( rec, 0 );
 
         CHECK( lis::decay(spec.mnemonic)         == std::string("DEPT")     );
         CHECK( lis::decay(spec.service_id)       == std::string("SLB   ")   );

@@ -223,7 +223,7 @@ const char* lis_f32low(const char* xs, float* x) {
     return xs + sizeof( float );
 }
 
-const char* lis_f32fix(const char* xs, float* x) {
+const char* lis_f32fix(const char* xs, float*) {
     static_assert(
         std::numeric_limits< float >::is_iec559 && sizeof( float ) == 4,
         "Function assumes IEEE 754 32-bit float" );
