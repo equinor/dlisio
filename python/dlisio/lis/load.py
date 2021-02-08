@@ -1,7 +1,7 @@
 import logging
 
 from .. import core
-from .file import logical_file, physical_reel
+from .file import logical_file, physical_file
 
 def load(path):
     """ Loads and indexes a file
@@ -30,7 +30,7 @@ def load(path):
     Returns
     -------
 
-    lis : dlisio.lis.physical_reel
+    lis : dlisio.lis.physical_file
     """
     def read_as_tapemark(f):
         try:
@@ -76,4 +76,4 @@ def load(path):
 
         offset = f.poffset() + f.psize()
 
-    return physical_reel(files)
+    return physical_file(files)

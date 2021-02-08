@@ -93,7 +93,7 @@ class logical_file():
 
         return parsed
 
-class physical_reel(tuple):
+class physical_file(tuple):
     def __enter__(self):
         return self
 
@@ -105,5 +105,5 @@ class physical_reel(tuple):
             f.close()
 
     def __repr__(self):
-        return 'physical_reel(logical files: {})'.format(len(self))
+        return 'physical_file(logical files: {})'.format(len(self))
 
