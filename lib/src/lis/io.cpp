@@ -67,7 +67,8 @@ noexcept (false) {
     // Find the next DFS record in the index, if any
     auto next_dfsr = std::find_if(std::next(curr_dfsr), this->expls.end(),
         [](const record_info& cur) {
-            return cur.type() == record_type::data_format_spec;
+            const auto type = static_cast< record_type >(lis::decay(cur.type));
+            return type == record_type::data_format_spec;
         }
     );
 
@@ -283,8 +284,6 @@ lis::lrheader iodevice::read_logical_header() noexcept (false) {
 }
 
 lis::record_info iodevice::index_record() noexcept (false) {
-    record_info rec_info;
-
     /* There is no explicitly defined "last" record in a logical file.
      *
      * A logical file is terminated when an exhausted record is followed by
@@ -295,13 +294,14 @@ lis::record_info iodevice::index_record() noexcept (false) {
      * important. This is to ensure a correct ltell regardless of the presence
      * of padbytes.
      */
-    rec_info.prh   = this->read_physical_header();
-    rec_info.ltell = this->ltell() - lis::prheader::size;
+    auto prh = this->read_physical_header();
+    std::int64_t ltell = this->ltell() - lis::prheader::size;
 
-    std::int64_t length = rec_info.prh.length;
+    std::size_t length = prh.length;
 
+    lis::lrheader lrh;
     try {
-        rec_info.lrh = this->read_logical_header();
+        lrh = this->read_logical_header();
     } catch( const dlisio::eof_error& e ) {
         const auto msg =  "iodevice::index_record: {}";
         throw dlisio::truncation_error( fmt::format(msg, e.what()) );
@@ -310,7 +310,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
         throw dlisio::truncation_error( fmt::format(msg, e.what()) );
     }
 
-    if ( not lis::valid_rectype( rec_info.lrh.type ) ) {
+    if ( not lis::valid_rectype( lrh.type ) ) {
         /* There is really no way of telling if the LRH is zero'd out, as 0 is
         * valid record_type and the second byte is undefined.
         *
@@ -320,10 +320,9 @@ lis::record_info iodevice::index_record() noexcept (false) {
                          "Found invalid record type ({}) when reading  "
                          "header at ptell ({})";
         const auto tell = this->ptell() - lis::lrheader::size;
-        throw std::runtime_error(fmt::format( msg, lis::decay(rec_info.lrh.type), tell));
+        throw std::runtime_error(fmt::format( msg, lis::decay(lrh.type), tell));
     }
 
-    auto prh = rec_info.prh;
     while ( true ) {
         // TODO Should consider to read the PR trailer too - and possible
         //      include in index
@@ -332,7 +331,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
              * by attempting to read the last byte in the record.
              */
             char tmp;
-            this->seek( rec_info.ltell + length - 1 );
+            this->seek( ltell + length - 1 );
             this->read( &tmp, 1 );
 
             if ( this->eof() ) {
@@ -344,7 +343,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
             break;
         }
 
-        this->seek(rec_info.ltell + length);
+        this->seek(ltell + length);
 
         try {
             prh = this->read_physical_header();
@@ -355,15 +354,17 @@ lis::record_info iodevice::index_record() noexcept (false) {
         }
     }
 
-    rec_info.size = length;
-    return rec_info;
+    record_info info;
+    info.type  = lrh.type;
+    info.size  = length;
+    info.ltell = ltell;
+
+    return info;
 }
 
 record_index iodevice::index_records() noexcept (true) {
     std::vector< record_info > ex;
     std::vector< record_info > im;
-
-    using type = lis::record_type;
 
     this->seek(0);
     while ( true ) {
@@ -388,9 +389,9 @@ record_index iodevice::index_records() noexcept (true) {
             this->is_truncated = true;
             break;
         }
-
-        if (info.type() == type::normal_data or
-            info.type() == type::alternate_data) {
+        auto type = static_cast< lis::record_type >(lis::decay(info.type));
+        if (type == lis::record_type::normal_data or
+            type == lis::record_type::alternate_data) {
             im.push_back( std::move( info ) );
         } else {
             ex.push_back( std::move( info ) );

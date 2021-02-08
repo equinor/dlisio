@@ -383,9 +383,10 @@ TEST_CASE("A record spanning one PR can be indexed and read", "[iodevice]") {
     auto index = file.index_records();
     auto info = index.explicits()[0];
 
+    const auto type = static_cast< lis::record_type >(lis::decay(info.type));
     CHECK( info.ltell      == 0 );
     CHECK( info.size       == 8 );
-    CHECK( info.type()     == lis::record_type::reel_header );
+    CHECK( type            == lis::record_type::reel_header );
     CHECK( info.consistent == true );
 
     /* The tell is left right after the header */
@@ -421,9 +422,10 @@ TEST_CASE("A record spanning two PRs can be indexed and read", "[iodevice]") {
     CHECK( index.size()     == 1 ); // Total record count equals explicit count
 
     auto info = explicits[0];
-    CHECK( info.ltell  == 0 );
-    CHECK( info.size   == 16 );
-    CHECK( info.type() == lis::record_type::reel_header );
+    const auto type = static_cast< lis::record_type >(lis::decay(info.type));
+    CHECK( info.ltell == 0 );
+    CHECK( info.size  == 16 );
+    CHECK( type == lis::record_type::reel_header );
     CHECK( info.consistent == true );
 
     /* The tell is left right after the header */
@@ -462,9 +464,10 @@ TEST_CASE("A record spanning three PRs can be indexed and read", "[iodevice]") {
     CHECK( index.size()     == 1 ); // Total record count equals explicit count
 
     auto info = explicits[0];
+    const auto type = static_cast< lis::record_type >(lis::decay(info.type));
     CHECK( info.ltell  == 0 );
     CHECK( info.size   == 23 );
-    CHECK( info.type() == lis::record_type::reel_header );
+    CHECK( type == lis::record_type::reel_header );
     CHECK( info.consistent == true );
 
     /* The tell is left right after the header */
@@ -534,11 +537,12 @@ TEST_CASE("Padbytes can be identified and skipped") {
 
     SECTION(" A record after padbytes is indexed correctly") {
         file.seek(8);
-        const auto recinfo = file.index_record();
+        const auto info = file.index_record();
 
-        CHECK( recinfo.ltell  == 12 );
-        CHECK( recinfo.size   ==  7 );
-        CHECK( recinfo.type() == lis::record_type::tape_header );
+        const auto type = static_cast< lis::record_type >(lis::decay(info.type));
+        CHECK( info.ltell == 12 );
+        CHECK( info.size  ==  7 );
+        CHECK( type == lis::record_type::tape_header );
     }
 
     SECTION("PR after padding is included in the index") {
@@ -737,8 +741,9 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
 
     SECTION("No implicits are found for a DFSR where next record is also DFSR") {
         auto dfsr = explicits[0];
+        const auto type = static_cast< lis::record_type >(lis::decay(dfsr.type));
         CHECK( dfsr.ltell == 0 );
-        CHECK( dfsr.type() == lis::record_type::data_format_spec );
+        CHECK( type == lis::record_type::data_format_spec );
 
         auto im = index.implicits_of(dfsr);
         CHECK(im.begin() == im.end());
@@ -751,8 +756,9 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
         };
 
         auto dfsr = explicits[1];
+        const auto type = static_cast< lis::record_type >(lis::decay(dfsr.type));
         CHECK( dfsr.ltell == 8 );
-        CHECK( dfsr.type() == lis::record_type::data_format_spec );
+        CHECK( type == lis::record_type::data_format_spec );
 
         auto implicits = index.implicits_of(dfsr);
         auto beg = implicits.begin();
@@ -777,8 +783,9 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
         };
 
         auto dfsr = explicits[2];
+        const auto type = static_cast< lis::record_type >(lis::decay(dfsr.type));
         CHECK( dfsr.ltell == 32 );
-        CHECK( dfsr.type() == lis::record_type::data_format_spec );
+        CHECK( type == lis::record_type::data_format_spec );
 
         auto implicits = index.implicits_of(dfsr);
         auto beg = implicits.begin();

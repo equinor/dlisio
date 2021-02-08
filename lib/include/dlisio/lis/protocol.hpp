@@ -135,17 +135,18 @@ bool valid_rectype(lis::byte type);
  * span multiple PR's. While each PR has its own header (PRH), the LR Header
  * (LRH) is only recorded once - At the start of the *first* PR.
  *
- * record_info contains all information needed in order to find and extract
- * the content of the Logical Record.
+ * record_info is a light-weight representation of a Logical Record, containing
+ * information needed in order to find and extract the content of the Logical
+ * Record.
+ *
+ * TODO type as record_type ?
  */
 struct record_info {
-    std::int64_t  ltell; // Logical offset to the *first* PR
-    lis::lrheader lrh;   // Logical Record Header
-    lis::prheader prh;   // The _first_ Physical Record Header
+    lis::byte    type;  // From Logical Record Header
+    std::size_t  size;  // Sum off all PRH length fields
+    std::int64_t ltell; // Logical offset to the *first* PR
 
     bool consistent = true; // TODO implement succ/pred check
-    std::size_t size;
-    record_type type() const noexcept (false);
 };
 
 /** Logical Record (LR)

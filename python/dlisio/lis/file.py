@@ -68,7 +68,7 @@ class logical_file():
         # This can be C++ function (although what about the return type?)
         rec = self.io.read_record(recinfo)
 
-        rtype = recinfo.type
+        rtype = core.lis_rectype(recinfo.type)
         types = core.lis_rectype
         if   rtype == types.data_format_spec: return core.parse_dfsr(rec)
         elif rtype == types.reel_header:      return core.parse_reelheader(rec)
@@ -87,7 +87,8 @@ class logical_file():
         # barrier so much
         parsed = []
         for recinfo in self.explicits:
-            if recinfo.type != core.lis_rectype.data_format_spec: continue
+            rectype = core.lis_rectype(recinfo.type)
+            if rectype != core.lis_rectype.data_format_spec: continue
             rec = self.io.read_record(recinfo)
             parsed.append( core.parse_dfsr(rec) )
 

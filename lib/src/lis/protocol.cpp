@@ -115,11 +115,6 @@ bool valid_rectype(lis::byte type) {
     }
 }
 
-/* record_info */
-record_type record_info::type() const noexcept (false) {
-    return static_cast< record_type >( lis::decay(this->lrh.type));
-}
-
 namespace {
 
 using std::swap;

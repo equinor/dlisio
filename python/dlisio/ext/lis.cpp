@@ -335,18 +335,18 @@ void init_lis_extension(py::module_ &m) {
     py::class_< lis::record_info >( m, "lis_record_info" )
         .def( "__repr__", [](const lis::record_info& x) {
             return "lis::record_info(type={}, ltell={})"_s.format(
-                x.lrh.type, x.ltell
+                x.type, x.ltell
             );
         })
-        .def_readonly(          "ltell", &lis::record_info::ltell )
-        .def_readonly(          "prh",   &lis::record_info::prh   )
-        .def_property_readonly( "type",  &lis::record_info::type  )
+        .def_readonly( "ltell", &lis::record_info::ltell )
+        .def_readonly( "size",  &lis::record_info::size  )
+        .def_readonly( "type",  &lis::record_info::type  )
     ;
 
     py::class_< lis::record >( m, "lis_record", py::buffer_protocol() )
         .def( "__repr__", [](const lis::record& x) {
             return "lis::record(type={}, ltell={}, size={})"_s.format(
-                x.info.type(), x.info.ltell, x.data.size()
+                x.info.type, x.info.ltell, x.data.size()
             );
         })
         .def_buffer( []( lis::record& rec ) -> py::buffer_info {
