@@ -8,7 +8,7 @@ def test_dfsr_fmtstring():
         dfsr = lf.dfsr()[0]
 
         fmt = core.dfs_formatstring(dfsr)
-        assert fmt == 'f' * 44
+        assert fmt == 'D' * 44
 
 def test_dfsr_dtype():
     path = 'data/lis/MUD_LOG_1.LIS'

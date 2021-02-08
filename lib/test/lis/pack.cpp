@@ -37,7 +37,7 @@ TEST_CASE_METHOD(check_packflen, "pack unsigned integers (byte)", "[pack]") {
         0xFF, // uint-max byte
     };
 
-    fmt = "bbbbbbb";
+    fmt = "BBBBBBB";
     buffer.resize(7);
     auto* dst = buffer.data();
 
@@ -66,7 +66,7 @@ TEST_CASE_METHOD(check_packflen, "pack signed integers", "[pack]") {
         0x7F, 0xFF, 0xFF, 0xFF, // ~2.1b i32 (int-max)
     };
 
-    fmt = "ssiilll";
+    fmt = "88OOIII";
     buffer.resize((1 * 2) + (2 * 2) + (4 * 3));
     auto* dst = buffer.data();
 
@@ -102,7 +102,7 @@ TEST_CASE_METHOD(check_packflen, "pack floats", "[pack]") {
         0x00, 0x08, 0xB3, 0x80, // -153 f32lowres
     };
 
-    fmt = "eefffrrr";
+    fmt = "11DDD222";
     buffer.resize(8 * sizeof(float));
     float* dst = reinterpret_cast< float* >( buffer.data() );
 
