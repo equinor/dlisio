@@ -105,10 +105,10 @@ void assert_overflow(const char* ptr, const char* end, int skip) {
     }
 }
 
-void read_fdata_frame( const std::string& fmt,
-                       const char*& ptr,
-                       const char* end,
-                       unsigned char*& dst )
+void read_frame( const std::string& fmt,
+                 const char*& ptr,
+                 const char* end,
+                 unsigned char*& dst )
 noexcept (false) {
 
     int src_skip, dst_skip;
@@ -120,13 +120,13 @@ noexcept (false) {
     ptr += src_skip;
 }
 
-void read_fdata_record( const std::string& fmt,
-                        const lis::record& src,
-                        unsigned char*&    dst,
-                        int& frames,
-                        const std::size_t& itemsize,
-                        std::size_t allocated_rows,
-                        std::function<void (std::size_t)> resize )
+void read_data_record( const std::string& fmt,
+                       const lis::record& src,
+                       unsigned char*&    dst,
+                       int& frames,
+                       const std::size_t& itemsize,
+                       std::size_t allocated_rows,
+                       std::function<void (std::size_t)> resize )
 noexcept (false) {
 
     const auto* ptr = src.data.data();
@@ -139,19 +139,19 @@ noexcept (false) {
             dst += (frames * itemsize);
         }
 
-        read_fdata_frame(fmt, ptr, end, dst);
+        read_frame(fmt, ptr, end, dst);
 
         ++frames;
     }
 }
 
 
-py::object read_fdata(const std::string& fmt,
-                      lis::iodevice& file,
-                      const lis::record_index& index,
-                      const lis::record_info& recinfo,
-                      std::size_t itemsize,
-                      py::object alloc)
+py::object read_data_records(const std::string& fmt,
+                             lis::iodevice& file,
+                             const lis::record_index& index,
+                             const lis::record_info& recinfo,
+                             std::size_t itemsize,
+                             py::object alloc)
 noexcept (false) {
     /*
      * TODO: veriy that format string is valid
@@ -204,13 +204,13 @@ noexcept (false) {
     for ( const auto& head : implicits ) {
         /* get record */
         auto record = file.read_record( head );
-        read_fdata_record( fmt,
-                           record,
-                           dst,
-                           frames,
-                           itemsize,
-                           allocated_rows,
-                           resize );
+        read_data_record( fmt,
+                          record,
+                          dst,
+                          frames,
+                          itemsize,
+                          allocated_rows,
+                          resize );
     }
 
     assert(allocated_rows >= frames);
@@ -403,5 +403,5 @@ void init_lis_extension(py::module_ &m) {
     m.def("dfs_formatstring", &lis::dfs_fmtstr);
     /* end - parse.hpp */
 
-    m.def("read_fdata", read_fdata);
+    m.def("read_data_records", read_data_records);
 }

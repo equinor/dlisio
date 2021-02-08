@@ -97,7 +97,7 @@ def curves(f, dfsr, strict=True):
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)
 
-    return core.read_fdata(
+    return core.read_data_records(
         fmt,
         f.io,
         f.index,
