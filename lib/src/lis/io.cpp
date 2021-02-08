@@ -247,17 +247,22 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
         }
     }
 
-    lis::prheader head = lis::read_prh(buf);
+    const auto head = lis::read_prh(buf);
 
     /* Minimum valid length (mvl) depends on whether this is the first PR in a
-     * series of assosiated PR's or not. The first PR must contain a LR, while
-     * the remaining PR's have no requirements w.r.t. content - and hence
-     * length.
+     * series of assosiated PR's or not and on the the optional Physical Record
+     * Traielr. The first PR must contain a LR, while the remaining PR's have
+     * no requirements w.r.t. content - and hence length.
      *
-     *      - mvl for the first header is 6 bytes (PRH size + LRH size)
-     *      - mvl for other PR's is 4 bytes (PRH size)
+     *  - mvl for the first heade: PRH size + LRH size + PRT size
+     *  - mvl for other PR's: PRH + PRT size
      */
     std::size_t mvl = (head.attributes & lis::prheader::predces) ? 4 : 6;
+
+    if ( head.attributes & lis::prheader::reconum ) mvl += 2;
+    if ( head.attributes & lis::prheader::filenum ) mvl += 2;
+    if ( head.attributes & lis::prheader::chcksum ) mvl += 2;
+
 
     if ( head.length < mvl ) {
         std::string where = "iodevice::read_physical_header: ";
