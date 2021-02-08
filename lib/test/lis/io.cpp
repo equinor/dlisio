@@ -123,7 +123,7 @@ TEST_CASE("A PRH with pred=0 must be at least 6 bytes", "[iodevice]") {
     auto* cfile = lfp_cfile( tempfile( contents ) );
     auto file = lis::iodevice( cfile );
 
-    REQUIRE_THROWS_AS(file.read_physical_header(), std::runtime_error);
+    CHECK_THROWS_AS(file.read_physical_header(), std::runtime_error);
 
     file.close();
 }
@@ -136,7 +136,7 @@ TEST_CASE("A PRH with pred=1 must be at least 4 bytes", "[iodevice]") {
     auto* cfile = lfp_cfile( tempfile( contents ) );
     auto file = lis::iodevice( cfile );
 
-    REQUIRE_THROWS_AS(file.read_physical_header(), std::runtime_error);
+    CHECK_THROWS_AS(file.read_physical_header(), std::runtime_error);
 
     file.close();
 }
@@ -294,7 +294,7 @@ TEST_CASE("Padbytes after last PR is considered EOF", "[iodevice]") {
         auto* cfile = lfp_cfile( tempfile( contents ) );
         auto file = lis::iodevice( cfile );
 
-        REQUIRE_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
+        CHECK_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
         file.close();
     }
 
@@ -306,7 +306,7 @@ TEST_CASE("Padbytes after last PR is considered EOF", "[iodevice]") {
         auto* cfile = lfp_cfile( tempfile( contents ) );
         auto file = lis::iodevice( cfile );
 
-        REQUIRE_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
+        CHECK_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
         file.close();
     }
 
@@ -319,7 +319,7 @@ TEST_CASE("Padbytes after last PR is considered EOF", "[iodevice]") {
         auto* cfile = lfp_cfile( tempfile( contents ) );
         auto file = lis::iodevice( cfile );
 
-        REQUIRE_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
+        CHECK_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
         file.close();
     }
 }
@@ -360,7 +360,7 @@ TEST_CASE("A LRH with invalid type", "[iodevice]") {
     }
 
     SECTION("A record with invalid type cannot be indexed") {
-        REQUIRE_THROWS_AS( file.index_record(), std::runtime_error );
+        CHECK_THROWS_AS( file.index_record(), std::runtime_error );
     }
 
     file.close();
@@ -490,7 +490,7 @@ TEST_CASE("Padding after last PRH is considered a valid EOF") {
 
     SECTION("Trying to read padbytes result in eof_error") {
         file.seek(8);
-        REQUIRE_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
+        CHECK_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
     }
 
     SECTION("File is not considered truncated") {
@@ -502,7 +502,7 @@ TEST_CASE("Padding after last PRH is considered a valid EOF") {
 
     SECTION("N-padbytes < PRH size"){
         file.seek(10);
-        REQUIRE_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
+        CHECK_THROWS_AS(file.read_physical_header(), dlisio::eof_error);
     }
 
     file.close();
@@ -599,8 +599,8 @@ TEST_CASE("Size of the indexed file") {
         auto* cfile = lfp_cfile( tempfile( contents ) );
         auto file = lis::iodevice( cfile );
 
-        REQUIRE_THROWS_AS(file.psize(), std::runtime_error);
-        REQUIRE_THROWS_AS(file.truncated(), std::runtime_error);
+        CHECK_THROWS_AS(file.psize(), std::runtime_error);
+        CHECK_THROWS_AS(file.truncated(), std::runtime_error);
 
         file.close();
     }
@@ -640,7 +640,7 @@ TEST_CASE("Size of the indexed file") {
         auto index = file.index_records();
 
         CHECK( file.truncated() );
-        REQUIRE_THROWS_AS(file.psize(), std::runtime_error);
+        CHECK_THROWS_AS(file.psize(), std::runtime_error);
 
         file.close();
     }
