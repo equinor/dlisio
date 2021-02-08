@@ -81,6 +81,18 @@ def curves(f, dfsr, strict=True):
         (16678259., 852606., 2237., 852606.)])
 
     """
+
+    # Check depth recording mode flag (type 13)
+    #
+    # If present and type 1 depth only occurs once in each data record, before
+    # the first frame. The depth of all other frames in the data record follow
+    # a constant sampling given by other entry blocks
+    #
+    # TODO: implement support
+    if any(x for x in dfsr.entries if x.type == 13 and x.value == 1):
+        msg = "lis::curves: depth recording mode == 1"
+        raise NotImplementedError(msg)
+
     fmt   = core.dfs_formatstring(dfsr)
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)
@@ -102,7 +114,7 @@ def dfsr_dtype(dfsr, strict=True):
     ]
 
     if any(x for x in dfsr.specs if x.samples > 1):
-        raise RuntimeError("Fast channel not implemented")
+        raise NotImplementedError("Fast channel not implemented")
 
     try:
         dtype = np.dtype(types)
