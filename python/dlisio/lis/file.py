@@ -69,8 +69,9 @@ class logical_file():
         rec = self.io.read_record(recinfo)
 
         rtype = recinfo.type
-        if   rtype == core.rectype.format_spec: return core.parse_dfsr(rec)
-        elif rtype == core.rectype.reelheader:  return core.parse_reelheader(rec)
+        types = core.lis_rectype
+        if   rtype == types.data_format_spec: return core.parse_dfsr(rec)
+        elif rtype == types.reel_header:      return core.parse_reelheader(rec)
         else:
             raise NotImplementedError("No parsing rule for  {}".format(rtype))
 
@@ -86,7 +87,7 @@ class logical_file():
         # barrier so much
         parsed = []
         for recinfo in self.explicits:
-            if recinfo.type != core.lis_rectype.format_spec: continue
+            if recinfo.type != core.lis_rectype.data_format_spec: continue
             rec = self.io.read_record(recinfo)
             parsed.append( core.parse_dfsr(rec) )
 

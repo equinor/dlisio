@@ -78,35 +78,35 @@ bool valid_rectype(lis::byte type) {
 
     switch (rectype) {
         case rt::normal_data:
-        case rt::alt_data:
-        case rt::job_id:
-        case rt::wellsite:
-        case rt::toolstring:
-        case rt::encrp_table:
+        case rt::alternate_data:
+        case rt::job_identification:
+        case rt::wellsitei_data:
+        case rt::tool_string_info:
+        case rt::enc_table_dump:
         case rt::table_dump:
-        case rt::format_spec:
-        case rt::descriptor:
-        case rt::sw_boot:
-        case rt::bootstrap:
-        case rt::cp_kernel:
-        case rt::program_fh:
-        case rt::program_oh:
-        case rt::program_ol:
-        case rt::fileheader:
-        case rt::filetrailer:
-        case rt::tapeheader:
-        case rt::tapetrailer:
-        case rt::reelheader:
-        case rt::reeltrailer:
+        case rt::data_format_spec:
+        case rt::data_descriptor:
+        case rt::tu10_software_boot:
+        case rt::bootstrap_loader:
+        case rt::cp_kernel_loader:
+        case rt::prog_file_header:
+        case rt::prog_overlay_header:
+        case rt::prog_overlay_load:
+        case rt::file_header:
+        case rt::file_trailer:
+        case rt::tape_header:
+        case rt::tape_trailer:
+        case rt::reel_header:
+        case rt::reel_trailer:
         case rt::logical_eof:
         case rt::logical_bot:
         case rt::logical_eot:
         case rt::logical_eom:
-        case rt::op_command:
-        case rt::op_response:
-        case rt::sys_output:
-        case rt::flic_comm:
-        case rt::blank_rec:
+        case rt::op_command_inputs:
+        case rt::op_response_inputs:
+        case rt::system_outputs:
+        case rt::flic_comment:
+        case rt::blank_record:
         case rt::picture:
         case rt::image:
             return true;

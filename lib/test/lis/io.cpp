@@ -385,7 +385,7 @@ TEST_CASE("A record spanning one PR can be indexed and read", "[iodevice]") {
 
     CHECK( info.ltell      == 0 );
     CHECK( info.size       == 8 );
-    CHECK( info.type()     == lis::record_type::reelheader );
+    CHECK( info.type()     == lis::record_type::reel_header );
     CHECK( info.consistent == true );
 
     /* The tell is left right after the header */
@@ -423,7 +423,7 @@ TEST_CASE("A record spanning two PRs can be indexed and read", "[iodevice]") {
     auto info = explicits[0];
     CHECK( info.ltell  == 0 );
     CHECK( info.size   == 16 );
-    CHECK( info.type() == lis::record_type::reelheader );
+    CHECK( info.type() == lis::record_type::reel_header );
     CHECK( info.consistent == true );
 
     /* The tell is left right after the header */
@@ -464,7 +464,7 @@ TEST_CASE("A record spanning three PRs can be indexed and read", "[iodevice]") {
     auto info = explicits[0];
     CHECK( info.ltell  == 0 );
     CHECK( info.size   == 23 );
-    CHECK( info.type() == lis::record_type::reelheader );
+    CHECK( info.type() == lis::record_type::reel_header );
     CHECK( info.consistent == true );
 
     /* The tell is left right after the header */
@@ -538,7 +538,7 @@ TEST_CASE("Padbytes can be identified and skipped") {
 
         CHECK( recinfo.ltell  == 12 );
         CHECK( recinfo.size   ==  7 );
-        CHECK( recinfo.type() == lis::record_type::tapeheader );
+        CHECK( recinfo.type() == lis::record_type::tape_header );
     }
 
     SECTION("PR after padding is included in the index") {
@@ -738,7 +738,7 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
     SECTION("No implicits are found for a DFSR where next record is also DFSR") {
         auto dfsr = explicits[0];
         CHECK( dfsr.ltell == 0 );
-        CHECK( dfsr.type() == lis::record_type::format_spec );
+        CHECK( dfsr.type() == lis::record_type::data_format_spec );
 
         auto im = index.implicits_of(dfsr);
         CHECK(im.begin() == im.end());
@@ -752,7 +752,7 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
 
         auto dfsr = explicits[1];
         CHECK( dfsr.ltell == 8 );
-        CHECK( dfsr.type() == lis::record_type::format_spec );
+        CHECK( dfsr.type() == lis::record_type::data_format_spec );
 
         auto implicits = index.implicits_of(dfsr);
         auto beg = implicits.begin();
@@ -778,7 +778,7 @@ TEST_CASE("Implicits are partitioned correctly by their DFSR") {
 
         auto dfsr = explicits[2];
         CHECK( dfsr.ltell == 32 );
-        CHECK( dfsr.type() == lis::record_type::format_spec );
+        CHECK( dfsr.type() == lis::record_type::data_format_spec );
 
         auto implicits = index.implicits_of(dfsr);
         auto beg = implicits.begin();

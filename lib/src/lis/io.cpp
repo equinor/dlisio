@@ -67,7 +67,7 @@ noexcept (false) {
     // Find the next DFS record in the index, if any
     auto next_dfsr = std::find_if(std::next(curr_dfsr), this->expls.end(),
         [](const record_info& cur) {
-            return cur.type() == record_type::format_spec;
+            return cur.type() == record_type::data_format_spec;
         }
     );
 
@@ -389,8 +389,8 @@ record_index iodevice::index_records() noexcept (true) {
             break;
         }
 
-
-        if (info.type() == type::normal_data or info.type() == type::alt_data) {
+        if (info.type() == type::normal_data or
+            info.type() == type::alternate_data) {
             im.push_back( std::move( info ) );
         } else {
             ex.push_back( std::move( info ) );
