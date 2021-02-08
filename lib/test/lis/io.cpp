@@ -53,6 +53,13 @@ wrap_tif( const std::vector< unsigned char >& source) {
     std::memcpy( dst + 0, &type, sizeof(std::uint32_t) );
     std::memcpy( dst + 4, &prev, sizeof(std::uint32_t) );
     std::memcpy( dst + 8, &next, sizeof(std::uint32_t) );
+    #if (defined(IS_BIG_ENDIAN) || \
+        (defined(__BYTE_ORDER__) && \
+        (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)))
+        std::reverse(dst + 0, dst + 4);
+        std::reverse(dst + 4, dst + 8);
+        std::reverse(dst + 8, dst + 12);
+    #endif
 
     /* Write the source data */
     std::memcpy(dst + 12, source.data(), size);
@@ -69,6 +76,18 @@ wrap_tif( const std::vector< unsigned char >& source) {
     std::memcpy(dst + 24 + size + 0, &type, sizeof(std::uint32_t) );
     std::memcpy(dst + 24 + size + 4, &prev, sizeof(std::uint32_t) );
     std::memcpy(dst + 24 + size + 8, &next, sizeof(std::uint32_t) );
+
+    #if (defined(IS_BIG_ENDIAN) || \
+        (defined(__BYTE_ORDER__) && \
+        (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)))
+        std::reverse(dst + 12 + size + 0, dst + 12 + size + 4);
+        std::reverse(dst + 12 + size + 4, dst + 12 + size + 8);
+        std::reverse(dst + 12 + size + 8, dst + 12 + size + 12);
+
+        std::reverse(dst + 24 + size + 0, dst + 24 + size + 4);
+        std::reverse(dst + 24 + size + 4, dst + 24 + size + 8);
+        std::reverse(dst + 24 + size + 8, dst + 24 + size + 12);
+    #endif
 
     return dest;
 }
