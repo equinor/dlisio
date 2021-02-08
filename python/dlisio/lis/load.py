@@ -32,19 +32,38 @@ def load(path):
 
     lis : dlisio.lis.physical_reel
     """
-    f = core.open(path, 0)
-    tm = core.read_tapemark(f)
-    f.close()
+    def read_as_tapemark(f):
+        try:
+            return core.read_tapemark(f)
+        except:
+            f.close()
+            msg = 'Cannot read {} first bytes of file: {}'
+            raise IOError(msg.format(offset + 12, path))
 
     offset = 0
-    tapeimage = core.valid_tapemark(tm)
-    if tapeimage and tm.type == 1: offset += 12
+    f = core.open(path, offset)
+
+    # Read the first 12 bytes of the file assuming TapeImageFormat.
+    # Verify assumption before moving on.
+    tm = read_as_tapemark(f)
+    is_tif = core.valid_tapemark(tm)
+
+    # Some TapeImageFormat files start with tapemark(s) of type 1 (EOF-tapemark)
+    # Opening a lfp tapeimage protocol at a type 1 tapemarks cause an instant
+    # EOF. Hence we have to find the offset of the first type 0 tapemark, which
+    # will be the start of our logical file.
+    if is_tif:
+        while tm.type != 0:
+            tm = read_as_tapemark(f)
+        offset = f.ptell - 12
+
+    f.close()
 
     files = []
     while True:
         # Open a new file-handle until we hit EOF
         try:
-            f = core.openlis(path, offset, tapeimage)
+            f = core.openlis(path, offset, is_tif)
         except EOFError:
             break
         index = f.index_records()
