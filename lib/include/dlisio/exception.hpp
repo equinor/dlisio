@@ -10,6 +10,10 @@ struct eof_error : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
+struct truncation_error : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
 struct io_error : public std::runtime_error {
     using std::runtime_error::runtime_error;
     explicit io_error( int no ) : runtime_error( std::strerror( no ) ) {}

@@ -28,6 +28,7 @@ struct PYBIND11_EXPORT not_implemented;
 struct PYBIND11_EXPORT not_found;
 }
 
+#include <dlisio/tapemark.hpp>
 #include <dlisio/exception.hpp>
 #include <dlisio/dlis/records.hpp>
 
@@ -150,6 +151,7 @@ public:
  *
  * [1] https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-reduce-the-build-time
  */
+void init_lis_extension(py::module_ &m);
 void init_dlis_extension(py::module_ &m);
 
 
@@ -170,7 +172,21 @@ PYBIND11_MODULE(core, m) {
         }
     });
 
+    init_lis_extension(m);
     init_dlis_extension(m);
+
+    m.def( "read_tapemark",  dlisio::read_tapemark );
+    m.def( "valid_tapemark", dlisio::valid_tapemark );
+
+    py::class_< dlisio::tapemark >( m, "tapemark" )
+        .def_readonly( "type", &dlisio::tapemark::type )
+        .def_readonly( "prev", &dlisio::tapemark::prev )
+        .def_readonly( "next", &dlisio::tapemark::next )
+        .def( "__repr__", []( const dlisio::tapemark& x ) {
+            return "lis::tapemark(type={}, prev={}, next={})"_s.format(
+                    x.type, x.prev, x.next );
+        })
+    ;
 
     py::enum_< dl::error_severity >( m, "error_severity" )
         .value( "info",     dl::error_severity::INFO )

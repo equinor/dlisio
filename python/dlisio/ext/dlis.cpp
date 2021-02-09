@@ -1050,7 +1050,6 @@ void init_dlis_extension(py::module_ &m) {
 
     m.def( "findsul", dl::findsul );
     m.def( "findvrl", dl::findvrl );
-    m.def( "hastapemark", dl::hastapemark );
     m.def("findfdata", dl::findfdata);
 
     m.def( "findoffsets", []( dlisio::stream& file,
