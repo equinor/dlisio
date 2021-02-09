@@ -26,3 +26,16 @@ def curves(dlis, frame, dtype, pre_fmt, fmt, post_fmt):
         alloc,
         dlis.error_handler
     )
+
+def noformat(noformat):
+    """ For internal use.
+    Reads noformat data for provided no-format object
+    """
+
+    dlis = noformat.logicalfile
+    try:
+        indices = dlis.fdata_index[noformat.fingerprint]
+    except KeyError:
+        indices = []
+
+    return core.read_noform(dlis.file, indices, dlis.error_handler)

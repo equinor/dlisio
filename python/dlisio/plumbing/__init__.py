@@ -21,6 +21,7 @@ from .group import Group
 from .path import Path
 from .process import Process
 from .unknown import Unknown
+from .noformat import Noformat
 
 from .matcher import *
 from .valuetypes import *

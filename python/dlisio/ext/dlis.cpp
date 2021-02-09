@@ -696,6 +696,43 @@ noexcept (false) {
     return dstobj;
 }
 
+py::bytes read_noform(dlisio::stream& file,
+                                      const std::vector< long long >& indices,
+                                      dl::error_handler& errorhandler) {
+
+    auto noform = std::vector< char > {};
+    for (auto i : indices) {
+        dl::record rec;
+        try {
+            rec = dl::extract(file, i, errorhandler);
+        } catch (const std::exception& e) {
+            const auto context =
+                "dlis::read_noform: Reading raw bytes from record";
+            const auto debug = "Physical tell (end of the record): " +
+                               std::to_string(file.ptell()) + " (dec)";
+            errorhandler.log(dl::error_severity::CRITICAL, context,
+                             e.what(), "", "Data part is skipped", debug);
+            continue;
+        }
+
+        /* read obname */
+        std::int32_t origin;
+        std::uint8_t copy;
+        const auto ptr =
+            dlis_obname(rec.data.data(), &origin, &copy, nullptr, nullptr);
+
+        const auto prevsize = noform.size();
+        const std::size_t obname_size = ptr - rec.data.data();
+        const auto record_size = rec.data.size() - obname_size;
+
+        noform.resize( prevsize + record_size );
+        std::memcpy( noform.data() + prevsize, ptr, record_size );
+    }
+
+    return py::bytes(noform.data(), noform.size());
+}
+
+
 /** trampoline helper class for dlis::matcher bindings
  *
  * Creating the binding code for a abstract c++ class that we want do derive
@@ -739,6 +776,7 @@ void init_dlis_extension(py::module_ &m) {
     m.def( "storage_label", storage_label );
     m.def("fingerprint", fingerprint);
     m.def("read_fdata", read_fdata);
+    m.def("read_noform", read_noform);
 
     /*
      * TODO: support constructor with kwargs

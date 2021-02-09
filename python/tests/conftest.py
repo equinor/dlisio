@@ -161,6 +161,7 @@ def fpath(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/message.dlis.part',
         'data/chap4-7/eflr/comment.dlis.part',
         'data/chap4-7/eflr/update.dlis.part',
+        'data/chap4-7/eflr/no-format.dlis.part',
         'data/chap4-7/eflr/unknown.dlis.part',
     ]
     merge_files_manyLR(path, content)
