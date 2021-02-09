@@ -382,15 +382,23 @@ void init_lis_extension(py::module_ &m) {
         .def_readonly( "value", &lis::entry_block::value )
     ;
 
-    py::class_< lis::spec_block >( m, "spec_block" )
-        .def_readonly( "mnemonic",         &lis::spec_block::mnemonic         )
-        .def_readonly( "service_id",       &lis::spec_block::service_id       )
-        .def_readonly( "service_order_nr", &lis::spec_block::service_order_nr )
-        .def_readonly( "units",            &lis::spec_block::units            )
-        .def_readonly( "filenr",           &lis::spec_block::filenr           )
-        .def_readonly( "size",             &lis::spec_block::ssize            )
-        .def_readonly( "samples",          &lis::spec_block::samples          )
-        .def_readonly( "reprc",            &lis::spec_block::reprc            )
+    py::class_< lis::detail::spec_block >( m, "spec_block" )
+        .def_readonly( "mnemonic",         &lis::spec_block0::mnemonic         )
+        .def_readonly( "service_id",       &lis::spec_block0::service_id       )
+        .def_readonly( "service_order_nr", &lis::spec_block0::service_order_nr )
+        .def_readonly( "units",            &lis::spec_block0::units            )
+        .def_readonly( "filenr",           &lis::spec_block0::filenr           )
+        .def_readonly( "size",             &lis::spec_block0::ssize            )
+        .def_readonly( "samples",          &lis::spec_block0::samples          )
+        .def_readonly( "reprc",            &lis::spec_block0::reprc            )
+    ;
+
+    py::class_< lis::spec_block0, lis::detail::spec_block >( m, "spec_block0" )
+        // TODO implement spec_block 0 specific fields
+    ;
+
+    py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block1" )
+        // TODO implement spec_block 1 specific fields
     ;
 
     py::class_< lis::dfsr >( m, "dfsr" )

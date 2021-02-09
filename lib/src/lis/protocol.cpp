@@ -22,7 +22,8 @@ namespace lis = dlisio::lis79;
  */
 constexpr const int lis::lrheader::size;
 constexpr const int lis::prheader::size;
-constexpr const int lis::spec_block::size;
+constexpr const int lis::spec_block0::size;
+constexpr const int lis::spec_block1::size;
 constexpr const int lis::entry_block::fixed_size;
 
 bool is_padbytes(const char* xs, std::uint16_t size) {
@@ -309,11 +310,11 @@ noexcept (false) {
     const auto* cur = rec.data.data() + offset;
     const auto* end = cur + rec.data.size();
 
-    if ( std::distance(cur, end) < lis::spec_block::size ) {
+    if ( std::distance(cur, end) < T::size ) {
         const auto msg = "lis::spec_block: "
                          "{} bytes left in record, expected at least {} more";
         const auto left = std::distance(cur, end);
-        throw std::runtime_error(fmt::format(msg, left, lis::spec_block::size));
+        throw std::runtime_error(fmt::format(msg, left, T::size));
     }
 
     constexpr int padbyte = 1;
@@ -370,11 +371,11 @@ lis::dfsr parse_dfsr( const lis::record& rec ) noexcept (false) {
     while ( offset < rec.data.size() ) {
         if (subtype == 0) {
             formatspec.specs.emplace_back( read_spec_block0(rec, offset) );
+            offset += lis::spec_block0::size;
         } else {
             formatspec.specs.emplace_back( read_spec_block1(rec, offset) );
+            offset += lis::spec_block1::size;
         }
-
-        offset += lis::spec_block::size;
     }
 
     return formatspec;
