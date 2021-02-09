@@ -67,8 +67,7 @@ noexcept (false) {
     // Find the next DFS record in the index, if any
     auto next_dfsr = std::find_if(std::next(curr_dfsr), this->expls.end(),
         [](const record_info& cur) {
-            const auto type = static_cast< record_type >(lis::decay(cur.type));
-            return type == record_type::data_format_spec;
+            return cur.type == record_type::data_format_spec;
         }
     );
 
@@ -263,7 +262,6 @@ lis::prheader iodevice::read_physical_header() noexcept (false) {
     if ( head.attributes & lis::prheader::filenum ) mvl += 2;
     if ( head.attributes & lis::prheader::chcksum ) mvl += 2;
 
-
     if ( head.length < mvl ) {
         std::string where = "iodevice::read_physical_header: ";
         std::string what  = "Too short record length (was {} bytes)";
@@ -360,7 +358,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
     }
 
     record_info info;
-    info.type  = lrh.type;
+    info.type  = static_cast< lis::record_type >(lis::decay(lrh.type));
     info.size  = length;
     info.ltell = ltell;
 
@@ -394,9 +392,8 @@ record_index iodevice::index_records() noexcept (true) {
             this->is_truncated = true;
             break;
         }
-        auto type = static_cast< lis::record_type >(lis::decay(info.type));
-        if (type == lis::record_type::normal_data or
-            type == lis::record_type::alternate_data) {
+        if (info.type == lis::record_type::normal_data or
+            info.type == lis::record_type::alternate_data) {
             im.push_back( std::move( info ) );
         } else {
             ex.push_back( std::move( info ) );

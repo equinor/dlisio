@@ -261,7 +261,7 @@ noexcept (false) {
         default: {
             const auto msg = "unable to interpret attribute: "
                              "unknown representation code {}";
-            const auto code = static_cast< int >(repr);
+            const auto code = lis::decay(reprc);
             throw std::runtime_error(fmt::format(msg, code));
         }
     }
@@ -357,7 +357,7 @@ lis::dfsr parse_dfsr( const lis::record& rec ) noexcept (false) {
 
     while (true) {
         const auto entry = read_entry_block(rec, offset);
-        const auto type  = static_cast< lis::entry_type >( lis::decay(entry.type) );
+        const auto type  = static_cast< lis::entry_type >(lis::decay(entry.type));
 
         offset += lis::entry_block::fixed_size + lis::decay(entry.size);
 

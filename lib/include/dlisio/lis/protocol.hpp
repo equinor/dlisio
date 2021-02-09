@@ -138,13 +138,11 @@ bool valid_rectype(lis::byte type);
  * record_info is a lightweight representation of a Logical Record, containing
  * information needed in order to find and extract the content of the Logical
  * Record.
- *
- * TODO type as record_type ?
  */
 struct record_info {
-    lis::byte    type;  // From Logical Record Header
-    std::size_t  size;  // Sum off all PRH length fields
-    std::int64_t ltell; // Logical offset to the *first* PR
+    lis::record_type type;  // From Logical Record Header
+    std::size_t      size;  // Sum off all PRH length fields
+    std::int64_t     ltell; // Logical offset to the *first* PR
 
     bool consistent = true; // TODO implement succ/pred check
 };

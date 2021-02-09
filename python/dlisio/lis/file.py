@@ -63,36 +63,24 @@ class logical_file():
         """
         pass
 
-
     def parse_record(self, recinfo):
         # This can be C++ function (although what about the return type?)
         rec = self.io.read_record(recinfo)
 
-        rtype = core.lis_rectype(recinfo.type)
+        rtype = recinfo.type
         types = core.lis_rectype
-        if   rtype == types.data_format_spec: return core.parse_dfsr(rec)
-        elif rtype == types.reel_header:      return core.parse_reelheader(rec)
+        if rtype == types.data_format_spec: return core.parse_dfsr(rec)
         else:
             raise NotImplementedError("No parsing rule for  {}".format(rtype))
 
-
-    @property
     def explicits(self):
         return self.index.explicits()
 
     def dfsr(self):
         # TODO duplication checking
-        # TODO Maybe we want a factory function in c++ for extraction (and
-        # parsing) all records of a given type. To avoid crossing the language
-        # barrier so much
-        parsed = []
-        for recinfo in self.explicits:
-            rectype = core.lis_rectype(recinfo.type)
-            if rectype != core.lis_rectype.data_format_spec: continue
-            rec = self.io.read_record(recinfo)
-            parsed.append( core.parse_dfsr(rec) )
-
-        return parsed
+        ex = self.explicits()
+        recs = [x for x in ex if x.type == core.lis_rectype.data_format_spec]
+        return [self.parse_record(x) for x in recs]
 
 class physical_file(tuple):
     def __enter__(self):
