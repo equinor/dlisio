@@ -91,7 +91,7 @@ enum class record_type : std::uint8_t {
     normal_data         = 0,
     alternate_data      = 1,
     job_identification  = 32,
-    wellsitei_data      = 34,
+    wellsite_data       = 34,
     tool_string_info    = 39,
     enc_table_dump      = 42,
     table_dump          = 47,
@@ -135,7 +135,7 @@ bool valid_rectype(lis::byte type);
  * span multiple PR's. While each PR has its own header (PRH), the LR Header
  * (LRH) is only recorded once - At the start of the *first* PR.
  *
- * record_info is a light-weight representation of a Logical Record, containing
+ * record_info is a lightweight representation of a Logical Record, containing
  * information needed in order to find and extract the content of the Logical
  * Record.
  *

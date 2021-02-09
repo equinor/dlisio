@@ -14,8 +14,8 @@ namespace lis = dlisio::lis79;
 
 /* Definitions of static members
 
- * In C++11 static members needs to be defined outside the class definition in
- * order to be odr-used [1]. These definisions can go away if we ever upgrade to
+ * In C++11 static members need to be defined outside the class definition in
+ * order to be odr-used [1]. These definitions can go away if we ever upgrade to
  * C++17 or higher.
  *
  * [1] https://en.cppreference.com/w/cpp/language/static
@@ -80,7 +80,7 @@ bool valid_rectype(lis::byte type) {
         case rt::normal_data:
         case rt::alternate_data:
         case rt::job_identification:
-        case rt::wellsitei_data:
+        case rt::wellsite_data:
         case rt::tool_string_info:
         case rt::enc_table_dump:
         case rt::table_dump:

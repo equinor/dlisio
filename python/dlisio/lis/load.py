@@ -49,7 +49,7 @@ def load(path):
     is_tif = core.valid_tapemark(tm)
 
     # Some TapeImageFormat files start with tapemark(s) of type 1 (EOF-tapemark)
-    # Opening a lfp tapeimage protocol at a type 1 tapemarks cause an instant
+    # Opening a lfp tapeimage protocol at a type 1 tapemarks causes an instant
     # EOF. Hence we have to find the offset of the first type 0 tapemark, which
     # will be the start of our logical file.
     if is_tif:

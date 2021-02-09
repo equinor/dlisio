@@ -228,7 +228,7 @@ void init_lis_extension(py::module_ &m) {
         .value( "normal_data"         , lis::record_type::normal_data         )
         .value( "alternate_data"      , lis::record_type::alternate_data      )
         .value( "job_identification"  , lis::record_type::job_identification  )
-        .value( "wellsitei_data"      , lis::record_type::wellsitei_data      )
+        .value( "wellsite_data"       , lis::record_type::wellsite_data       )
         .value( "tool_string_info"    , lis::record_type::tool_string_info    )
         .value( "enc_table_dump"      , lis::record_type::enc_table_dump      )
         .value( "table_dump"          , lis::record_type::table_dump          )

@@ -84,7 +84,7 @@ def curves(f, dfsr, strict=True):
 
     # Check depth recording mode flag (type 13)
     #
-    # If present and type 1 depth only occurs once in each data record, before
+    # If present and type 1, depth only occurs once in each data record, before
     # the first frame. The depth of all other frames in the data record follow
     # a constant sampling given by other entry blocks
     #

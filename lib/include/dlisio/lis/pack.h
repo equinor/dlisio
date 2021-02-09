@@ -36,7 +36,7 @@ extern "C" {
  * uint8_t C3;
  *
  * unsigned char bytes[2 + 2*4 + 4];
- * err = lis_packf("iffb", src, bytes);
+ * err = lis_packf("IDDB", src, bytes);
  * if (err) exit(1);
  *
  * memcpy(&C1, bytes,      sizeof(C1));
