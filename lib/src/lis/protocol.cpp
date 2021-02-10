@@ -116,6 +116,47 @@ bool valid_rectype(lis::byte type) {
     }
 }
 
+std::string record_type_str( lis::record_type type ) noexcept (true) {
+    using rt = lis::record_type;
+
+    switch ( lis::decay(type) ) {
+        case rt::normal_data:         return "Normal Data";
+        case rt::alternate_data:      return "Alternate Data";
+        case rt::job_identification:  return "Job Identification";
+        case rt::wellsite_data:       return "Wellsite Data";
+        case rt::tool_string_info:    return "Tool String Info";
+        case rt::enc_table_dump:      return "Encrypted Table Dump";
+        case rt::table_dump:          return "Table Dump";
+        case rt::data_format_spec:    return "Data Format Specification";
+        case rt::data_descriptor:     return "Data Descriptor";
+        case rt::tu10_software_boot:  return "TU10 Software Boot";
+        case rt::bootstrap_loader:    return "Bootstrap Loader";
+        case rt::cp_kernel_loader:    return "CP-Kernel Loader Boot";
+        case rt::prog_file_header:    return "Program File Header";
+        case rt::prog_overlay_header: return "Program Overlay Header";
+        case rt::prog_overlay_load:   return "Program Overlay Load";
+        case rt::file_header:         return "File Header";
+        case rt::file_trailer:        return "File Trailer";
+        case rt::tape_header:         return "Tape Header";
+        case rt::tape_trailer:        return "Tape Trailer";
+        case rt::reel_header:         return "Reel Header";
+        case rt::reel_trailer:        return "Reel Trailer";
+        case rt::logical_eof:         return "Logical EOF";
+        case rt::logical_bot:         return "Logical BOT";
+        case rt::logical_eot:         return "Logical EOT";
+        case rt::logical_eom:         return "Logical EOM";
+        case rt::op_command_inputs:   return "Operator Command Inputs";
+        case rt::op_response_inputs:  return "Operator Response Inputs";
+        case rt::system_outputs:      return "System Outputs to Operator";
+        case rt::flic_comment:        return "FLIC Comment";
+        case rt::blank_record:        return "Blank Record/CSU Comment";
+        case rt::picture:             return "Picture";
+        case rt::image:               return "Image";
+        default:
+            return "Invalid LIS79 Record Type";
+    }
+}
+
 namespace {
 
 using std::swap;

@@ -271,6 +271,7 @@ void init_lis_extension(py::module_ &m) {
         .value( "byte"   , lis::representation_code::byte   )
         .value( "mask"   , lis::representation_code::mask   )
     ;
+    m.def( "rectype_tostring",   &lis::record_type_str );
 
     /* start - io.hpp */
     m.def("openlis", &lis::open,

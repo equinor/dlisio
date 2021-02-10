@@ -129,6 +129,8 @@ enum class record_type : std::uint8_t {
  */
 bool valid_rectype(lis::byte type);
 
+std::string record_type_str( record_type ) noexcept (true);
+
 /** (Logical) Record Info
  *
  * A Logical Record (LR) always starts on a new Physical Record (PR) and may
