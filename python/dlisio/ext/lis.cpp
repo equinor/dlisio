@@ -345,6 +345,7 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::record >( m, "lis_record", py::buffer_protocol() )
+        .def_readonly( "info", &lis::record::info )
         .def( "__repr__", [](const lis::record& x) {
             return "lis::record(type={}, ltell={}, size={})"_s.format(
                 x.info.type, x.info.ltell, x.data.size()

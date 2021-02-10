@@ -63,24 +63,15 @@ class logical_file():
         """
         pass
 
-    def parse_record(self, recinfo):
-        # This can be C++ function (although what about the return type?)
-        rec = self.io.read_record(recinfo)
-
-        rtype = recinfo.type
-        types = core.lis_rectype
-        if rtype == types.data_format_spec: return core.parse_dfsr(rec)
-        else:
-            raise NotImplementedError("No parsing rule for  {}".format(rtype))
-
     def explicits(self):
         return self.index.explicits()
 
     def dfsr(self):
         # TODO duplication checking
         ex = self.explicits()
-        recs = [x for x in ex if x.type == core.lis_rectype.data_format_spec]
-        return [self.parse_record(x) for x in recs]
+        dfs = core.lis_rectype.data_format_spec
+        recs = [self.io.read_record(x) for x in ex if x.type == dfs]
+        return [parse_record(x) for x in recs]
 
 class physical_file(tuple):
     def __enter__(self):
@@ -96,3 +87,33 @@ class physical_file(tuple):
     def __repr__(self):
         return 'physical_file(logical files: {})'.format(len(self))
 
+
+def parse_record(rec):
+    """ Parse Explicit (or Fixed) record
+
+    Checks the type-of-record and dispatches to the correct parsing routine.
+
+    Parameters
+    ----------
+
+    rec : dlisio.core.lis_record
+
+    Returns
+    -------
+
+    parsed_record
+        The type of the returned record depends on rec.info.type of the raw
+        record.
+
+    Raises
+    ------
+
+    NotImplementedError
+        If no parsing routine is implemented for the given record
+    """
+    rtype = rec.info.type
+    types = core.lis_rectype
+    if rtype == types.data_format_spec: return core.parse_dfsr(rec)
+    else:
+        msg = "No parsing rule for {} Records"
+        raise NotImplementedError(msg.format(core.rectype_tostring(rtype)))
