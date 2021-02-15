@@ -459,19 +459,12 @@ noexcept (false) {
         throw dlisio::io_error(fmt::format(msg, path, strerror(errno)));
     }
 
-    auto* protocol = lfp_cfile(file);
+    auto* protocol = lfp_cfile_open_at_offset(file, offset);
     if ( protocol == nullptr ) {
-        throw dlisio::io_error("lis::open: "
-                               "lfp: unable to open lfp protocol cfile");
-    }
-
-    auto err = lfp_seek(protocol, offset);
-    switch (err) {
-        case LFP_OK: break;
-        default: {
-            lfp_close( protocol );
-            throw dlisio::io_error( lfp_errormsg(protocol) );
-        }
+        std::fclose(file);
+        const auto msg = "lis::open: "
+                         "unable to open lfp protocol cfile at tell {}";
+        throw dlisio::io_error(fmt::format(msg, offset));
     }
 
     if ( tapeimage ) {

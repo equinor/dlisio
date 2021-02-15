@@ -26,30 +26,9 @@ std::int64_t stream::ltell() const noexcept (true) {
 }
 
 std::int64_t stream::ptell() const noexcept (false) {
-    auto* outer = this->f;
-    lfp_protocol* inner;
-
-    while (true) {
-        auto err = lfp_peek(outer, &inner);
-        switch (err) {
-            case LFP_OK:
-                break;
-            case LFP_LEAF_PROTOCOL:
-                /*
-                 * lfp_peek is not implemented for LEAF protocols
-                 *
-                 * We use this fact as an implicit check that we have reached the
-                 * inner-most protocol.
-                 */
-                std::int64_t tell;
-                lfp_tell(outer, &tell);
-                return tell;
-            case LFP_IOERROR:
-            default:
-                throw std::runtime_error(lfp_errormsg(outer));
-        }
-        outer = inner;
-    }
+    std::int64_t ptell;
+    lfp_ptell(this->f, &ptell);
+    return ptell;
 }
 
 std::int64_t stream::read( char* dst, int n )

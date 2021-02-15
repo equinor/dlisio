@@ -30,16 +30,14 @@ noexcept (false) {
         auto msg = "unable to open file for path {} : {}";
         throw dlisio::io_error(fmt::format(msg, path, strerror(errno)));
     }
-    auto* protocol = lfp_cfile(file);
-    if ( protocol == nullptr  )
-        throw dlisio::io_error("lfp: unable to open lfp protocol cfile");
 
-    auto err = lfp_seek(protocol, offset);
-    switch (err) {
-            case LFP_OK: break;
-            default:
-                throw dlisio::io_error(lfp_errormsg(protocol));
-        }
+    auto* protocol = lfp_cfile_open_at_offset(file, offset);
+    if ( protocol == nullptr ) {
+        std::fclose(file);
+        const auto msg = "lfp: unable to open lfp protocol cfile at tell {}";
+        throw dlisio::io_error(fmt::format(msg, offset));
+    }
+
     return dlisio::stream(protocol);
 }
 
