@@ -291,6 +291,7 @@ void init_lis_extension(py::module_ &m) {
         .def( "istruncated",   &lis::iodevice::truncated )
         .def( "close",         &lis::iodevice::close )
         .def( "seek",          &lis::iodevice::seek )
+        .def( "eof",           &lis::iodevice::eof )
         .def( "read", []( lis::iodevice& s, py::buffer b, long long off, int n ) {
             auto info = b.request();
             if (info.size < n) {

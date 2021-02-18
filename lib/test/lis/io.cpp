@@ -512,13 +512,13 @@ TEST_CASE("Padding after last PRH is considered a valid EOF") {
 TEST_CASE("Padbytes can be identified and skipped") {
     const auto contents = std::vector< unsigned char > {
         0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
-        0x84, 0x00,             // lrh(type=132)
+        0x80, 0x00,             // lrh(type=128)
         0x01, 0x02,             // dummy data
 
         0x00, 0x00, 0x00, 0x00, // Padding
 
         0x00, 0x07, 0x00, 0x00, // prh(len=7, pred=0, succ=0)
-        0x82, 0x00,             // lrh(type=130)
+        0x81, 0x00,             // lrh(type=129)
         0x03,                   // dummy data
     };
 
@@ -538,7 +538,7 @@ TEST_CASE("Padbytes can be identified and skipped") {
 
         CHECK( info.ltell == 12 );
         CHECK( info.size  ==  7 );
-        CHECK( info.type  == lis::record_type::tape_header );
+        CHECK( info.type  == lis::record_type::file_trailer );
     }
 
     SECTION("PR after padding is included in the index") {
@@ -559,6 +559,188 @@ TEST_CASE("Inconsistent PR headers") {
 }
 
 TEST_CASE("Implicit records are stored seperatly from explicits/fixed") {
+}
+
+TEST_CASE("index_records partitions the LF correctly") {
+    const auto thlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x82, 0x00,             // lrh(type=130)
+    };
+
+    const auto ttlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x83, 0x00,             // lrh(type=131)
+    };
+
+    const auto fhlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x80, 0x00,             // lrh(type=128)
+    };
+
+    const auto ftlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x81, 0x00,             // lrh(type=129)
+    };
+
+    const auto padd = std::vector< unsigned char > {
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00
+    };
+
+    SECTION("Hitting EOF: no TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 6 + 6 );
+        CHECK( file.ltell() == 6 + 6 );
+
+        file.close();
+    }
+
+    SECTION("Hitting EOF: no TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 6 + 10 + 6 + 10 );
+        CHECK( file.ltell() == 6 + 10 + 6 + 10 );
+
+        file.close();
+    }
+
+    SECTION("Hitting EOF: TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( wrap_tif( content ) ) );
+        auto* tif   = lfp_tapeimage_open( cfile );
+        auto file   = lis::iodevice( tif );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 12 + 6 + 6 + 12 );
+        CHECK( file.ltell() == 6 + 6 );
+
+        file.close();
+    }
+
+    SECTION("Hitting EOF: TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+
+        auto* cfile = lfp_cfile( tempfile( wrap_tif( content ) ) );
+        auto* tif   = lfp_tapeimage_open( cfile );
+        auto file   = lis::iodevice( tif );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 12 + 6 + 10 + 6 + 10 + 12 );
+        CHECK( file.ltell() == 6 + 10 + 6 + 10 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: FTLR, no TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), ttlr.begin(), ttlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 6 + 6 );
+        CHECK( file.ltell() == 6 + 6 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: FTLR, no TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ttlr.begin(), ttlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 6 + 10 + 6 + 10 );
+        CHECK( file.ltell() == 6 + 10 + 6 + 10 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: THLR, no TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), thlr.begin(), thlr.end() );
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+
+        //THLR
+        auto index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6);
+        CHECK( file.ltell() == 6 );
+
+        // FHLR
+        index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6 + 6 );
+        CHECK( file.ltell() == 6 + 6 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: THLR, no TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), thlr.begin(), thlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+
+        //THLR
+        auto index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6 + 10);
+        CHECK( file.ltell() == 6 + 10);
+
+        // FHLR
+        index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6 + 10 + 6 );
+        CHECK( file.ltell() == 6 + 10 + 6 );
+
+        file.close();
+    }
 }
 
 TEST_CASE("Implicits are partitioned correctly by their DFSR") {

@@ -3,7 +3,7 @@ import pytest
 from dlisio import lis
 
 def test_file_header():
-    with lis.load('data/lis/MUD_LOG_1.LIS') as (_, f, *tail):
+    with lis.load('data/lis/MUD_LOG_1.LIS') as (f, *tail):
         header = f.header()
 
         assert header.file_name           == 'LIS1  .001'
@@ -15,7 +15,7 @@ def test_file_header():
         assert header.prev_file_name      == ' '*10
 
 def test_file_trailer():
-    with lis.load('data/lis/MUD_LOG_1.LIS') as (_, f, *tail):
+    with lis.load('data/lis/MUD_LOG_1.LIS') as (f, *tail):
         trailer = f.trailer()
 
         assert trailer.file_name           == 'LIS1  .001'

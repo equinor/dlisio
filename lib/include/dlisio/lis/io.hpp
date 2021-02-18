@@ -152,10 +152,27 @@ public:
      */
     lis::lrheader read_logical_header()  noexcept (false);
 
-    /** Create an index of all the logical records in the file
+    /** Create an index of Logical Records (LR)
      *
-     * The returned record_index is a lightweight logical record index which
-     * essentially provides random-access to logical records.
+     * This function will return the index when hitting EOF or encountering one
+     * of the following records:
+     *
+     *  - File Trailer Logical Record (TTLR)
+     *  - Reel Header  Logical Record (RHLR)
+     *  - Reel Trailer Logical Record (RTLR)
+     *  - Tape Header  Logical Record (THLR)
+     *  - Tape Trailer Logical Record (TTLR)
+     *  - Logical EOF  Logical Record (LEOF)
+     *
+     *  or if encountering a File Header Logical Record (FHLR) that is not
+     *  first in in the record. The second FHLR will _not_ be included in the
+     *  index. This can typically be the case if the optional FTLR is missing.
+     *
+     *  In any case, the tell is left at the start of the _next_ LR in line, or
+     *  at EOF.
+     *
+     * The returned record_index is a lightweight LR index which essentially
+     * provides random-access to the LR's within the LF.
      */
     record_index index_records() noexcept (true);
 
