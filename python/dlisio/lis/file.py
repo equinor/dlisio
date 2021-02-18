@@ -158,6 +158,64 @@ class logical_file():
         return [parse_record(x) for x in recs]
 
 class physical_file(tuple):
+    """ Physical File - A regular file on disk
+
+    Think of a LIS file as a directory. The top directory is your regular file
+    on disk. The regular file is divided into sub-structures (or subfolders if
+    you will) called 'Reels'. Each Reel if further divided into 'Tapes', which
+    again contains Logical Files::
+
+        your_file.lis
+        |
+        |-> Reel 0
+        |   |
+        |   |-> Tape 0
+        |   |   |
+        |   |   |-> Logical File 0
+        |   |   |-> Logical File 1
+        |   |
+        |   |-> Tape 1
+        |   |   |
+        |   |   |-> Logical File 0
+        |
+        |-> Reel 1
+            |
+            |-> Tape 0
+                |
+                |-> Logical File 0
+
+    Each Logical File can be thought of as an independent regular file,
+    containing log data.
+
+    Each Reel and Tape has its own corresponding Header and Trailer. These
+    contain general information about the Reel or Tape.
+
+    When reading the LIS file with :func:`dlisio.lis.load`, dlisio will flatten
+    the above tree structure and simply return a tuple-like object
+    (:class:`physical_file`) of all the Logical Files. The Reel and Tape in
+    which a Logical File belongs to can be queried directly from the Logical
+    File.
+
+    Notes
+    -----
+
+    More often than not, the tree structure of a LIS file is trivial,
+    containing just a couple of logical files - all belonging to the same Tape
+    and Reel.
+
+    Notes
+    -----
+
+    The LIS79 specification opens for the possibility of a Reel spanning across
+    multiples regular files. dlisio does not currently have cross-file support.
+    Each regular file can still be read as a stand-alone LIS-file.
+
+    See Also
+    --------
+
+    dlisio.lis.load : Open and Index a LIS-file
+    dlisio.lis.logical_file : A wrapper for a single Logical File
+    """
     def __enter__(self):
         return self
 

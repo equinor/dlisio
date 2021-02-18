@@ -4,14 +4,12 @@ from .. import core
 from .file import logical_file, physical_file, HeaderTrailer, parse_record
 
 def load(path):
-    """ Loads and indexes a file
+    """ Loads and indexes a LIS file
 
-    A LIS file is typically segmented into multiple Logical Files (LF). LF's
-    are just a way to group information that logically belongs together. LF's
-    are completely independent of each other and can generally be treated as if
-    they were different files on disk. In fact - that's just what load does.
-    Each logical file gets its own io-device and is completely segmented from
-    other LF's.
+    Load does more than just opening the file. A LIS file has no random access
+    in itself, so load scans the entire file and creates its own index to
+    enumlate random access. The file is also segmented into Logical Files, see
+    :class:`physical_file` and :class:`logical_file`.
 
     Notes
     -----
