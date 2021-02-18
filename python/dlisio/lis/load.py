@@ -74,6 +74,6 @@ def load(path):
             logging.info(msg.format(len(files)))
             break
 
-        offset = f.poffset() + f.psize()
+        offset = f.ptell()
 
     return physical_file(files)

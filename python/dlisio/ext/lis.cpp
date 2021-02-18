@@ -281,14 +281,12 @@ void init_lis_extension(py::module_ &m) {
     );
 
     py::class_< lis::iodevice >( m, "lis_stream" )
-        .def( "__repr__", [](const lis::iodevice& x) {
-            return "lis::iodevice(poffset={})"_s.format( x.poffset() );
+        .def( "__repr__", [](const lis::iodevice&) {
+            return "lis::iodevice";
         })
         .def( "read_record",   &lis::iodevice::read_record )
         .def( "index_records", &lis::iodevice::index_records )
         .def( "index_record",  &lis::iodevice::index_record )
-        .def( "poffset",       &lis::iodevice::poffset )
-        .def( "psize",         &lis::iodevice::psize )
         .def( "ptell",         &lis::iodevice::ptell )
         .def( "istruncated",   &lis::iodevice::truncated )
         .def( "close",         &lis::iodevice::close )

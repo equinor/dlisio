@@ -95,26 +95,6 @@ noexcept (false) {
 
 
 /* iodevice */
-iodevice::iodevice(lfp_protocol* p) : dlisio::stream(p) {
-    this->pzero = this->ptell();
-}
-
-std::int64_t iodevice::poffset() const noexcept (true) {
-    return this->pzero;
-}
-
-std::int64_t iodevice::psize() const noexcept (false) {
-    if ( not this->indexed() ) {
-        const auto msg = "iodevice: filesize unknown before file is indexed";
-        throw std::runtime_error(msg);
-    }
-    if ( this->truncated() ) {
-        const auto msg = "iodevice: filesize unknown, file is truncated";
-        throw std::runtime_error(msg);
-    }
-    return this->plength;
-}
-
 bool iodevice::truncated() const noexcept (false) {
     if ( not this->indexed() ) {
         const auto msg = "iodevice: cannot tell if un-indexed file is truncated";
@@ -400,9 +380,7 @@ record_index iodevice::index_records() noexcept (true) {
         }
     }
 
-    this->plength = this->ptell() - this->poffset();
     this->is_indexed = true;
-
     return record_index( std::move(ex), std::move(im) );
 }
 
@@ -484,28 +462,25 @@ noexcept (false) {
         char tmp;
         device.read(&tmp, 1);
     } catch ( const std::exception& e ) {
-        const auto poffset = device.poffset();
         device.close();
         const auto msg = "lis::open: "
                             "Cannot open lis::iodevice (ptell={}): {}";
-        throw dlisio::io_error( fmt::format(msg, poffset, e.what() ));
+        throw dlisio::io_error( fmt::format(msg, offset, e.what() ));
     }
 
     if ( device.eof() ) {
-        const auto poffset = device.poffset();
         device.close();
         const auto msg = "open: handle is opened at EOF (ptell={})";
-        throw dlisio::eof_error( fmt::format(msg, poffset) );
+        throw dlisio::eof_error( fmt::format(msg, offset) );
     }
 
     try {
         device.seek( 0 );
     } catch ( const std::exception& e ) {
-        const auto poffset = device.poffset();
         device.close();
         const auto msg = "lis::open: "
                          "Could not rewind lis::iodevice to ptell {}: {}";
-        throw dlisio::io_error( fmt::format(msg, poffset, e.what()) );
+        throw dlisio::io_error( fmt::format(msg, offset, e.what()) );
     }
 
     return device;

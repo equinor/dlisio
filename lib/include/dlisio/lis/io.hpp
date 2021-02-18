@@ -129,7 +129,7 @@ private:
  */
 struct iodevice : public dlisio::stream {
 public:
-    explicit iodevice( lfp_protocol* );
+    explicit iodevice( lfp_protocol* p ) : dlisio::stream(p) {};
 
     /* Read the physical header from the file. UB if the next byte that is
      * _not_ a padbyte is not a part of the header [1]
@@ -173,50 +173,9 @@ public:
     record_info index_record() noexcept (false);
     record read_record( const record_info& ) noexcept (false);
 
-    /** The byte-interval in the physical file this iodevice instance works on
-     *
-     *  poffset -> the physical offset in which the file was opened at
-     *  psize   -> the phisical size (number of bytes) from poffset to
-     *             end-of-logical-file
-     *
-     * For a LIS file without Physical Tape Marks (PTM):
-     *
-     *  poffset                     poffset + psize
-     *     |                                |
-     *      -------------------------------------------
-     *     | PR0 | PR1 | .. | PRn | padding | PRH | ...|
-     *      -------------------------------------------
-     *
-     *  TODO: Need a non-tif files to confirm
-     *
-     * For a LIS file with tapemarks (Tape Image Format), the interval includes
-     * the first TM and the *first* EOF TM (type 1) after the last PR:
-     *
-     *  poffset                                    poffset + psize
-     *     |                                               |
-     *      ---------------------------------------------------------
-     *     | TM | PR0 | TM | PR1 | .. | PRn | padding | TM | TM | ...|
-     *      ---------------------------------------------------------
-     *
-     * Note that the interval includes potential padding between PR's. If there
-     * is padding between two PR's that belong to different logical files,
-     * the padding is counted in the first of the two logical file.
-     *
-     * Note that the psize is not known until the logical file is indexed. That
-     * is until index_records() is called. If the file is truncated, its size
-     * is unknown.
-     *
-     * poffset + psize can be used to open a new file handle for the next logical
-     * file.
-     */
-    std::int64_t poffset() const noexcept (true);
-    std::int64_t psize() const noexcept (false);
-
     bool truncated() const noexcept (false);
     bool indexed() const noexcept (true);
 private:
-    std::int64_t pzero;
-    std::int64_t plength;
     bool is_indexed   = false;
     bool is_truncated = false;
 };
