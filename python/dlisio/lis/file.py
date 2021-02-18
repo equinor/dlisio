@@ -41,27 +41,57 @@ class logical_file():
         msg = 'logical_file(path="{}", io={}, index={})'
         return msg.format(self.path, self.io, self.index)
 
-    @property
     def header(self):
         """ Logical File Header
 
-        """
-        pass
-
-    @property
-    def trailer(self):
-        """ Logical File Trailer
-
-        Returns the Logical File Trailer - if present. Otherwise returns None.
+        Reads and parses the Logical File Header _from disk_ - if present.
 
         Returns
         -------
 
-        trailer : dlisio.core.log_file_trailer or None
-
-
+        header : dlisio.core.file_header or None
         """
-        pass
+        rectype = core.lis_rectype.file_header
+        info = [x for x in self.explicits() if x.type == rectype]
+
+        if len(info) > 1:
+            msg =  'Multiple {} Logical Records, should only be one. '
+            msg += 'Use parse_record to read them all'
+            raise ValueError(msg.format(core.rectype_tostring(rectype)))
+
+        if len(info) == 0:
+            msg = "No {} Logical Record in {}"
+            logging.warning(msg.format(core.rectype_tostring(rectype), self))
+            return None
+
+        rec = self.io.read_record(info[0])
+        return parse_record(rec)
+
+    def trailer(self):
+        """ Logical File Trailer
+
+        Reads and parses the Logical File Header _from disk_ - if present.
+
+        Returns
+        -------
+
+        trailer : dlisio.core.file_trailer or None
+        """
+        rectype = core.lis_rectype.file_trailer
+        info = [x for x in self.explicits() if x.type == rectype]
+
+        if len(info) > 1:
+            msg =  'Multiple {} Records, should only be one. '
+            msg += 'Use parse_record to read them all'
+            raise ValueError(msg.format(core.rectype_tostring(rectype)))
+
+        if len(info) == 0:
+            msg = "No {} Logical Record in {}"
+            logging.info(msg.format(core.rectype_tostring(rectype), self))
+            return None
+
+        rec = self.io.read_record(info[0])
+        return parse_record(rec)
 
     def explicits(self):
         return self.index.explicits()
@@ -113,7 +143,9 @@ def parse_record(rec):
     """
     rtype = rec.info.type
     types = core.lis_rectype
-    if rtype == types.data_format_spec: return core.parse_dfsr(rec)
+    if rtype   == types.data_format_spec: return core.parse_dfsr(rec)
+    elif rtype == types.file_header:      return core.parse_file_header(rec)
+    elif rtype == types.file_trailer:     return core.parse_file_trailer(rec)
     else:
         msg = "No parsing rule for {} Records"
         raise NotImplementedError(msg.format(core.rectype_tostring(rtype)))

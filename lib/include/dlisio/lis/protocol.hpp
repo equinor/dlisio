@@ -292,6 +292,35 @@ dfsr parse_dfsr( const lis::record& ) noexcept (false);
 
 std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false);
 
+namespace detail {
+
+struct file_record {
+    lis::string file_name;
+    lis::string service_sublvl_name;
+    lis::string version_number;
+    lis::string date_of_generation;
+    lis::string max_pr_length;
+    lis::string file_type;
+    lis::string optional_file_name;
+};
+
+} // namespace detail
+
+struct file_header : public detail::file_record {
+    lis::string prev_file_name;
+
+    static constexpr const int size = 56;
+};
+
+struct file_trailer : public detail::file_record {
+    lis::string next_file_name;
+
+    static constexpr const int size = 56;
+};
+
+file_header  parse_file_header( const record& )  noexcept (false);
+file_trailer parse_file_trailer( const record& ) noexcept (false);
+
 } // namespace lis79
 
 } // namespace dlisio

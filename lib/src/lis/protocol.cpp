@@ -2,6 +2,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cstring>
+#include <type_traits>
 
 #include <fmt/core.h>
 
@@ -25,6 +26,8 @@ constexpr const int lis::prheader::size;
 constexpr const int lis::spec_block0::size;
 constexpr const int lis::spec_block1::size;
 constexpr const int lis::entry_block::fixed_size;
+constexpr const int lis::file_header::size;
+constexpr const int lis::file_trailer::size;
 
 bool is_padbytes(const char* xs, std::uint16_t size) {
     constexpr int PADBYTE_NULL  = 0x00;
@@ -471,6 +474,66 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
     }
 
     return fmt;
+}
+
+namespace {
+
+void parse_name( const char* cur, lis::file_header& rec ) {
+    cast(cur, rec.prev_file_name, 10);
+}
+
+void parse_name( const char* cur, lis::file_trailer& rec) {
+    cast(cur, rec.next_file_name, 10);
+}
+
+template< typename T >
+void parse_file_record( const record& raw, T& rec ) noexcept (false) {
+    if ( not (raw.info.type == lis::record_type::file_header or
+              raw.info.type == lis::record_type::file_trailer) ) {
+
+        const auto type = lis::decay(raw.info.type);
+        const auto type_str = lis::record_type_str(raw.info.type);
+        const auto msg = "parse_file_record: Invalid record type, {} ({})";
+        throw std::runtime_error(fmt::format(msg, type, type_str));
+    }
+
+    if ( raw.data.size() < T::size ) {
+        //TODO log when too many bytes
+        const auto type_str = lis::record_type_str(raw.info.type);
+        const auto msg = "parse_file_record: Unable to parse record, "
+                         "{} Records are {} bytes, raw record is only {}";
+        throw std::runtime_error(
+                fmt::format(msg, type_str, T::size, raw.data.size()) );
+    }
+
+    constexpr int BLANK = 1;
+    const auto* cur = raw.data.data();
+
+    cur = cast(cur, rec.file_name, 10);
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.service_sublvl_name, 6 );
+    cur = cast(cur, rec.version_number     , 8 );
+    cur = cast(cur, rec.date_of_generation , 8 );
+    cur += 1 * BLANK;
+    cur = cast(cur, rec.max_pr_length, 5 );
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.file_type, 2 );
+    cur += 2 * BLANK;
+    parse_name(cur, rec);
+}
+
+} // namespace
+
+file_header parse_file_header( const record& raw ) {
+    lis::file_header fileheader;
+    parse_file_record( raw, fileheader );
+    return fileheader;
+}
+
+file_trailer parse_file_trailer( const record& raw ) {
+    lis::file_trailer filetrailer;
+    parse_file_record( raw, filetrailer );
+    return filetrailer;
 }
 
 } // namespace lis79

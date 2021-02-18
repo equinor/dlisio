@@ -403,11 +403,37 @@ void init_lis_extension(py::module_ &m) {
         // TODO implement spec_block 1 specific fields
     ;
 
+    py::class_< lis::detail::file_record >( m, "file_record" )
+        .def_readonly( "file_name",           &lis::detail::file_record::file_name           )
+        .def_readonly( "service_sublvl_name", &lis::detail::file_record::service_sublvl_name )
+        .def_readonly( "version_number",      &lis::detail::file_record::version_number      )
+        .def_readonly( "date_of_generation",  &lis::detail::file_record::date_of_generation  )
+        .def_readonly( "max_pr_length",       &lis::detail::file_record::max_pr_length       )
+        .def_readonly( "file_type",           &lis::detail::file_record::file_type           )
+    ;
+
+    py::class_< lis::file_header, lis::detail::file_record >( m, "file_header" )
+        .def_readonly( "prev_file_name", &lis::file_header::prev_file_name )
+        .def( "__repr__", []( const lis::file_header& ) {
+                return "lis::file_header";
+        })
+    ;
+
+    py::class_< lis::file_trailer, lis::detail::file_record >( m, "file_trailer" )
+        .def_readonly( "next_file_name", &lis::file_trailer::next_file_name )
+        .def( "__repr__", []( const lis::file_trailer& ) {
+                return "lis::file_trailer";
+        })
+    ;
+
     py::class_< lis::dfsr >( m, "dfsr" )
         .def_readonly( "info",    &lis::dfsr::info    )
         .def_readonly( "entries", &lis::dfsr::entries )
         .def_readonly( "specs",   &lis::dfsr::specs   )
     ;
+
+    m.def( "parse_file_header",  &lis::parse_file_header );
+    m.def( "parse_file_trailer", &lis::parse_file_trailer );
 
     m.def( "parse_dfsr", &lis::parse_dfsr );
     m.def("dfs_formatstring", &lis::dfs_fmtstr);
