@@ -426,6 +426,44 @@ void init_lis_extension(py::module_ &m) {
         })
     ;
 
+    py::class_< lis::detail::reel_tape_record >( m, "reel_tape_record" )
+        .def_readonly( "service_name",        &lis::detail::reel_tape_record::service_name        )
+        .def_readonly( "date",                &lis::detail::reel_tape_record::date                )
+        .def_readonly( "origin_of_data",      &lis::detail::reel_tape_record::origin_of_data      )
+        .def_readonly( "name",                &lis::detail::reel_tape_record::name                )
+        .def_readonly( "continuation_number", &lis::detail::reel_tape_record::continuation_number )
+        .def_readonly( "comment",             &lis::detail::reel_tape_record::comment             )
+    ;
+
+    py::class_< lis::tape_header, lis::detail::reel_tape_record >( m, "tape_header" )
+        .def_readonly( "prev_tape_name", &lis::tape_header::prev_tape_name )
+        .def( "__repr__", []( const lis::tape_header& ) {
+                return "lis::tape_header";
+        })
+    ;
+
+    py::class_< lis::tape_trailer, lis::detail::reel_tape_record >( m, "tape_trailer" )
+        .def_readonly( "next_tape_name", &lis::tape_trailer::next_tape_name )
+        .def( "__repr__", []( const lis::tape_trailer& ) {
+                return "lis::tape_trailer";
+        })
+    ;
+
+    py::class_< lis::reel_header, lis::detail::reel_tape_record >( m, "reel_header" )
+        .def_readonly( "prev_reel_name", &lis::reel_header::prev_reel_name )
+        .def( "__repr__", []( const lis::reel_header& ) {
+                return "lis::reel_header";
+        })
+    ;
+
+    py::class_< lis::reel_trailer, lis::detail::reel_tape_record >( m, "reel_trailer" )
+        .def_readonly( "next_reel_name", &lis::reel_trailer::next_reel_name )
+        .def( "__repr__", []( const lis::reel_trailer& ) {
+                return "lis::reel_trailer";
+        })
+    ;
+    ;
+
     py::class_< lis::dfsr >( m, "dfsr" )
         .def_readonly( "info",    &lis::dfsr::info    )
         .def_readonly( "entries", &lis::dfsr::entries )
@@ -434,6 +472,10 @@ void init_lis_extension(py::module_ &m) {
 
     m.def( "parse_file_header",  &lis::parse_file_header );
     m.def( "parse_file_trailer", &lis::parse_file_trailer );
+    m.def( "parse_tape_header",  &lis::parse_tape_header );
+    m.def( "parse_tape_trailer", &lis::parse_tape_trailer );
+    m.def( "parse_reel_header",  &lis::parse_reel_header );
+    m.def( "parse_reel_trailer", &lis::parse_reel_trailer );
 
     m.def( "parse_dfsr", &lis::parse_dfsr );
     m.def("dfs_formatstring", &lis::dfs_fmtstr);

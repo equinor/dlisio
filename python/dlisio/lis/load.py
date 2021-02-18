@@ -1,7 +1,7 @@
 import logging
 
 from .. import core
-from .file import logical_file, physical_file
+from .file import logical_file, physical_file, HeaderTrailer
 
 def load(path):
     """ Loads and indexes a file
@@ -67,7 +67,7 @@ def load(path):
         except EOFError:
             break
         index = f.index_records()
-        files.append( logical_file(path, f, index) )
+        files.append( logical_file(path, f, index, HeaderTrailer(), HeaderTrailer()) )
 
         if f.istruncated():
             msg = 'logical file nr {} is truncated'

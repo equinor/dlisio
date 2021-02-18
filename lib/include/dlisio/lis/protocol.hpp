@@ -321,6 +321,45 @@ struct file_trailer : public detail::file_record {
 file_header  parse_file_header( const record& )  noexcept (false);
 file_trailer parse_file_trailer( const record& ) noexcept (false);
 
+namespace detail {
+
+/* Common base for Reel/Tape Header/Trailer Records */
+struct reel_tape_record {
+    lis::string service_name;
+    lis::string date;
+    lis::string origin_of_data;
+    lis::string name;
+    lis::string continuation_number;
+    lis::string comment;
+};
+
+} // namespace detail
+
+struct reel_header : public detail::reel_tape_record {
+    lis::string prev_reel_name;
+    static constexpr const int size = 126;
+};
+
+struct reel_trailer : public detail::reel_tape_record {
+    lis::string next_reel_name;
+    static constexpr const int size = 126;
+};
+
+struct tape_header : public detail::reel_tape_record {
+    lis::string prev_tape_name;
+    static constexpr const int size = 126;
+};
+
+struct tape_trailer : public detail::reel_tape_record {
+    lis::string next_tape_name;
+    static constexpr const int size = 126;
+};
+
+reel_header  parse_reel_header(  const record& ) noexcept (false);
+reel_trailer parse_reel_trailer( const record& ) noexcept (false);
+tape_header  parse_tape_header(  const record& ) noexcept (false);
+tape_trailer parse_tape_trailer( const record& ) noexcept (false);
+
 } // namespace lis79
 
 } // namespace dlisio

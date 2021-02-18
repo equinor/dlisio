@@ -2,6 +2,58 @@ import logging
 
 from .. import core
 
+
+class HeaderTrailer():
+    """ Container for Header-Trailer pairs
+
+    Both Reels and Tapes have a Header Logical Record (RHLR and THLR) - and
+    optionally a Trailer Logical Record (RTLR / TTLR).
+
+    The Trailer Records have an identical structure to their corresponding
+    header, except for the prev_reel_name/prev_tape_name, which in the trailer
+    is named next_reel_name/next_tape_name.
+    """
+    def __init__(self, header=None, trailer=None):
+        self.rawheader  = header
+        self.rawtrailer = trailer
+
+    def header(self):
+        """ Header Record
+
+        Returns the Reel or Tape Header Logical Record (RHLR or THLR), depending
+        on the context in which the current instance lives.
+
+        Returns
+        -------
+
+        header : core.reel_header, core.tape_header or None
+            Returns None if the Header Record is missing.
+        """
+        if self.rawheader is None:
+            logging.warning("Missing Header Record - File structure is broken")
+            return None
+
+        return parse_record(self.rawheader)
+
+    def trailer(self):
+        """ Trailer Record
+
+        Returns the Reel or Tape Trailer Logical Record (RTLR or TTLR),
+        depending on the context in which the current instance lives.
+
+        Returns
+        -------
+
+        trailer : core.reel_trailer, core.tape_trailer or None
+            Returns None if the Trailer Record is missing.
+        """
+        if self.rawtrailer is None:
+            logging.info("No (optional) Trailer Record present")
+            return None
+
+        return parse_record(self.rawtrailer)
+
+
 class logical_file():
     """ Logical File (LF)
 
@@ -23,10 +75,12 @@ class logical_file():
     No parsed records are cached by this class. Thus it's advisable that the
     result of each record read is cached locally.
     """
-    def __init__(self, path, io, index):
+    def __init__(self, path, io, index, reel, tape):
         self.path  = path
         self.io    = io
         self.index = index
+        self.reel  = reel
+        self.tape  = tape
 
     def close(self):
         self.io.close()
@@ -146,6 +200,10 @@ def parse_record(rec):
     if rtype   == types.data_format_spec: return core.parse_dfsr(rec)
     elif rtype == types.file_header:      return core.parse_file_header(rec)
     elif rtype == types.file_trailer:     return core.parse_file_trailer(rec)
+    elif rtype == types.reel_header:      return core.parse_reel_header(rec)
+    elif rtype == types.reel_trailer:     return core.parse_reel_trailer(rec)
+    elif rtype == types.tape_header:      return core.parse_tape_header(rec)
+    elif rtype == types.tape_trailer:     return core.parse_tape_trailer(rec)
     else:
         msg = "No parsing rule for {} Records"
         raise NotImplementedError(msg.format(core.rectype_tostring(rtype)))
