@@ -1,17 +1,15 @@
 import logging
 
 from .. import core
-from .file import logical_file, physical_file
+from .file import logical_file, physical_file, HeaderTrailer, parse_record
 
 def load(path):
-    """ Loads and indexes a file
+    """ Loads and indexes a LIS file
 
-    A LIS file is typically segmented into multiple Logical Files (LF). LF's
-    are just a way to group information that logically belongs together. LF's
-    are completely independent of each other and can generally be treated as if
-    they were different files on disk. In fact - that's just what load does.
-    Each logical file gets its own io-device and is completely segmented from
-    other LF's.
+    Load does more than just opening the file. A LIS file has no random access
+    in itself, so load scans the entire file and creates its own index to
+    enumlate random access. The file is also segmented into Logical Files, see
+    :class:`physical_file` and :class:`logical_file`.
 
     Notes
     -----
@@ -59,21 +57,73 @@ def load(path):
 
     f.close()
 
-    files = []
+    logical_files = []
+    reel = HeaderTrailer()
+    tape = HeaderTrailer()
+
     while True:
         # Open a new file-handle until we hit EOF
         try:
             f = core.openlis(path, offset, is_tif)
         except EOFError:
             break
-        index = f.index_records()
-        files.append( logical_file(path, f, index) )
 
-        if f.istruncated():
+        index = f.index_records()
+        truncated = f.istruncated()
+
+        # Update the offset at which stopped indexing. Due to inconsistent use
+        # of tapemarks in files, we have to manually update the offset.
+
+        # TODO: this logic should see further improvements to be more robust
+        #       against different file configurations/layouts.
+        offset = f.ptell()
+        if is_tif and not f.eof(): offset = offset - 12
+
+        # Special handling of Records that serve as delimiters.
+        #
+        # All delimiter records are indexed separately by index_records. If
+        # applicable the raw record is extracted and correctly stored. In any
+        # case the filehandle is closed before we continue indexing the file.
+        first = index.explicits()[0]
+        if is_delimiter(first):
+            if first.type == core.lis_rectype.reel_header:
+                reel = HeaderTrailer(f.read_record(first))
+
+            elif first.type == core.lis_rectype.reel_trailer:
+                # The reel is already assigned to the LF's at this point, so
+                # just assign the trailer to that instance before initiating a
+                # new instance for the next reel.
+                reel.rawtrailer = f.read_record(first)
+                reel = HeaderTrailer()
+
+            elif first.type == core.lis_rectype.tape_header:
+                tape = HeaderTrailer(f.read_record(first))
+
+            elif first.type == core.lis_rectype.tape_trailer:
+                # The tape is already assigned to the LF's at this point, so
+                # just assign the trailer to that instance before initiating a
+                # new instance for the next tape.
+                tape.rawtrailer = f.read_record(first)
+                tape = HeaderTrailer()
+
+            f.close()
+            continue
+
+        logfile = logical_file(path, f, index, reel, tape)
+        logical_files.append(logfile)
+
+        if truncated:
             msg = 'logical file nr {} is truncated'
             logging.info(msg.format(len(files)))
             break
 
-        offset = f.poffset() + f.psize()
+    return physical_file(logical_files)
 
-    return physical_file(files)
+
+def is_delimiter(recinfo):
+    if recinfo.type == core.lis_rectype.reel_header:  return True
+    if recinfo.type == core.lis_rectype.reel_trailer: return True
+    if recinfo.type == core.lis_rectype.tape_header:  return True
+    if recinfo.type == core.lis_rectype.tape_trailer: return True
+    if recinfo.type == core.lis_rectype.logical_eof:  return True
+    return False

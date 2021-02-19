@@ -15,6 +15,142 @@ TEST_CASE("Pad-bytes are correctly identified", "[protocol]") { }
 
 TEST_CASE("Valid repcodes", "[protocol]") { }
 
+TEST_CASE("Record type strings") {
+    using rectype = lis::record_type;
+    SECTION("Normal Data") {
+        CHECK( lis::record_type_str(rectype::normal_data) ==
+               "Normal Data" );
+    }
+    SECTION("Alternate Data") {
+        CHECK( lis::record_type_str(rectype::alternate_data) ==
+               "Alternate Data" );
+    }
+    SECTION("Job Identification") {
+        CHECK( lis::record_type_str(rectype::job_identification) ==
+               "Job Identification" );
+    }
+    SECTION("Wellsite Data") {
+        CHECK( lis::record_type_str(rectype::wellsite_data) ==
+               "Wellsite Data" );
+    }
+    SECTION("Tool String Info") {
+        CHECK( lis::record_type_str(rectype::tool_string_info) ==
+               "Tool String Info" );
+    }
+    SECTION("Encrypted Table Dump") {
+        CHECK( lis::record_type_str(rectype::enc_table_dump) ==
+               "Encrypted Table Dump" );
+    }
+    SECTION("Table Dump") {
+        CHECK( lis::record_type_str(rectype::table_dump) ==
+               "Table Dump" );
+    }
+    SECTION("Data Format Specification") {
+        CHECK( lis::record_type_str(rectype::data_format_spec) ==
+               "Data Format Specification" );
+    }
+    SECTION("Data Descriptor") {
+        CHECK( lis::record_type_str(rectype::data_descriptor) ==
+               "Data Descriptor" );
+    }
+    SECTION("TU10 Software Boot") {
+        CHECK( lis::record_type_str(rectype::tu10_software_boot) ==
+               "TU10 Software Boot" );
+    }
+    SECTION("Bootstrap Loader") {
+        CHECK( lis::record_type_str(rectype::bootstrap_loader) ==
+               "Bootstrap Loader" );
+    }
+    SECTION("CP-Kernel Loader Boot") {
+        CHECK( lis::record_type_str(rectype::cp_kernel_loader) ==
+               "CP-Kernel Loader Boot" );
+    }
+    SECTION("Program File Header") {
+        CHECK( lis::record_type_str(rectype::prog_file_header) ==
+               "Program File Header" );
+    }
+    SECTION("Program Overlay Header") {
+        CHECK( lis::record_type_str(rectype::prog_overlay_header) ==
+               "Program Overlay Header" );
+    }
+    SECTION("Program Overlay Load") {
+        CHECK( lis::record_type_str(rectype::prog_overlay_load) ==
+               "Program Overlay Load" );
+    }
+    SECTION("File Header") {
+        CHECK( lis::record_type_str(rectype::file_header) ==
+               "File Header" );
+    }
+    SECTION("File Trailer") {
+        CHECK( lis::record_type_str(rectype::file_trailer) ==
+               "File Trailer" );
+    }
+    SECTION("Tape Header") {
+        CHECK( lis::record_type_str(rectype::tape_header) ==
+               "Tape Header" );
+    }
+    SECTION("Tape Trailer") {
+        CHECK( lis::record_type_str(rectype::tape_trailer) ==
+               "Tape Trailer" );
+    }
+    SECTION("Reel Header") {
+        CHECK( lis::record_type_str(rectype::reel_header) ==
+               "Reel Header" );
+    }
+    SECTION("Reel Trailer") {
+        CHECK( lis::record_type_str(rectype::reel_trailer) ==
+               "Reel Trailer" );
+    }
+    SECTION("Logical EOF") {
+        CHECK( lis::record_type_str(rectype::logical_eof) ==
+               "Logical EOF" );
+    }
+    SECTION("Logical BOT") {
+        CHECK( lis::record_type_str(rectype::logical_bot) ==
+               "Logical BOT" );
+    }
+    SECTION("Logical EOT") {
+        CHECK( lis::record_type_str(rectype::logical_eot) ==
+               "Logical EOT" );
+    }
+    SECTION("Logical EOM") {
+        CHECK( lis::record_type_str(rectype::logical_eom) ==
+               "Logical EOM" );
+    }
+    SECTION("Operator Command Inputs") {
+        CHECK( lis::record_type_str(rectype::op_command_inputs) ==
+               "Operator Command Inputs" );
+    }
+    SECTION("Operator Response Inputs") {
+        CHECK( lis::record_type_str(rectype::op_response_inputs) ==
+               "Operator Response Inputs" );
+    }
+    SECTION("System Outputs to Operator") {
+        CHECK( lis::record_type_str(rectype::system_outputs) ==
+               "System Outputs to Operator" );
+    }
+    SECTION("FLIC Comment") {
+        CHECK( lis::record_type_str(rectype::flic_comment) ==
+               "FLIC Comment" );
+    }
+    SECTION("Blank Record/CSU Comment") {
+        CHECK( lis::record_type_str(rectype::blank_record) ==
+               "Blank Record/CSU Comment" );
+    }
+    SECTION("Picture") {
+        CHECK( lis::record_type_str(rectype::picture) ==
+               "Picture" );
+    }
+    SECTION("Image") {
+        CHECK( lis::record_type_str(rectype::image) ==
+               "Image" );
+    }
+    SECTION("Invalid") {
+        CHECK( lis::record_type_str(static_cast< lis::record_type >(2)) ==
+               "Invalid LIS79 Record Type" );
+    }
+}
+
 TEST_CASE("Entry Block", "[protocol]") {
     SECTION("Well-formatted - lis::i8") {
         lis::record rec;

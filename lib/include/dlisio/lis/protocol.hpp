@@ -129,6 +129,8 @@ enum class record_type : std::uint8_t {
  */
 bool valid_rectype(lis::byte type);
 
+std::string record_type_str( record_type ) noexcept (true);
+
 /** (Logical) Record Info
  *
  * A Logical Record (LR) always starts on a new Physical Record (PR) and may
@@ -289,6 +291,74 @@ struct dfsr {
 dfsr parse_dfsr( const lis::record& ) noexcept (false);
 
 std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false);
+
+namespace detail {
+
+struct file_record {
+    lis::string file_name;
+    lis::string service_sublvl_name;
+    lis::string version_number;
+    lis::string date_of_generation;
+    lis::string max_pr_length;
+    lis::string file_type;
+    lis::string optional_file_name;
+};
+
+} // namespace detail
+
+struct file_header : public detail::file_record {
+    lis::string prev_file_name;
+
+    static constexpr const int size = 56;
+};
+
+struct file_trailer : public detail::file_record {
+    lis::string next_file_name;
+
+    static constexpr const int size = 56;
+};
+
+file_header  parse_file_header( const record& )  noexcept (false);
+file_trailer parse_file_trailer( const record& ) noexcept (false);
+
+namespace detail {
+
+/* Common base for Reel/Tape Header/Trailer Records */
+struct reel_tape_record {
+    lis::string service_name;
+    lis::string date;
+    lis::string origin_of_data;
+    lis::string name;
+    lis::string continuation_number;
+    lis::string comment;
+};
+
+} // namespace detail
+
+struct reel_header : public detail::reel_tape_record {
+    lis::string prev_reel_name;
+    static constexpr const int size = 126;
+};
+
+struct reel_trailer : public detail::reel_tape_record {
+    lis::string next_reel_name;
+    static constexpr const int size = 126;
+};
+
+struct tape_header : public detail::reel_tape_record {
+    lis::string prev_tape_name;
+    static constexpr const int size = 126;
+};
+
+struct tape_trailer : public detail::reel_tape_record {
+    lis::string next_tape_name;
+    static constexpr const int size = 126;
+};
+
+reel_header  parse_reel_header(  const record& ) noexcept (false);
+reel_trailer parse_reel_trailer( const record& ) noexcept (false);
+tape_header  parse_tape_header(  const record& ) noexcept (false);
+tape_trailer parse_tape_trailer( const record& ) noexcept (false);
 
 } // namespace lis79
 

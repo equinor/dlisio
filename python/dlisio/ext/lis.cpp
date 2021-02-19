@@ -271,6 +271,7 @@ void init_lis_extension(py::module_ &m) {
         .value( "byte"   , lis::representation_code::byte   )
         .value( "mask"   , lis::representation_code::mask   )
     ;
+    m.def( "rectype_tostring",   &lis::record_type_str );
 
     /* start - io.hpp */
     m.def("openlis", &lis::open,
@@ -280,18 +281,17 @@ void init_lis_extension(py::module_ &m) {
     );
 
     py::class_< lis::iodevice >( m, "lis_stream" )
-        .def( "__repr__", [](const lis::iodevice& x) {
-            return "lis::iodevice(poffset={})"_s.format( x.poffset() );
+        .def( "__repr__", [](const lis::iodevice&) {
+            return "lis::iodevice";
         })
         .def( "read_record",   &lis::iodevice::read_record )
         .def( "index_records", &lis::iodevice::index_records )
         .def( "index_record",  &lis::iodevice::index_record )
-        .def( "poffset",       &lis::iodevice::poffset )
-        .def( "psize",         &lis::iodevice::psize )
         .def( "ptell",         &lis::iodevice::ptell )
         .def( "istruncated",   &lis::iodevice::truncated )
         .def( "close",         &lis::iodevice::close )
         .def( "seek",          &lis::iodevice::seek )
+        .def( "eof",           &lis::iodevice::eof )
         .def( "read", []( lis::iodevice& s, py::buffer b, long long off, int n ) {
             auto info = b.request();
             if (info.size < n) {
@@ -344,6 +344,7 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::record >( m, "lis_record", py::buffer_protocol() )
+        .def_readonly( "info", &lis::record::info )
         .def( "__repr__", [](const lis::record& x) {
             return "lis::record(type={}, ltell={}, size={})"_s.format(
                 x.info.type, x.info.ltell, x.data.size()
@@ -401,11 +402,79 @@ void init_lis_extension(py::module_ &m) {
         // TODO implement spec_block 1 specific fields
     ;
 
+    py::class_< lis::detail::file_record >( m, "file_record" )
+        .def_readonly( "file_name",           &lis::detail::file_record::file_name           )
+        .def_readonly( "service_sublvl_name", &lis::detail::file_record::service_sublvl_name )
+        .def_readonly( "version_number",      &lis::detail::file_record::version_number      )
+        .def_readonly( "date_of_generation",  &lis::detail::file_record::date_of_generation  )
+        .def_readonly( "max_pr_length",       &lis::detail::file_record::max_pr_length       )
+        .def_readonly( "file_type",           &lis::detail::file_record::file_type           )
+    ;
+
+    py::class_< lis::file_header, lis::detail::file_record >( m, "file_header" )
+        .def_readonly( "prev_file_name", &lis::file_header::prev_file_name )
+        .def( "__repr__", []( const lis::file_header& ) {
+                return "lis::file_header";
+        })
+    ;
+
+    py::class_< lis::file_trailer, lis::detail::file_record >( m, "file_trailer" )
+        .def_readonly( "next_file_name", &lis::file_trailer::next_file_name )
+        .def( "__repr__", []( const lis::file_trailer& ) {
+                return "lis::file_trailer";
+        })
+    ;
+
+    py::class_< lis::detail::reel_tape_record >( m, "reel_tape_record" )
+        .def_readonly( "service_name",        &lis::detail::reel_tape_record::service_name        )
+        .def_readonly( "date",                &lis::detail::reel_tape_record::date                )
+        .def_readonly( "origin_of_data",      &lis::detail::reel_tape_record::origin_of_data      )
+        .def_readonly( "name",                &lis::detail::reel_tape_record::name                )
+        .def_readonly( "continuation_number", &lis::detail::reel_tape_record::continuation_number )
+        .def_readonly( "comment",             &lis::detail::reel_tape_record::comment             )
+    ;
+
+    py::class_< lis::tape_header, lis::detail::reel_tape_record >( m, "tape_header" )
+        .def_readonly( "prev_tape_name", &lis::tape_header::prev_tape_name )
+        .def( "__repr__", []( const lis::tape_header& ) {
+                return "lis::tape_header";
+        })
+    ;
+
+    py::class_< lis::tape_trailer, lis::detail::reel_tape_record >( m, "tape_trailer" )
+        .def_readonly( "next_tape_name", &lis::tape_trailer::next_tape_name )
+        .def( "__repr__", []( const lis::tape_trailer& ) {
+                return "lis::tape_trailer";
+        })
+    ;
+
+    py::class_< lis::reel_header, lis::detail::reel_tape_record >( m, "reel_header" )
+        .def_readonly( "prev_reel_name", &lis::reel_header::prev_reel_name )
+        .def( "__repr__", []( const lis::reel_header& ) {
+                return "lis::reel_header";
+        })
+    ;
+
+    py::class_< lis::reel_trailer, lis::detail::reel_tape_record >( m, "reel_trailer" )
+        .def_readonly( "next_reel_name", &lis::reel_trailer::next_reel_name )
+        .def( "__repr__", []( const lis::reel_trailer& ) {
+                return "lis::reel_trailer";
+        })
+    ;
+    ;
+
     py::class_< lis::dfsr >( m, "dfsr" )
         .def_readonly( "info",    &lis::dfsr::info    )
         .def_readonly( "entries", &lis::dfsr::entries )
         .def_readonly( "specs",   &lis::dfsr::specs   )
     ;
+
+    m.def( "parse_file_header",  &lis::parse_file_header );
+    m.def( "parse_file_trailer", &lis::parse_file_trailer );
+    m.def( "parse_tape_header",  &lis::parse_tape_header );
+    m.def( "parse_tape_trailer", &lis::parse_tape_trailer );
+    m.def( "parse_reel_header",  &lis::parse_reel_header );
+    m.def( "parse_reel_trailer", &lis::parse_reel_trailer );
 
     m.def( "parse_dfsr", &lis::parse_dfsr );
     m.def("dfs_formatstring", &lis::dfs_fmtstr);

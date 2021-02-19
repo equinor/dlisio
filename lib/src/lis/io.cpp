@@ -95,26 +95,6 @@ noexcept (false) {
 
 
 /* iodevice */
-iodevice::iodevice(lfp_protocol* p) : dlisio::stream(p) {
-    this->pzero = this->ptell();
-}
-
-std::int64_t iodevice::poffset() const noexcept (true) {
-    return this->pzero;
-}
-
-std::int64_t iodevice::psize() const noexcept (false) {
-    if ( not this->indexed() ) {
-        const auto msg = "iodevice: filesize unknown before file is indexed";
-        throw std::runtime_error(msg);
-    }
-    if ( this->truncated() ) {
-        const auto msg = "iodevice: filesize unknown, file is truncated";
-        throw std::runtime_error(msg);
-    }
-    return this->plength;
-}
-
 bool iodevice::truncated() const noexcept (false) {
     if ( not this->indexed() ) {
         const auto msg = "iodevice: cannot tell if un-indexed file is truncated";
@@ -365,14 +345,41 @@ lis::record_info iodevice::index_record() noexcept (false) {
     return info;
 }
 
+namespace {
+
+
+} // namespace
+
 record_index iodevice::index_records() noexcept (true) {
     std::vector< record_info > ex;
     std::vector< record_info > im;
 
-    this->seek(0);
-    while ( true ) {
-        record_info info;
+    lis::record_info info;
 
+    /* Essentially seek past potential pad-bytes after the record.
+     *
+     * This leaves the tell after termination of this function on
+     * the start of the next record - or at EOF. That is useful for
+     * caller code that often would want to open a new file-handle
+     * and keep indexing the file from this tell.
+     *
+     * TODO: This hack can go away if we decouple the
+     *       "seek_past_padding"-logic from read_physical_header
+     */
+    const auto reposition_tell = [this](){
+        try {
+            auto nextinfo = this->index_record();
+            this->seek(nextinfo.ltell);
+        } catch ( const std::exception& ) {
+            /* Ignore any errors.
+            *
+            * If we hit EOF, we achieved what we wanted w.r.t. the tell.
+            * Any other errors will be the problem of the next "LF".
+            */
+        }
+    };
+
+    while (true) {
         try {
             info = this->index_record();
         } catch( const dlisio::eof_error& e ) {
@@ -392,17 +399,58 @@ record_index iodevice::index_records() noexcept (true) {
             this->is_truncated = true;
             break;
         }
+
         if (info.type == lis::record_type::normal_data or
             info.type == lis::record_type::alternate_data) {
-            im.push_back( std::move( info ) );
+            im.push_back( info );
         } else {
-            ex.push_back( std::move( info ) );
+            ex.push_back( info );
         }
+
+        switch (info.type) {
+            case lis::record_type::reel_header:
+            case lis::record_type::reel_trailer:
+            case lis::record_type::tape_header:
+            case lis::record_type::tape_trailer: {
+                /* Reel and Tape records are index separately. If this is not
+                 * the _first_ record in the index, pop it off and rewind. This
+                 * typically happens then the FTLR is missing.
+                 */
+                if ( ex.size() > 1 ) {
+                    this->seek(info.ltell);
+                    ex.pop_back();
+                } else {
+                    reposition_tell();
+                }
+                break;
+            }
+            case lis::record_type::file_header: {
+                /* Continue indexing if this is the first record. If not,
+                 * there is probably a missing File Trailer record and we have
+                 * moved into the next LF.
+                 */
+                if ( ex.size() == 1 ) {
+                    continue;
+                }
+                this->seek(info.ltell);
+                ex.pop_back();
+                break;
+            }
+            case lis::record_type::logical_eof:
+            case lis::record_type::file_trailer: {
+                reposition_tell();
+                break;
+            }
+
+            default:
+                /* Continue indexing more records */
+                continue;
+        }
+
+        break;
     }
 
-    this->plength = this->ptell() - this->poffset();
     this->is_indexed = true;
-
     return record_index( std::move(ex), std::move(im) );
 }
 
@@ -459,19 +507,12 @@ noexcept (false) {
         throw dlisio::io_error(fmt::format(msg, path, strerror(errno)));
     }
 
-    auto* protocol = lfp_cfile(file);
+    auto* protocol = lfp_cfile_open_at_offset(file, offset);
     if ( protocol == nullptr ) {
-        throw dlisio::io_error("lis::open: "
-                               "lfp: unable to open lfp protocol cfile");
-    }
-
-    auto err = lfp_seek(protocol, offset);
-    switch (err) {
-        case LFP_OK: break;
-        default: {
-            lfp_close( protocol );
-            throw dlisio::io_error( lfp_errormsg(protocol) );
-        }
+        std::fclose(file);
+        const auto msg = "lis::open: "
+                         "unable to open lfp protocol cfile at tell {}";
+        throw dlisio::io_error(fmt::format(msg, offset));
     }
 
     if ( tapeimage ) {
@@ -491,28 +532,25 @@ noexcept (false) {
         char tmp;
         device.read(&tmp, 1);
     } catch ( const std::exception& e ) {
-        const auto poffset = device.poffset();
         device.close();
         const auto msg = "lis::open: "
                             "Cannot open lis::iodevice (ptell={}): {}";
-        throw dlisio::io_error( fmt::format(msg, poffset, e.what() ));
+        throw dlisio::io_error( fmt::format(msg, offset, e.what() ));
     }
 
     if ( device.eof() ) {
-        const auto poffset = device.poffset();
         device.close();
         const auto msg = "open: handle is opened at EOF (ptell={})";
-        throw dlisio::eof_error( fmt::format(msg, poffset) );
+        throw dlisio::eof_error( fmt::format(msg, offset) );
     }
 
     try {
         device.seek( 0 );
     } catch ( const std::exception& e ) {
-        const auto poffset = device.poffset();
         device.close();
         const auto msg = "lis::open: "
                          "Could not rewind lis::iodevice to ptell {}: {}";
-        throw dlisio::io_error( fmt::format(msg, poffset, e.what()) );
+        throw dlisio::io_error( fmt::format(msg, offset, e.what()) );
     }
 
     return device;

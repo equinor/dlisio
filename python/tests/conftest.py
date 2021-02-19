@@ -6,6 +6,23 @@ import dlisio
 dlisio.set_encodings(['latin1'])
 
 @pytest.fixture(scope="module")
+def merge_lis_prs():
+    """
+    Merges a list of files containing full LIS Physical Records into a valid
+    LIS file without tapemarks.
+    """
+    def merge(fpath, flist):
+        b = bytearray()
+        for file in flist:
+            with open(file, 'rb') as source:
+                b += bytearray(source.read())
+
+        with open(fpath, "wb") as dest:
+            dest.write(b)
+
+    return merge
+
+@pytest.fixture(scope="module")
 def merge_files_oneLR():
     """
     Merges list of files containing only one LR in one VR.

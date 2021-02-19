@@ -512,13 +512,13 @@ TEST_CASE("Padding after last PRH is considered a valid EOF") {
 TEST_CASE("Padbytes can be identified and skipped") {
     const auto contents = std::vector< unsigned char > {
         0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
-        0x84, 0x00,             // lrh(type=132)
+        0x80, 0x00,             // lrh(type=128)
         0x01, 0x02,             // dummy data
 
         0x00, 0x00, 0x00, 0x00, // Padding
 
         0x00, 0x07, 0x00, 0x00, // prh(len=7, pred=0, succ=0)
-        0x82, 0x00,             // lrh(type=130)
+        0x81, 0x00,             // lrh(type=129)
         0x03,                   // dummy data
     };
 
@@ -538,7 +538,7 @@ TEST_CASE("Padbytes can be identified and skipped") {
 
         CHECK( info.ltell == 12 );
         CHECK( info.size  ==  7 );
-        CHECK( info.type  == lis::record_type::tape_header );
+        CHECK( info.type  == lis::record_type::file_trailer );
     }
 
     SECTION("PR after padding is included in the index") {
@@ -561,142 +561,185 @@ TEST_CASE("Inconsistent PR headers") {
 TEST_CASE("Implicit records are stored seperatly from explicits/fixed") {
 }
 
-TEST_CASE("Size of the indexed file") {
-    const auto contents = std::vector< unsigned char > {
-        0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
-        0x40, 0x00,             // lrh(type=64) DFSR
-        0x01, 0x02,             // dummy data
-
-        0x00, 0x07, 0x00, 0x00, // prh(len=7, pred=0, succ=0)
-        0x40, 0x00,             // lrh(type=64) DFSR
-        0x01,                   // dummy data
+TEST_CASE("index_records partitions the LF correctly") {
+    const auto thlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x82, 0x00,             // lrh(type=130)
     };
 
-    SECTION("Size of file is correct after indexing") {
-        auto* cfile = lfp_cfile( tempfile( contents ) );
-        auto file = lis::iodevice( cfile );
-        auto index = file.index_records();
+    const auto ttlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x83, 0x00,             // lrh(type=131)
+    };
+
+    const auto fhlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x80, 0x00,             // lrh(type=128)
+    };
+
+    const auto ftlr = std::vector< unsigned char > {
+        0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+        0x81, 0x00,             // lrh(type=129)
+    };
+
+    const auto padd = std::vector< unsigned char > {
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00
+    };
+
+    SECTION("Hitting EOF: no TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+
+        auto index  = file.index_records();
 
         CHECK( index.size() == 2 );
-        CHECK( file.psize() == 15 );
+        CHECK( file.ptell() == 6 + 6 );
+        CHECK( file.ltell() == 6 + 6 );
 
         file.close();
     }
 
-    SECTION("Size of file is correct after indexing - TIF") {
-        auto* cfile = lfp_cfile( tempfile( wrap_tif( contents ) ) );
-        auto* tif = lfp_tapeimage_open( cfile );
-        auto file = lis::iodevice( tif );
-        auto index = file.index_records();
+    SECTION("Hitting EOF: no TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+        auto index  = file.index_records();
 
         CHECK( index.size() == 2 );
-        CHECK( file.psize() == 15 + 2*12 );
+        CHECK( file.ptell() == 6 + 10 + 6 + 10 );
+        CHECK( file.ltell() == 6 + 10 + 6 + 10 );
 
         file.close();
     }
 
-    SECTION("A un-indexed file does not have a size") {
-        auto* cfile = lfp_cfile( tempfile( contents ) );
-        auto file = lis::iodevice( cfile );
+    SECTION("Hitting EOF: TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
 
-        CHECK_THROWS_AS(file.psize(), std::runtime_error);
-        CHECK_THROWS_AS(file.truncated(), std::runtime_error);
-
-        file.close();
-    }
-
-    SECTION("Padding at after last PR is not considered as truncation") {
-        const auto contents = std::vector< unsigned char > {
-            0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
-            0x40, 0x00,             // lrh(type=64) DFSR
-            0x01, 0x02,             // dummy data
-
-            0x00, 0x00,             // padding
-        };
-
-        auto* cfile = lfp_cfile( tempfile( contents ) );
-        auto file = lis::iodevice( cfile );
-        auto index = file.index_records();
-
-        CHECK( not file.truncated() );
-
-        CHECK( index.size() == 1 );
-        CHECK( file.psize() == 10 );
-
-        file.close();
-    }
-
-    SECTION("A truncated file cannot report a valid size") {
-        const auto contents = std::vector< unsigned char > {
-            0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
-            0x40, 0x00,             // lrh(type=64) DFSR
-            0x01, 0x02,             // dummy data
-
-            0x00, 0x05,             // truncated
-        };
-
-        auto* cfile = lfp_cfile( tempfile( contents ) );
-        auto file = lis::iodevice( cfile );
-        auto index = file.index_records();
-
-        CHECK( file.truncated() );
-        CHECK_THROWS_AS(file.psize(), std::runtime_error);
-
-        file.close();
-    }
-
-    SECTION("A new file can be opened from previous offset + size") {
-        const auto contents = std::vector< unsigned char > {
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x18, 0x00, 0x00, 0x00, // tm(type=0,prev=0,next=24)
-
-            0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
-            0x84, 0x00,             // lrh(type=132)
-
-            0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
-            0x82, 0x00,             // lrh(type=130)
-
-            0x01, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x24, 0x00, 0x00, 0x00, // tm(type=1,prev=0,next=36)
-
-            0x00, 0x00, 0x00, 0x00,
-            0x18, 0x00, 0x00, 0x00,
-            0x36, 0x00, 0x00, 0x00, // tm(type=0,prev=24,next=72)
-
-            0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
-            0x80, 0x00,             // lrh(type=128)
-
-            0x01, 0x00, 0x00, 0x00,
-            0x24, 0x00, 0x00, 0x00,
-            0x42, 0x00, 0x00, 0x00, // tm(type=1,prev=0,next=24)
-        };
-
-        auto* cfile = lfp_cfile( tempfile( contents ) );
+        auto* cfile = lfp_cfile( tempfile( wrap_tif( content ) ) );
         auto* tif   = lfp_tapeimage_open( cfile );
-        auto file1 = lis::iodevice( tif );
-        auto index1 = file1.index_records();
+        auto file   = lis::iodevice( tif );
+        auto index  = file.index_records();
 
-        CHECK( index1.size()   == 2 );
-        CHECK( file1.poffset() == 0 );
-        CHECK( file1.psize()   == 12 + 12 + 12); // TM + data + TM
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 12 + 6 + 6 + 12 );
+        CHECK( file.ltell() == 6 + 6 );
 
-        auto prev_offset = file1.poffset();
-        auto prev_size   = file1.psize();
+        file.close();
+    }
 
-        auto* cfile2 = lfp_cfile( tempfile( contents ) );
-        lfp_seek( cfile2, file1.poffset() + file1.psize() );
+    SECTION("Hitting EOF: TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
 
-        auto file2 = lis::iodevice( lfp_tapeimage_open( cfile2 ) );
-        auto index2 = file2.index_records();
+        auto* cfile = lfp_cfile( tempfile( wrap_tif( content ) ) );
+        auto* tif   = lfp_tapeimage_open( cfile );
+        auto file   = lis::iodevice( tif );
+        auto index  = file.index_records();
 
-        CHECK( index2.size()   == 1 );
-        CHECK( file2.poffset() == prev_offset + prev_size );
-        CHECK( file2.psize()   == 12 + 6 + 12 ); // TM + data + TM
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 12 + 6 + 10 + 6 + 10 + 12 );
+        CHECK( file.ltell() == 6 + 10 + 6 + 10 );
 
-        file1.close();
-        file2.close();
+        file.close();
+    }
+
+    SECTION("Hitting record: FTLR, no TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), ttlr.begin(), ttlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 6 + 6 );
+        CHECK( file.ltell() == 6 + 6 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: FTLR, no TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ftlr.begin(), ftlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), ttlr.begin(), ttlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+        auto index  = file.index_records();
+
+        CHECK( index.size() == 2 );
+        CHECK( file.ptell() == 6 + 10 + 6 + 10 );
+        CHECK( file.ltell() == 6 + 10 + 6 + 10 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: THLR, no TIF, no padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), thlr.begin(), thlr.end() );
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+
+        //THLR
+        auto index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6);
+        CHECK( file.ltell() == 6 );
+
+        // FHLR
+        index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6 + 6 );
+        CHECK( file.ltell() == 6 + 6 );
+
+        file.close();
+    }
+
+    SECTION("Hitting record: THLR, no TIF, padding") {
+        std::vector< unsigned char > content;
+        content.insert( content.end(), thlr.begin(), thlr.end() );
+        content.insert( content.end(), padd.begin(), padd.end() );
+        content.insert( content.end(), fhlr.begin(), fhlr.end() );
+
+        auto* cfile = lfp_cfile( tempfile( content ) );
+        auto file   = lis::iodevice( cfile );
+
+        //THLR
+        auto index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6 + 10);
+        CHECK( file.ltell() == 6 + 10);
+
+        // FHLR
+        index  = file.index_records();
+        CHECK( index.size() == 1 );
+        CHECK( file.ptell() == 6 + 10 + 6 );
+        CHECK( file.ltell() == 6 + 10 + 6 );
+
+        file.close();
     }
 }
 

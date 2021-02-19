@@ -2,6 +2,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cstring>
+#include <type_traits>
 
 #include <fmt/core.h>
 
@@ -25,6 +26,12 @@ constexpr const int lis::prheader::size;
 constexpr const int lis::spec_block0::size;
 constexpr const int lis::spec_block1::size;
 constexpr const int lis::entry_block::fixed_size;
+constexpr const int lis::file_header::size;
+constexpr const int lis::file_trailer::size;
+constexpr const int lis::tape_header::size;
+constexpr const int lis::tape_trailer::size;
+constexpr const int lis::reel_header::size;
+constexpr const int lis::reel_trailer::size;
 
 bool is_padbytes(const char* xs, std::uint16_t size) {
     constexpr int PADBYTE_NULL  = 0x00;
@@ -113,6 +120,47 @@ bool valid_rectype(lis::byte type) {
             return true;
         default:
             return false;
+    }
+}
+
+std::string record_type_str( lis::record_type type ) noexcept (true) {
+    using rt = lis::record_type;
+
+    switch ( lis::decay(type) ) {
+        case rt::normal_data:         return "Normal Data";
+        case rt::alternate_data:      return "Alternate Data";
+        case rt::job_identification:  return "Job Identification";
+        case rt::wellsite_data:       return "Wellsite Data";
+        case rt::tool_string_info:    return "Tool String Info";
+        case rt::enc_table_dump:      return "Encrypted Table Dump";
+        case rt::table_dump:          return "Table Dump";
+        case rt::data_format_spec:    return "Data Format Specification";
+        case rt::data_descriptor:     return "Data Descriptor";
+        case rt::tu10_software_boot:  return "TU10 Software Boot";
+        case rt::bootstrap_loader:    return "Bootstrap Loader";
+        case rt::cp_kernel_loader:    return "CP-Kernel Loader Boot";
+        case rt::prog_file_header:    return "Program File Header";
+        case rt::prog_overlay_header: return "Program Overlay Header";
+        case rt::prog_overlay_load:   return "Program Overlay Load";
+        case rt::file_header:         return "File Header";
+        case rt::file_trailer:        return "File Trailer";
+        case rt::tape_header:         return "Tape Header";
+        case rt::tape_trailer:        return "Tape Trailer";
+        case rt::reel_header:         return "Reel Header";
+        case rt::reel_trailer:        return "Reel Trailer";
+        case rt::logical_eof:         return "Logical EOF";
+        case rt::logical_bot:         return "Logical BOT";
+        case rt::logical_eot:         return "Logical EOT";
+        case rt::logical_eom:         return "Logical EOM";
+        case rt::op_command_inputs:   return "Operator Command Inputs";
+        case rt::op_response_inputs:  return "Operator Response Inputs";
+        case rt::system_outputs:      return "System Outputs to Operator";
+        case rt::flic_comment:        return "FLIC Comment";
+        case rt::blank_record:        return "Blank Record/CSU Comment";
+        case rt::picture:             return "Picture";
+        case rt::image:               return "Image";
+        default:
+            return "Invalid LIS79 Record Type";
     }
 }
 
@@ -430,6 +478,149 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
     }
 
     return fmt;
+}
+
+namespace {
+
+void parse_name( const char* cur, lis::file_header& rec ) {
+    cast(cur, rec.prev_file_name, 10);
+}
+
+void parse_name( const char* cur, lis::file_trailer& rec) {
+    cast(cur, rec.next_file_name, 10);
+}
+
+template< typename T >
+void parse_file_record( const record& raw, T& rec ) noexcept (false) {
+    if ( not (raw.info.type == lis::record_type::file_header or
+              raw.info.type == lis::record_type::file_trailer) ) {
+
+        const auto type = lis::decay(raw.info.type);
+        const auto type_str = lis::record_type_str(raw.info.type);
+        const auto msg = "parse_file_record: Invalid record type, {} ({})";
+        throw std::runtime_error(fmt::format(msg, type, type_str));
+    }
+
+    if ( raw.data.size() < T::size ) {
+        //TODO log when too many bytes
+        const auto type_str = lis::record_type_str(raw.info.type);
+        const auto msg = "parse_file_record: Unable to parse record, "
+                         "{} Records are {} bytes, raw record is only {}";
+        throw std::runtime_error(
+                fmt::format(msg, type_str, T::size, raw.data.size()) );
+    }
+
+    constexpr int BLANK = 1;
+    const auto* cur = raw.data.data();
+
+    cur = cast(cur, rec.file_name, 10);
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.service_sublvl_name, 6 );
+    cur = cast(cur, rec.version_number     , 8 );
+    cur = cast(cur, rec.date_of_generation , 8 );
+    cur += 1 * BLANK;
+    cur = cast(cur, rec.max_pr_length, 5 );
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.file_type, 2 );
+    cur += 2 * BLANK;
+    parse_name(cur, rec);
+}
+
+} // namespace
+
+file_header parse_file_header( const record& raw ) {
+    lis::file_header fileheader;
+    parse_file_record( raw, fileheader );
+    return fileheader;
+}
+
+file_trailer parse_file_trailer( const record& raw ) {
+    lis::file_trailer filetrailer;
+    parse_file_record( raw, filetrailer );
+    return filetrailer;
+}
+
+namespace {
+
+const char* parse_name( const char* cur, lis::reel_header& rec ) {
+    return cast(cur, rec.prev_reel_name, 8);
+}
+
+const char* parse_name( const char* cur, lis::reel_trailer& rec ) {
+    return cast(cur, rec.next_reel_name, 8);
+}
+
+const char* parse_name( const char* cur, lis::tape_header& rec ) {
+    return cast(cur, rec.prev_tape_name, 8);
+}
+
+const char* parse_name( const char* cur, lis::tape_trailer& rec ) {
+    return cast(cur, rec.next_tape_name, 8);
+}
+
+template< typename T >
+void parse_reel_tape_record( const record& raw, T& rec ) {
+    const auto type = static_cast< lis::record_type >(lis::decay(raw.info.type));
+    if ( not (type == lis::record_type::reel_header or
+              type == lis::record_type::reel_trailer or
+              type == lis::record_type::tape_header or
+              type == lis::record_type::tape_trailer) ) {
+
+        const auto type = lis::decay(raw.info.type);
+        const auto type_str = lis::record_type_str(raw.info.type);
+        const auto msg = "parse_reel_tape_record: Invalid record type, {} ({})";
+        throw std::runtime_error(fmt::format(msg, type, type_str));
+    }
+
+    if ( raw.data.size() < T::size ) {
+        //TODO log when too many bytes
+        const auto msg = "Unable to parse record. "
+                         "Expected {} bytes, raw record is only {}";
+        throw std::runtime_error(fmt::format(msg, T::size, raw.data.size()));
+    }
+
+    constexpr int BLANK = 1;
+    const auto* cur = raw.data.data();
+
+    cur = cast(cur, rec.service_name, 6);
+    cur += 6 * BLANK;
+    cur = cast(cur, rec.date, 8);
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.origin_of_data, 4);
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.name, 8);
+    cur += 2 * BLANK;
+    cur = cast(cur, rec.continuation_number, 2);
+    cur += 2 * BLANK;
+    cur = parse_name(cur, rec);
+    cur += 2 * BLANK;
+    cast(cur, rec.comment, 74);
+}
+
+} // namespace
+
+tape_header parse_tape_header( const record& raw ) {
+    lis::tape_header tapeheader;
+    parse_reel_tape_record( raw, tapeheader );
+    return tapeheader;
+}
+
+tape_trailer parse_tape_trailer( const record& raw ) {
+    lis::tape_trailer tapetrailer;
+    parse_reel_tape_record( raw, tapetrailer );
+    return tapetrailer;
+}
+
+reel_header parse_reel_header( const record& raw ) {
+    lis::reel_header reelheader;
+    parse_reel_tape_record( raw, reelheader );
+    return reelheader;
+}
+
+reel_trailer parse_reel_trailer( const record& raw ) {
+    lis::reel_trailer reeltrailer;
+    parse_reel_tape_record( raw, reeltrailer );
+    return reeltrailer;
 }
 
 } // namespace lis79

@@ -4,7 +4,7 @@ import numpy as np
 def test_dfsr_fmtstring():
     path = 'data/lis/MUD_LOG_1.LIS'
 
-    with lis.load(path) as (_, lf, _):
+    with lis.load(path) as (lf, *tail):
         dfsr = lf.dfsr()[0]
 
         fmt = core.dfs_formatstring(dfsr)
@@ -13,7 +13,7 @@ def test_dfsr_fmtstring():
 def test_dfsr_dtype():
     path = 'data/lis/MUD_LOG_1.LIS'
 
-    with lis.load(path) as (_, lf, _):
+    with lis.load(path) as (lf, *tail):
         dfsr = lf.dfsr()[0]
 
         dtype = lis.dfsr_dtype(dfsr)
@@ -29,7 +29,7 @@ def test_read_curves():
     path = 'data/lis/MUD_LOG_1.LIS'
 
     #TODO proper curves testing
-    with lis.load(path) as (_, lf, _):
+    with lis.load(path) as (lf, *tail):
         dfs = lf.dfsr()[1]
         curves = lis.curves(lf, dfs)
 
