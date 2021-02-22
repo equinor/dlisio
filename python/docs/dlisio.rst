@@ -106,6 +106,11 @@ Message
 .. autoclass:: Message(BasicObject)
     :exclude-members: describe_attr
 
+No Format
+---------
+.. autoclass:: Noformat(BasicObject)
+    :exclude-members: describe_attr
+
 Origin
 ------
 .. autoclass:: Origin(BasicObject)
