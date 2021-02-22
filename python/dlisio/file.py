@@ -84,12 +84,16 @@ class physicalfile(tuple):
 
 
 class logicalfile(object):
-    """Logical file
+    """Logical file (LF)
 
-    A logical file is a collection of objects - in lack of a better word,
-    that are logically connected in some way. Think of a logical file as a pool
-    of objects. Some examples of objects are Channel, Frame, Fileheader, Tool.
-    They are all accessible through their own attribute.
+    This class supplies the main interface for working with a single Logical
+    File. A Logical File contains log data and metadata related to the
+    acquisition of the logs. The metadata is stored as 'objects' - in lack of a
+    better word.  There are different object-types for different types of data.
+    The logs can be acquired through Frame- and Channel-objects
+    (:class:`dlisio.plumbing.Frame` and :class:`dlisio.plumbing.Channel`).
+    There is also an abundance of object-types for storing other metadata: Tool,
+    Parameter, Measurement and Calibration to name a few.
 
     :py:func:`object()` and :py:func:`find()` let you access specific objects
     or search for objects matching a regular expression. Unknown objects such

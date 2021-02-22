@@ -29,24 +29,13 @@ def open(path, offset = 0):
 def load(path, error_handler = None):
     """ Loads a file and returns one filehandle pr logical file.
 
-    The dlis standard have a concept of logical files. A logical file is a
-    group of related logical records, i.e. curves and metadata and is
-    independent from any other logical file. Each physical file (.dlis) can
-    contain 1 to n logical files. Layouts of physical- and logical files:
+    Load does more than just opening the file. A DLIS file has no random access
+    in itself, so load scans the entire file and creates its own index to
+    emulate random access.
 
-    Physical file::
-
-         --------------------------------------------------------
-        | Logical File 1 | Logical File 2 | ... | Logical File n |
-         --------------------------------------------------------
-
-    Logical File::
-
-         ---------------------------------------------------------
-        | Fileheader |  Origin  |  Frame  |  Channel  | curvedata |
-         ---------------------------------------------------------
-
-    This means that dlisio.load() will return 1 to n logical files.
+    DLIS-files are segmented into Logical Files, see :class:`physical_file` and
+    :class:`logical_file`. The partitioning into Logical Files also happens at
+    load.
 
     Parameters
     ----------
@@ -58,32 +47,41 @@ def load(path, error_handler = None):
             Handler will be added to all the logical files, so users may modify
             the behavior at any time.
 
+    Returns
+    -------
+
+    dlis : dlisio.physicalfile
+
+    Notes
+    -----
+
+    It's not uncommon that DLIS files are stored with different file extensions
+    than `.DLIS`. For example `.TIF` [1]. Load does not care about file extension at
+    all. As long as the content adheres to the Digital Log Interchange
+    Standard, load will read it as such.
+
+    [1] TIF in this case refers to TapeImageFormat, and is not to be confused
+        with the image format TIFF.
+
     Examples
     --------
 
-    Read the fileheader of each logical file
+    Load is designed to work with python's ``with``-statement:
 
     >>> with dlisio.load(filename) as files:
     ...     for f in files:
-    ...         header = f.fileheader
+    ...         pass
 
     Automatically unpack the first logical file and store the remaining logical
     files in tail
 
     >>> with dlisio.load(filename) as (f, *tail):
-    ...     header = f.fileheader
-    ...     for g in tail:
-    ...         header = g.fileheader
+    ...     pass
 
     Note that the parentheses are needed when unpacking directly in the with-
     statement.  The asterisk allows an arbitrary number of extra logical files
     to be stored in tail. Use len(tail) to check how many extra logical files
     there are.
-
-    Returns
-    -------
-
-    dlis : dlisio.physicalfile(dlisio.logicalfile)
     """
     if not error_handler:
         error_handler = ErrorHandler()
