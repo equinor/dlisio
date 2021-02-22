@@ -39,7 +39,7 @@ Basic Object
     :members:
     :undoc-members:
     :member-order: bysource
-    :exclude-members: stripspaces
+    :exclude-members: describe_attr
 
 Axis
 ----
