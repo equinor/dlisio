@@ -26,6 +26,8 @@ attrs-inconsistency-type-pred.dlis  First implicit lrs expects successor, but
                                     what follows is an explicit lrs with no
                                     predecessor
 
+ends-on-FF-01.dlis                  Last bytes in the file are FF 01
+
 incomplete-sul.dlis                 Incomplete storage unit label
 
 incomplete-vr.dlis                  Incomplete visible record
@@ -80,6 +82,8 @@ truncated-in-lrsh-vr-over.dlis      File is truncated in the LRSH, VR end aligns
 
 truncated-in-second-lr.dlis         Mismatch between visible record length and
                                     remaining bytes. Second LR truncated
+
+truncated-in-sul.dlis               File truncated in SUL
 
 truncated-lr-no-lrs-in-vr.dlis      LRS expects successor, but none comes. File
                                     is truncated. VR is also truncated

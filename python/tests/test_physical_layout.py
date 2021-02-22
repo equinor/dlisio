@@ -17,6 +17,11 @@ def test_load_7K_file_with_several_LR():
     with dlisio.load('data/chap2/7K-file.dlis'):
         pass
 
+@pytest.mark.xfail
+def test_load_file_ending_on_FF_01():
+    with dlisio.load('data/chap2/ends-on-FF-01.dlis'):
+        pass
+
 def test_3lrs_in_lr_in_vr():
     with dlisio.load('data/chap2/3lrs-in-vr.dlis'):
         pass
@@ -86,17 +91,25 @@ def test_old_vrs():
         _ = dlisio.load('data/chap2/old-vr.dlis')
     assert "could not find visible record" in str(excinfo.value)
 
-def test_broken_sul():
+def test_broken_sul(assert_info):
     with dlisio.load('data/chap2/incomplete-sul.dlis') as (f,):
         obj = f.object('RANDOM_SET3', 'RANDOM_OBJECT3')
         assert obj['RANDOM_ATTRIBUTE3'] == [3]
 
         assert f.storage_label() is None
+    #assert_info("found something that could be parts of a SUL")
 
 def test_broken_vr():
     with pytest.raises(RuntimeError) as excinfo:
         _ = dlisio.load('data/chap2/incomplete-vr.dlis')
     assert "file may be corrupted" in str(excinfo.value)
+
+@pytest.mark.xfail
+def test_truncated_in_sul(assert_log):
+    with dlisio.load('data/chap2/truncated-in-sul.dlis') as files:
+        pass
+    assert len(files) == 0
+    assert_log("SUL is expected to be 80 bytes, but was 32")
 
 def test_truncated_in_iflr():
     with pytest.raises(RuntimeError) as excinfo:
@@ -216,7 +229,7 @@ def test_sul_error_values():
     assert sul['layout'] == 'unknown'
 
 
-def test_load_pre_sul_garbage():
+def test_load_pre_sul_garbage(assert_info):
     d = {
         'sequence': 1,
         'version': '1.0',
@@ -226,9 +239,10 @@ def test_load_pre_sul_garbage():
     }
     with dlisio.load('data/chap2/pre-sul-garbage.dlis') as (f,):
         assert f.storage_label() == d
+    #assert_info("SUL found at ptell 12 (dec), but expected at 0")
 
 
-def test_load_pre_vrl_garbage():
+def test_load_pre_vrl_garbage(assert_info):
     d = {
         'sequence': 1,
         'version': '1.0',
@@ -238,8 +252,10 @@ def test_load_pre_vrl_garbage():
     }
     with dlisio.load('data/chap2/pre-sul-pre-vrl-garbage.dlis') as (f,):
         assert f.storage_label() == d
+    #assert_info("VR found at ptell 116 (dec), but expected at 92")
 
-def test_load_missing_sul():
+def test_load_missing_sul(assert_info):
     with dlisio.load('data/chap2/missing-sul.dlis') as files:
         for f in files:
             assert f.storage_label() is None
+    #assert_info("Exactly one SUL is expected at the start of the file")

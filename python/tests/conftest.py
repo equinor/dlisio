@@ -139,6 +139,8 @@ def assert_debug(caplog):
 
 @pytest.fixture
 def assert_message_count(caplog):
+    # setting lowest level allows us to record everything
+    caplog.set_level(logging.DEBUG)
     def assert_message_count(message_id, count):
         mcount = [message_id in r.message for r in caplog.records].count(True)
         assert count == mcount

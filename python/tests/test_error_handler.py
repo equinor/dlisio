@@ -71,6 +71,13 @@ def test_zeroed_before_vr(assert_error):
         assert_error("Incorrect format version")
         assert len(f.channels) == 1
 
+@pytest.mark.xfail
+def test_tif_padding(assert_error):
+    path = 'data/tif/irregular/padding.dlis'
+    with dlisio.load(path, error_handler=errorhandler) as files:
+        assert_error("File might be padded")
+        assert len(files) == 2
+
 def test_extract_broken_padbytes(assert_error):
     path = 'data/chap2/padbytes-bad.dlis'
     with dlisio.load(path, error_handler=errorhandler) as (f, *_):
