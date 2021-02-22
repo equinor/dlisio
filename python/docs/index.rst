@@ -29,7 +29,6 @@ Standard (DLIS)`.
    :maxdepth: 2
 
    rp66v1
-   tif
    vendors
 
 .. toctree::
