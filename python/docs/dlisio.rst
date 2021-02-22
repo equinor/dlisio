@@ -13,7 +13,11 @@ Open and Load
 .. autofunction:: dlisio.load
 .. autofunction:: dlisio.open
 
-Logical files
+Physical File
+=============
+.. autoclass:: dlisio.physicalfile()
+
+Logical Files
 =============
 .. autoclass:: dlisio.logicalfile()
     :members:

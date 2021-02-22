@@ -37,7 +37,6 @@ Standard (DLIS)`.
    :name: Data organization
    :maxdepth: 3
 
-   segmentation
    metadata
    curves
 

@@ -8,6 +8,45 @@ from . import plumbing
 from . import settings
 
 class physicalfile(tuple):
+    """ A Physical File
+
+    A physical DLIS file, i.e. a regular file on disk, is segmented into
+    multiple Logical Files (LF). Think of a DLIS file as a folder-structure.
+    The DLIS-file itself is the folder, and the Logical Files are the actual
+    files::
+
+        your_file.dlis
+        |
+        |-> Logical File 0
+        |-> Logical File 1
+        |-> Logical File 2
+        ...
+        |-> Logical File n
+
+
+    Each LF is a logical grouping of log data and metadata related to the
+    acquisition of those logs. The LF's are independent of each other and can
+    be thought of as separate files.
+
+    This class is essentially a tuple of all the Logical Files in a regular
+    file, and is what's being returned by :func:`dlisio.load`. The LFs can be
+    unpacked following standard Python tuple unpacking rules.
+
+    Notes
+    -----
+
+    The DLIS-specification, rp66v1, opens up for a Logical File to span
+    multiple physical files. dlisio does not currently have cross-file support.
+    We have yet to see any files in the wild using this feature. Note that
+    dlisio will still be able to open such files, but any internal
+    cross-referencing will be lost.
+
+    See Also
+    --------
+
+    dlisio.load : Open and Index a DLIS-file
+    dlisio.logicalfile : Interface for working with a single Logical File
+    """
     def __enter__(self):
         return self
 
@@ -15,6 +54,7 @@ class physicalfile(tuple):
         self.close()
 
     def close(self):
+        """ Close the file handles of all Logical Files """
         for f in self:
             f.close()
 
@@ -22,6 +62,11 @@ class physicalfile(tuple):
         return 'physicalfile(logical files: {})'.format(len(self))
 
     def describe(self, width=80, indent=''):
+        """ Describe
+
+        Returns a human-readable and printable summary of the current Physical
+        File.
+        """
         buf = StringIO()
         plumbing.describe_header(buf, 'Physical File', width, indent)
 
