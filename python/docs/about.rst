@@ -20,3 +20,16 @@ Please note that dlisio is still in alpha, so expect breaking changes between
 versions.
 
 .. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
+
+
+Installation
+============
+
+dlisio can be installed with `pip <https://pip.pypa.io>`_
+
+.. code-block:: bash
+
+    $ python3 -m pip install dlisio
+
+
+Alternatively, you can grab the latest source code from `GitHub <https://github.com/equinor/dlisio>`_.
