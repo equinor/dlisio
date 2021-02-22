@@ -3,60 +3,65 @@
    :alt: dlisio logo
    :align: center
 
-Welcome to dlisio's documentation!
-==================================
+Welcome to dlisio. dlisio is a python package for reading Digital Log
+Interchange Standard (DLIS) v1. Version 2 exists, and has been around for
+quite a while, but it is our understanding that most dlis files out there are
+still version 1. Hence dlisio's focus is put on version 1 [1]_, for now.
 
-For help, examples and reference, type ``help(function)`` in
-your favourite python interpreter, or ``pydoc function`` in the unix console.
+.. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
 
-Before you get started we recommended that you familiarize yourself with some
-basic concepts of the dlis file format. Remember, dlis is a non-trivial format
-to work with.  Even though dlisio aims to be simple-to-use library that
-abstracts away some of the pain of dlis, there are some concepts from the
-standard you need to be familiar with to be able to work with these files.
-Check out this short overview of need-to-know-concepts: :ref:`Digital Log Interchange
-Standard (DLIS)`.
+Installation
+============
+
+dlisio can be installed with `pip <https://pip.pypa.io>`_
+
+.. code-block:: bash
+
+    $ python3 -m pip install dlisio
+
+Alternatively, you can grab the latest source code from `GitHub <https://github.com/equinor/dlisio>`_.
+
+About the project
+=================
+
+dlisio attempts to abstract away a lot of the pain of dlis and gives
+access to the data in a simple and easy-to-use manner. It gives the user the
+ability to work with dlis-files without having to know the details of the
+standard itself. Its main focus is making the data accessible while putting
+little assumptions on how the data is to be used.
+
+dlisio is written and maintained by Equinor ASA as a free, simple, easy-to-use
+library to read well logs that can be tailored to our needs, and as a
+contribution to the open-source community.
+
+Please note that dlisio is still in alpha, so expect breaking changes between
+versions.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   about
    changelog
 
 .. toctree::
-   :caption: RP66
+   :caption: Digital Log Interchange Standard
    :name: rp66
-   :maxdepth: 2
-
-   rp66v1
-   vendors
-
-.. toctree::
-   :caption: Data organization
-   :name: Data organization
    :maxdepth: 3
 
-   metadata
-   curves
+   dlis/specification
+   dlis/userguide
+   dlis/metadata
+   dlis/curves
+   dlis/api
+   dlis/vendors
 
 .. toctree::
-   :caption: API Reference
-   :name: apiref
+   :caption: Common
+   :name: common
    :maxdepth: 3
 
-   dlisio
-
-.. toctree::
-   :caption: Examples
-   :name: Examples
-   :maxdepth: 3
-
-   examples
+   common-api
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

@@ -1,7 +1,7 @@
 .. currentmodule:: dlisio.plumbing
 
-Curves
-======
+DLIS Curves
+===========
 
 The primary data of a dlis-file are curves, also referred to as channels.
 Typically a curve is the recorded measurements taken along the borehole,
