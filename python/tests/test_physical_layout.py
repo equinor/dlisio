@@ -103,7 +103,6 @@ def test_broken_vr():
         _ = dlisio.load('data/chap2/incomplete-vr.dlis')
     assert "file may be corrupted" in str(excinfo.value)
 
-@pytest.mark.xfail
 def test_truncated_in_sul(assert_log):
     with dlisio.load('data/chap2/truncated-in-sul.dlis') as files:
         pass

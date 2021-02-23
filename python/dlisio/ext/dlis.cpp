@@ -1001,8 +1001,8 @@ void init_dlis_extension(py::module_ &m) {
                 throw std::invalid_argument( msg );
             }
             s.seek( off );
-            s.read( static_cast< char* >( info.ptr ), n );
-            return b;
+            auto bytes_read = s.read( static_cast< char* >( info.ptr ), n );
+            return bytes_read;
         })
     ;
 

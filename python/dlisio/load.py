@@ -290,5 +290,18 @@ class FileIndexer:
         """
         sulsize = 80
         sulbytes = bytearray(sulsize)
-        self.stream.get(sulbytes, self.stream.ltell, sulsize)
+        read = self.stream.get(
+            sulbytes, self.stream.ltell, sulsize)
+
+        if read != sulsize:
+            self.error_handler.log(
+                core.error_severity.major,
+                "dlis::load: Reading SUL",
+                "SUL is expected to be 80 bytes, but was {}".format(read),
+                "2.3.2 Storage Unit Label (SUL): The first 80 bytes of the "
+                    "Visible Envelope ... constitute a Storage Unit Label.",
+                "Bytes are stored as SUL",
+                "")
+            sulbytes = sulbytes[0:read]
+
         self.sul = sulbytes
