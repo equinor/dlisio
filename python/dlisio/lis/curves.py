@@ -57,6 +57,16 @@ def curves(f, dfsr, strict=True):
         Array requires all column names to be unique. See parameter `strict`
         for workaround
 
+    NotImplementedError
+        If the DFSR contains one or more "Fast Channels". These are channels
+        that are recorded at a higher sampling rate than the rest of the
+        channels. dlisio does not currently support fast channels.
+
+    NotImplementedError
+        If Depth Record Mode == 1. The depth recording mode is mainly an
+        internal detail about how the depth-index is recorded in the file.
+        Currently dlisio only supports the default recording mode (0).
+
     Examples
     --------
 
