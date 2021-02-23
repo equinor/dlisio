@@ -280,6 +280,18 @@ class FileIndexer:
         expected = not self.sul and (len(self.logical_files) == 0)
         try:
             core.findsul(self.stream, self.error_handler, expected)
+
+            if not expected:
+                self.error_handler.log(
+                    core.error_severity.minor,
+                    "dlis::load: Looking for SUL",
+                    "SUL is expected only at the start of the file",
+                    "2.3.3 Storage Unit Requirements: A Storage Unit must have "
+                        "exactly one Storage Unit Label that must appear "
+                        "before any Logical Format data.",
+                    "New SUL will be read",
+                    "")
+
             return True
         except RuntimeError as e:
             self.stream.seek(0)

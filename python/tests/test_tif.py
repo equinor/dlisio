@@ -70,7 +70,6 @@ def test_template_suls(assert_info):
         assert 'TIF2' in f2.storage_label()['id']
         assert_info("SUL is expected only at the start of the file")
 
-@pytest.mark.xfail
 def test_template_suls_file_TM(assert_info):
     fpath = 'data/tif/irregular/suls-file-TM.dlis'
     assure_load(fpath)
