@@ -233,13 +233,13 @@ class physical_file(tuple):
         |   |
         |   |-> Tape 1
         |   |   |
-        |   |   |-> Logical File 0
+        |   |   |-> Logical File 2
         |
         |-> Reel 1
             |
             |-> Tape 0
                 |
-                |-> Logical File 0
+                |-> Logical File 3
 
     Each Logical File can be thought of as an independent regular file,
     containing log data.
