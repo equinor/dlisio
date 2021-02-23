@@ -17,7 +17,6 @@ def test_load_7K_file_with_several_LR():
     with dlisio.load('data/chap2/7K-file.dlis'):
         pass
 
-@pytest.mark.xfail
 def test_load_file_ending_on_FF_01():
     with dlisio.load('data/chap2/ends-on-FF-01.dlis'):
         pass

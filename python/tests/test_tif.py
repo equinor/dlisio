@@ -54,7 +54,6 @@ def test_template_misalignment():
     fpath = 'data/tif/irregular/misalignment.dlis'
     assure_load(fpath)
 
-@pytest.mark.xfail
 def test_template_padding():
     fpath = 'data/tif/irregular/padding.dlis'
     with pytest.raises(RuntimeError) as excinfo:
@@ -88,12 +87,10 @@ def test_layout_LR_disaligned():
     fpath = 'data/tif/layout/LR-disaligned.dlis'
     assure_load(fpath, 1)
 
-@pytest.mark.xfail
 def test_layout_FF01():
     fpath = 'data/tif/layout/TM-contains-FF-01.dlis'
     assure_load(fpath, 1)
 
-@pytest.mark.xfail
 def test_layout_ending_on_FF_01():
     with dlisio.load('data/tif/layout/ends-on-FF-01.dlis'):
         pass

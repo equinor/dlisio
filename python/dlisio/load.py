@@ -88,88 +88,207 @@ def load(path, error_handler = None):
     if not error_handler:
         error_handler = ErrorHandler()
 
-    sulsize = 80
-    tifsize = 12
-    lfs = []
-
-    def rewind(offset, tif):
-        """Rewind offset to make sure not to miss VRL when calling findvrl"""
-        offset -= 4
-        if tif: offset -= 12
-        return offset
-
     path = str(path)
     if not os.path.isfile(path):
         raise OSError("'{}' is not an existing regular file".format(path))
+
     stream = open(path)
+    tm = core.read_tapemark(stream)
+    is_tif = core.valid_tapemark(tm)
+    stream.close()
+
+    indexer = FileIndexer(path, is_tif, error_handler)
     try:
-        core.findsul(stream, error_handler, True)
-        offset = stream.ltell
-        sul = stream.get(bytearray(sulsize), offset, sulsize)
-        offset += sulsize
+        while (not indexer.end_of_data()):
+            indexer.open_stream()
+
+            if indexer.logical_eof():
+                # When working with TapeImageFormat files, lfp will report EOF
+                # when encountering a TM of type 1. We therefore need to close
+                # the current stream and open a new one at the next TM.
+                indexer.close_stream()
+                continue
+
+            if indexer.find_sul():
+                indexer.read_sul()
+
+            if indexer.logical_eof():
+                indexer.close_stream()
+                continue
+
+            indexer.apply_rp66_protocol()
+            indexer.parse_logical_file()
     except:
-        offset = 0
-        sul = None
-
-    try:
-        stream.seek(0)
-        tm = core.read_tapemark(stream)
-        tapemarks = core.valid_tapemark(tm)
-        stream.seek(offset)
-        core.findvrl(stream, error_handler)
-        offset = stream.ltell
-
-        # Layered File Protocol does not currently offer support for re-opening
-        # files at the current position, nor is it able to precisly report the
-        # underlying tell. Therefore, dlisio has to manually search for the
-        # VRL to determine the right offset in which to open the new filehandle
-        # at.
-        #
-        # Logical files are partitioned by core.findoffsets and it's required
-        # [1] that new logical files always start on a new Visible Record.
-        # Hence, dlisio takes the (approximate) tell at the end of each Logical
-        # File and searches for the VRL to get the exact tell.
-        #
-        # [1] rp66v1, 2.3.6 Record Structure Requirements:
-        #     > ... Visible Records cannot intersect more than one Logical File.
-        while True:
-            if tapemarks: offset -= tifsize
-            stream.seek(offset)
-            if tapemarks: stream = core.open_tif(stream)
-            stream = core.open_rp66(stream)
-
-            explicits, implicits, broken = core.findoffsets(stream, error_handler)
-            hint = rewind(stream.ptell, tapemarks)
-
-            recs  = core.extract(stream, explicits, error_handler)
-            sets  = core.parse_objects(recs, error_handler)
-            pool  = core.pool(sets)
-            fdata = core.findfdata(stream, implicits, error_handler)
-
-            lf = logicalfile(stream, pool, fdata, sul, error_handler)
-            lfs.append(lf)
-
-            if len(broken):
-                # do not attempt to recover or read more logical files
-                # if the error happened in findoffsets
-                # return all logical files we were able to process until now
-                break
-
-            stream = open(path)
-
-            try:
-                stream.seek(hint)
-                core.findvrl(stream, error_handler)
-                offset = stream.ltell
-            except RuntimeError:
-                if stream.eof():
-                    stream.close()
-                    break
-                raise
-
-        return physicalfile(lfs)
-    except:
-        stream.close()
-        for f in lfs:
-            f.close()
+        indexer.close()
         raise
+
+    return physicalfile(indexer.logical_files)
+
+
+class FileIndexer:
+    """ Logical Files Indexer
+
+    Contains all the internal information required to correctly parse logical
+    files.
+    """
+    def __init__(self, path, is_tif, error_handler):
+        self.error_handler = error_handler
+        self.is_tif = is_tif
+        self.path = path
+
+        self.logical_files = []
+        self.sul = None
+        self.stream = None
+
+        self.open_next_at_tell = 0
+        self.data_end = False
+
+    def open_stream(self):
+        """ Opens new logical stream
+
+        Opens cfile/aligned TIF stream. It's important that both streams are
+        opened at the same offset as it allows us to handle TIFed files the
+        same way as non-TIFed.
+
+        In case of TIFed files stream must always be opened at the TM.
+        """
+        self.stream = open(self.path, self.open_next_at_tell)
+        if self.is_tif:
+            self.stream = core.open_tif(self.stream)
+
+    def close_stream(self):
+        """ Closes current logical stream
+        """
+        if self.stream:
+            self.stream.close()
+        self.stream = None
+
+    def apply_rp66_protocol(self):
+        """ Opens RP66 protocol (Visible Envelope part)
+
+        Positions on next VR and opens rp66 protocol from that VR.
+        """
+        core.findvrl(self.stream, self.error_handler)
+        self.stream = core.open_rp66(self.stream)
+
+    def index_logical_file(self):
+        """ Finds LR offsets required to parse current file and LF offsets
+        needed to open the next one
+
+        Due to the essence of core.findoffsets function both these things are
+        done at the same time.
+        Code may become more straightforward if findoffsets are ever refactored
+        to deal with this internally and explicitly return the final tell.
+
+        Warning: lfp does *not* make physical tell reliable.
+            We rely on it anyway.
+        """
+        explicits, implicits, broken = core.findoffsets(
+            self.stream, self.error_handler)
+        if len(broken):
+            self.data_end = True
+
+        self.open_next_at_tell = self.stream.ptell
+        if not self.stream.eof():
+            # rewind only when EOF was detected by reading next LF record
+            # substract VR header size for all the files
+            # substract additional 12 for TIFed files to be positioned before TM
+            self.open_next_at_tell -= 4
+            if self.is_tif:
+                self.open_next_at_tell -= 12
+
+        return explicits, implicits
+
+    def parse_logical_file(self):
+        """ Parses new logical file
+
+        In the process gathers data about the next logical file
+        """
+        explicits, implicits = self.index_logical_file()
+        recs = core.extract(self.stream, explicits, self.error_handler)
+        sets = core.parse_objects(recs, self.error_handler)
+        pool = core.pool(sets)
+        fdata = core.findfdata(self.stream, implicits, self.error_handler)
+
+        lf = logicalfile(self.stream, pool, fdata, self.sul, self.error_handler)
+        self.logical_files.append(lf)
+
+    def end_of_data(self):
+        """ Tests for end of data which indexer is able to process
+
+        Returns true only if the physical file reported EOF or data itself is
+        broken such that no new logical file can be opened.
+        """
+        return self.data_end
+
+    def close(self):
+        """ Closes parser
+
+        Closes current stream along with streams of all processed logical files
+        """
+        self.close_stream()
+        for f in self.logical_files:
+            f.close()
+
+    def logical_eof(self):
+        """ Tests for logical EOF
+
+        Decides if currently opened logical stream has data inside.
+        In the process updates parsers knowledge about data eof and next logical
+        file offset.
+
+        This method must be called whenever TIF file marks are expected.
+        At the moment we know that TIF EOF marks can happen before SUL, before
+        LF or before physical EOF.
+        If EOF is reported, then current stream does not contain a valid logical
+        file, so it must be closed. New stream must be opened from the next TM.
+        """
+        ltell = self.stream.ltell
+        try:
+            self.stream.get(bytearray(1), ltell, 1)
+        except Exception as e:
+            self.error_handler.log(
+                core.error_severity.critical,
+                "dlis::load: Testing logical eof",
+                e,
+                "",
+                "Load is suspended",
+                "Physical tell: {} (dec)".format(self.stream.ptell))
+            self.data_end = True
+            return True
+
+        if self.stream.peof():
+            self.data_end = True
+            return True
+
+        if self.stream.eof():
+            self.open_next_at_tell = self.stream.ptell
+            return True
+
+        self.stream.seek(ltell)
+        return False
+
+    def find_sul(self):
+        """ Finds next SUL
+
+        Expected to be called from the start of the stream.
+        If SUL is found, positions on it and returns True.
+        If SUL is not found, leaves position untouched and returns False.
+
+        Reports specification violations if detected.
+        """
+        expected = not self.sul and (len(self.logical_files) == 0)
+        try:
+            core.findsul(self.stream, self.error_handler, expected)
+            return True
+        except RuntimeError as e:
+            self.stream.seek(0)
+            return False
+
+    def read_sul(self):
+        """ Reads SUL
+        """
+        sulsize = 80
+        sulbytes = bytearray(sulsize)
+        self.stream.get(sulbytes, self.stream.ltell, sulsize)
+        self.sul = sulbytes
