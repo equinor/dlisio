@@ -294,6 +294,17 @@ class FileIndexer:
 
             return True
         except RuntimeError as e:
+            if expected:
+                self.error_handler.log(
+                    core.error_severity.minor,
+                    "dlis::load: Looking for SUL",
+                    "Exactly one SUL is expected at the start of the file, but "
+                        "found none: {}".format(e),
+                    "2.3.3 Storage Unit Requirements: A Storage Unit must have "
+                        "exactly one Storage Unit Label that must appear "
+                        "before any Logical Format data.",
+                    "No SUL will be read",
+                    "")
             self.stream.seek(0)
             return False
 

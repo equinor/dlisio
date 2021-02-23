@@ -96,7 +96,7 @@ def test_broken_sul(assert_info):
         assert obj['RANDOM_ATTRIBUTE3'] == [3]
 
         assert f.storage_label() is None
-    #assert_info("found something that could be parts of a SUL")
+    assert_info("found something that could be parts of a SUL")
 
 def test_broken_vr():
     with pytest.raises(RuntimeError) as excinfo:
@@ -256,4 +256,4 @@ def test_load_missing_sul(assert_info):
     with dlisio.load('data/chap2/missing-sul.dlis') as files:
         for f in files:
             assert f.storage_label() is None
-    #assert_info("Exactly one SUL is expected at the start of the file")
+    assert_info("Exactly one SUL is expected at the start of the file")
