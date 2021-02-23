@@ -4,7 +4,7 @@ from . import core
 from .file import physicalfile, logicalfile
 from .errors import ErrorHandler
 
-def open(path):
+def open(path, offset = 0):
     """ Open a file
 
     Open a low-level file handle. This is not intended for end-users - rather,
@@ -13,6 +13,8 @@ def open(path):
     Parameters
     ----------
     path : str_like
+    offset: int
+        Physical file offset at which handle must be opened
 
     Returns
     -------
@@ -22,7 +24,7 @@ def open(path):
     --------
     dlisio.load
     """
-    return core.open(str(path))
+    return core.open(str(path), offset)
 
 def load(path, error_handler = None):
     """ Loads a file and returns one filehandle pr logical file.
@@ -150,7 +152,7 @@ def load(path, error_handler = None):
                 # return all logical files we were able to process until now
                 break
 
-            stream = core.open(path)
+            stream = open(path)
 
             try:
                 offset = core.findvrl(stream, hint)

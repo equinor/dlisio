@@ -769,7 +769,7 @@ void init_dlis_extension(py::module_ &m) {
 
     py::bind_vector<std::vector< dl::object_set >>(m, "list(object_set)");
 
-    m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
+    m.def("open", &dl::open);
     m.def("open_rp66", &dl::open_rp66);
     m.def("open_tif", &dl::open_tapeimage);
 
