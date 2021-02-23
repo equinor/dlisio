@@ -4,11 +4,31 @@
    :align: center
 
 Welcome to dlisio. dlisio is a python package for reading Digital Log
-Interchange Standard (DLIS) v1. Version 2 exists, and has been around for
-quite a while, but it is our understanding that most dlis files out there are
-still version 1. Hence dlisio's focus is put on version 1 [1]_, for now.
+Interchange Standard (DLIS) v1. Version 2 exists, and has been around for quite
+a while, but it is our understanding that most dlis files out there are still
+version 1. Hence dlisio's focus is put on version 1 [1]_, for now.
+
+As of version 0.3.0, dlisio is extended to also read Log Information Standard 79
+(LIS79) [2]_. An extended version of the LIS79 standard called LIS84/Enhanced LIS
+exists, but this version is currently not supported by dlisio.
+
+.. warning::
+   The LIS79 reader should be used with caution. It is experimental and lacks
+   thorough testing and real world experience. Early adaptors are encouraged to
+   report any issues or bugs in the issue tracker on GitHub [3]_
+
+Before you get started we recommended that you familiarize yourself with some
+basic concepts of the DLIS- and LIS file formats. These are non-trivial formats
+and some knowledge about them is required for effective work. A good place to
+start is the user guides: :ref:`DLIS User Guide` and :ref:`LIS User Guide`.
+
+.. warning::
+   Please note that dlisio is still in alpha, so expect breaking changes between
+   versions.
 
 .. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
+.. [2] LIS79, http://w3.energistics.org/LIS/lis-79.pdf
+.. [3] Issue Tracker, https://github.com/equinor/dlisio/issues
 
 Installation
 ============
@@ -24,18 +44,15 @@ Alternatively, you can grab the latest source code from `GitHub <https://github.
 About the project
 =================
 
-dlisio attempts to abstract away a lot of the pain of dlis and gives
+dlisio attempts to abstract away a lot of the pain of LIS and DLIS and give
 access to the data in a simple and easy-to-use manner. It gives the user the
-ability to work with dlis-files without having to know the details of the
+ability to work with these files without having to know *all* the details of the
 standard itself. Its main focus is making the data accessible while putting
 little assumptions on how the data is to be used.
 
 dlisio is written and maintained by Equinor ASA as a free, simple, easy-to-use
 library to read well logs that can be tailored to our needs, and as a
 contribution to the open-source community.
-
-Please note that dlisio is still in alpha, so expect breaking changes between
-versions.
 
 .. toctree::
    :maxdepth: 1
@@ -53,6 +70,14 @@ versions.
    dlis/curves
    dlis/api
    dlis/vendors
+
+.. toctree::
+   :caption: Log Interchange Standard
+   :name: LIS
+
+   lis/specification
+   lis/userguide
+   lis/api
 
 .. toctree::
    :caption: Common
