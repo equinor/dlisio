@@ -22,7 +22,7 @@ commands:
       - run:
           name: install fmtlib
           command: |
-            git clone -b suspect3 https://github.com/achaikou/fmt.git
+            git clone -b suspect2 https://github.com/achaikou/fmt.git
             mkdir fmt/build
             cd fmt/build
             cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
