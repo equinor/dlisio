@@ -22,7 +22,7 @@ commands:
       - run:
           name: install fmtlib
           command: |
-            git clone -b symbol_not_found_on_clang https://github.com/achaikou/fmt.git
+            git clone -b symbol_not_found_on_clang_second https://github.com/achaikou/fmt.git
             mkdir fmt/build
             cd fmt/build
             cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
