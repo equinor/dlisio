@@ -59,4 +59,23 @@ int stream::eof() const noexcept (true) {
     return lfp_eof(this->f);
 }
 
+int stream::peof() const noexcept (false) {
+    auto* outer = this->f;
+    lfp_protocol* inner;
+
+    while (true) {
+        auto err = lfp_peek(outer, &inner);
+        switch (err) {
+            case LFP_OK:
+                break;
+            case LFP_LEAF_PROTOCOL:
+                return lfp_eof(outer);
+            case LFP_IOERROR:
+            default:
+                throw std::runtime_error(lfp_errormsg(outer));
+        }
+        outer = inner;
+    }
+}
+
 } // namespace dlisio

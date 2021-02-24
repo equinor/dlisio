@@ -984,9 +984,11 @@ void init_dlis_extension(py::module_ &m) {
     ;
 
     py::class_< dlisio::stream >( m, "stream" )
+        .def_property_readonly("ltell", &dlisio::stream::ltell)
         .def_property_readonly("ptell", &dlisio::stream::ptell)
-        .def( "seek", &dlisio::stream::seek   )
+        .def( "seek",  &dlisio::stream::seek  )
         .def( "eof",   &dlisio::stream::eof   )
+        .def( "peof",  &dlisio::stream::peof  )
         .def( "close", &dlisio::stream::close )
         .def( "get", []( dlisio::stream& s, py::buffer b, long long off, int n ) {
             auto info = b.request();
