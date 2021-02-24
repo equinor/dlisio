@@ -473,50 +473,50 @@ workflows:
       - clang
       - debug
 
-  static-analysis:
-    jobs:
-      - cppcheck
-      - scan-build
-
-  python:
-    jobs:
-      - python-35
-      - python-36
-      - python-37
-      - python-38
-
-  windows:
-    jobs:
-      - windows_build:
-          name: build-python-<< matrix.python >>-win-<< matrix.platform >>
-          matrix:
-            parameters:
-              python: ["3.5", "3.6", "3.7", "3.8"]
-              platform: ["x86", "x64"]
-          # filters on the "build" jobs are not accidental, CircleCI needs them
-          filters:
-            tags:
-              only: /.*/
-      - deploy:
-          name: deploy-python-<< matrix.python >>-win-<< matrix.platform >>
-          matrix:
-            parameters:
-              python: ["3.5", "3.6", "3.7", "3.8"]
-              platform: ["x86", "x64"]
-          requires:
-            - build-python-<< matrix.python >>-win-<< matrix.platform >>
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - windows_build:
-          name: debug-build-python-<< matrix.python >>-win-<< matrix.platform >>
-          matrix:
-            parameters:
-              python: ["3.8"]
-              platform: ["x86", "x64"]
-              build_type: ["Debug"]
-  arch:
-    jobs:
-      - bigendian
+#   static-analysis:
+#     jobs:
+#       - cppcheck
+#       - scan-build
+# 
+#   python:
+#     jobs:
+#       - python-35
+#       - python-36
+#       - python-37
+#       - python-38
+# 
+#   windows:
+#     jobs:
+#       - windows_build:
+#           name: build-python-<< matrix.python >>-win-<< matrix.platform >>
+#           matrix:
+#             parameters:
+#               python: ["3.5", "3.6", "3.7", "3.8"]
+#               platform: ["x86", "x64"]
+#           # filters on the "build" jobs are not accidental, CircleCI needs them
+#           filters:
+#             tags:
+#               only: /.*/
+#       - deploy:
+#           name: deploy-python-<< matrix.python >>-win-<< matrix.platform >>
+#           matrix:
+#             parameters:
+#               python: ["3.5", "3.6", "3.7", "3.8"]
+#               platform: ["x86", "x64"]
+#           requires:
+#             - build-python-<< matrix.python >>-win-<< matrix.platform >>
+#           filters:
+#             tags:
+#               only: /^v.*/
+#             branches:
+#               ignore: /.*/
+#       - windows_build:
+#           name: debug-build-python-<< matrix.python >>-win-<< matrix.platform >>
+#           matrix:
+#             parameters:
+#               python: ["3.8"]
+#               platform: ["x86", "x64"]
+#               build_type: ["Debug"]
+#   arch:
+#     jobs:
+#       - bigendian

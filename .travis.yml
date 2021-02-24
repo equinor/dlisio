@@ -25,9 +25,9 @@ jobs:
     fast_finish: true
     include:
         - python: 3.5
-        - python: 3.6
-        - python: 3.7
-        - python: 3.8
+#         - python: 3.6
+#         - python: 3.7
+#         - python: 3.8
         - os: linux
           compiler: clang
           python: 3.8
@@ -37,40 +37,40 @@ jobs:
               - SOURCEDEPLOY=1
               - WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
               - MKDOC="-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
-        - os: osx
-          python: 3.5
-          language: generic
-          env:
-            - MB_PYTHON_VERSION=3.5
-            - MACOSX_DEPLOYMENT_TARGET=10.9
-        - os: osx
-          language: generic
-          python: 3.6
-          env:
-            - MB_PYTHON_VERSION=3.6
-            - MACOSX_DEPLOYMENT_TARGET=10.9
-        - os: osx
-          language: generic
-          python: 3.7
-          env:
-            - MB_PYTHON_VERSION=3.7
-            - MACOSX_DEPLOYMENT_TARGET=10.9
+#         - os: osx
+#           python: 3.5
+#           language: generic
+#           env:
+#             - MB_PYTHON_VERSION=3.5
+#             - MACOSX_DEPLOYMENT_TARGET=10.9
+#         - os: osx
+#           language: generic
+#           python: 3.6
+#           env:
+#             - MB_PYTHON_VERSION=3.6
+#             - MACOSX_DEPLOYMENT_TARGET=10.9
+#         - os: osx
+#           language: generic
+#           python: 3.7
+#           env:
+#             - MB_PYTHON_VERSION=3.7
+#             - MACOSX_DEPLOYMENT_TARGET=10.9
         - os: osx
           language: generic
           python: 3.8
           env:
             - MB_PYTHON_VERSION=3.8
             - MACOSX_DEPLOYMENT_TARGET=10.9
-        - os: linux
-          arch: s390x
-          name: bigendian
-          language: generic
-          before_install: skip
-          install: skip
-          before_script: skip
-          deploy:
-          script:
-            - docker build -t dlisio -f .travis/bigendian/Dockerfile .
+#         - os: linux
+#           arch: s390x
+#           name: bigendian
+#           language: generic
+#           before_install: skip
+#           install: skip
+#           before_script: skip
+#           deploy:
+#           script:
+#             - docker build -t dlisio -f .travis/bigendian/Dockerfile .
 
 before_install:
     - eval "${MATRIX_EVAL}"
