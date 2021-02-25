@@ -37,7 +37,6 @@ extensions = [
 ]
 
 autosummary_generate = True
-add_module_names = False
 
 # sphinx 1.8 deprecates autodoc_default_flags. docs should be buildable with
 # warnings-as-errors, but the docs really don't require more than sphinx 1.5.
