@@ -115,7 +115,9 @@ def load(path, error_handler = None):
         stream.seek(0)
         tm = core.read_tapemark(stream)
         tapemarks = core.valid_tapemark(tm)
-        offset = core.findvrl(stream, offset)
+        stream.seek(offset)
+        core.findvrl(stream, error_handler)
+        offset = stream.ltell
 
         # Layered File Protocol does not currently offer support for re-opening
         # files at the current position, nor is it able to precisly report the
@@ -156,7 +158,9 @@ def load(path, error_handler = None):
             stream = open(path)
 
             try:
-                offset = core.findvrl(stream, hint)
+                stream.seek(hint)
+                core.findvrl(stream, error_handler)
+                offset = stream.ltell
             except RuntimeError:
                 if stream.eof():
                     stream.close()

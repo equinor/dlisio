@@ -38,7 +38,19 @@ dlisio::stream open_tapeimage(const dlisio::stream&) noexcept (false);
  * If SUL is not found, RuntimeException is thrown.
  */
 void findsul(dlisio::stream&, const dl::error_handler&, bool) noexcept(false);
-long long findvrl(dlisio::stream&, long long) noexcept (false);
+
+/* Find VR and position on it.
+ *
+ * Stream is expected to be positioned at the supposed VR start.
+ * Check will be performed in two steps. First, mininum amount of bytes that
+ * should be enough to find VR will be read and processed. If VR is not found
+ * in the first step, then in second step maximum amount of bytes is read. It's
+ * unclear if second step allows to unlock any real files. It is present for
+ * compliance with older dlisio versions.
+ *
+ * If VR is nout found, RuntimeException is thrown.
+ */
+void findvrl(dlisio::stream&, const dl::error_handler&) noexcept(false);
 
 dl::record extract(dlisio::stream&, long long, dl::error_handler&) noexcept (false);
 dl::record& extract(dlisio::stream&, long long, long long, dl::record&,

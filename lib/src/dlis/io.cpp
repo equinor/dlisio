@@ -101,6 +101,41 @@ long long findsul( dlisio::stream& file, int toread ) noexcept (false) {
     }
 }
 
+long long findvrl( dlisio::stream& file, int toread ) noexcept (false) {
+    long long offset;
+
+    const auto lfrom = file.ltell();
+    const auto pfrom = file.ptell();
+
+    std::vector<char> buffer;
+    buffer.reserve( toread );
+    auto bytes_read = file.read(buffer.data(), toread);
+
+    const auto err = dlis_find_vrl(buffer.data(), bytes_read, &offset);
+
+    // TODO: error messages could maybe be pulled from core library
+    switch (err) {
+        case DLIS_OK:
+            return lfrom + offset;
+
+        case DLIS_NOTFOUND: {
+            const auto msg =
+                "searched {} bytes from offset {} (dec), but could not find "
+                "visible record envelope pattern [0xFF 0x01]";
+            throw dlisio::not_found(fmt::format(msg, bytes_read, pfrom));
+        }
+
+        case DLIS_INCONSISTENT: {
+            const auto msg = "found [0xFF 0x01] but len field not intact, "
+                             "file may be corrupted";
+            throw std::runtime_error(msg);
+        }
+
+        default:
+            throw std::runtime_error("dlis_find_vrl: unknown error");
+    }
+}
+
 } //namespace
 
 void findsul(dlisio::stream& file, const dl::error_handler& errorhandler,
@@ -143,40 +178,37 @@ void findsul(dlisio::stream& file, const dl::error_handler& errorhandler,
     file.seek(offset);
 }
 
-long long findvrl( dlisio::stream& file, long long from ) noexcept (false) {
-    if (from < 0) {
-        const auto msg = "expected from (which is {}) >= 0";
-        throw std::out_of_range(fmt::format(msg, from));
-    }
+void findvrl(dlisio::stream& file,
+             const dl::error_handler& errorhandler) noexcept(false) {
+    const auto lfrom = file.ltell();
+    const auto pfrom = file.ptell();
 
     long long offset;
+    try {
+        /* Expected situation: we are positioned right before VR */
+        constexpr auto minread = 4;
+        offset = findvrl(file, minread);
+        assert(offset == lfrom);
+    } catch (std::exception& e) {
+        /* Compliance with previous dlisio versions: search 200 bytes for VR.
+         * No real file that is saved by this check is known, but it might
+         * happen exactly because this check is present.
+         */
+        constexpr auto maxread = 200;
+        file.seek(lfrom);
+        offset = findvrl(file, maxread);
 
-    char buffer[ 200 ];
-    file.seek(from);
-    auto bytes_read = file.read(buffer, 200);
-    const auto err = dlis_find_vrl(buffer, bytes_read, &offset);
-
-    // TODO: error messages could maybe be pulled from core library
-    switch (err) {
-        case DLIS_OK:
-            return from + offset;
-
-        case DLIS_NOTFOUND: {
-            const auto msg = "searched {} bytes, but could not find "
-                             "visible record envelope pattern [0xFF 0x01]"
-            ;
-            throw dlisio::not_found(fmt::format(msg, bytes_read));
-        }
-
-        case DLIS_INCONSISTENT: {
-            const auto msg = "found [0xFF 0x01] but len field not intact, "
-                             "file may be corrupted";
-            throw std::runtime_error(msg);
-        }
-
-        default:
-            throw std::runtime_error("dlis_find_vrl: unknown error");
+        assert(offset > lfrom);
+        const auto debug = "VR found at ptell {} (dec), but expected at {}";
+        errorhandler.log(
+            dl::error_severity::MINOR,
+            "dlis::findvrl: Searching for VR",
+            "Unexpected bytes found before VR",
+            "",
+            "Unexpected bytes ignored",
+            fmt::format(debug, pfrom + (offset - lfrom), pfrom));
     }
+    file.seek(offset);
 }
 
 bool record::isexplicit() const noexcept (true) {

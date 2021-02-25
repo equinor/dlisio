@@ -252,7 +252,7 @@ def test_load_pre_vrl_garbage(assert_info):
     }
     with dlisio.load('data/chap2/pre-sul-pre-vrl-garbage.dlis') as (f,):
         assert f.storage_label() == d
-    #assert_info("VR found at ptell 116 (dec), but expected at 92")
+    assert_info("VR found at ptell 116 (dec), but expected at 92")
 
 def test_load_missing_sul(assert_info):
     with dlisio.load('data/chap2/missing-sul.dlis') as files:
