@@ -239,7 +239,7 @@ def test_load_pre_sul_garbage(assert_info):
     }
     with dlisio.load('data/chap2/pre-sul-garbage.dlis') as (f,):
         assert f.storage_label() == d
-    #assert_info("SUL found at ptell 12 (dec), but expected at 0")
+    assert_info("SUL found at ptell 12 (dec), but expected at 0")
 
 
 def test_load_pre_vrl_garbage(assert_info):

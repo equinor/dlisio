@@ -103,7 +103,8 @@ def load(path, error_handler = None):
         raise OSError("'{}' is not an existing regular file".format(path))
     stream = open(path)
     try:
-        offset = core.findsul(stream)
+        core.findsul(stream, error_handler, True)
+        offset = stream.ltell
         sul = stream.get(bytearray(sulsize), offset, sulsize)
         offset += sulsize
     except:
