@@ -150,7 +150,7 @@ class logical_file():
     def explicits(self):
         return self.index.explicits()
 
-    def dfsr(self):
+    def data_format_specs(self):
         # TODO duplication checking
         ex = self.explicits()
         dfs = core.lis_rectype.data_format_spec
