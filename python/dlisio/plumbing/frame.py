@@ -2,12 +2,19 @@ from .basicobject import BasicObject
 from ..dlisutils import curves
 from .valuetypes import scalar, vector, boolean
 from .linkage import obname
-from .utils import *
+from .describe import (
+    describe_header,
+    describe_attributes,
+    describe_text,
+    describe_array,
+    replist,
+)
 
 from .. import core
 
 import numpy as np
 import logging
+from collections import OrderedDict
 
 
 class Frame(BasicObject):

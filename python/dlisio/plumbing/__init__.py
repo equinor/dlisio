@@ -26,4 +26,5 @@ from .noformat import Noformat
 from .matcher import *
 from .valuetypes import *
 from .linkage import *
-from .utils import *
+from .describe import *
+from .dimensional import *

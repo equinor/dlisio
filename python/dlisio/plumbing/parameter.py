@@ -1,7 +1,12 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector, reverse
 from .linkage import obname
-from .utils import *
+from .dimensional import validshape, sampling
+from .describe import (
+    describe_description,
+    describe_attributes,
+    describe_sampled_attrs,
+)
 
 import logging
 import numpy as np

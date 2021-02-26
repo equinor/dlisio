@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import vector
-from .utils import describe_array
+from .describe import describe_array
 
 class Comment(BasicObject):
     """

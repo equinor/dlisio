@@ -1,6 +1,6 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar
-from .utils import describe_attributes
+from .describe import describe_attributes
 
 from collections import OrderedDict
 

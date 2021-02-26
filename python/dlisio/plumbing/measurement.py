@@ -1,7 +1,13 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector, reverse
 from .linkage import objref, obname
-from .utils import *
+from .dimensional import validshape, sampling
+from .describe import (
+    describe_header,
+    describe_attributes,
+    describe_sampled_attrs,
+    remove_empties,
+)
 
 from collections import OrderedDict
 import logging

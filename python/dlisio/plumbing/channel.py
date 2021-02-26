@@ -3,7 +3,7 @@ from ..reprc import dtype, fmt
 from ..dlisutils import curves
 from .valuetypes import scalar, vector, reverse
 from .linkage import *
-from .utils import *
+from .describe import describe_description, describe_attributes
 
 import numpy as np
 from collections import OrderedDict

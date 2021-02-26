@@ -1,7 +1,14 @@
 from .. import core
 from .valuetypes import *
 from .linkage import *
-from .utils import *
+from .describe import (
+    describe_header,
+    describe_dict,
+    describe_attributes,
+    parseoptions,
+    headerinfo,
+    Summary
+)
 
 import logging
 

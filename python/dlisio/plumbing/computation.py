@@ -1,11 +1,17 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector, reverse
 from .linkage import obname, objref
-from .utils import *
+from .dimensional import sampling, validshape
+from .describe import (
+    describe_description,
+    describe_attributes,
+    describe_sampled_attrs,
+)
 
 import logging
 import numpy as np
 
+from collections import OrderedDict
 
 class Computation(BasicObject):
     """

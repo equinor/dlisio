@@ -2,7 +2,7 @@ from .. import core
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname, objref
-from .utils import describe_dict
+from .describe import describe_dict
 
 from collections import OrderedDict
 from copy import deepcopy

@@ -1,7 +1,7 @@
 from .basicobject import BasicObject
 from .valuetypes import scalar, vector
 from .linkage import obname
-from .utils import *
+from .describe import describe_dict, describe_description, replist
 
 from collections import OrderedDict
 
