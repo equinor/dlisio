@@ -2,11 +2,11 @@
 Testing division of one physical file into several logical files
 """
 
-import dlisio
+from dlisio import dlis, core
 
 def test_partitioning():
     path = 'data/chap4-7/many-logical-files.dlis'
-    with dlisio.load(path) as (f1, f2, f3, *tail):
+    with dlis.load(path) as (f1, f2, f3, *tail):
         assert len(tail) == 0
 
         def getobjects(f):
@@ -16,7 +16,7 @@ def test_partitioning():
         assert len(getobjects(f2)) == 7
         assert len(getobjects(f3)) == 1
 
-        key = dlisio.core.fingerprint('FRAME', 'FRAME-INC', 10, 0)
+        key = core.fingerprint('FRAME', 'FRAME-INC', 10, 0)
 
         assert f1.object_pool.types == ['ORIGIN', 'CHANNEL', 'FRAME']
         assert not f1.fdata_index
@@ -30,7 +30,7 @@ def test_partitioning():
 
 def test_objects_ownership():
     path = 'data/chap4-7/many-logical-files.dlis'
-    with dlisio.load(path) as (f1, f2, f3):
+    with dlis.load(path) as (f1, f2, f3):
         fh2 = f2.object('FILE-HEADER', 'N', 11, 0)
         fh3 = f3.object('FILE-HEADER', 'N', 10, 0)
 
@@ -52,7 +52,7 @@ def test_objects_ownership():
 def test_objects_with_encrypted_records_ownership():
     path = 'data/chap4-7/many-logical-files-same-object.dlis'
 
-    with dlisio.load(path) as (f1, f2):
+    with dlis.load(path) as (f1, f2):
         f1_channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
         f2_channel = f2.object('CHANNEL', 'CHANN1', 10, 0)
 
@@ -61,7 +61,7 @@ def test_objects_with_encrypted_records_ownership():
 
 def test_linking():
     path = 'data/chap4-7/many-logical-files.dlis'
-    with dlisio.load(path) as (f1, f2, _):
+    with dlis.load(path) as (f1, f2, _):
         frame1  = f1.object('FRAME', 'FRAME1', 10, 0)
         frame2  = f2.object('FRAME', 'FRAME1', 10, 0)
         channel = f1.object('CHANNEL', 'CHANN1', 10, 0)

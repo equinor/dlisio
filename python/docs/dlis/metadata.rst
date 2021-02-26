@@ -1,4 +1,4 @@
-.. currentmodule:: dlisio.plumbing
+.. currentmodule:: dlisio.dlis
 
 DLIS Metadata
 =============
@@ -24,25 +24,24 @@ the logs.
 
 :class:`Parameter`: Contains some parameter value and a description of it.
 
-.. currentmodule:: dlisio
 .. [1] There is currently a handful of object-types (mostly from Chaper 7:
        semantics: dictionaries of RP66v1) that dlisio does not implement full
        support for. I.e. they are not translated into their own python class,
        but rather use the more generic and rough interface of
-       :class:`plumbing.BasicObject`. These rarely see the light of day, but if
+       :class:`BasicObject`. These rarely see the light of day, but if
        present they can be accessed through :attr:`logicalfile.unknowns`.
 
 Identifying specific objects
 ----------------------------
 
-.. currentmodule:: dlisio.plumbing.BasicObject
+.. currentmodule:: dlisio.dlis.BasicObject
 
 Common for *all* objects are the four fields: :attr:`type`, :attr:`name`
 (mnemonic), :attr:`origin` and :attr:`copynumber`.  Together, these form a
 unique identifier for the object. RP66v1 states that no two objects from the
 *same logical file* can have the same value for all four fields.
 
-.. currentmodule:: dlisio.plumbing
+.. currentmodule:: dlisio.dlis
 
 **origin**: The origin field states which origin the object is a part of.
 Its interger value implicitly refers to the :class:`Origin`-object that has the
@@ -51,8 +50,6 @@ same value in its origin field.
 **copynumber**: The copynumber is used to distinguish two objects that otherwise
 have an identical signature. E.g. if there are two :class:`Channel` objects
 with the same name/mnemonic and both belong to the same origin.
-
-.. currentmodule:: dlisio
 
 To access a specific object use :func:`logicalfile.object`. Or search for objects
 matching a regular expression with :func:`logicalfile.find`
@@ -74,8 +71,6 @@ matching a regular expression with :func:`logicalfile.find`
 
 Relationship between metadata objects
 -------------------------------------
-
-.. currentmodule:: dlisio.plumbing
 
 A key feature of RP66v1 is that objects refer to each other.  Object-to-object
 referencing is used to establish a relationship between two objects. This
@@ -115,10 +110,10 @@ more than one:
 
 .. code-block:: python
 
-   import dlisio
    import logging
+   from dlisio import dlis
 
-   with dlisio.load(path) as (f, *tail):
+   with dlis.load(path) as (f, *tail):
       if len(f.origins) > 1: logging.warning('File contains multiple origins')
 
 Vendor-specific metadata
@@ -133,5 +128,5 @@ The vendor-specific objects are reachable through :code:`f.unknowns`:
 
 .. code-block:: python
 
-   with dlisio.load(path) as (f, *tail):
+   with dlis.load(path) as (f, *tail):
       f.unknowns

@@ -2,11 +2,10 @@
 Testing Logical file class (also known as dlis)
 """
 
-import dlisio
 import pytest
 import os
 
-from dlisio import core
+from dlisio import core, dlis
 
 def test_object(f):
     channel = f.object("CHANNEL", "CHANN1", 10, 0)
@@ -55,7 +54,7 @@ def test_object_many_objects_nameonly(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.127-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         with pytest.raises(ValueError) as exc:
             _ = f.object("CHANNEL", "MATCH1")
         assert "Candidates are" in str(exc.value)
@@ -72,7 +71,7 @@ def test_object_ducplicated_object(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.127-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         ch = f.object("CHANNEL", "MATCH1")
 
         assert ch.name       == "MATCH1"
@@ -92,7 +91,7 @@ def test_object_same_signature_diff_content(tmpdir_factory, merge_files_manyLR):
     ]
     merge_files_manyLR(fpath, content)
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         with pytest.raises(ValueError) as exc:
             _ = f.object("CHANNEL", "CHANN1", 10, 0)
         assert "Candidates are" in str(exc.value)
@@ -113,7 +112,7 @@ def test_match(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         refs = []
         refs.append(f.object('CHANNEL', 'MATCH1', 16, 0))
         refs.append(f.object('CHANNEL', 'MATCH111', 16, 0))
@@ -138,7 +137,7 @@ def test_match_type(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         refs = []
         refs.append( f.object('MATCH', 'MATCH22', 16, 0) )
         refs.append( f.object('FRAME', 'MATCH22', 16, 0) )
@@ -172,7 +171,7 @@ def test_match_special_characters(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         o1 = f.object('440.TYPE', '440-MATCH1', 16, 0)
         o2 = f.object('440-TYPE', '440.MATCH1', 16, 0)
 
@@ -207,7 +206,7 @@ def test_find(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         refs = []
         refs.append(f.object('CHANNEL', 'MATCH1', 16, 0))
         refs.append(f.object('CHANNEL', 'MATCH111', 16, 0))
@@ -232,7 +231,7 @@ def test_find_type(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         refs = []
         refs.append( f.object('MATCH', 'MATCH22', 16, 0) )
         refs.append( f.object('FRAME', 'MATCH22', 16, 0) )
@@ -266,7 +265,7 @@ def test_find_special_characters(tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         o1 = f.object('440.TYPE', '440-MATCH1', 16, 0)
         o2 = f.object('440-TYPE', '440.MATCH1', 16, 0)
 
@@ -314,7 +313,7 @@ def test_dlis_types(f):
     assert len(f.noformats)    == 2
 
 def test_load_unknowns():
-    with dlisio.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
+    with dlis.load('data/206_05a-_3_DWL_DWL_WIRE_258276498.DLIS') as (f,):
         assert len(f.unknowns) == 5
 
 def test_unknowns_multiple_sets(tmpdir_factory, merge_files_manyLR):
@@ -329,12 +328,12 @@ def test_unknowns_multiple_sets(tmpdir_factory, merge_files_manyLR):
     ]
     merge_files_manyLR(fpath, content)
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         assert len(f.unknowns['UNKNOWN_SET']) == 2
 
 def test_noform_data(tmpdir):
     fpath = 'data/chap4-7/iflr/noform.dlis'
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
 
         assert len(f.fdata_index) == 3
 

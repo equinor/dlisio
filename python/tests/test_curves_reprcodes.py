@@ -7,10 +7,10 @@ import numpy as np
 import sys
 from datetime import datetime
 
-import dlisio
+from dlisio import dlis
 
 def load_curves(fpath):
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
         return curves

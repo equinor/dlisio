@@ -5,14 +5,14 @@ from io import StringIO
 import os
 import pytest
 
-import dlisio
-from dlisio.plumbing import *
+from dlisio import dlis
+from dlisio.dlis.utils import *
 
 def test_describe(fpath):
     # Because the .describe() i.e. returns long descriptive textual string,
     # they are hard to test. But the very least test that it is callable.
 
-    with dlisio.load(fpath) as batch:
+    with dlis.load(fpath) as batch:
         _ = batch.describe()
 
         for f in batch:
@@ -103,7 +103,7 @@ def test_sampled_attrs(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object('PARAMETER', 'OBJECT', 10, 0)
         dims = [2]
 
@@ -148,7 +148,7 @@ def test_sampled_attrs_wrong_value(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object('PARAMETER', 'OBJECT', 10, 0)
         dims = [2]
 

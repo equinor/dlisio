@@ -6,7 +6,7 @@ import pytest
 from datetime import datetime
 import os, sys
 
-import dlisio
+from dlisio import dlis
 from dlisio.core import dlis_reprc as reprc
 
 @pytest.mark.future_test_attributes
@@ -20,7 +20,7 @@ def test_default_attribute(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 2
@@ -39,7 +39,7 @@ def test_default_attribute_cut(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['INVARIANT_ATTRIBUTE'].value
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
@@ -54,7 +54,7 @@ def test_invariant_attribute(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['INVARIANT_ATTRIBUTE']
         #assert attr.count == 3
@@ -73,7 +73,7 @@ def test_invariant_attribute_in_object(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         assert attr.value == [8.0]
@@ -93,7 +93,7 @@ def test_absent_attribute(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['INVARIANT_ATTRIBUTE'].value
         with pytest.raises(KeyError):
@@ -110,7 +110,7 @@ def test_absent_attribute_in_template(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
         assert_log("Absent Attribute in object set template")
@@ -126,7 +126,7 @@ def test_global_default_attribute(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['GLOBAL_DEFAULT_ATTRIBUTE']
         #assert attr.count == 1
@@ -146,7 +146,7 @@ def test_all_attribute_bits(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 4
@@ -165,7 +165,7 @@ def test_objattr_same_as_default_no_value(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         assert attr.value == [-0.75, 10.0]
@@ -179,7 +179,7 @@ def test_no_template(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f,):
+    with dlis.load(path) as (f,):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert len(obj.attic) == 0
 
@@ -231,7 +231,7 @@ def test_repcode(tmpdir, merge_files_oneLR, filename_p, attr_n, attr_reprc, attr
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic[attr_n]
         #assert attr.reprc == attr_reprc
@@ -246,7 +246,7 @@ def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
 
         # run this test from python 3.6 only as code doesn't fail on python 3.5
@@ -274,7 +274,7 @@ def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "unknown representation code" in str(excinfo.value)
@@ -301,7 +301,7 @@ def test_repcode_invalid_in_template_no_value_fixed(tmpdir, merge_files_oneLR,
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
 
         _ = obj['DEFAULT_ATTRIBUTE']
@@ -337,7 +337,7 @@ def test_repcode_invalid_in_template_no_value_not_fixed(tmpdir,
         'data/chap3/object/object.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['INVALID']
         # note that behavior is different from the one below
@@ -369,7 +369,7 @@ def test_repcode_invalid_in_template_no_value_empty(tmpdir, merge_files_oneLR,
         'data/chap3/objattr/all-set.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         with pytest.raises(RuntimeError) as excinfo:
             # note that behavior is different from the one above
@@ -404,7 +404,7 @@ def test_repcode_invalid_in_objects_value(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "unknown representation code" in str(excinfo.value)
@@ -431,7 +431,7 @@ def test_repcode_invalid_in_objects_no_value(tmpdir, merge_files_oneLR,
         'data/chap3/objattr/all-set.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         with pytest.raises(RuntimeError) as excinfo:
             _ = obj['GLOBAL_DEFAULT_ATTRIBUTE']
@@ -456,7 +456,7 @@ def test_repcode_different_no_value(tmpdir, merge_files_oneLR, assert_log,
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
 
         attr = obj['DEFAULT_ATTRIBUTE']
@@ -474,7 +474,7 @@ def test_count0_novalue(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 0
@@ -492,7 +492,7 @@ def test_count0_value_bit(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 0
@@ -510,7 +510,7 @@ def test_count0_different_repcode(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 0
@@ -528,7 +528,7 @@ def test_label_bit_set_in_attribute(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
 
@@ -545,7 +545,7 @@ def test_label_bit_not_set_in_template(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['NEW_ATTRIBUTE']
         dt = datetime(2033, 4, 19, 20, 39, 58, 103000)
@@ -563,7 +563,7 @@ def test_set_type_bit_not_set_in_set(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
         assert_log("Problem:      SET:type not set\n"
@@ -582,7 +582,7 @@ def test_set_name_bit_set_name_not_present(tmpdir, merge_files_oneLR, assert_log
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             _ = f.object('FILE-HEADER', 'N', 2, 0)
         err = "object set of type 'FILE-HEADER' named 'SEQUENCE-NUMBER4ID"
@@ -599,7 +599,7 @@ def test_object_name_bit_not_set_in_object(tmpdir, merge_files_oneLR,
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert obj.attic['DEFAULT_ATTRIBUTE'].value
         _ = obj['DEFAULT_ATTRIBUTE']
@@ -618,7 +618,7 @@ def test_novalue_less_count(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         attr = obj.attic['DEFAULT_ATTRIBUTE']
         #assert attr.count == 1
@@ -642,7 +642,7 @@ def test_novalue_more_count(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         with pytest.raises(RuntimeError) as excinfo:
             _ = obj['DEFAULT_ATTRIBUTE']
@@ -663,7 +663,7 @@ def test_set_redundant(tmpdir, merge_files_oneLR, assert_info):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         _ = f.object('REDUNDANT', 'OBJECT', 1, 1)
         assert_info("Redundant sets are not supported")
 
@@ -678,7 +678,7 @@ def test_set_replacement(tmpdir, merge_files_oneLR, assert_log):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *tail):
+    with dlis.load(path) as (f, *tail):
         _ = f.object('REPLACEMENT', 'OBJECT', 1, 1)
         assert_log("Replacement sets are not supported")
 
@@ -688,18 +688,18 @@ def test_set_replacement(tmpdir, merge_files_oneLR, assert_log):
 # Hence there is no good place for it
 
 def test_findfdata_VR_aligned():
-    with dlisio.load('data/chap3/implicit/fdata-vr-aligned.dlis') as (f, *_):
+    with dlis.load('data/chap3/implicit/fdata-vr-aligned.dlis') as (f, *_):
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0]
 
 def test_findfdata_VR_aligned_padding():
     path = 'data/chap3/implicit/fdata-vr-aligned-padding.dlis'
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0]
 
 def test_findfdata_many_in_same_VR():
-    with dlisio.load('data/chap3/implicit/fdata-many-in-same-vr.dlis') as (f, *_):
+    with dlis.load('data/chap3/implicit/fdata-many-in-same-vr.dlis') as (f, *_):
         assert len(f.fdata_index) == 3
         assert f.fdata_index['T.FRAME-I.DLIS-FRAME-O.3-C.1'] == [0, 48]
 
@@ -712,42 +712,42 @@ def test_findfdata_many_in_same_VR():
 
 def test_findfdata_non_0_non_1_type():
     path = 'data/chap3/implicit/fdata-non-0-non-1-type.dlis'
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         assert len(f.fdata_index) == 0
 
 def test_findfdata_VR_disaligned():
-    with dlisio.load('data/chap3/implicit/fdata-vr-disaligned.dlis') as (f, *_):
+    with dlis.load('data/chap3/implicit/fdata-vr-disaligned.dlis') as (f, *_):
         assert len(f.fdata_index) == 1
         assert f.fdata_index['T.FRAME-I.IFLR-O.35-C.1'] == [0]
 
 def test_findfdata_VR_disaligned_after_obname():
     path = 'data/chap3/implicit/fdata-vr-disaligned-checksum.dlis'
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         assert len(f.fdata_index) == 1
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR!'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
 def test_findfdata_VR_disaligned_in_obname():
     path = 'data/chap3/implicit/fdata-vr-disaligned-in-obname.dlis'
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         assert len(f.fdata_index) == 1
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
 def test_findfdata_VR_disaligned_in_obname_trailing_length_in_lrs():
     path = 'data/chap3/implicit/fdata-vr-obname-trailing.dlis'
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         assert len(f.fdata_index) == 1
         name = 'FRAME-OBNAME-INTERRUPTED-BY-VR'
         assert f.fdata_index['T.FRAME-I.'+name+'-O.19-C.1'] == [0]
 
 def test_findfdata_encrypted():
-    with dlisio.load('data/chap3/implicit/fdata-encrypted.dlis') as (f, *_):
+    with dlis.load('data/chap3/implicit/fdata-encrypted.dlis') as (f, *_):
         assert len(f.fdata_index) == 0
 
 def test_findfdata_bad_obname():
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load('data/chap3/implicit/fdata-broken-obname.dlis')
+        _ = dlis.load('data/chap3/implicit/fdata-broken-obname.dlis')
 
     # Obname is truncated by LRS-length, which in itself is fine as long as it
     # continues on the next LRS. However, in this case there are no new LRS.
@@ -765,7 +765,7 @@ def test_unexpected_attribute_in_set(tmpdir, merge_files_oneLR):
     merge_files_oneLR(path, content)
 
     with pytest.raises(RuntimeError) as excinfo:
-        dlisio.load(path)
+        dlis.load(path)
     assert "expected SET" in str(excinfo.value)
 
 def test_unexpected_set_in_object(tmpdir, merge_files_oneLR):
@@ -780,7 +780,7 @@ def test_unexpected_set_in_object(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected ATTRIB" in str(excinfo.value)
@@ -797,7 +797,7 @@ def test_unexpected_set_in_template(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected ATTRIB" in str(excinfo.value)
@@ -814,7 +814,7 @@ def test_unexpected_attribute_instead_of_object(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "expected OBJECT" in str(excinfo.value)
@@ -829,7 +829,7 @@ def test_cut_before_template(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             f.load()
     assert "unexpected end-of-record" in str(excinfo.value)
@@ -843,7 +843,7 @@ def test_cut_before_object(tmpdir, merge_files_oneLR, assert_debug):
         'data/chap3/template/default.dlis.part',
     ]
     merge_files_oneLR(path, content)
-    with dlisio.load(path) as (f,):
+    with dlis.load(path) as (f,):
         objects = f.find('.*', '.*')
         assert len(objects) == 0
         assert_debug("Set contains no objects")
@@ -859,7 +859,7 @@ def test_cut_middle_object(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
     with pytest.raises(IndexError) as excinfo:
-        dlisio.load(path)
+        dlis.load(path)
     assert "unexpected end-of-record" in str(excinfo.value)
 
 
@@ -874,7 +874,7 @@ def test_cut_middle_object_attribute(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
     with pytest.raises(IndexError) as excinfo:
-        dlisio.load(path)
+        dlis.load(path)
     assert "unexpected end-of-record" in str(excinfo.value)
 
 
@@ -887,7 +887,7 @@ def test_cut_middle_template_attribute(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
     with pytest.raises(IndexError) as excinfo:
-        dlisio.load(path)
+        dlis.load(path)
     assert "unexpected end-of-record" in str(excinfo.value)
 
 

@@ -5,7 +5,7 @@ Testing objects from Chapter 5 and 6. Tests objects structure and attributes
 from datetime import datetime
 import numpy as np
 
-import dlisio
+from dlisio import dlis
 
 def test_file_header(f):
     fh = f.object('FILE-HEADER', 'N', 10, 0)
@@ -417,7 +417,7 @@ def test_noformat(f):
     assert noformat.description   == "dlisio logo"
 
 def test_update_just_warning(fpath, assert_log):
-    with dlisio.load(fpath) as _:
+    with dlis.load(fpath) as _:
         assert_log('contains UPDATE-object')
 
 def test_unknown(f):
@@ -436,7 +436,7 @@ def test_incomplete_object(tmpdir_factory, merge_files_manyLR):
     ]
     merge_files_manyLR(fpath, content)
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         channel = f.object('CHANNEL', 'INC-CH1', 10, 0)
         assert channel.long_name     == "Incomplete channel1"
         assert channel.properties    == []

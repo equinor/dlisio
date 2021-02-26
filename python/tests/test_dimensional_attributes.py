@@ -10,9 +10,9 @@ processing.
 import pytest
 from datetime import datetime
 import os
-import dlisio
 
-from dlisio.plumbing import *
+from dlisio import dlis
+from dlisio.dlis.utils import *
 
 def test_sampling_scalar_dims():
     raw = [1, 2, 3, 4, 5, 6]
@@ -128,7 +128,7 @@ def test_values_empty(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         assert np.array_equal(obj.values, np.empty(0))
         assert obj.dimension == []
@@ -146,7 +146,7 @@ def test_values_empty_dimension_provided(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         assert np.array_equal(obj.values, np.empty(0))
         assert obj.dimension == [1]
@@ -164,7 +164,7 @@ def test_values_simple(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         assert obj.values[0] == 2
 
@@ -179,7 +179,7 @@ def test_values_infer_simple(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         assert obj.values[0] == 2
 
@@ -194,7 +194,7 @@ def test_values_one_sample(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         assert list(obj.values[0]) == [1, 2]
 
@@ -209,7 +209,7 @@ def test_values_wrong_dimensions(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         msg = 'cannot reshape array of size 5 into shape [2]'
         with pytest.raises(ValueError) as error:
@@ -229,7 +229,7 @@ def test_values_wrong_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype)
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         msg = 'cannot reshape array of size 5 into shape [2]'
         with pytest.raises(ValueError) as error:
@@ -249,7 +249,7 @@ def test_values_infer_dimensions_from_zones(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         # Should be able to infer correct dimension from zones
         assert np.array_equal(obj.values, np.array([1, 2, 3, 4, 5]))
@@ -265,7 +265,7 @@ def test_values_no_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         # Should use dimension over zones
         assert np.array_equal(obj.values, np.array([1]))
@@ -281,7 +281,7 @@ def test_values_right_dimensions_wrong_zones(tmpdir, merge_files_oneLR, settype)
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         # Should use dimension over zones
         assert np.array_equal(obj.values, np.array([[1, 2], [3, 4]]))
@@ -297,7 +297,7 @@ def test_values_right_dimensions_right_zones(tmpdir, merge_files_oneLR, settype)
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
 
         assert np.array_equal(obj.values, np.array([[1, 2], [3, 4]]))
@@ -313,7 +313,7 @@ def test_values_multidim_values(tmpdir, merge_files_oneLR, settype):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
 
         assert list(obj.values[0][1]) == [3, 4]
@@ -343,7 +343,7 @@ def test_parameter_computation_repcode(tmpdir, merge_files_oneLR, settype,
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         obj  = f.object(settype, 'OBJECT', 10, 0)
         assert np.array_equal(obj.values[0], value)
 
@@ -362,7 +362,7 @@ def test_measurement_empty(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         assert m.samples.size       == 0
@@ -384,7 +384,7 @@ def test_measurement_dimension(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         assert m.samples.size   == 0
@@ -405,7 +405,7 @@ def test_measurement_wrong_dimension(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         msg = 'cannot reshape array of size 3 into shape [3, 2]'
@@ -439,7 +439,7 @@ def test_measurement_many_samples(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         assert np.array_equal(m.samples[0], np.array([1, 2, 3, 4]))
@@ -475,7 +475,7 @@ def test_measurement_non_corresponding_values(tmpdir, merge_files_oneLR):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         msg = 'cannot reshape array of size {} into shape 4'
@@ -526,7 +526,7 @@ def test_measurement_more_than_one_sample(tmpdir, merge_files_oneLR, assert_log)
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         assert np.array_equal(m.samples[2], np.array([5, 6]))
@@ -580,7 +580,7 @@ def test_measurement_repcode(tmpdir, merge_files_oneLR, reference, reffilename,
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path) as (f, *_):
+    with dlis.load(path) as (f, *_):
         m  = f.object('CALIBRATION-MEASUREMENT', 'OBJECT', 10, 0)
 
         assert np.array_equal(reference, m.reference)

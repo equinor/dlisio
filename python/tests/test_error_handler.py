@@ -7,9 +7,9 @@ import pytest
 import os
 import numpy as np
 
-import dlisio
+from dlisio import dlis
 
-from dlisio.errors import ErrorHandler, Actions
+from dlisio.common import ErrorHandler, Actions
 
 errorhandler = ErrorHandler(critical = Actions.LOG_ERROR)
 
@@ -20,79 +20,79 @@ def test_custom_action():
     path = 'data/chap2/truncated-in-lrsh-vr-over.dlis'
     errorhandler = ErrorHandler(critical=custom)
     with pytest.raises(ValueError) as excinfo:
-        _ = dlisio.load(path, error_handler=errorhandler)
+        _ = dlis.load(path, error_handler=errorhandler)
     assert "custom message: \n" in str(excinfo.value)
     assert "File truncated in Logical Record Header" in str(excinfo.value)
 
 def test_unescapable_notdlis(assert_error):
     path = 'data/chap2/nondlis.txt'
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load(path, error_handler=errorhandler)
+        _ = dlis.load(path, error_handler=errorhandler)
     assert "could not find visible record envelope" in str(excinfo.value)
 
 def test_truncated_in_data(assert_error):
     path = 'data/chap2/truncated-in-second-lr.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("File truncated in Logical Record Segment")
         assert len(f.channels) == 1
 
 def test_tif_truncated_in_data(assert_error):
     path = 'data/tif/layout/truncated-in-data.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("File truncated in Logical Record Segment")
 
 def test_truncated_in_lrsh(assert_error):
     path = 'data/chap2/truncated-in-lrsh.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("unexpected EOF when reading record")
         assert len(f.channels) == 1
 
 def test_truncated_after_lrsh_new_lf(assert_error):
     path = 'data/chap2/lf-truncated-after-lrsh.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as batch:
+    with dlis.load(path, error_handler=errorhandler) as batch:
         assert_error("File truncated in Logical Record Segment")
         assert len(batch) == 2
 
 def test_truncated_lr_missing_lrs_vr_over(assert_error):
     path = 'data/chap2/truncated-lr-no-lrs-vr-over.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("last logical record segment expects successor")
         assert len(f.channels) == 0
 
 def test_zeroed_before_lrs(assert_error):
     path = 'data/chap2/zeroed-in-1st-lr.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("Too short logical record")
         assert len(f.channels) == 0
 
 def test_zeroed_before_vr(assert_error):
     path = 'data/chap2/zeroed-in-2nd-lr.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("Incorrect format version")
         assert len(f.channels) == 1
 
 def test_tif_padding(assert_error):
     path = 'data/tif/irregular/padding.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as files:
+    with dlis.load(path, error_handler=errorhandler) as files:
         assert_error("File might be padded")
         assert len(files) == 2
 
 def test_extract_broken_padbytes(assert_error):
     path = 'data/chap2/padbytes-bad.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("bad segment trim")
         valid_obj = f.object("VALID-SET", "VALID-OBJ", 10, 0)
         assert valid_obj
 
 def test_findfdata_bad_obname(assert_error):
     path = 'data/chap3/implicit/fdata-broken-obname.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("fdata record corrupted, error on reading obname")
         assert "T.FRAME-I.DLIS-FRAME-O.3-C.1" in f.fdata_index
 
 def test_curves_broken_fmt(assert_error):
     path = 'data/chap4-7/iflr/broken-fmt.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
         assert_error("fmtstr would read past end")
@@ -100,7 +100,7 @@ def test_curves_broken_fmt(assert_error):
 
 def test_parse_objects_unexpected_attribute_in_set(assert_error):
     path = 'data/chap3/explicit/broken-in-set.dlis'
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         assert_error("Construct object sets")
         _ = f.object('VALID-SET', 'VALID-OBJ', 10, 0)
         _ = f.object('GOOOD-SET', 'VALID-OBJ', 10, 0)
@@ -116,7 +116,7 @@ def test_parse_critical_escaped(tmpdir, merge_files_oneLR,
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         # value is unclear and shouldn't be trusted
         _ = obj['INVALID']
@@ -136,7 +136,7 @@ def test_parse_unparsable_record(tmpdir, merge_files_oneLR, assert_error):
     ]
     merge_files_oneLR(path, content)
 
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
         assert_error("Action taken: object set parse has been interrupted")
 
@@ -160,7 +160,7 @@ def test_parse_major_errored(tmpdir, merge_files_oneLR):
 
     errorhandler = ErrorHandler(
         major=Actions.RAISE)
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             _ = f.object('REPLACEMENT', 'OBJECT', 1, 1)
         assert "Replacement sets are not supported" in str(excinfo.value)
@@ -179,7 +179,7 @@ def test_parse_minor_errored(tmpdir, merge_files_oneLR):
         major=Actions.RAISE,
         minor=Actions.RAISE
     )
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
         with pytest.raises(RuntimeError) as excinfo:
             _ = f.object('REDUNDANT', 'OBJECT', 1, 1)
         assert "Redundant sets are not supported" in str(excinfo.value)
@@ -189,7 +189,7 @@ def test_many_logical_files():
     errorhandler = ErrorHandler()
     errorhandler.critical = Actions.LOG_ERROR
 
-    with dlisio.load(path, error_handler=errorhandler) as files:
+    with dlis.load(path, error_handler=errorhandler) as files:
         # last file is not processed
         assert len(files) == 2
 
@@ -242,12 +242,12 @@ def test_complex(create_very_broken_file, tmpdir):
     errorhandler = ErrorHandler()
 
     with pytest.raises(RuntimeError):
-        with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+        with dlis.load(path, error_handler=errorhandler) as (f, *_):
             pass
 
     # escape errors on load
     errorhandler.critical = Actions.LOG_ERROR
-    with dlisio.load(path, error_handler=errorhandler) as (f, *_):
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
 
         # fail again on parsing objects not parsed on load
         errorhandler.critical = Actions.RAISE

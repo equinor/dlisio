@@ -4,13 +4,12 @@ attributes processing or similar)
 """
 import pytest
 
-from dlisio.plumbing import valuetypes, linkage
-from dlisio.plumbing import Channel
-from dlisio.plumbing import Parameter
+from dlisio.dlis import Channel, Parameter
+from dlisio.dlis.utils import valuetypes, linkage
 
 import dlisio
 
-class ActuallyKnown(dlisio.plumbing.basicobject.BasicObject):
+class ActuallyKnown(dlisio.dlis.BasicObject):
     attributes = {
         "SOME_LIST"   : valuetypes.vector,
         "SOME_VALUE"  : valuetypes.scalar,
@@ -55,7 +54,7 @@ def test_type_new(f):
 def test_type_change(f):
     try:
         # Parse all parameters as if they where Channels
-        dlisio.logicalfile.types['PARAMETER'] = dlisio.plumbing.Channel
+        dlisio.dlis.logicalfile.types['PARAMETER'] = dlisio.dlis.Channel
         f.load()
 
         longname = f.object('LONG-NAME', 'PARAM1-LONG', 10, 0)
@@ -63,7 +62,7 @@ def test_type_change(f):
         obj      = f.object('PARAMETER', 'PARAM1', 10, 0)
 
         # obj should have been parsed as a Channel
-        assert isinstance(obj, dlisio.plumbing.Channel)
+        assert isinstance(obj, dlisio.dlis.Channel)
 
         # Parameter attributes that's also Channel attributes should be
         # parsed normally
@@ -78,26 +77,26 @@ def test_type_change(f):
     finally:
         # even if the test fails, make sure that types is reset to its default,
         # to not interfere with other tests
-        dlisio.logicalfile.types['PARAMETER'] = dlisio.plumbing.Parameter
+        dlisio.dlis.logicalfile.types['PARAMETER'] = dlisio.dlis.Parameter
 
 def test_type_removal(f):
     try:
         # Deleting object-type CHANNEL and reload
-        del dlisio.logicalfile.types['CHANNEL']
+        del dlisio.dlis.logicalfile.types['CHANNEL']
         f.load()
 
         obj = f.object('CHANNEL', 'CHANN1', 10, 0)
 
         # Channel should be parsed as Unknown, but the type should still
         # reflects what's on file
-        assert isinstance(obj, dlisio.plumbing.Unknown)
+        assert isinstance(obj, dlisio.dlis.Unknown)
         assert obj.fingerprint in f.unknowns['CHANNEL']
         assert obj.type == 'CHANNEL'
 
     finally:
         # even if the test fails, make sure that types is reset to its default,
         # to not interfere with other tests
-        f.types['CHANNEL'] = dlisio.plumbing.Channel
+        f.types['CHANNEL'] = dlisio.dlis.Channel
 
     # Channels should now be parsed as Channel.allobjects
     assert 'CHANNEL' not in f.unknowns

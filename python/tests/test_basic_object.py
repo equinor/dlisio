@@ -3,7 +3,7 @@ Testing BasicObject class
 """
 import pytest
 import dlisio
-from dlisio.plumbing import *
+from dlisio.dlis.utils import *
 
 
 def test_getitem(f):

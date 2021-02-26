@@ -4,15 +4,15 @@ DLIS API Reference
 Load a DLIS-file
 ----------------
 
-.. autofunction:: dlisio.load
+.. autofunction:: dlisio.dlis.load
 
 Physical File
 -------------
-.. autoclass:: dlisio.physicalfile()
+.. autoclass:: dlisio.dlis.physicalfile()
 
 Logical Files
 -------------
-.. autoclass:: dlisio.logicalfile()
+.. autoclass:: dlisio.dlis.logicalfile()
     :members:
     :exclude-members: types, IndexedObjectDescriptor
     :member-order: bysource
@@ -21,7 +21,7 @@ Logical Files
     .. autoattribute:: types
         :annotation: = {}
 
-.. currentmodule:: dlisio.plumbing
+.. currentmodule:: dlisio.dlis
 
 DLIS Frame
 ----------

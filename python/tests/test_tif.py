@@ -1,8 +1,9 @@
 import pytest
-import dlisio
+
+from dlisio import dlis
 
 def assure_load(fpath, expected_logical_files_number = 2):
-    with dlisio.load(fpath) as batch:
+    with dlis.load(fpath) as batch:
         for f in batch:
             f.load()
         assert len(batch) == expected_logical_files_number
@@ -65,7 +66,7 @@ def test_template_padding():
 def test_template_suls(assert_info):
     fpath = 'data/tif/irregular/suls.dlis'
     assure_load(fpath)
-    with dlisio.load(fpath) as (f1, f2):
+    with dlis.load(fpath) as (f1, f2):
         assert 'TIF1' in f1.storage_label()['id']
         assert 'TIF2' in f2.storage_label()['id']
         assert_info("SUL is expected only at the start of the file")
@@ -73,7 +74,7 @@ def test_template_suls(assert_info):
 def test_template_suls_file_TM(assert_info):
     fpath = 'data/tif/irregular/suls-file-TM.dlis'
     assure_load(fpath)
-    with dlisio.load(fpath) as (f1, f2):
+    with dlis.load(fpath) as (f1, f2):
         assert 'TIF1' in f1.storage_label()['id']
         assert 'TIF2' in f2.storage_label()['id']
         assert_info("SUL is expected only at the start of the file")
@@ -91,12 +92,12 @@ def test_layout_FF01():
     assure_load(fpath, 1)
 
 def test_layout_ending_on_FF_01():
-    with dlisio.load('data/tif/layout/ends-on-FF-01.dlis'):
+    with dlis.load('data/tif/layout/ends-on-FF-01.dlis'):
         pass
 
 def test_layout_fdata_aligned():
     fpath = 'data/tif/layout/fdata-aligned.dlis'
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         f.load()
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
@@ -104,7 +105,7 @@ def test_layout_fdata_aligned():
 
 def test_layout_fdata_disaligned():
     fpath = 'data/tif/layout/fdata-disaligned.dlis'
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         f.load()
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
@@ -113,17 +114,17 @@ def test_layout_fdata_disaligned():
 def test_layout_truncated_in_data():
     fpath = 'data/tif/layout/truncated-in-data.dlis'
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load(fpath)
+        _ = dlis.load(fpath)
     assert "File truncated in Logical Record Segment" in str(excinfo.value)
 
 def test_layout_truncated_in_header():
     fpath = 'data/tif/layout/truncated-in-header.dlis'
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load(fpath)
+        _ = dlis.load(fpath)
     assert "unexpected EOF" in str(excinfo.value)
 
 def test_layout_truncated_after_header():
     fpath = 'data/tif/layout/truncated-after-header.dlis'
     with pytest.raises(RuntimeError) as excinfo:
-        _ = dlisio.load(fpath)
+        _ = dlis.load(fpath)
     assert "unexpected EOF" in str(excinfo.value)

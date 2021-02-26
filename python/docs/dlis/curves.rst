@@ -1,4 +1,4 @@
-.. currentmodule:: dlisio.plumbing
+.. currentmodule:: dlisio.dlis
 
 DLIS Curves
 ===========
@@ -9,9 +9,10 @@ indexed against an axis, like depth or time. But a curve can also be a
 computation of some sort, e.g. a calibrated version of a measured curve.
 
 In dlisio, curves are accessed through :class:`Frame`- or
-:class:`Channel`-objects, by calling their :func:`curves` methods.  The primary
-data type for curves is `structured numpy.ndarray`_.  This enables quick and
-easy mathematical operations on the data you care about.
+:class:`Channel`-objects, by calling :func:`Frame.curves` or
+:func:`Channel.curves`.  The primary data type for curves is `structured
+numpy.ndarray`_.  This enables quick and easy mathematical operations on the
+data you care about.
 
 Frame-objects
 -------------

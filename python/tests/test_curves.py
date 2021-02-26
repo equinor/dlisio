@@ -6,12 +6,12 @@ import pytest
 import numpy as np
 from datetime import datetime
 
-import dlisio
 from dlisio import core
-from dlisio.plumbing import mkunique
+from dlisio import dlis
+from dlisio.dlis import mkunique
 
 def load_curves(fpath):
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
         return curves
@@ -117,7 +117,7 @@ def test_framenos_duplicated_same_frame():
 def test_dimensions():
     fpath = 'data/chap4-7/iflr/multidimensions-ints-various.dlis'
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
         curves = frame.curves()
 
@@ -139,7 +139,7 @@ def test_dimensions():
 def test_dimensions_tuple():
     fpath = 'data/chap4-7/iflr/multidimensions-validated.dlis'
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-VALIDATE', 10, 0)
         curves = frame.curves()
 
@@ -152,7 +152,7 @@ def test_dimensions_tuple():
 def test_dimensions_in_multifdata():
     fpath = 'data/chap4-7/iflr/multidimensions-multifdata.dlis'
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object('FRAME', 'FRAME-DIMENSION', 11, 0)
         curves = frame.curves()
 
@@ -163,7 +163,7 @@ def test_dimensions_in_multifdata():
 
 def test_duplicated_mnemonics_get_unique_labels():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         assert 'ifDDD' == frame.fmtstr()
         dtype = frame.dtype()
@@ -195,13 +195,13 @@ def test_duplicated_mnemonics_dtype_supports_buffer_protocol():
     #
     # https://github.com/equinor/dlisio/pull/97
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         _ = memoryview(np.zeros(1, dtype = frame.dtype()))
 
 def test_duplicated_signatures(assert_error):
     fpath = "data/chap4-7/eflr/frames-and-channels/duplicated.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "DUPLICATED")
         with pytest.raises(Exception):
             _ = frame.curves()
@@ -234,7 +234,7 @@ def test_mkunique():
 
 def test_channel_order():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
 
         ref = [("TIME", 0), ("TDEP", 0), ("TIME", 1)]
@@ -246,7 +246,7 @@ def test_channel_order():
 
 def test_dtype():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
 
         dtype = np.dtype([
@@ -260,7 +260,7 @@ def test_dtype():
 
 def test_dtype_fmt_instance():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         frame.dtype_fmt = 'x-{:s} {:d}~{:d}'
 
@@ -270,13 +270,13 @@ def test_dtype_fmt_instance():
         assert expected_names == frame.dtype().names
 
 def test_dtype_fmt_class():
-    original = dlisio.plumbing.Frame.dtype_format
+    original = dlis.Frame.dtype_format
 
     try:
         # change dtype before the object itself is constructed, so it
-        dlisio.plumbing.Frame.dtype_format = 'x-{:s} {:d}~{:d}'
+        dlis.Frame.dtype_format = 'x-{:s} {:d}~{:d}'
         fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-        with dlisio.load(fpath) as (f, *_):
+        with dlis.load(fpath) as (f, *_):
             frame = f.object("FRAME", "MAINFRAME")
             expected_names = ('FRAMENO', 'x-TIME 0~0', 'TDEP', 'x-TIME 1~0')
             assert expected_names == frame.dtype().names
@@ -285,7 +285,7 @@ def test_dtype_fmt_class():
     finally:
         # even if the test fails, make sure the format string is reset to its
         # default, to not interfere with other tests
-        dlisio.plumbing.Frame.dtype_format = original
+        dlis.Frame.dtype_format = original
 
 @pytest.mark.parametrize('fmt', [
     ("x-{:d}.{:s}.{:d}"),
@@ -293,7 +293,7 @@ def test_dtype_fmt_class():
 ])
 def test_dtype_wrong_fmt(fmt, assert_error):
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         frame.dtype_fmt = fmt
         with pytest.raises(Exception):
@@ -303,7 +303,7 @@ def test_dtype_wrong_fmt(fmt, assert_error):
 
 def test_channel_curves():
     fpath = 'data/chap4-7/iflr/all-reprcodes.dlis'
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         channel = f.object('CHANNEL', 'CH26', 10, 0)
         curves = channel.curves()
         assert curves[0] == True
@@ -317,7 +317,7 @@ def test_channel_curves():
 
 def test_channel_curves_duplicated_mnemonics():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         channel = f.object("CHANNEL", "TIME", 0, 0)
         curve = channel.curves()
@@ -333,7 +333,7 @@ def test_channel_without_frame(assert_info, tmpdir_factory, merge_files_manyLR):
         'data/chap4-7/eflr/channel.dlis.part',
     ]
     merge_files_manyLR(fpath, content)
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         channel = f.object("CHANNEL", "CHANN1")
         assert channel.curves() == None
         assert_info('no recorded curve-data')
@@ -347,7 +347,7 @@ def test_channels_with_same_id(assert_info):
     # T.FRAME-I.FRAME_SAME1-O.0-C.0' -> T.CHANNEL-I.SAME-O.0-C.1'
     # T.FRAME-I.FRAME_SAME2-O.0-C.0' -> T.CHANNEL-I.SAME-O.0-C.2'
     fpath = "data/chap4-7/eflr/frames-and-channels/2-channels-same-content-diff-copynr.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         ch1 = f.object('CHANNEL', 'SAME', 0, 1)
         ch2 = f.object('CHANNEL', 'SAME', 0, 2)
         fr1 = f.object('FRAME', 'FRAME_SAME1')
@@ -358,14 +358,14 @@ def test_channels_with_same_id(assert_info):
 
 def test_channel_in_multiple_frames(assert_info):
     fpath = "data/chap4-7/eflr/frames-and-channels/1-channel-2-frames.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         ch = f.object("CHANNEL", "DUPL")
         _  = ch.frame
         assert_info("Channel(DUPL) belongs to multiple")
 
 def test_channel_duplicated_in_frame(assert_info):
     fpath = "data/chap4-7/eflr/frames-and-channels/duplicated.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         fr = f.object("FRAME", "DUPLICATED")
         ch = f.object("CHANNEL", "DUPL")
 
@@ -373,7 +373,7 @@ def test_channel_duplicated_in_frame(assert_info):
 
 def test_channel_fmt():
     fpath = "data/chap4-7/eflr/frames-and-channels/various.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "VARIOUS")
         channel = f.object("CHANNEL", "chn3")
         pre_fmt, ch_fmt, post_fmt = frame.fmtstrchannel(channel)
@@ -383,7 +383,7 @@ def test_channel_fmt():
 
 def test_channel_no_dimension(assert_log, tmpdir_factory, merge_files_manyLR):
     fpath = "data/chap4-7/eflr/frames-and-channels/no-dimension.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         ch = f.object("CHANNEL", "NODIM")
         with pytest.raises(ValueError) as exc:
             ch.fmtstr()
@@ -391,20 +391,20 @@ def test_channel_no_dimension(assert_log, tmpdir_factory, merge_files_manyLR):
 
 def test_frame_index():
     fpath = "data/chap4-7/eflr/frames-and-channels/mainframe.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "MAINFRAME")
         assert frame.index == frame.channels[0].name
 
 def test_frame_index_absent(assert_info):
     fpath = "data/chap4-7/eflr/frames-and-channels/nonindexed.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "NONINDEXED")
         assert frame.index == 'FRAMENO'
 
 def test_frame_index_nochannels(assert_info, tmpdir_factory,
                                 merge_files_manyLR):
     fpath = "data/chap4-7/eflr/frames-and-channels/indexed-no-channels.dlis"
-    with dlisio.load(fpath) as (f, *_):
+    with dlis.load(fpath) as (f, *_):
         frame = f.object("FRAME", "INDEXED_NO_CHANNELS")
         assert frame.index is None
         assert_info('Frame has no channels')

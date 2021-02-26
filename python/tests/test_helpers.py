@@ -5,7 +5,7 @@ Testing common helper methods and functionality passed from C level
 import pytest
 
 import dlisio
-from dlisio.plumbing import *
+from dlisio.dlis.utils import *
 
 def test_fingerprint():
     reference = "T.FRAME-I.800T-O.2-C.46"
@@ -56,7 +56,7 @@ def test_record_attributes():
     stream = core.open('data/chap2/3lr-in-vr-one-encrypted.dlis', 80)
     stream = core.open_rp66(stream)
     explicits = [0, 32, 64]
-    recs = core.extract(stream, explicits, dlisio.errors.ErrorHandler())
+    recs = core.extract(stream, explicits, dlisio.common.ErrorHandler())
 
     buffer = bytearray(1)
 
