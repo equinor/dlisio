@@ -63,7 +63,10 @@ public:
     lfp_protocol* protocol() const noexcept (true);
 
     void close() noexcept (true);
+    /** Logical eof */
     int eof() const noexcept (true);
+    /** Physical eof */
+    int peof() const noexcept (false);
 private:
     lfp_protocol* f;
 };

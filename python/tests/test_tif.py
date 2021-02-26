@@ -20,9 +20,10 @@ def test_template_3():
     fpath = 'data/tif/templates/3.dlis'
     assure_load(fpath)
 
-def test_template_4():
+def test_template_4(assert_message_count):
     fpath = 'data/tif/templates/4.dlis'
     assure_load(fpath)
+    assert_message_count("Exactly one SUL is expected", 0)
 
 def test_template_5():
     fpath = 'data/tif/templates/5.dlis'
@@ -53,15 +54,29 @@ def test_template_misalignment():
     fpath = 'data/tif/irregular/misalignment.dlis'
     assure_load(fpath)
 
-@pytest.mark.xfail
 def test_template_padding():
     fpath = 'data/tif/irregular/padding.dlis'
-    assure_load(fpath)
+    with pytest.raises(RuntimeError) as excinfo:
+        assure_load(fpath)
+    msg = "File might be padded"
+    assert msg in str(excinfo.value)
 
 @pytest.mark.xfail
-def test_template_suls():
+def test_template_suls(assert_info):
     fpath = 'data/tif/irregular/suls.dlis'
     assure_load(fpath)
+    with dlisio.load(fpath) as (f1, f2):
+        assert 'TIF1' in f1.storage_label()['id']
+        assert 'TIF2' in f2.storage_label()['id']
+        assert_info("SUL is expected only at the start of the file")
+
+def test_template_suls_file_TM(assert_info):
+    fpath = 'data/tif/irregular/suls-file-TM.dlis'
+    assure_load(fpath)
+    with dlisio.load(fpath) as (f1, f2):
+        assert 'TIF1' in f1.storage_label()['id']
+        assert 'TIF2' in f2.storage_label()['id']
+        assert_info("SUL is expected only at the start of the file")
 
 def test_layout_LR_aligned():
     fpath = 'data/tif/layout/LR-aligned.dlis'
@@ -71,10 +86,13 @@ def test_layout_LR_disaligned():
     fpath = 'data/tif/layout/LR-disaligned.dlis'
     assure_load(fpath, 1)
 
-@pytest.mark.xfail
 def test_layout_FF01():
-    fpath = 'data/tif/layout/FF01.dlis'
+    fpath = 'data/tif/layout/TM-contains-FF-01.dlis'
     assure_load(fpath, 1)
+
+def test_layout_ending_on_FF_01():
+    with dlisio.load('data/tif/layout/ends-on-FF-01.dlis'):
+        pass
 
 def test_layout_fdata_aligned():
     fpath = 'data/tif/layout/fdata-aligned.dlis'

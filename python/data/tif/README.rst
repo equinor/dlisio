@@ -61,6 +61,10 @@ misalignment.dlis       1 TM before SUL, 0 TMs before LF, 1 TM before every VR,
 padding.dlis            1 TM before SUL, 0 TMs before LF, 1 TM before every VR,
                         2 TMs in the end, then padding with zeroes
 
+suls-file-TM.dlis       1 TM before SUL, 0 TMs before LF, 1 TM before every VR,
+                        SUL before every LF, 2 TMs in the end. 1 File TM between
+                        end of previous file and next SUL.
+
 suls.dlis               1 TM before SUL, 0 TMs before LF, 1 TM before every VR,
                         SUL before every LF, 2 TMs in the end
 
@@ -75,17 +79,19 @@ various situations like that.
 =========================== ==================================================
 Filename                    Description
 =========================== ==================================================
+ends-on-FF-01.dlis          File ends on 0xFF 0x01 bytes before TM
+
 fdata-aligned.dlis          FDATA is present, but VR happens before it.
 
 fdata-disaligned.dlis       FDATA is present, new VR happens in the middle of
                             record
 
-FF01.dlis                   TM contains FF01 bytes. Note that it spoils even
-                            length requirement of the VR
-
 LR-aligned.dlis             LR is aligned with VR borders.
 
 LR-disaligned.dlis          LR is not aligned with VR borders.
+
+TM-contains-FF-01.dlis      TM contains 0xFF 0x01 bytes in prev. Note that it
+                            spoils even length requirement of the VR
 
 truncated-after-header.dlis File is truncated right after TIF header
 

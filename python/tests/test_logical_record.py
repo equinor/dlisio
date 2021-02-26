@@ -652,7 +652,7 @@ def test_novalue_more_count(tmpdir, merge_files_oneLR):
         attr = obj2['DEFAULT_ATTRIBUTE']
         assert attr == [1, 2, 3, 4]
 
-def test_set_redundat(tmpdir, merge_files_oneLR, assert_info):
+def test_set_redundant(tmpdir, merge_files_oneLR, assert_info):
     path = os.path.join(str(tmpdir), 'redundant-set.dlis')
     content = [
         'data/chap3/sul.dlis.part',

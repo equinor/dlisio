@@ -769,7 +769,7 @@ void init_dlis_extension(py::module_ &m) {
 
     py::bind_vector<std::vector< dl::object_set >>(m, "list(object_set)");
 
-    m.def("open", &dl::open, py::arg("path"), py::arg("zero") = 0);
+    m.def("open", &dl::open);
     m.def("open_rp66", &dl::open_rp66);
     m.def("open_tif", &dl::open_tapeimage);
 
@@ -984,9 +984,11 @@ void init_dlis_extension(py::module_ &m) {
     ;
 
     py::class_< dlisio::stream >( m, "stream" )
+        .def_property_readonly("ltell", &dlisio::stream::ltell)
         .def_property_readonly("ptell", &dlisio::stream::ptell)
-        .def( "seek", &dlisio::stream::seek   )
+        .def( "seek",  &dlisio::stream::seek  )
         .def( "eof",   &dlisio::stream::eof   )
+        .def( "peof",  &dlisio::stream::peof  )
         .def( "close", &dlisio::stream::close )
         .def( "get", []( dlisio::stream& s, py::buffer b, long long off, int n ) {
             auto info = b.request();
@@ -999,8 +1001,8 @@ void init_dlis_extension(py::module_ &m) {
                 throw std::invalid_argument( msg );
             }
             s.seek( off );
-            s.read( static_cast< char* >( info.ptr ), n );
-            return b;
+            auto bytes_read = s.read( static_cast< char* >( info.ptr ), n );
+            return bytes_read;
         })
     ;
 

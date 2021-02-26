@@ -53,7 +53,7 @@ def test_remove_empties():
     assert clean == ref
 
 def test_record_attributes():
-    stream = core.open('data/chap2/3lr-in-vr-one-encrypted.dlis', zero=80)
+    stream = core.open('data/chap2/3lr-in-vr-one-encrypted.dlis', 80)
     stream = core.open_rp66(stream)
     explicits = [0, 32, 64]
     recs = core.extract(stream, explicits, dlisio.errors.ErrorHandler())

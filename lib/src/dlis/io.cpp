@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cerrno>
+#include <cassert>
 #include <ciso646>
 #include <string>
 #include <system_error>
@@ -64,22 +65,29 @@ dlisio::stream open_tapeimage(const dlisio::stream& f) noexcept (false) {
     return dlisio::stream(protocol);
 }
 
-long long findsul( dlisio::stream& file ) noexcept (false) {
+namespace {
+
+long long findsul( dlisio::stream& file, int toread ) noexcept (false) {
     long long offset;
 
-    char buffer[ 200 ];
-    file.seek(0);
-    auto bytes_read = file.read(buffer, 200);
+    const auto lfrom = file.ltell();
+    const auto pfrom = file.ptell();
 
-    const auto err = dlis_find_sul(buffer, bytes_read, &offset);
+    std::vector<char> buffer;
+    buffer.reserve( toread );
+    auto bytes_read = file.read(buffer.data(), toread);
+
+    const auto err = dlis_find_sul(buffer.data(), bytes_read, &offset);
 
     switch (err) {
         case DLIS_OK:
-            return offset;
+            return lfrom + offset;
 
         case DLIS_NOTFOUND: {
-            auto msg = "searched {} bytes, but could not find storage label";
-            throw dlisio::not_found(fmt::format(msg, bytes_read));
+            auto msg =
+                "searched {} bytes from offset {} (dec), but could not find "
+                "storage label";
+            throw dlisio::not_found(fmt::format(msg, bytes_read, pfrom));
         }
 
         case DLIS_INCONSISTENT: {
@@ -93,29 +101,28 @@ long long findsul( dlisio::stream& file ) noexcept (false) {
     }
 }
 
-long long findvrl( dlisio::stream& file, long long from ) noexcept (false) {
-    if (from < 0) {
-        const auto msg = "expected from (which is {}) >= 0";
-        throw std::out_of_range(fmt::format(msg, from));
-    }
-
+long long findvrl( dlisio::stream& file, int toread ) noexcept (false) {
     long long offset;
 
-    char buffer[ 200 ];
-    file.seek(from);
-    auto bytes_read = file.read(buffer, 200);
-    const auto err = dlis_find_vrl(buffer, bytes_read, &offset);
+    const auto lfrom = file.ltell();
+    const auto pfrom = file.ptell();
+
+    std::vector<char> buffer;
+    buffer.reserve( toread );
+    auto bytes_read = file.read(buffer.data(), toread);
+
+    const auto err = dlis_find_vrl(buffer.data(), bytes_read, &offset);
 
     // TODO: error messages could maybe be pulled from core library
     switch (err) {
         case DLIS_OK:
-            return from + offset;
+            return lfrom + offset;
 
         case DLIS_NOTFOUND: {
-            const auto msg = "searched {} bytes, but could not find "
-                             "visible record envelope pattern [0xFF 0x01]"
-            ;
-            throw dlisio::not_found(fmt::format(msg, bytes_read));
+            const auto msg =
+                "searched {} bytes from offset {} (dec), but could not find "
+                "visible record envelope pattern [0xFF 0x01]";
+            throw dlisio::not_found(fmt::format(msg, bytes_read, pfrom));
         }
 
         case DLIS_INCONSISTENT: {
@@ -127,6 +134,81 @@ long long findvrl( dlisio::stream& file, long long from ) noexcept (false) {
         default:
             throw std::runtime_error("dlis_find_vrl: unknown error");
     }
+}
+
+} //namespace
+
+void findsul(dlisio::stream& file, const dl::error_handler& errorhandler,
+             bool expected) noexcept(false) {
+    const auto lfrom = file.ltell();
+    const auto pfrom = file.ptell();
+    assert (lfrom == 0);
+
+    long long offset;
+    try {
+        /* In most cases files are well-formed and we already are positioned
+         * on the SUL. Hence reading the minimum required to access needle is
+         * enough.
+         */
+        constexpr auto minread = 15;
+        offset = findsul(file, minread);
+        assert(offset == lfrom);
+    } catch (std::exception& e) {
+        /* Find late SUL. For performance reasons attempt reading more bytes
+         * only if SUL is expected. */
+        if (!expected) {
+            throw e;
+        }
+        // default maxread value comes from real files with trash before SUL
+        constexpr auto maxread = 1700;
+        file.seek(lfrom);
+        offset = findsul(file, maxread);
+
+        assert(offset > lfrom);
+        const auto debug = "SUL found at ptell {} (dec), but expected at {}";
+        errorhandler.log(
+            dl::error_severity::MINOR,
+            "dlis::findsul: Searching for SUL",
+            "Unexpected bytes found before SUL",
+            "2.3.2 Storage Unit Label (SUL): The first 80 bytes of the Visible "
+                "Envelope ... constitute a Storage Unit Label.",
+            "Unexpected bytes are ignored",
+            fmt::format(debug, pfrom + (offset - lfrom), pfrom));
+    }
+    file.seek(offset);
+}
+
+void findvrl(dlisio::stream& file,
+             const dl::error_handler& errorhandler) noexcept(false) {
+    const auto lfrom = file.ltell();
+    const auto pfrom = file.ptell();
+
+    long long offset;
+    try {
+        /* Expected situation: we are positioned right before VR */
+        constexpr auto minread = 4;
+        offset = findvrl(file, minread);
+        assert(offset == lfrom);
+    } catch (std::exception& e) {
+        /* Compliance with previous dlisio versions: search 200 bytes for VR.
+         * No real file that is saved by this check is known, but it might
+         * happen exactly because this check is present.
+         */
+        constexpr auto maxread = 200;
+        file.seek(lfrom);
+        offset = findvrl(file, maxread);
+
+        assert(offset > lfrom);
+        const auto debug = "VR found at ptell {} (dec), but expected at {}";
+        errorhandler.log(
+            dl::error_severity::MINOR,
+            "dlis::findvrl: Searching for VR",
+            "Unexpected bytes found before VR",
+            "",
+            "Unexpected bytes ignored",
+            fmt::format(debug, pfrom + (offset - lfrom), pfrom));
+    }
+    file.seek(offset);
 }
 
 bool record::isexplicit() const noexcept (true) {
