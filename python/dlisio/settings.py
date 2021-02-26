@@ -4,15 +4,6 @@ from . import plumbing
 import re
 
 
-""" regex and exact matchers are frequently used by most methods on
-logicalfile. To avoid the overhead of initializing a new instance of these for
-every method-call they are cached as globals here.
-
-Although possible, these globals are not intended to be changed by the end user directly.
-"""
-regex = plumbing.regex_matcher(re.IGNORECASE)
-exact = plumbing.exact_matcher()
-
 def get_encodings():
     """Get codepages to use for decoding strings
 

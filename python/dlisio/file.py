@@ -1,3 +1,4 @@
+import re
 import logging
 
 from collections import defaultdict, OrderedDict
@@ -6,6 +7,15 @@ from io import StringIO
 from . import core
 from . import plumbing
 from . import settings
+
+""" regex and exact matchers are frequently used by most methods on
+logicalfile. To avoid the overhead of initializing a new instance of these for
+every method-call they are cached as globals here.
+
+Although possible, these globals are not intended to be changed by the end user directly.
+"""
+regex = plumbing.regex_matcher(re.IGNORECASE)
+exact = plumbing.exact_matcher()
 
 class physicalfile(tuple):
     """ A Physical File
@@ -163,7 +173,7 @@ class logicalfile(object):
         """Return all objects of a given type
 
         .. deprecated:: 0.2.6
-            use :func:`find(type, matcher=dlisio.settings.exact)` instead
+            use :func:`find(type, matcher=dlisio.exact)` instead
 
         Parameters
         ----------
@@ -178,10 +188,10 @@ class logicalfile(object):
         """
         import warnings
         msg = "__getitem__ is deprecated and will be removed in a future version, "
-        msg += "use find('{}', matcher=dlisio.settings..exact) instead".format(type)
+        msg += "use find('{}', matcher=dlisio.exact) instead".format(type)
         warnings.warn(msg, FutureWarning)
 
-        objs = self.find(type, matcher=settings.exact)
+        objs = self.find(type, matcher=exact)
         return { x.fingerprint : x for x in objs }
 
     def __enter__(self):
@@ -213,7 +223,7 @@ class logicalfile(object):
 
         def __get__(self, instance, owner):
             if instance is None: return None
-            return instance.find(self.t, matcher=settings.exact)
+            return instance.find(self.t, matcher=exact)
 
     @property
     def fileheader(self):
@@ -224,7 +234,7 @@ class logicalfile(object):
         fileheader : Fileheader
 
         """
-        values = self.find('FILE-HEADER', matcher=settings.exact)
+        values = self.find('FILE-HEADER', matcher=exact)
 
         if len(values) != 1:
             msg = "Expected exactly one fileheader. Was: {}"
@@ -281,7 +291,7 @@ class logicalfile(object):
         unknowns = defaultdict(dict)
         for t in set(self.object_pool.types):
             if t in self.types: continue
-            objects = self.find(t, matcher=settings.exact)
+            objects = self.find(t, matcher=exact)
             unknowns[t] = {x.fingerprint : x for x in objects}
 
         return unknowns
@@ -393,7 +403,7 @@ class logicalfile(object):
         matcher : Any matcher derived from dlisio.core.matcher, optional
                   matcher object to be used when comparing objecttype,
                   objectname to file content. Default is
-                  :py:attr:`dlisio.settings.regex`.
+                  :py:attr:`dlisio.regex`.
 
         Returns
         -------
@@ -442,7 +452,7 @@ class logicalfile(object):
         [Frame(60B), Frame(20B), Frame(10B)]
         """
         if not matcher:
-            matcher = settings.regex
+            matcher = regex
 
         if not objectname:
             attics = self.object_pool.get(objecttype, matcher, self.error_handler)
@@ -491,7 +501,7 @@ class logicalfile(object):
         MKAP
 
         """
-        matches = self.find(type, name, settings.exact)
+        matches = self.find(type, name, exact)
 
         if origin is not None:
             matches = [o for o in matches if o.origin == origin]
@@ -551,7 +561,7 @@ class logicalfile(object):
 
         known, unknown = {}, {}
         for objtype in self.object_pool.types:
-            objs = self.find(objtype, matcher=settings.exact)
+            objs = self.find(objtype, matcher=exact)
             if objtype in self.types: known[objtype]   = len(objs)
             else:                     unknown[objtype] = len(objs)
 
@@ -567,7 +577,7 @@ class logicalfile(object):
 
     def load(self):
         """ Force load all objects - mainly indended for debugging"""
-        _ = [self.find(x, matcher=settings.exact)
+        _ = [self.find(x, matcher=exact)
              for x in self.object_pool.types]
 
     def storage_label(self):
