@@ -5,7 +5,7 @@ def test_dfsr_fmtstring():
     path = 'data/lis/MUD_LOG_1.LIS'
 
     with lis.load(path) as (lf, *tail):
-        dfsr = lf.dfsr()[0]
+        dfsr = lf.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfsr)
         assert fmt == 'D' * 44
@@ -14,7 +14,7 @@ def test_dfsr_dtype():
     path = 'data/lis/MUD_LOG_1.LIS'
 
     with lis.load(path) as (lf, *tail):
-        dfsr = lf.dfsr()[0]
+        dfsr = lf.data_format_specs()[0]
 
         dtype = lis.dfsr_dtype(dfsr)
 
@@ -30,7 +30,7 @@ def test_read_curves():
 
     #TODO proper curves testing
     with lis.load(path) as (lf, *tail):
-        dfs = lf.dfsr()[1]
+        dfs = lf.data_format_specs()[1]
         curves = lis.curves(lf, dfs)
 
         assert len(curves) == 3946

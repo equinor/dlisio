@@ -74,6 +74,42 @@ class logical_file():
 
     No parsed records are cached by this class. Thus it's advisable that the
     result of each record read is cached locally.
+
+    Attributes
+    ----------
+
+    path : str
+        Path to the file as passed to :func:`dlisio.lis.load`
+
+    io : dlisio.core.lis_stream
+       The underlying lis-aware IO-device that acts on the file. The iodevice
+       implements primitive io-operations such as seek, read and tell, but also
+       higher level abstractions such as read_record. For normal workflows it
+       should not be necessary to interact directly with the io-device.
+
+    index : dlisio.core.lis_record_index
+       A dlisio-created index of all Logical Records (LR) in the current
+       Logical File (LF). The index is created at load and gives dlisio random
+       access to the LR's. The index can be iterated and records can be
+       extracted using :attr:`dlisio.lis.logical_file.io`. For normal workflow
+       it should not be necessary to interact directly with the index.
+
+    reel : dlisio.lis.HeaderTrailer
+        The reel that this Logical File (LF) belongs to.
+
+        See :class:`dlisio.lis.physical_file` for more on the relationship
+        between LIS reels and LF's. See :class:`dlisio.core.reel_header` and
+        :class:`dlisio.core.reel_trailer` for more on the Reel Logical Records
+        (RHLR, RTLR).
+
+    tape : dlisio.lis.HeaderTrailer
+        The tape that this Logical File (LF) belongs to.
+
+        See :class:`dlisio.lis.physical_file` for more on the relationship
+        between LIS tapes and LF's. See :class:`dlisio.core.tape_header` and
+        :class:`dlisio.core.tape_trailer` for more on the Tape Logical Records
+        (THLR, TTLR).
+
     """
     def __init__(self, path, io, index, reel, tape):
         self.path  = path
@@ -83,6 +119,11 @@ class logical_file():
         self.tape  = tape
 
     def close(self):
+        """Close the file handle
+
+        It is not necessary to call this method if you're using the `with`
+        statement, which will close the file for you.
+        """
         self.io.close()
 
     def __enter__(self):
@@ -98,7 +139,7 @@ class logical_file():
     def header(self):
         """ Logical File Header
 
-        Reads and parses the Logical File Header _from disk_ - if present.
+        Reads and parses the Logical File Header from disk - if present.
 
         Returns
         -------
@@ -124,7 +165,7 @@ class logical_file():
     def trailer(self):
         """ Logical File Trailer
 
-        Reads and parses the Logical File Header _from disk_ - if present.
+        Reads and parses the Logical File Header from disk - if present.
 
         Returns
         -------
@@ -150,7 +191,23 @@ class logical_file():
     def explicits(self):
         return self.index.explicits()
 
-    def dfsr(self):
+    def data_format_specs(self):
+        """ Data Format Specification Records (DFSR)
+
+        A DFSR contains all relevant information to extract a specific logset -
+        a logset being a set of channels/curves all sampled along a common
+        index.
+
+        See also
+        --------
+
+        dlisio.lis.curves: Read all the curves from a given DFSR
+
+        Returns
+        -------
+
+        records : list of dlisio.core.dfsr
+        """
         # TODO duplication checking
         ex = self.explicits()
         dfs = core.lis_rectype.data_format_spec
@@ -176,13 +233,13 @@ class physical_file(tuple):
         |   |
         |   |-> Tape 1
         |   |   |
-        |   |   |-> Logical File 0
+        |   |   |-> Logical File 2
         |
         |-> Reel 1
             |
             |-> Tape 0
                 |
-                |-> Logical File 0
+                |-> Logical File 3
 
     Each Logical File can be thought of as an independent regular file,
     containing log data.

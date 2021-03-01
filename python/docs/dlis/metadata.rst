@@ -1,14 +1,14 @@
 .. currentmodule:: dlisio.plumbing
 
-Metadata
-========
+DLIS Metadata
+=============
 
 Together with the actual logs, there is often an abundance of metadata related
 to the acquisition of the logs. In a DLIS-file metadata is structured into
 different :code:`dict`-like objects that describe certain pieces of
 information.  RP66v1 defines over 20 object-types. In practice, only a handful
-see widespread use. Please refer to the :ref:`apiref` to get a full [1]_
-overview of the different object-types. Here are some examples of the
+see widespread use. Please refer to the :ref:`DLIS API Reference` to get a full
+[1]_ overview of the different object-types. Here are some examples of the
 frequently used ones:
 
 :class:`Origin`: Contains general information about the file, and the

@@ -34,13 +34,15 @@ def set_encodings(encodings):
     RP66 specifies that all strings should be in ASCII, meaning 7-bit. Strings
     in ASCII have identical bitwise representation in UTF-8, and python strings
     are in UTF-8. However, a lot of files contain strings that aren't ASCII,
-    but encoded in some way - a common is the degree symbol [1]_, but plenty of
+    but are encoded in some way - a common is the degree symbol [1]_. Plenty of
     files use other encodings too.
 
+    LIS does not explicitly mention that strings should be ASCII, but it also
+    doesn't mention any encodings.
+
     This function sets the code pages that dlisio will try *in order* when
-    decoding strings (IDENT, ASCII, UNITS, and when they appear as members in
-    e.g. ATTREF). UTF-8 will always be tried first, and is always correct if
-    the file behaves according to spec.
+    decoding the string-types specified by LIS and DLIS. UTF-8 will always be
+    tried first, and is always correct if the file behaves according to spec.
 
     Available encodings can be found in the Python docs [2]_.
 
@@ -59,10 +61,10 @@ def set_encodings(encodings):
 
     Warnings
     --------
-    There is no place in the DLIS spec to put or look for encoding information,
-    decoding is a wild guess. Plenty of strings are valid in multiple encodings,
-    so there's a high chance that decoding with the wrong encoding will give a
-    valid string, but not the one the writer intended.
+    There is no place in the LIS or DLIS spec to put or look for encoding
+    information, decoding is a wild guess. Plenty of strings are valid in
+    multiple encodings, so there's a high chance that decoding with the wrong
+    encoding will give a valid string, but not the one the writer intended.
 
     Warnings
     --------

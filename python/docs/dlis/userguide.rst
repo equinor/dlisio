@@ -1,13 +1,13 @@
-A quick guide
-=============
+DLIS User Guide
+===============
 
 This is a quick guide to get you started with dlisio. Note that all classes and
-functions are more thoroughly documented under :ref:`apiref`. Please refer
-there for more information about them.
+functions are more thoroughly documented under :ref:`DLIS API Reference`.
+Please refer there for more information about them.
 
 The same documentation is also available directly in your favorite python
 interpreter and in the unix console, just type :code:`help(function)` or  :code:`pydoc
-function`, respectably. In the interpreter, help can be used directly on
+function`, respectively. In the interpreter, help can be used directly on
 class instances. E.g: :code:`help(frame)` or :code:`help(frame.curves)`
 
 Opening files
@@ -151,8 +151,8 @@ Inspect an object with the :code:`.describe()`-method:
 Frames and Channels
 -------------------
 
-See :ref:`Curves` for information about the relationship between Channels and
-Frames. Have a look at :ref:`Channel` and :ref:`Frame`, they contain some
+See :ref:`DLIS Curves` for information about the relationship between Channels and
+Frames. Have a look at :ref:`DLIS Channel` and :ref:`DLIS Frame`, they contain some
 useful metadata in addition to the curve-values!
 
 Channels belonging to a Frame can be accessed directly through

@@ -119,7 +119,6 @@ if(BUILD_PYDOC AND sphinx)
             ${CMAKE_CURRENT_BINARY_DIR}/docs
         DEPENDS docs/conf.py
                 docs/index.rst
-                docs/dlisio.rst
         COMMENT "Building python documentation with sphinx"
     )
     add_dependencies(doc pydoc)

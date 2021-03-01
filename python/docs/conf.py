@@ -37,7 +37,6 @@ extensions = [
 ]
 
 autosummary_generate = True
-add_module_names = False
 
 # sphinx 1.8 deprecates autodoc_default_flags. docs should be buildable with
 # warnings-as-errors, but the docs really don't require more than sphinx 1.5.
@@ -138,7 +137,11 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#html_theme = 'default'
+try:
+    __import__('furo')
+    html_theme = 'furo'
+except ImportError:
+    pass
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -157,7 +160,7 @@ pygments_style = 'sphinx'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = '../../dlisio-logo.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

@@ -9,3 +9,4 @@ pybind11
 hypothesis
 sphinx
 scikit-build
+furo
