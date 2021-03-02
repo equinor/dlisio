@@ -33,6 +33,7 @@ std::int64_t stream::ptell() const noexcept (false) {
 
 std::int64_t stream::read( char* dst, int n )
 noexcept (false) {
+    if ( n == 0 ) return 0;
     std::int64_t nread = -1;
     const auto err = lfp_readinto(this->f, dst, n, &nread);
     switch (err) {
