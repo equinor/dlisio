@@ -257,5 +257,28 @@ TEST_CASE("Byte - unsigned 8-bit integer", "[type]") {
 }
 
 TEST_CASE("Mask - n-byte bitmask", "[type]") {
+
+    SECTION("1 byte bitmask") {
+        const char input = 0xAC;
+        constexpr std::uint8_t len = 1;
+        char out[len];
+
+        lis_mask( &input, len, out );
+        CHECK( (out[0] & 0x02) >> 1 == 0 );
+        CHECK( (out[0] & 0x04) >> 2 == 1 );
+    }
+
+    SECTION("Process Indicators bitmask") {
+        /* Note: in specification mask type is used only for
+         * 4.1.6 (l) Process Indicators. */
+
+        constexpr std::uint8_t len = 5;
+        const bytes<len> input = { 0x41, 0x42, 0x43, 0x44, 0x45};
+        char out[len];
+
+        lis_mask( input, len, out );
+        CHECK_THAT( out, BytesEquals(input) );
+    }
+
 }
 
