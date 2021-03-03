@@ -68,8 +68,19 @@ const char* lis_f32(const char*, float*);
 DLISIO_API
 const char* lis_f32low(const char*, float*);
 
-/* (reprc 70) 32-bit fixed point - 2's compliment with binary point in the
- * middle */
+/* (reprc 70) 32-bit fixed point - 2's complement with binary point in the
+ * middle
+ *
+ * Note: some numbers can't be represented correctly by IEEE 754 floats.
+ * Problem happens for values with high precision which do not fit into floats.
+ * There is no strictly defined precision loss range here, but it might already
+ * appear for numbers outside of [-256, 256] range.
+ *
+ * Using double type instead would have solved the issue.
+ * This type, however, is not expected to be used frequently as it's too
+ * different from the standard ones. Hence precision loss is considered
+ * acceptable.
+ */
 DLISIO_API
 const char* lis_f32fix(const char*, float*);
 

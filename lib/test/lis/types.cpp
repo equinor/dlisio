@@ -349,6 +349,98 @@ TEST_CASE("32-bit low-res floating point", "[type]") {
 }
 
 TEST_CASE("32-bit fixed point", "[type]") {
+
+    SECTION("standard floats") {
+        const std::array< bytes<4>, 4 > inputs = {{
+            { 0x00, 0x00, 0x00, 0x00 }, // 0
+            { 0x00, 0x00, 0x80, 0x00 }, // 0.5
+            { 0x00, 0x99, 0x40, 0x00 }, // 153.25
+            { 0xFF, 0x66, 0xC0, 0x00 }, // -153.25
+        }};
+
+        const std::array< float, inputs.size() > expected = {
+            0,
+            0.5,
+            153.25,
+            -153.25,
+        };
+
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            lis_f32fix( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION(" Additional precision loss due to available bits number ") {
+        /* Looks like we lose some precision due to type having 31 significant
+         * digits and float having just 23 places in fraction. So, for example,
+         * 2^9 - 2^(-16) already loses precision.
+         *
+         * This, however, shouldn't be a problem if doubles were used as their
+         * fraction is 52 bits
+         */
+        SECTION(" No precision loss ") {
+            /* 2^8 - 2^(-16) */
+            const float expected1 = std::pow(2.0f, 8) - std::pow(2.0f, -16);
+            const bytes<4> input1 = { 0x00, 0xFF, 0xFF, 0xFF };
+
+            /* 2^8 */
+            const float expected2 = std::pow(2.0f, 8);
+            const bytes<4> input2 = { 0x01, 0x00, 0x00, 0x00 };
+
+            float v1;
+            lis_f32fix( input1, &v1 );
+            CHECK( v1 == expected1 );
+
+            float v2;
+            lis_f32fix( input2, &v2 );
+            CHECK( v2 == expected2 );
+
+            CHECK( v1 != v2 );
+        }
+
+        SECTION(" Precision loss ") {
+            /* 2^9 - 2^(-16) */
+            const float expected1 = std::pow(2.0f, 9) - std::pow(2.0f, -16);
+            const bytes<4> input1 = { 0x01, 0xFF, 0xFF, 0xFF };
+
+            /* 2^9 */
+            const float expected2 = std::pow(2.0f, 9);
+            const bytes<4> input2 = { 0x02, 0x00, 0x00, 0x00 };
+
+            float v1;
+            lis_f32fix( input1, &v1 );
+            CHECK( v1 == expected1 );
+
+            float v2;
+            lis_f32fix( input2, &v2 );
+            CHECK( v2 == expected2 );
+
+            // precision loss: different numbers get represented by same float
+            // CHECK( v1 != v2 );
+        }
+    }
+
+    SECTION(" maximum LIS-stored positive number (precision loss) ") {
+        /* 2^15 - 2^(-16) */
+        const float expected = 32768; // actually 2^15 - 2^(-16)
+        const bytes<4> input = { 0x7F, 0xFF, 0xFF, 0xFF };
+
+        float v;
+        lis_f32fix( input, &v );
+        CHECK( v == expected );
+    }
+
+    SECTION(" minimum LIS-stored negative number ") {
+        /* -2^15 */
+        const float expected = -32768;
+        const bytes<4> input = { 0x80, 0x00, 0x00, 0x00 };
+
+        float v;
+        lis_f32fix( input, &v );
+        CHECK( v == expected );
+    }
 }
 
 

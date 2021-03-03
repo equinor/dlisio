@@ -272,15 +272,38 @@ const char* lis_f32low(const char* xs, float* x) {
     return xs + sizeof( std::uint32_t );
 }
 
-const char* lis_f32fix(const char* xs, float*) {
-    static_assert(
-        std::numeric_limits< float >::is_iec559 && sizeof( float ) == 4,
-        "Function assumes IEEE 754 32-bit float" );
+const char* lis_f32fix(const char* xs, float* x) {
+    /* B.6. Code 70: 32-bit Fixed Point
+     * Counting value of float number knowing sign, integer and real parts.
+     * - 1-bit sign
+     * - 31-bit number I.R stored as 2-complelement, with
+     *   - 15-bit integer part I
+     *   - 16-bit real part R
+     */
+    assert_architecture();
 
-    bool lis_f32fix_is_implemented = false;
-    assert( lis_f32fix_is_implemented );
+    std::uint32_t v;
+    std::memcpy( &v, xs, sizeof( std::uint32_t ) );
+    v = ntoh( v );
 
-    return xs + sizeof( float );
+    /* Vxxxxxxx 0xXX 0xXX 0xXX -> 0000000V */
+    std::uint8_t sign_bit = (v & 0x80000000) >> 31;
+    std::uint32_t data_bits = (v & 0x7FFFFFFF) >> 0;
+
+    float sign = sign_bit ? -1.0 : 1.0;
+
+    std::uint32_t data_2_complement = twos_complement(sign_bit, data_bits, 31);
+
+    /* VVVVVVVV VVVVVVVV 0xXX 0xXX -> 0VVVVVVV VVVVVVVV */
+    std::uint16_t integer_bits  = (data_2_complement & 0xFFFF0000) >> 16;
+    float integer_part = float (integer_bits);
+
+    /* 0xXX 0xXX VVVVVVVV VVVVVVVV -> VVVVVVVV VVVVVVVV */
+    std::uint16_t real_bits = (data_2_complement & 0x0000FFFF) >> 0;
+    float real_part = real_bits * std::pow( 2, -16 );
+
+    if (x) *x = sign * (integer_part + real_part);
+    return xs + sizeof( std::uint32_t );
 }
 
 const char* lis_string(const char* xs, const std::int32_t len, char* x) {
