@@ -130,10 +130,12 @@ def load(path):
             logfile = logical_file(path, f, index, reel, tape)
             logical_files.append(logfile)
 
-        if truncated:
-            msg = 'logical file nr {} is truncated'
-            logging.info(msg.format(len(files)))
-            break
+        if truncated: break
+
+    if truncated:
+        msg =  'dlisio.lis.load: Stopped indexing around tell {}\n'
+        msg += 'Reason: File likely truncated\nFilepath: {}'
+        logging.error(msg.format(offset, path))
 
     return physical_file(logical_files)
 
