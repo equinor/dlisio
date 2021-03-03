@@ -3,7 +3,7 @@ import logging
 
 import dlisio
 
-dlisio.set_encodings(['latin1'])
+dlisio.common.set_encodings(['latin1'])
 
 @pytest.fixture(scope="module")
 def merge_lis_prs():
@@ -188,5 +188,5 @@ def fpath(tmpdir_factory, merge_files_manyLR):
 
 @pytest.fixture(scope="module")
 def f(fpath):
-    with dlisio.load(fpath) as (f, *_):
+    with dlisio.dlis.load(fpath) as (f, *_):
         yield f

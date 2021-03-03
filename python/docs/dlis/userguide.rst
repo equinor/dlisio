@@ -1,3 +1,5 @@
+.. currentmodule:: dlisio.dlis
+
 DLIS User Guide
 ===============
 
@@ -13,33 +15,34 @@ class instances. E.g: :code:`help(frame)` or :code:`help(frame.curves)`
 Opening files
 -------------
 
-Load all :ref:`Logical files`:
+Load all the :class:`logicalfile`:
 
 .. code-block:: python
-
-    >>> with dlisio.load(filename) as files:
+    
+    >>> from dlisio import dlis
+    >>> with dlis.load(filename) as files:
     ...     for f in files:
     ...         pass
 
-The returned :code:`files` can be iterated over and operations can be applied
-to each logical file.
+The returned :code:`files` is an instance of :class:`physicalfile` that can be
+iterated over and operations can be applied to each logical file.
 
-If you only want to work with one logical file at the time,
-:py:func:`dlisio.load()` supports automatic unpacking of logical files. The
-following syntax unpacks the first logical file into :code:`f` and stores the
-rest (0-n) logical files into :code:`*tail`.
+If you only want to work with one logical file at the time, :func:`load`
+supports automatic unpacking of logical files. The following syntax unpacks the
+first logical file into :code:`f` and stores the rest (0-n) logical files into
+:code:`*tail`.
 
 
 .. code-block:: python
 
-    >>> with dlisio.load(filename) as (f, *tail):
+    >>> with dlis.load(filename) as (f, *tail):
     ...     pass
 
 Or, if the number of logical files is known:
 
 .. code-block:: python
 
-    >>> with dlisio.load(filename) as (f1, f2, f3):
+    >>> with dlis.load(filename) as (f1, f2, f3):
     ...     pass
 
 When a file is loaded, you can output some basic information about the physical
@@ -47,8 +50,7 @@ file:
 
 .. code-block:: python
 
-    >>> import dlisio
-    >>> with dlisio.load(filename) as files:
+    >>> with dlis.load(filename) as files:
     ...     files.describe()
     -------------
     Physical File
@@ -71,8 +73,7 @@ Or about a logical file:
 
 .. code-block:: python
 
-    >>> import dlisio
-    >>> with dlisio.load(filename) as (f, *tail):
+    >>> with dlis.load(filename) as (f, *tail):
     ...     f.describe()
     ------------
     Logical File
@@ -108,13 +109,13 @@ objects of a type can be reached by name, e.g. channels or coefficients:
 
 See :ref:`Logical files` for a full list of all object types.
 
-:py:func:`dlisio.logicalfile.object` lets you access a specific object:
+:func:`logicalfile.object` lets you access a specific object:
 
 .. code-block:: python
 
     >>> obj = f.object('CHANNEL', 'TDEP')
 
-Objects can also be searched for with :py:func:`dlisio.logicalfile.find()`:
+Objects can also be searched for with :func:`logicalfile.find`:
 
 .. code-block:: python
 
@@ -156,7 +157,7 @@ Frames. Have a look at :ref:`DLIS Channel` and :ref:`DLIS Frame`, they contain s
 useful metadata in addition to the curve-values!
 
 Channels belonging to a Frame can be accessed directly through
-:py:attr:`dlisio.plumbing.Frame.channels`:
+:py:attr:`Frame.channels`:
 
 .. code-block:: python
 
@@ -170,7 +171,7 @@ Likewise, the parent-frame of a Channel can be accessed through the channel:
     >>> ch.frame
     Frame(800T)
 
-The actual curve data of a Channel is accessed by :py:func:`dlisio.plumbing.Channel.curves()`,
+The actual curve data of a Channel is accessed by :func:`Channel.curves`,
 which returns a structured numpy array that support common slicing operations:
 
 .. code-block:: python
@@ -180,13 +181,12 @@ which returns a structured numpy array that support common slicing operations:
     array([852606., 852606., 852606., 852606., 852606.], dtype=float32)
 
 Note that its almost always considerably faster to read curves-data with
-:py:func:`dlisio.plumbing.Frame.curves()`. Please refer to
-:py:func:`dlisio.plumbing.Channel.curves()` for further elaboration on why this
-is.
+:func:`Frame.curves`. Please refer to :func:`Channel.curves` for further
+elaboration on why this is.
 
-Access all curves in a frame with :py:func:`dlisio.plumbing.Frame.curves()`.
-The returned structured numpy array can be indexed by Channel mnemonics
-and/or sliced by samples:
+Access all curves in a frame with :func:`Frame.curves`.  The returned
+structured numpy array can be indexed by Channel mnemonics and/or sliced by
+samples:
 
 .. code-block:: python
 
@@ -207,4 +207,4 @@ trivially converted to a pandas DataFrame:
     >>> curves = pd.DataFrame(frame.curves())
 
 For more examples of how to work with the curve-data, please refer to
-:py:func:`dlisio.plumbing.Frame.curves()` and :py:func:`dlisio.plumbing.Channel.curves()`
+:func:`Frame.curves` and :func:`Channel.curves`

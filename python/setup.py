@@ -53,7 +53,7 @@ skbuild.setup(
     description = 'DLIS v1',
     long_description = 'DLIS v1',
     url = 'https://github.com/equinor/dlisio',
-    packages = ['dlisio', 'dlisio.plumbing', 'dlisio.errors'],
+    packages = ['dlisio', 'dlisio.dlis', 'dlisio.lis', 'dlisio.common', 'dlisio.dlis.utils'],
     license = 'LGPL-3.0',
     platforms = 'any',
     install_requires = ['numpy'],
