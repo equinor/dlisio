@@ -66,15 +66,26 @@ T ntoh( T value ) noexcept {
 
 #endif
 
+void assert_architecture() {
+    /* While it's extremly unlikely that dlisio is run on
+     * non 2's complement platform, nothing prevents us from
+     * assuring it first
+     */
+    static_assert(~0 == -1, "Platform is not 2's complement");
+}
+
 } // namespace
 
 const char* lis_i8(const char* xs, std::int8_t* x) {
-    /* assume two's complement platform - insert check to support */
+    /* B.3. Code 56: 8-bit 2's complement Integer */
+    assert_architecture();
     if (x) std::memcpy( x, xs, sizeof( std::int8_t ) );
     return xs + sizeof( std::int8_t );
 }
 
 const char* lis_i16(const char* xs, std::int16_t* x) {
+    /* B.9. Code 79: 16-bit 2's complement Integer */
+    assert_architecture();
     std::uint16_t ux;
     std::memcpy( &ux, xs, sizeof( std::int16_t ) );
     ux = ntoh( ux );
@@ -83,6 +94,8 @@ const char* lis_i16(const char* xs, std::int16_t* x) {
 }
 
 const char* lis_i32(const char* xs, std::int32_t* x) {
+    /* B.7. Code 73: 32-bit 2's complement Integer */
+    assert_architecture();
     std::uint32_t ux;
     std::memcpy( &ux, xs, sizeof( std::int32_t ) );
     ux = ntoh( ux );
@@ -235,17 +248,19 @@ const char* lis_f32fix(const char* xs, float*) {
 }
 
 const char* lis_string(const char* xs, const std::int32_t len, char* x) {
+    /* Appendix B. Code 65: Alphanumeric */
     if (x) std::memcpy( x, xs, len );
     return xs + len;
 }
 
 const char* lis_byte(const char* xs, std::uint8_t* x) {
-    /* assume two's complement platform - insert check to support */
+    /* B.4. Code 66: Byte Format */
     if (x) std::memcpy( x, xs, sizeof(std::uint8_t) );
     return xs + sizeof(std::uint8_t);
 }
 
 const char* lis_mask(const char* xs, const std::int32_t len, char* x) {
+    /* B.8. Code 77: Mask */
     if (x) std::memcpy( x, xs, len );
     return xs + len;
 }
