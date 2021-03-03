@@ -223,34 +223,53 @@ const char* lis_f32(const char* xs, float* x) {
 }
 
 const char* lis_f32low(const char* xs, float* x) {
-    static_assert(
-        std::numeric_limits< float >::is_iec559 && sizeof( float ) == 4,
-        "Function assumes IEEE 754 32-bit float" );
-
-    /** Calculating mantissa (M) and final value:
-     *
-     *  M = F * precision = fraction * 2^(-15)
-     *
-     *  value = M * 2^E                     [1]
-     *        = fraction * 2^(-15) * 2^E
-     *        = fraction * 2^(E-15);
-     *
-     * [1] spec ref: LIS79 Appendix B.5
+    /* B.2. Code 50: 32-bit Low Resolution Floating Point
+     * Counting value of float number knowing sign, exponent and fraction.
+     * - 1-bit fraction sign
+     * - 1-bit exponent sign
+     * - 15-bit exponent (e, where e is 15-bit, sign is not included),
+     *   stored as 2'complelement
+     * - 15-bit fraction (0.m, where m is 15-bit, sign is not included)
+     *   stored as 2'complelement
      */
+    assert_architecture();
 
-    static constexpr std::uint8_t precision = 15;
+    std::uint32_t v;
+    std::memcpy( &v, xs, sizeof( std::uint32_t ) );
+    v = ntoh( v );
 
-    std::uint32_t u;
-    std::memcpy( &u, xs, sizeof( std::uint32_t ) );
-    u = ntoh( u );
+    /* 0xXX 0xXX Vxxxxxxx 0xXX -> 0000000V */
+    std::uint8_t fraction_sign_bit  = (v & 0x00008000) >> 15;
+    /* Vxxxxxxx 0xXX 0xXX 0xXX -> 0000000V */
+    std::uint8_t exponent_sign_bit  = (v & 0x80000000) >> 31;
+    /* xVVVVVVV VVVVVVVV 0xXX 0xXX -> 0VVVVVVV VVVVVVVV */
+    std::uint16_t exp_bits  = (v & 0x7FFF0000) >> 16;
+    /* 0xXX 0xXX xVVVVVVV VVVVVVVV -> 0VVVVVVV VVVVVVVV */
+    std::uint16_t frac_bits = (v & 0x00007FFF) >> 0;
 
-    std::int16_t  fraction = (u & 0x0000FFFF);
-    std::uint16_t exp_bits = (u & 0xFFFF0000) >> 16;
+    float fraction_sign = fraction_sign_bit ? -1.0 : 1.0;
+    float exponent_sign = exponent_sign_bit ? -1.0 : 1.0;
 
-    float out = std::ldexp(fraction, exp_bits - precision);
+    std::uint16_t exp_2_complement =
+        twos_complement(exponent_sign_bit, exp_bits, 15);
+    /* 0VVVVVVVV VVVVVVVV -> VVVVVVVVVVVVVVV.0 */
+    float exponent = exponent_sign * float( exp_2_complement );
 
-    if (x) *x = out;
-    return xs + sizeof( float );
+    std::uint16_t frac_2_complement =
+        twos_complement(fraction_sign_bit, frac_bits, 15);
+
+    /* Expected logic:
+     *    // 0VVVVVVV VVVVVVVV -> 0.VVVVVVVVVVVVVVV0
+     *    float fraction = frac_2_complement * std::pow( 2.0, -15 );
+     *    if (x) *x = fraction_sign * fraction * std::pow( 2.0f, exponent );
+     * Problem is that in doing so we lose a bit of precision. Hence we need
+     * to optimize calculations. Other types do not have this issue because
+     * their boundary values are not near float boundaries.
+     */
+    if (x)
+        *x = fraction_sign * frac_2_complement * std::pow(2.0f, exponent - 15);
+
+    return xs + sizeof( std::uint32_t );
 }
 
 const char* lis_f32fix(const char* xs, float*) {

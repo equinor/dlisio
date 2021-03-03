@@ -221,22 +221,130 @@ TEST_CASE("32-bit floating point", "[type]") {
 }
 
 TEST_CASE("32-bit low-res floating point", "[type]") {
-    const std::array< bytes<4>, 3 > inputs = {{
-        { 0x00, 0x00, 0x00, 0x00 }, // 0
-        { 0x00, 0x08, 0x4C, 0x80 }, // 153
-        { 0x00, 0x08, 0xB3, 0x80 }, // -153
-    }};
 
-    const std::array< float, inputs.size() > expected = {
-        0,
-        153,
-        -153,
-    };
+    SECTION("standard floats") {
+        const std::array< bytes<4>, 5 > inputs = {{
+            { 0x00, 0x00, 0x00, 0x00 }, // 0
+            { 0x00, 0x08, 0x4C, 0x80 }, // 153
+            { 0x00, 0x08, 0xB3, 0x80 }, // -153
+            { 0xFF, 0xFF, 0x40, 0x00 }, // 0.25
+            { 0xFF, 0xFF, 0xC0, 0x00 }, // -0.25
+        }};
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
+        const std::array< float, inputs.size() > expected = {
+            0,
+            153,
+            -153,
+            0.25,
+            -0.25,
+        };
+
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            lis_f32low( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    /*
+     * Low-resolution float numbers do not fit under float (or even double).
+     * Tests below attempt to define the boundaries of that discrepancy.
+     *
+     * It's difficult to assure that presented numbers are actually
+     * the max/min/smallest architecture-represented ones, not last due to
+     * differences in space assigned to exponent and fraction, but they
+     * should be somewhere near.
+     *
+     * Commented out tests are here to define the boundaries and substitute
+     * ability to mark sections as 'shouldfail' in catch2.
+     */
+
+    SECTION(" near-maximum architecture-represented positive number ") {
+        /* E = 2^7, M = 2^15 - 1 */
+
+        /*
+         * Expected is stored explicitly because some compilers overflow float
+         * when calculating.
+         *
+         * (1 - std::pow(2.0f, -15)) * std::pow(2.0f, std::pow(2.0f, 7))
+         */
+        const float expected = 340271982327221393808117546439109771264.0f;
+        const bytes<4> input = { 0x00, 0x80, 0x7F, 0xFF };
+
         float v;
-        lis_f32low( inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+        lis_f32low( input, &v );
+        CHECK( v == expected );
+        CHECK (v <= std::numeric_limits<float>::max());
+    }
+
+    SECTION(" near-minimum architecture-represented negative number ") {
+        /* E = 2^7, M = -(2^15 - 1) */
+
+        /*
+         * Expected is stored explicitly because some compilers overflow float
+         * when calculating.
+         *
+         * -(1 - std::pow(2.0f, -15)) * std::pow(2.0f, std::pow(2.0f, 7))
+         */
+        const float expected = -340271982327221393808117546439109771264.0f;
+        const bytes<4> input = { 0x00, 0x80, 0x80, 0x01 };
+
+        float v;
+        lis_f32low( input, &v );
+        CHECK( v == expected );
+        CHECK (v >= std::numeric_limits<float>::lowest());
+    }
+
+    SECTION(" maximum LIS-stored positive number (data loss)") {
+        /* E = 2^15 - 1, M = 2^15 - 1 */
+        const float expected =
+            (1 - std::pow(2.0f, -15)) * std::pow(2.0f, std::pow(2.0f, 15) - 1);
+        const bytes<4> input = { 0x7F, 0xFF, 0x7F, 0xFF };
+
+        float v;
+        lis_f32low( input, &v );
+        CHECK( v == expected );
+        // Failing: too big number, can't be represented by float
+        // CHECK (v <= std::numeric_limits<float>::max());
+    }
+
+    SECTION(" minimum LIS-stored negative number (data loss) ") {
+        /* E = 2^15 - 1, M = -2^15*/
+        const float expected = -1 * std::pow(2.0f, std::pow(2.0f, 15) - 1);
+        const bytes<4> input = { 0x7F, 0xFF, 0x80, 0x00 };
+
+        float v;
+        lis_f32low( input, &v );
+        CHECK( v == expected );
+        // Failing: too big (modulo) number, can't be represented by float
+        // CHECK (v >= std::numeric_limits<float>::lowest());
+    }
+
+    SECTION(" near-smallest architecture-represented positive number ") {
+        /* E = -2^7, M = 1 */
+        // Note: even smaller number seems to be with E = -2^7 - 6, which
+        // shows that real boundaries are a bit bigger
+        const float expected =
+            std::pow(2.0f, -15) * std::pow(2.0f, -std::pow(2.0f, 7));
+        const bytes<4> input = { 0xFF, 0x80, 0x00, 0x01 };
+
+        float v;
+        lis_f32low( input, &v );
+        CHECK( v == expected );
+        CHECK (v > 0);
+    }
+
+    SECTION(" smallest LIS-stored positive number (data loss) ") {
+        /* E = -2^15, M = 1 */
+        const float expected =
+            std::pow(2.0f, -15) * std::pow(2.0f, -std::pow(2.0f, 15) );
+        const bytes<4> input = { 0x80, 0x00, 0x00, 0x01 };
+
+        float v;
+        lis_f32low( input, &v );
+        CHECK( v == expected );
+        // Failing: data is not 0, but due to precision loss is reported as 0
+        // CHECK (v > 0);
     }
 }
 

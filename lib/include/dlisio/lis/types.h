@@ -52,7 +52,19 @@ const char* lis_f16(const char*, float*);
 DLISIO_API
 const char* lis_f32(const char*, float*);
 
-/* (reprc 50) 32-bit low resolution floating point */
+/* (reprc 50) 32-bit low resolution floating point
+ *
+ * Caution: value is represented as float, though much larger values can be
+ * stored according to specification due to 15-bit exponent. As per IEEE 754,
+ * exponent is 8-bit (less than LIS) and fraction is 23-bit (more precise than
+ * LIS). It means that values in approximately next ranges are lost:
+ *   [2^128, 2^32768)
+ *   (-2^32768, -2^128]
+ *   with precision around (2^(-32768), 2^(-128))
+ *
+ * It is assumed that stored values are reasonable and floats should be enough
+ * in all real cases.
+ */
 DLISIO_API
 const char* lis_f32low(const char*, float*);
 
