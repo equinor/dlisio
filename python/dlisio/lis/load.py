@@ -67,6 +67,11 @@ def load(path):
             f = core.openlis(path, offset, is_tif)
         except EOFError:
             break
+        except OSError as e:
+            msg =  'dlisio.lis.load: stopped indexing at tell {}\n'
+            msg += 'Reason: {}\nFilepath: {}'
+            logging.error(msg.format(offset, e, path))
+            break
 
         index = f.index_records()
         truncated = f.istruncated()
