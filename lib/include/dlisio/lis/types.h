@@ -43,7 +43,12 @@ const char* lis_i32(const char*, std::int32_t*);
 DLISIO_API
 const char* lis_f16(const char*, float*);
 
-/* (reprc 68) 32-bit floating point */
+/* (reprc 68) 32-bit floating point
+ *
+ * Note: small precision loss may apply. It's not expected to be a problem
+ * as loss might happen around precisions 2^(-127) and 2^(-128), which are
+ * unlikely to happen in reality.
+ */
 DLISIO_API
 const char* lis_f32(const char*, float*);
 

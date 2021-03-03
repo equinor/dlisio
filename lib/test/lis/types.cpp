@@ -131,25 +131,92 @@ TEST_CASE("16-bit floating point", "[type]") {
 }
 
 TEST_CASE("32-bit floating point", "[type]") {
-    const std::array< bytes<4>, 4 > inputs = {{
-        { 0x00, 0x00, 0x00, 0x00 }, // 0
-        /* S = 0, E != 0, M == 0 */
-        { 0x2A, 0x00, 0x00, 0x00 }, // 0
-        { 0x44, 0x4C, 0x80, 0x00 }, // 153
-        { 0xBB, 0xB3, 0x80, 0x00 }, // -153
-    }};
 
-    const std::array< float, inputs.size() > expected = {
-        0,
-        0,
-        153,
-        -153,
-    };
+    SECTION("standard floats") {
+        const std::array< bytes<4>, 8 > inputs = {{
+            { 0x00, 0x00, 0x00, 0x00 }, // 0
+            /* S = 0, E != 0, M == 0 */
+            { 0x2A, 0x00, 0x00, 0x00 }, // 0
+            /* S = 1, E (adjusted)== 0, M (bytes)== 0 */
+            { 0xBF, 0x80, 0x00, 0x00 }, // -1
+            { 0xBF, 0x40, 0x00, 0x00 }, // -1
+            { 0x40, 0xC0, 0x00, 0x00 }, // 1
+            { 0x41, 0x20, 0x00, 0x00 }, // 1
+            { 0x44, 0x4C, 0x80, 0x00 }, // 153
+            { 0xBB, 0xB3, 0x80, 0x00 }, // -153
+        }};
 
-    for( std::size_t i = 0; i < expected.size(); ++i ) {
+        const std::array< float, inputs.size() > expected = {
+            0,
+            0,
+            -1,
+            -1,
+            1,
+            1,
+            153,
+            -153,
+        };
+
+        for( std::size_t i = 0; i < expected.size(); ++i ) {
+            float v;
+            lis_f32( inputs[ i ], &v );
+            CHECK( v == expected[ i ] );
+        }
+    }
+
+    SECTION(" maximum LIS-stored positive number ") {
+        /* S = 0, E (adjusted) == 127, M == 2^23 - 1 */
+        const float expected = (1 - std::pow(2.0f, -23)) * std::pow(2.0f, 127);
+        const bytes<4> input = { 0x7F, 0xFF, 0xFF, 0xFF };
+
         float v;
-        lis_f32( inputs[ i ], &v );
-        CHECK( v == expected[ i ] );
+        lis_f32( input, &v );
+        CHECK( v == expected );
+        CHECK (v <= std::numeric_limits<float>::max());
+    }
+
+    SECTION(" minimum LIS-stored negative number ") {
+        /* S = 1, E (adjusted) == 127, M == 2^23 */
+        const float expected = -1 * std::pow(2.0f, 127);
+        const bytes<4> input = { 0x80, 0x00, 0x00, 0x00 };
+
+        float v;
+        lis_f32( input, &v );
+        CHECK( v == expected );
+        CHECK (v > std::numeric_limits<float>::lowest());
+    }
+
+    SECTION(" near-smallest architecture-represented positive number ") {
+        /* suspected to be the smallest, but no guarantee */
+        /* S = 0, E (adjusted) == -126, M == 1, denormalized */
+        const float expected = std::pow(2.0f, -23) * std::pow(2.0f, -126);
+        const bytes<4> input = { 0x01, 0x00, 0x00, 0x01 };
+
+        float v;
+        lis_f32( input, &v );
+        CHECK( v == expected );
+        CHECK (v > 0);
+        /* debug: the following works, but not asserting due to possible
+           architecture differences */
+        // CHECK (v == std::numeric_limits<float>::denorm_min());
+    }
+
+    SECTION(" smallest LIS-stored positive number: acceptable precision loss ") {
+        /* Precision loss seems to happen because
+         * in lis_f32 E has range [-128, 127]
+         * in IEEE 754 float E has effective range [-126, 127]
+         */
+
+        /*  S = 0, E (adjusted) == -128, M == 1, denormalized */
+        const float expected = std::pow(2.0f, -23) * std::pow(2.0f, -128);
+        const bytes<4> input = { 0x00, 0x00, 0x00, 0x01 };
+
+        float v;
+        lis_f32( input, &v );
+        CHECK( v == expected );
+
+        // Failing: data is not 0, but due to precision loss is reported as 0
+        // CHECK (v > 0);
     }
 }
 

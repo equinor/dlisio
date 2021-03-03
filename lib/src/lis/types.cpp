@@ -178,87 +178,48 @@ const char* lis_f16(const char* xs, float* x) {
 }
 
 const char* lis_f32(const char* xs, float* x) {
-    static_assert(
-        std::numeric_limits< float >::is_iec559 && sizeof( float ) == 4,
-        "Function assumes IEEE 754 32-bit float" );
-
-    /** Calculating the value of a lis 32bit float [1]
-     *
-     * The sign (S) and the exponent (E) is trivial. The mantissa is in theory
-     * easy too, but a couple of optimizations can be applied:
-     *
-     * The straightforward way of calculating the value of the mantissa (which
-     * is a binary fraction) is to take the sum of all bits, each multiplied
-     * by 2^n, where n = [-1, -nbits]:
-     *
-     *      std::uint8_t bf = 10100000 (binary fraction)
-     *
-     *      mantissa = 1 * 2^-1
-     *               + 0 * 2^-2
-     *               + 1 * 2^-3
-     *               + 0 * 2^-4 ... 0 * 2^8
-     *               = 0.5 + 0.125 = 0.625
-     *
-     * This is the same as reading the binary fraction as a signed 2's
-     * compliment [2][3] and multiplying it by the precision/resolution, where
-     * the precision is the value of rightmost bit in the fraction:
-     *
-     *      mantissa = (std::int8_t)bf * precision
-     *               = 160 * 2^-8
-     *               = 0.625;
-     *
-     * This is a bit more convoluted, but should be more performant as we
-     * do a simple cast, compared to looping all 23 bits. Which would involve
-     * 23 multiplications and a sum operation.
-     *
-     * The value of a lis' 32bit float is defined as [1]:
-     *
-     *      value = M * 2^(E - 128)   if S = 0
-     *      value = M * 2^(127-E)     if S = 1
-     *
-     * We can now expand the mantissa (M) and factor in the precision into the
-     * exponent part, which reduces the expression to:
-     *
-     *      value = bf * 2^-23 * 2^(E - 128) = bf * 2^(E-151)   if S = 0
-     *      value = bf * 2^-23 * 2^(127-E)   = bf * 2^(104-E)   if S = 1
-     *
-     * [1] spec ref: LIS79 Appendix B.5
-     *
-     * [2] https://en.wikipedia.org/wiki/Floating-point_arithmetic#Floating-point_numbers
-     *
-     * [3] Note that the mantissa is only 23 bytes, while we work on 32bit
-     * buffers. When trying to interpret the _value_ of the buffer as a signed
-     * 2'compliments integer we need to be a bit cautious.
-     *
-     * For positive 2's compliment numbers, leading zeros do not count towards
-     * the value so just make sure all excess bits are set to zero.
-     *
-     * For negative 2's compliment numbers the opposite is true. Leading ones
-     * does not count towards the final value. Hence the excess bytes in the
-     * buffer must be set to 1 before interpreting it as a signed 2's
-     * compliment.
+    /* B.5. Code 68: 32-bit Floating Point
+     * Counting value of float number knowing sign, exponent and fraction.
+     * - 1-bit sign
+     * - 8-bit exponent, stored as excess of 128 for positive numbers
+     *   [real_exponet = stored_exponent_as_unsigned_int - 128]
+     *   and as 1-complement excess of 128 for negatives
+     *   [real_exponet = ~stored_exponent_as_unsigned_int - 128]
+     * - 23-bit fraction (0.m, where m is 23-bit, sign is not included)
+     *   stored as 2-complelement
      */
+    assert_architecture();
 
-    static constexpr std::uint8_t precision = 23;
+    std::uint32_t v;
+    std::memcpy( &v, xs, sizeof( std::uint32_t ) );
+    v = ntoh( v );
 
-    std::uint32_t u;
-    std::memcpy( &u, xs, sizeof( std::uint32_t ) );
-    u = ntoh( u );
+    /* Vxxxxxxx 0xXX 0xXX 0xXX -> 0000000V */
+    std::uint8_t sign_bit  = (v & 0x80000000) >> 31;
+    /* xVVVVVVV Vxxxxxxx 0xXX 0xXX -> VVVVVVVV */
+    std::uint8_t exp_bits  = (v & 0x7F800000) >> 23;
+    /* 0xXX xVVVVVVV VVVVVVVV VVVVVVVV -> 0x00 0VVVVVVV VVVVVVVV VVVVVVVV */
+    std::uint32_t frac_bits = (v & 0x007FFFFF) >> 0;
 
-    std::uint32_t sign_bit  = (u & 0x80000000);
-    std::uint32_t frac_bits = (u & 0x007FFFFF);
-    std::uint8_t  exp_bits  = (u & 0x7F800000) >> 23;
+    float sign = sign_bit ? -1.0 : 1.0;
 
-    std::uint32_t exponent = sign_bit ? (127 - exp_bits) : (exp_bits - 128);
-    exponent -= precision;
+    std::uint8_t exponent_1_complement;
+    if( sign_bit ) {
+        exponent_1_complement = ~exp_bits;
+        /* No "unused bits" adjustments are required for exponent because
+         * exponent bits use all assigned for them space - 8 bits */
+    } else {
+        exponent_1_complement = exp_bits;
+    }
+    /* VVVVVVVV -> EEEEEEEE.0 */
+    float exponent = float( exponent_1_complement ) - 128;
 
-    std::int32_t mask = sign_bit ? 0xFF800000 : 0;
-    std::int32_t fraction = mask | frac_bits;
+    std::uint32_t frac_2_complement = twos_complement(sign_bit, frac_bits, 23);
+    /* 0x00 0VVVVVVV VVVVVVVV VVVVVVVV -> 0.VVVVVVVVVVVVVVVVVVVVVVV0 */
+    float fraction = frac_2_complement * std::pow( 2, -23 );
 
-    float out = std::ldexp(fraction, exponent);
-
-    if (x) *x = out;
-    return xs + sizeof( float );
+    if (x) *x = sign * fraction * std::pow( 2.0f, exponent );
+    return xs + sizeof( std::uint32_t );
 }
 
 const char* lis_f32low(const char* xs, float* x) {
