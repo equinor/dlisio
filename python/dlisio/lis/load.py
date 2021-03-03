@@ -91,31 +91,44 @@ def load(path):
         # case the filehandle is closed before we continue indexing the file.
         first = index.explicits()[0]
         if is_delimiter(first):
+            try:
+                record = f.read_record(first)
+                f.close()
+            except Exception as e:
+                # This is very unlikely to happen as index_records has already
+                # done the sanity checking needed for succesfully reading the
+                # record.
+                # However read_records can in theory still fail on blocked IO
+                # and other non-LIS related issues.
+                msg =  'dlisio.lis.load: Could not read record {}, indexing stopped\n'
+                msg += 'Reason: {}\nFilepath: {}'
+                logging.error(msg.format(first, e, path))
+                f.close()
+                break
+
             if first.type == core.lis_rectype.reel_header:
-                reel = HeaderTrailer(f.read_record(first))
+                reel = HeaderTrailer(record)
 
             elif first.type == core.lis_rectype.reel_trailer:
                 # The reel is already assigned to the LF's at this point, so
                 # just assign the trailer to that instance before initiating a
                 # new instance for the next reel.
-                reel.rawtrailer = f.read_record(first)
+                reel.rawtrailer = record
                 reel = HeaderTrailer()
 
             elif first.type == core.lis_rectype.tape_header:
-                tape = HeaderTrailer(f.read_record(first))
+                tape = HeaderTrailer(record)
 
             elif first.type == core.lis_rectype.tape_trailer:
                 # The tape is already assigned to the LF's at this point, so
                 # just assign the trailer to that instance before initiating a
                 # new instance for the next tape.
-                tape.rawtrailer = f.read_record(first)
+                tape.rawtrailer = record
                 tape = HeaderTrailer()
 
-            f.close()
-            continue
-
-        logfile = logical_file(path, f, index, reel, tape)
-        logical_files.append(logfile)
+        else:
+            logfile = logical_file(path, f, index, reel, tape)
+            logical_files.append(logfile)
 
         if truncated:
             msg = 'logical file nr {} is truncated'
