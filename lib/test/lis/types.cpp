@@ -112,6 +112,7 @@ TEST_CASE("16-bit floating point", "[type]") {
         { 0x80, 0x0F }, // min
     }};
 
+    /* type fits well inside float boundaries, so no limit tests required */
     const std::array< float, inputs.size() > expected = {
         0,
         1,
