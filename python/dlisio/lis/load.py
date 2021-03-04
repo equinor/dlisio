@@ -76,6 +76,11 @@ def load(path):
         index = f.index_records()
         truncated = f.istruncated()
 
+        # If not a single record could be indexed, close the file and stop here
+        if index.size() == 0 and truncated:
+            f.close()
+            break
+
         # Update the offset at which stopped indexing. Due to inconsistent use
         # of tapemarks in files, we have to manually update the offset.
 
@@ -89,7 +94,7 @@ def load(path):
         # All delimiter records are indexed separately by index_records. If
         # applicable the raw record is extracted and correctly stored. In any
         # case the filehandle is closed before we continue indexing the file.
-        first = index.explicits()[0]
+        first = index.explicits()[0] if len(index.explicits()) else None
         if is_delimiter(first):
             try:
                 record = f.read_record(first)
@@ -141,6 +146,8 @@ def load(path):
 
 
 def is_delimiter(recinfo):
+    if recinfo is None: return False
+
     if recinfo.type == core.lis_rectype.reel_header:  return True
     if recinfo.type == core.lis_rectype.reel_trailer: return True
     if recinfo.type == core.lis_rectype.tape_header:  return True
