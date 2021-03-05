@@ -67,9 +67,19 @@ def load(path):
             f = core.openlis(path, offset, is_tif)
         except EOFError:
             break
+        except OSError as e:
+            msg =  'dlisio.lis.load: stopped indexing at tell {}\n'
+            msg += 'Reason: {}\nFilepath: {}'
+            logging.error(msg.format(offset, e, path))
+            break
 
         index = f.index_records()
         truncated = f.istruncated()
+
+        # If not a single record could be indexed, close the file and stop here
+        if index.size() == 0 and truncated:
+            f.close()
+            break
 
         # Update the offset at which stopped indexing. Due to inconsistent use
         # of tapemarks in files, we have to manually update the offset.
@@ -84,43 +94,60 @@ def load(path):
         # All delimiter records are indexed separately by index_records. If
         # applicable the raw record is extracted and correctly stored. In any
         # case the filehandle is closed before we continue indexing the file.
-        first = index.explicits()[0]
+        first = index.explicits()[0] if len(index.explicits()) else None
         if is_delimiter(first):
+            try:
+                record = f.read_record(first)
+                f.close()
+            except Exception as e:
+                # This is very unlikely to happen as index_records has already
+                # done the sanity checking needed for succesfully reading the
+                # record.
+                # However read_records can in theory still fail on blocked IO
+                # and other non-LIS related issues.
+                msg =  'dlisio.lis.load: Could not read record {}, indexing stopped\n'
+                msg += 'Reason: {}\nFilepath: {}'
+                logging.error(msg.format(first, e, path))
+                f.close()
+                break
+
             if first.type == core.lis_rectype.reel_header:
-                reel = HeaderTrailer(f.read_record(first))
+                reel = HeaderTrailer(record)
 
             elif first.type == core.lis_rectype.reel_trailer:
                 # The reel is already assigned to the LF's at this point, so
                 # just assign the trailer to that instance before initiating a
                 # new instance for the next reel.
-                reel.rawtrailer = f.read_record(first)
+                reel.rawtrailer = record
                 reel = HeaderTrailer()
 
             elif first.type == core.lis_rectype.tape_header:
-                tape = HeaderTrailer(f.read_record(first))
+                tape = HeaderTrailer(record)
 
             elif first.type == core.lis_rectype.tape_trailer:
                 # The tape is already assigned to the LF's at this point, so
                 # just assign the trailer to that instance before initiating a
                 # new instance for the next tape.
-                tape.rawtrailer = f.read_record(first)
+                tape.rawtrailer = record
                 tape = HeaderTrailer()
 
-            f.close()
-            continue
+        else:
+            logfile = logical_file(path, f, index, reel, tape)
+            logical_files.append(logfile)
 
-        logfile = logical_file(path, f, index, reel, tape)
-        logical_files.append(logfile)
+        if truncated: break
 
-        if truncated:
-            msg = 'logical file nr {} is truncated'
-            logging.info(msg.format(len(files)))
-            break
+    if truncated:
+        msg =  'dlisio.lis.load: Stopped indexing around tell {}\n'
+        msg += 'Reason: File likely truncated\nFilepath: {}'
+        logging.error(msg.format(offset, path))
 
     return physical_file(logical_files)
 
 
 def is_delimiter(recinfo):
+    if recinfo is None: return False
+
     if recinfo.type == core.lis_rectype.reel_header:  return True
     if recinfo.type == core.lis_rectype.reel_trailer: return True
     if recinfo.type == core.lis_rectype.tape_header:  return True
