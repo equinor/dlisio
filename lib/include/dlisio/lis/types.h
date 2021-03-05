@@ -43,16 +43,44 @@ const char* lis_i32(const char*, std::int32_t*);
 DLISIO_API
 const char* lis_f16(const char*, float*);
 
-/* (reprc 68) 32-bit floating point */
+/* (reprc 68) 32-bit floating point
+ *
+ * Note: small precision loss may apply. It's not expected to be a problem
+ * as loss might happen around precisions 2^(-127) and 2^(-128), which are
+ * unlikely to happen in reality.
+ */
 DLISIO_API
 const char* lis_f32(const char*, float*);
 
-/* (reprc 50) 32-bit low resolution floating point */
+/* (reprc 50) 32-bit low resolution floating point
+ *
+ * Caution: value is represented as float, though much larger values can be
+ * stored according to specification due to 15-bit exponent. As per IEEE 754,
+ * exponent is 8-bit (less than LIS) and fraction is 23-bit (more precise than
+ * LIS). It means that values in approximately next ranges are lost:
+ *   [2^128, 2^32768)
+ *   (-2^32768, -2^128]
+ *   with precision around (2^(-32768), 2^(-128))
+ *
+ * It is assumed that stored values are reasonable and floats should be enough
+ * in all real cases.
+ */
 DLISIO_API
 const char* lis_f32low(const char*, float*);
 
-/* (reprc 70) 32-bit fixed point - 2's compliment with binary point in the
- * middle */
+/* (reprc 70) 32-bit fixed point - 2's complement with binary point in the
+ * middle
+ *
+ * Note: some numbers can't be represented correctly by IEEE 754 floats.
+ * Problem happens for values with high precision which do not fit into floats.
+ * There is no strictly defined precision loss range here, but it might already
+ * appear for numbers outside of [-256, 256] range.
+ *
+ * Using double type instead would have solved the issue.
+ * This type, however, is not expected to be used frequently as it's too
+ * different from the standard ones. Hence precision loss is considered
+ * acceptable.
+ */
 DLISIO_API
 const char* lis_f32fix(const char*, float*);
 
