@@ -113,9 +113,36 @@ By default, the python library is built.
 
 ## Tutorial ##
 
-The API documentation is avaliable on [readthedocs](https://dlisio.readthedocs.io/en/stable/).
-Here you also find some simple examples to get you started with dlis and
-dlisio.
+dlisio's documentation is hosted on
+[readthedocs](https://dlisio.readthedocs.io/en/stable/). Please refer there for
+proper introduction to dlisio, and the file-formats DLIS and LIS. With dlisio
+it is easy to read the curve-data from DLIS-files:
+
+```python
+from dlisio import dlis
+
+with dlis.load('myfile.dlis') as files:
+    for f in files:
+        for frame in f.frames:
+            curves = f.curves()
+            # Do something with the curves
+
+```
+and from LIS-files:
+
+```python
+from dlisio import lis
+
+with lis.load('myfile.lis') as files:
+    for f in files:
+        for format_spec in f.data_format_specs:
+            curves = lis.curves(f, format_spec)
+            # Do something with the curves
+```
+
+In both cases the curves are returned as [strucutured
+numpy.ndarray](https://numpy.org/doc/stable/user/basics.rec.html) with the
+curve mnemonics as field names (column names).
 
 ## Contributing ##
 
