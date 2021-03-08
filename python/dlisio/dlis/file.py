@@ -41,7 +41,7 @@ Although possible, these globals are not intended to be changed by the end user 
 regex = utils.regex_matcher(re.IGNORECASE)
 exact = utils.exact_matcher()
 
-class physicalfile(tuple):
+class PhysicalFile(tuple):
     """ A Physical File
 
     A physical DLIS file, i.e. a regular file on disk, is segmented into
@@ -93,7 +93,7 @@ class physicalfile(tuple):
             f.close()
 
     def __repr__(self):
-        return 'physicalfile(logical files: {})'.format(len(self))
+        return 'PhysicalFile(logical files: {})'.format(len(self))
 
     def describe(self, width=80, indent=''):
         """ Describe

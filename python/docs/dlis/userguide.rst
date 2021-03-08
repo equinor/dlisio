@@ -24,7 +24,7 @@ Load all the :class:`LogicalFile`:
     ...     for f in files:
     ...         pass
 
-The returned :code:`files` is an instance of :class:`physicalfile` that can be
+The returned :code:`files` is an instance of :class:`PhysicalFile` that can be
 iterated over and operations can be applied to each logical file.
 
 If you only want to work with one logical file at the time, :func:`load`

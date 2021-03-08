@@ -8,7 +8,7 @@ Load a DLIS-file
 
 Physical File
 -------------
-.. autoclass:: dlisio.dlis.physicalfile()
+.. autoclass:: dlisio.dlis.PhysicalFile()
 
 Logical Files
 -------------
