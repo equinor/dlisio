@@ -12,7 +12,7 @@ Physical File
 
 Logical Files
 -------------
-.. autoclass:: dlisio.dlis.logicalfile()
+.. autoclass:: dlisio.dlis.LogicalFile()
     :members:
     :exclude-members: types, IndexedObjectDescriptor
     :member-order: bysource

@@ -2,7 +2,7 @@ import os
 
 from .. import core
 from .. import common
-from .file import physicalfile, logicalfile
+from .file import physicalfile, LogicalFile
 
 
 def load(path, error_handler = None):
@@ -13,7 +13,7 @@ def load(path, error_handler = None):
     emulate random access.
 
     DLIS-files are segmented into Logical Files, see
-    :class:`dlisio.dlis.physicalfile` and :class:`dlisio.dlis.logicalfile`.
+    :class:`dlisio.dlis.physicalfile` and :class:`dlisio.dlis.LogicalFile`.
     The partitioning into Logical Files also happens at load.
 
     Parameters
@@ -188,7 +188,7 @@ class FileIndexer:
         pool = core.pool(sets)
         fdata = core.findfdata(self.stream, implicits, self.error_handler)
 
-        lf = logicalfile(self.stream, pool, fdata, self.sul, self.error_handler)
+        lf = LogicalFile(self.stream, pool, fdata, self.sul, self.error_handler)
         self.logical_files.append(lf)
 
     def end_of_data(self):

@@ -29,7 +29,7 @@ the logs.
        support for. I.e. they are not translated into their own python class,
        but rather use the more generic and rough interface of
        :class:`BasicObject`. These rarely see the light of day, but if
-       present they can be accessed through :attr:`logicalfile.unknowns`.
+       present they can be accessed through :attr:`LogicalFile.unknowns`.
 
 Identifying specific objects
 ----------------------------
@@ -51,8 +51,8 @@ same value in its origin field.
 have an identical signature. E.g. if there are two :class:`Channel` objects
 with the same name/mnemonic and both belong to the same origin.
 
-To access a specific object use :func:`logicalfile.object`. Or search for objects
-matching a regular expression with :func:`logicalfile.find`
+To access a specific object use :func:`LogicalFile.object`. Or search for objects
+matching a regular expression with :func:`LogicalFile.find`
 
 .. code-block:: python
 
@@ -64,10 +64,10 @@ matching a regular expression with :func:`logicalfile.find`
    [Channel(GR), Channel(RGR)]
 
 .. note::
-   Note that :func:`logicalfile.object` allows you to ommit the origin and/or
+   Note that :func:`LogicalFile.object` allows you to ommit the origin and/or
    copynumber, but will raise if it's unable to uniquely identify the object.
-   The documentation for :func:`logicalfile.object` and
-   :func:`logicalfile.find` offers more examples.
+   The documentation for :func:`LogicalFile.object` and
+   :func:`LogicalFile.find` offers more examples.
 
 Relationship between metadata objects
 -------------------------------------

@@ -33,7 +33,7 @@ from .. import core
 from . import utils
 
 """ dlis and exact matchers are frequently used by most methods on
-logicalfile. To avoid the overhead of initializing a new instance of these for
+LogicalFile. To avoid the overhead of initializing a new instance of these for
 every method-call they are cached as globals here.
 
 Although possible, these globals are not intended to be changed by the end user directly.
@@ -79,7 +79,7 @@ class physicalfile(tuple):
     --------
 
     dlisio.dlis.load : Open and Index a DLIS-file
-    dlisio.dlis.logicalfile : Interface for working with a single Logical File
+    dlisio.dlis.LogicalFile : Interface for working with a single Logical File
     """
     def __enter__(self):
         return self
@@ -117,7 +117,7 @@ class physicalfile(tuple):
         return utils.Summary(info=buf.getvalue())
 
 
-class logicalfile(object):
+class LogicalFile(object):
     """Logical file (LF)
 
     This class supplies the main interface for working with a single Logical
@@ -237,7 +237,7 @@ class logicalfile(object):
             desc = self.fileheader.id
         except AttributeError:
             desc = 'Unknown'
-        return 'logicalfile({})'.format(desc)
+        return 'LogicalFile({})'.format(desc)
 
     class IndexedObjectDescriptor:
         """ Return all objects of this type"""
