@@ -22,7 +22,7 @@ object containing all the Logical Files (LF) in ``myfile.lis``.
 
 .. note::
     If you are unfamiliar with Logical Files and the internal structure of a
-    LIS file, please refer to :class:`dlisio.lis.logical_file` and
+    LIS file, please refer to :class:`dlisio.lis.LogicalFile` and
     :class:`dlisio.lis.physical_file`.
 
 Lets have a closer look at one of the Logical Files returned by load:
@@ -31,7 +31,7 @@ Lets have a closer look at one of the Logical Files returned by load:
 
    >>> f, *tail = files
 
-The Logical File, ``f``, is an instance of :class:`dlisio.lis.logical_file`
+The Logical File, ``f``, is an instance of :class:`dlisio.lis.LogicalFile`
 which is the main interface for interacting with Logical Files.
 
 A Logical File contains a File Header Logical Header (FTLR), and optionally a

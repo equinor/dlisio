@@ -13,7 +13,7 @@ LIS Physical File
 
 LIS Logical File
 -----------------
-.. autoclass:: dlisio.lis.logical_file()
+.. autoclass:: dlisio.lis.LogicalFile()
 
 LIS Curves
 ----------

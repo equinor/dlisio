@@ -54,7 +54,7 @@ class HeaderTrailer():
         return parse_record(self.rawtrailer)
 
 
-class logical_file():
+class LogicalFile():
     """ Logical File (LF)
 
     This class is the main interface for working with a single LF. A LF is
@@ -91,7 +91,7 @@ class logical_file():
        A dlisio-created index of all Logical Records (LR) in the current
        Logical File (LF). The index is created at load and gives dlisio random
        access to the LR's. The index can be iterated and records can be
-       extracted using :attr:`dlisio.lis.logical_file.io`. For normal workflow
+       extracted using :attr:`dlisio.lis.LogicalFile.io`. For normal workflow
        it should not be necessary to interact directly with the index.
 
     reel : dlisio.lis.HeaderTrailer
@@ -133,7 +133,7 @@ class logical_file():
         self.close()
 
     def __repr__(self):
-        msg = 'logical_file(path="{}", io={}, index={})'
+        msg = 'LogicalFile(path="{}", io={}, index={})'
         return msg.format(self.path, self.io, self.index)
 
     def header(self):
@@ -271,7 +271,7 @@ class physical_file(tuple):
     --------
 
     dlisio.lis.load : Open and Index a LIS-file
-    dlisio.lis.logical_file : A wrapper for a single Logical File
+    dlisio.lis.LogicalFile : A wrapper for a single Logical File
     """
     def __enter__(self):
         return self

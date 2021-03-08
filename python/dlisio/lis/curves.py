@@ -31,7 +31,7 @@ def curves(f, dfsr, strict=True):
     Parameters
     ----------
 
-    f : logical_file
+    f : LogicalFile
         The logcal file that the dfsr belongs to
 
     dfsr: dlisio.core.dfsr
