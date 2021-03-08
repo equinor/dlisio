@@ -261,6 +261,65 @@ Reel Trailer (RTLR)
 
         :type: str
 
+
+LIS Structures
+--------------
+
+Other structures defined by LIS79
+
+.. class:: dlisio.core.component_block()
+
+   Component Block (CB)
+
+   Component Blocks are the basic structure of an Information Record. Each CB
+   contains an individual piece of information.
+
+   .. attribute:: type_nb
+
+        Helps define how a :class:`dlisio.lis.InformationRecord` is formatted.
+        E.g. as a series of individual pieces of information or a table of
+        information.
+
+        :type: int
+
+   .. attribute:: reprc
+
+        The type of :attr:`component`
+
+        :type: int
+
+   .. attribute:: size
+
+       The size of :attr:`component`
+
+       :type: int
+
+   .. attribute:: category
+
+       Category is undefined by LIS79
+
+       :type: int
+
+   .. attribute:: mnemonic
+
+       The name of the Component Block
+
+       :type: str
+
+   .. attribute:: units
+
+       The units of measurement for :attr:`component`
+
+       :type: str
+
+   .. attribute:: component
+
+       The actual data of this Component Block
+
+
+.. autoclass:: dlisio.lis.InformationRecord
+
+
 Utilities
 ---------
 .. autoclass:: dlisio.lis.HeaderTrailer

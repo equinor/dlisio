@@ -187,6 +187,8 @@ using value_type = mpark::variant<
     lis::mask
 >;
 
+// Data Format Specification Records
+
 enum class entry_type : std::uint8_t {
     terminator         = 0,
     data_rec_type      = 1,
@@ -291,6 +293,25 @@ struct dfsr {
 dfsr parse_dfsr( const lis::record& ) noexcept (false);
 
 std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false);
+
+// Information Records
+
+struct component_block {
+    lis::byte   type_nb;
+    lis::byte   reprc;
+    lis::byte   size;
+    lis::byte   category; // Category is undefined by LIS79
+    lis::string mnemonic; // Fixed size string (4 bytes)
+    lis::string units;    // Fixed size string (4 bytes)
+
+    value_type component;
+
+    static constexpr const int fixed_size = 12;
+};
+
+component_block read_component_block(const record&, std::size_t)
+noexcept (false);
+
 
 namespace detail {
 

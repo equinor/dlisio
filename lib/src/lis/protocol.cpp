@@ -6,6 +6,7 @@
 
 #include <fmt/core.h>
 
+#include <dlisio/exception.hpp>
 #include <dlisio/lis/protocol.hpp>
 #include <dlisio/lis/types.h>
 #include <dlisio/lis/types.hpp>
@@ -26,6 +27,7 @@ constexpr const int lis::prheader::size;
 constexpr const int lis::spec_block0::size;
 constexpr const int lis::spec_block1::size;
 constexpr const int lis::entry_block::fixed_size;
+constexpr const int lis::component_block::fixed_size;
 constexpr const int lis::file_header::size;
 constexpr const int lis::file_trailer::size;
 constexpr const int lis::tape_header::size;
@@ -478,6 +480,40 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
     }
 
     return fmt;
+}
+
+lis::component_block read_component_block( const lis::record& rec, std::size_t offset )
+noexcept (false) {
+    const auto* cur = rec.data.data() + offset;
+    const auto* end = cur + rec.data.size();
+
+    if ( std::distance(cur, end) < lis::component_block::fixed_size ) {
+        const auto msg = "lis::component_block: "
+                         "{} bytes left in record, expected at least {} more";
+        const auto left = std::distance(cur, end);
+        throw dlisio::truncation_error( fmt::format(
+                    msg, left, lis::component_block::fixed_size) );
+    }
+
+    lis::component_block component;
+
+    cur = cast( cur, component.type_nb ); // TODO verify type
+    cur = cast( cur, component.reprc );   // TODO verify reprc
+    cur = cast( cur, component.size );
+    cur = cast( cur, component.category );
+    cur = cast( cur, component.mnemonic, 4 );
+    cur = cast( cur, component.units, 4 );
+
+    if ( std::distance(cur, end) < lis::decay( component.size ) ) {
+        const auto msg = "lis::component_block: "
+                         "{} bytes left in record, expected at least {} more";
+        const auto left = std::distance(cur, end);
+        throw dlisio::truncation_error(fmt::format(msg, left, lis::decay(component.size)));
+    }
+
+    element(cur, component.size, component.reprc, component.component);
+
+    return component;
 }
 
 namespace {

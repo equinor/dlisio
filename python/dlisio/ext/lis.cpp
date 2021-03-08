@@ -402,6 +402,23 @@ void init_lis_extension(py::module_ &m) {
         // TODO implement spec_block 1 specific fields
     ;
 
+    py::class_< lis::component_block >( m, "component_block" )
+        .def_readonly( "type_nb",   &lis::component_block::type_nb   )
+        .def_readonly( "reprc",     &lis::component_block::reprc     )
+        .def_readonly( "size",      &lis::component_block::size      )
+        .def_readonly( "category",  &lis::component_block::category  )
+        .def_readonly( "mnemonic",  &lis::component_block::mnemonic  )
+        .def_readonly( "units",     &lis::component_block::units     )
+        .def_readonly( "component", &lis::component_block::component )
+        .def( "__repr__", []( const lis::component_block& x ) {
+            return "dlisio.core.component_block(mnem='{}', units='{}', component='{}')"_s.format(
+                x.mnemonic,
+                x.units,
+                x.component
+            );
+        })
+    ;
+
     py::class_< lis::detail::file_record >( m, "file_record" )
         .def_readonly( "file_name",           &lis::detail::file_record::file_name           )
         .def_readonly( "service_sublvl_name", &lis::detail::file_record::service_sublvl_name )
