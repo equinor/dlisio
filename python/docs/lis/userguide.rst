@@ -17,13 +17,13 @@ designed to work with python's ``with``-statement:
    >>> with lis.load('myfile.lis') as files:
    ...      pass     
 
-This returns an instance of :class:`dlisio.lis.physical_file` - a tuple-like
+This returns an instance of :class:`dlisio.lis.PhysicalFile` - a tuple-like
 object containing all the Logical Files (LF) in ``myfile.lis``.
 
 .. note::
     If you are unfamiliar with Logical Files and the internal structure of a
     LIS file, please refer to :class:`dlisio.lis.LogicalFile` and
-    :class:`dlisio.lis.physical_file`.
+    :class:`dlisio.lis.PhysicalFile`.
 
 Lets have a closer look at one of the Logical Files returned by load:
 

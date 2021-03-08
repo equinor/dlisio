@@ -97,7 +97,7 @@ class LogicalFile():
     reel : dlisio.lis.HeaderTrailer
         The reel that this Logical File (LF) belongs to.
 
-        See :class:`dlisio.lis.physical_file` for more on the relationship
+        See :class:`dlisio.lis.PhysicalFile` for more on the relationship
         between LIS reels and LF's. See :class:`dlisio.core.reel_header` and
         :class:`dlisio.core.reel_trailer` for more on the Reel Logical Records
         (RHLR, RTLR).
@@ -105,7 +105,7 @@ class LogicalFile():
     tape : dlisio.lis.HeaderTrailer
         The tape that this Logical File (LF) belongs to.
 
-        See :class:`dlisio.lis.physical_file` for more on the relationship
+        See :class:`dlisio.lis.PhysicalFile` for more on the relationship
         between LIS tapes and LF's. See :class:`dlisio.core.tape_header` and
         :class:`dlisio.core.tape_trailer` for more on the Tape Logical Records
         (THLR, TTLR).
@@ -214,7 +214,7 @@ class LogicalFile():
         recs = [self.io.read_record(x) for x in ex if x.type == dfs]
         return [parse_record(x) for x in recs]
 
-class physical_file(tuple):
+class PhysicalFile(tuple):
     """ Physical File - A regular file on disk
 
     Think of a LIS file as a directory. The top directory is your regular file
@@ -249,7 +249,7 @@ class physical_file(tuple):
 
     When reading the LIS file with :func:`dlisio.lis.load`, dlisio will flatten
     the above tree structure and simply return a tuple-like object
-    (:class:`physical_file`) of all the Logical Files. The Reel and Tape in
+    (:class:`PhysicalFile`) of all the Logical Files. The Reel and Tape in
     which a Logical File belongs to can be queried directly from the Logical
     File.
 
@@ -284,7 +284,7 @@ class physical_file(tuple):
             f.close()
 
     def __repr__(self):
-        return 'physical_file(logical files: {})'.format(len(self))
+        return 'PhysicalFile(logical files: {})'.format(len(self))
 
 
 def parse_record(rec):

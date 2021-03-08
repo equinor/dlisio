@@ -9,7 +9,7 @@ Load a LIS-file
 
 LIS Physical File
 -----------------
-.. autoclass:: dlisio.lis.physical_file()
+.. autoclass:: dlisio.lis.PhysicalFile()
 
 LIS Logical File
 -----------------
