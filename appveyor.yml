@@ -14,8 +14,6 @@ environment:
     TWINE_PASSWORD:
         secure: l6EOt89SzIItVoVNEMhf/fhrJ0o+HVNn0vQmE0Opt9Y=
     matrix:
-        - PYTHON: C:\Python35
-          PYTHON_VERSION: 35
         - PYTHON: C:\Python36
           PYTHON_VERSION: 36
         - PYTHON: C:\Python37

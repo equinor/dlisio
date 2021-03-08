@@ -389,12 +389,9 @@ def test_ascii_broken_utf8():
 
 def test_datetime_invalid():
     fpath = 'data/chap4-7/iflr/invalid-dtime.dlis'
-    # run this test from python 3.6 only as code doesn't fail on python 3.5
-    # check might be removed once we remove support for python 3.5
-    if sys.version_info.major >= 3 and sys.version_info.minor > 5:
-        with pytest.raises(RuntimeError) as excinfo:
-            _ = load_curves(fpath)
-        assert "ValueError: day is out of range for month" in str(excinfo.value)
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = load_curves(fpath)
+    assert "ValueError: day is out of range for month" in str(excinfo.value)
 
 def test_fmt_broken():
     fpath = 'data/chap4-7/iflr/broken-fmt.dlis'

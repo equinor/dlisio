@@ -24,7 +24,6 @@ addons:
 jobs:
     fast_finish: true
     include:
-        - python: 3.5
         - python: 3.6
         - python: 3.7
         - python: 3.8
@@ -40,12 +39,6 @@ jobs:
               - SOURCEDEPLOY=1
               - WERROR="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror"
               - MKDOC="-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
-        - os: osx
-          python: 3.5
-          language: generic
-          env:
-            - MB_PYTHON_VERSION=3.5
-            - MACOSX_DEPLOYMENT_TARGET=10.9
         - os: osx
           language: generic
           python: 3.6

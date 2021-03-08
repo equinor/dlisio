@@ -249,12 +249,9 @@ def test_repcode_invalid_datetime(tmpdir, merge_files_oneLR):
     with dlis.load(path) as (f, *tail):
         obj = f.object('VERY_MUCH_TESTY_SET', 'OBJECT', 1, 1)
 
-        # run this test from python 3.6 only as code doesn't fail on python 3.5
-        # check might be removed once we remove support for python 3.5
-        if sys.version_info.major >= 3 and sys.version_info.minor > 5:
-            with pytest.raises(ValueError) as excinfo:
-                _ = obj.attic['DTIME'].value
-            assert "month must be in 1..12" in str(excinfo.value)
+        with pytest.raises(ValueError) as excinfo:
+            _ = obj.attic['DTIME'].value
+        assert "month must be in 1..12" in str(excinfo.value)
 
 def test_repcode_invalid_in_template_value(tmpdir, merge_files_oneLR):
     path = os.path.join(str(tmpdir), 'invalid-repcode-template-value.dlis')
