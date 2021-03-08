@@ -28,6 +28,9 @@ jobs:
         - python: 3.6
         - python: 3.7
         - python: 3.8
+        - python: 3.9
+          env: MB_ML_VER=2010
+
         - os: linux
           compiler: clang
           python: 3.8
@@ -60,6 +63,12 @@ jobs:
           python: 3.8
           env:
             - MB_PYTHON_VERSION=3.8
+            - MACOSX_DEPLOYMENT_TARGET=10.9
+        - os: osx
+          language: generic
+          python: 3.9
+          env:
+            - MB_PYTHON_VERSION=3.9
             - MACOSX_DEPLOYMENT_TARGET=10.9
         - os: linux
           arch: s390x

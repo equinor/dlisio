@@ -7,8 +7,13 @@ function run_tests {
 
 function pre_build {
     if [ -d build-centos5 ]; then return; fi
-
-    python -m pip install "cmake<3.14" pybind11 scikit-build
+    # the cmakes available in yum for centos5 are too old (latest 2.11.x), so
+    # fetch a newer version pypi. Files newer than 3.13.3 are not available
+    # for manylinux1, so pin that. However, cmake < 3.14 is not packaged for python 3.9
+    python -m pip install \
+        "cmake < 3.14; python_version < '3.9'" \
+        "cmake; python_version >= '3.9'" \
+        pybind11 scikit-build
 
     # On linux multibuild runs in a container, only copying with it the root
     # directory of the repo. Thus, the system installed layered-file-protocols

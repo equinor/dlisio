@@ -202,6 +202,12 @@ jobs:
       - python_build:
           docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
 
+  python-39:
+    docker:
+      - image: circleci/python:3.9
+    steps:
+      - python_build
+
   windows_build:
     executor:
       name: win/default
@@ -484,6 +490,7 @@ workflows:
       - python-36
       - python-37
       - python-38
+      - python-39
 
   windows:
     jobs:
@@ -491,7 +498,7 @@ workflows:
           name: build-python-<< matrix.python >>-win-<< matrix.platform >>
           matrix:
             parameters:
-              python: ["3.5", "3.6", "3.7", "3.8"]
+              python: ["3.5", "3.6", "3.7", "3.8", "3.9"]
               platform: ["x86", "x64"]
           # filters on the "build" jobs are not accidental, CircleCI needs them
           filters:
@@ -501,7 +508,7 @@ workflows:
           name: deploy-python-<< matrix.python >>-win-<< matrix.platform >>
           matrix:
             parameters:
-              python: ["3.5", "3.6", "3.7", "3.8"]
+              python: ["3.5", "3.6", "3.7", "3.8", "3.9"]
               platform: ["x86", "x64"]
           requires:
             - build-python-<< matrix.python >>-win-<< matrix.platform >>
