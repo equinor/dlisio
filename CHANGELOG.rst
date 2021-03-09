@@ -6,6 +6,36 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.3.0_ - 2020.03.09
+-------------------
+* Added an initial pass at a Log Information Standard 79 (LIS79) reader. Like
+  the DLIS reader, the new LIS reader is mainly implemented in C/C++ with
+  python bindings on top. The reader is not feature complete at this point. But
+  it can read most curves, with a few exceptions (see the docs of
+  dlisio.lis.curves). Basic metadata such as LIS Header/trailer Records (RHLR,
+  RTLR, THLR, TTLR, FHLR, FTLR) can also be read. Support for more complex LIS
+  Records such Information Records is not yet added. The LIS reader
+  resides in the python submodule ``dlisio.lis``.
+* The python module is restructured to accommodate the new LIS reader. Most
+  notably, all DLIS related functionality is moved to the submodule
+  ``dlisio.dlis``. I.e.  this release breaks the main entry point of dlisio
+  ``dlisio.load`` which from this release and onwards is moved to
+  ``dlisio.dlis.load``. For a full overview of the restructuring see
+  commit ``#736d545``.
+* The documentation on readthedocs_ has been given an overhaul to fit the new
+  module structure and LIS documentation is added.
+* Added support for DLIS NOFORM objects.
+* Better debug information for broken DLIS files.
+* Better error message when passing a directory as path to ``dlisio.dlis.load``.
+* Nicer error message when failing to construct datetime objects due to invalid
+  dates in the file.
+* Added support for python 3.9
+* Dropped support for python 3.5
+* Restructuring the C/C++ core of dlisio, please refer to the git log for a
+  full overview of the restructuring.
+* The C and C++ targets are merged into one target ``dlisio``, and
+  ``dlisio-extension`` ceased to exist.
+
 0.2.6_ - 2020.12.16
 -------------------
 * Fixes a bug that caused ``dlisio.load`` to fail on files >2GB on Windows.
@@ -182,6 +212,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.3.0: https://github.com/equinor/dlisio/compare/v0.2.6...v0.3.0
 .. _0.2.6: https://github.com/equinor/dlisio/compare/v0.2.5...v0.2.6
 .. _0.2.5: https://github.com/equinor/dlisio/compare/v0.2.4...v0.2.5
 .. _0.2.4: https://github.com/equinor/dlisio/compare/v0.2.3...v0.2.4

@@ -1,7 +1,7 @@
 import logging
 
 from .. import core
-from .file import logical_file, physical_file, HeaderTrailer, parse_record
+from .file import LogicalFile, PhysicalFile, HeaderTrailer, parse_record
 
 def load(path):
     """ Loads and indexes a LIS file
@@ -9,7 +9,7 @@ def load(path):
     Load does more than just opening the file. A LIS file has no random access
     in itself, so load scans the entire file and creates its own index to
     enumlate random access. The file is also segmented into Logical Files, see
-    :class:`physical_file` and :class:`logical_file`.
+    :class:`PhysicalFile` and :class:`LogicalFile`.
 
     Notes
     -----
@@ -28,7 +28,7 @@ def load(path):
     Returns
     -------
 
-    lis : dlisio.lis.physical_file
+    lis : dlisio.lis.PhysicalFile
     """
     def read_as_tapemark(f):
         try:
@@ -132,7 +132,7 @@ def load(path):
                 tape = HeaderTrailer()
 
         else:
-            logfile = logical_file(path, f, index, reel, tape)
+            logfile = LogicalFile(path, f, index, reel, tape)
             logical_files.append(logfile)
 
         if truncated: break
@@ -142,7 +142,7 @@ def load(path):
         msg += 'Reason: File likely truncated\nFilepath: {}'
         logging.error(msg.format(offset, path))
 
-    return physical_file(logical_files)
+    return PhysicalFile(logical_files)
 
 
 def is_delimiter(recinfo):

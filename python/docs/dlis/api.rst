@@ -8,11 +8,11 @@ Load a DLIS-file
 
 Physical File
 -------------
-.. autoclass:: dlisio.dlis.physicalfile()
+.. autoclass:: dlisio.dlis.PhysicalFile()
 
 Logical Files
 -------------
-.. autoclass:: dlisio.dlis.logicalfile()
+.. autoclass:: dlisio.dlis.LogicalFile()
     :members:
     :exclude-members: types, IndexedObjectDescriptor
     :member-order: bysource

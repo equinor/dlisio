@@ -54,7 +54,7 @@ class HeaderTrailer():
         return parse_record(self.rawtrailer)
 
 
-class logical_file():
+class LogicalFile():
     """ Logical File (LF)
 
     This class is the main interface for working with a single LF. A LF is
@@ -91,13 +91,13 @@ class logical_file():
        A dlisio-created index of all Logical Records (LR) in the current
        Logical File (LF). The index is created at load and gives dlisio random
        access to the LR's. The index can be iterated and records can be
-       extracted using :attr:`dlisio.lis.logical_file.io`. For normal workflow
+       extracted using :attr:`dlisio.lis.LogicalFile.io`. For normal workflow
        it should not be necessary to interact directly with the index.
 
     reel : dlisio.lis.HeaderTrailer
         The reel that this Logical File (LF) belongs to.
 
-        See :class:`dlisio.lis.physical_file` for more on the relationship
+        See :class:`dlisio.lis.PhysicalFile` for more on the relationship
         between LIS reels and LF's. See :class:`dlisio.core.reel_header` and
         :class:`dlisio.core.reel_trailer` for more on the Reel Logical Records
         (RHLR, RTLR).
@@ -105,7 +105,7 @@ class logical_file():
     tape : dlisio.lis.HeaderTrailer
         The tape that this Logical File (LF) belongs to.
 
-        See :class:`dlisio.lis.physical_file` for more on the relationship
+        See :class:`dlisio.lis.PhysicalFile` for more on the relationship
         between LIS tapes and LF's. See :class:`dlisio.core.tape_header` and
         :class:`dlisio.core.tape_trailer` for more on the Tape Logical Records
         (THLR, TTLR).
@@ -133,7 +133,7 @@ class logical_file():
         self.close()
 
     def __repr__(self):
-        msg = 'logical_file(path="{}", io={}, index={})'
+        msg = 'LogicalFile(path="{}", io={}, index={})'
         return msg.format(self.path, self.io, self.index)
 
     def header(self):
@@ -214,7 +214,7 @@ class logical_file():
         recs = [self.io.read_record(x) for x in ex if x.type == dfs]
         return [parse_record(x) for x in recs]
 
-class physical_file(tuple):
+class PhysicalFile(tuple):
     """ Physical File - A regular file on disk
 
     Think of a LIS file as a directory. The top directory is your regular file
@@ -249,7 +249,7 @@ class physical_file(tuple):
 
     When reading the LIS file with :func:`dlisio.lis.load`, dlisio will flatten
     the above tree structure and simply return a tuple-like object
-    (:class:`physical_file`) of all the Logical Files. The Reel and Tape in
+    (:class:`PhysicalFile`) of all the Logical Files. The Reel and Tape in
     which a Logical File belongs to can be queried directly from the Logical
     File.
 
@@ -271,7 +271,7 @@ class physical_file(tuple):
     --------
 
     dlisio.lis.load : Open and Index a LIS-file
-    dlisio.lis.logical_file : A wrapper for a single Logical File
+    dlisio.lis.LogicalFile : A wrapper for a single Logical File
     """
     def __enter__(self):
         return self
@@ -284,7 +284,7 @@ class physical_file(tuple):
             f.close()
 
     def __repr__(self):
-        return 'physical_file(logical files: {})'.format(len(self))
+        return 'PhysicalFile(logical files: {})'.format(len(self))
 
 
 def parse_record(rec):

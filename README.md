@@ -39,6 +39,12 @@ the industry. It is an attempt at a powerful community-driven, portable,
 easy-to-use and flexible library for well logs, that can be used to build a
 wide array of applications.
 
+As of version 0.3.0, dlisio is extended to also read Log Information Standard 79
+([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)). An extended version of the
+LIS79 standard called LIS84/Enhanced LIS exists, but this version is currently
+not supported by dlisio. Please note that the LIS reader is experimental and
+lacks the same thorough testing and real world experience as the DLIS reader.
+
 Features are added as they are needed; suggestions, defect reports, and
 contributions of all kinds are very welcome.
 
@@ -107,9 +113,36 @@ By default, the python library is built.
 
 ## Tutorial ##
 
-The API documentation is avaliable on [readthedocs](https://dlisio.readthedocs.io/en/stable/).
-Here you also find some simple examples to get you started with dlis and
-dlisio.
+dlisio's documentation is hosted on
+[readthedocs](https://dlisio.readthedocs.io/en/stable/). Please refer there for
+proper introduction to dlisio, and the file-formats DLIS and LIS. With dlisio
+it is easy to read the curve-data from DLIS-files:
+
+```python
+from dlisio import dlis
+
+with dlis.load('myfile.dlis') as files:
+    for f in files:
+        for frame in f.frames:
+            curves = f.curves()
+            # Do something with the curves
+
+```
+and from LIS-files:
+
+```python
+from dlisio import lis
+
+with lis.load('myfile.lis') as files:
+    for f in files:
+        for format_spec in f.data_format_specs:
+            curves = lis.curves(f, format_spec)
+            # Do something with the curves
+```
+
+In both cases the curves are returned as [strucutured
+numpy.ndarray](https://numpy.org/doc/stable/user/basics.rec.html) with the
+curve mnemonics as field names (column names).
 
 ## Contributing ##
 

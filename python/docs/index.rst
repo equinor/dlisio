@@ -14,8 +14,9 @@ exists, but this version is currently not supported by dlisio.
 
 .. warning::
    The LIS79 reader should be used with caution. It is experimental and lacks
-   thorough testing and real world experience. Early adaptors are encouraged to
-   report any issues or bugs in the issue tracker on GitHub [3]_
+   the same thorough testing and real world experience as the DLIS reader.
+   Early adopters are encouraged to report any issues or bugs in the issue
+   tracker on GitHub [3]_
 
 Before you get started we recommended that you familiarize yourself with some
 basic concepts of the DLIS- and LIS file formats. These are non-trivial formats

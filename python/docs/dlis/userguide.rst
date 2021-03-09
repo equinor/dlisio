@@ -15,7 +15,7 @@ class instances. E.g: :code:`help(frame)` or :code:`help(frame.curves)`
 Opening files
 -------------
 
-Load all the :class:`logicalfile`:
+Load all the :class:`LogicalFile`:
 
 .. code-block:: python
     
@@ -24,7 +24,7 @@ Load all the :class:`logicalfile`:
     ...     for f in files:
     ...         pass
 
-The returned :code:`files` is an instance of :class:`physicalfile` that can be
+The returned :code:`files` is an instance of :class:`PhysicalFile` that can be
 iterated over and operations can be applied to each logical file.
 
 If you only want to work with one logical file at the time, :func:`load`
@@ -57,15 +57,15 @@ file:
     -------------
     Number of Logical Files : 3
 
-    Description : logicalfile(DDBC1)
+    Description : LogicalFile(DDBC1)
     Frames      : 0
     Channels    : 0
 
-    Description : logicalfile(DDBC2)
+    Description : LogicalFile(DDBC2)
     Frames      : 2
     Channels    : 22
 
-    Description : logicalfile(DDBC3)
+    Description : LogicalFile(DDBC3)
     Frames      : 2
     Channels    : 160
 
@@ -78,7 +78,7 @@ Or about a logical file:
     ------------
     Logical File
     ------------
-    Description  : logicalfile(MSCT_200LTP)
+    Description  : LogicalFile(MSCT_200LTP)
     Frames       : 2
     Channels     : 104
 
@@ -109,13 +109,13 @@ objects of a type can be reached by name, e.g. channels or coefficients:
 
 See :ref:`Logical files` for a full list of all object types.
 
-:func:`logicalfile.object` lets you access a specific object:
+:func:`LogicalFile.object` lets you access a specific object:
 
 .. code-block:: python
 
     >>> obj = f.object('CHANNEL', 'TDEP')
 
-Objects can also be searched for with :func:`logicalfile.find`:
+Objects can also be searched for with :func:`LogicalFile.find`:
 
 .. code-block:: python
 
