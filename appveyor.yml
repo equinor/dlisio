@@ -3,8 +3,8 @@ version: 1.0.{build}
 configuration:
     - Release
 
-os: Visual Studio 2015
-image: Visual Studio 2015
+os: Visual Studio 2019
+image: Visual Studio 2019
 
 platform:
     - x86
@@ -14,14 +14,14 @@ environment:
     TWINE_PASSWORD:
         secure: l6EOt89SzIItVoVNEMhf/fhrJ0o+HVNn0vQmE0Opt9Y=
     matrix:
-        - PYTHON: C:\Python35
-          PYTHON_VERSION: 35
         - PYTHON: C:\Python36
           PYTHON_VERSION: 36
         - PYTHON: C:\Python37
           PYTHON_VERSION: 37
         - PYTHON: C:\Python38
           PYTHON_VERSION: 38
+        - PYTHON: C:\Python39
+          PYTHON_VERSION: 39
 
 matrix:
     fast_finish: true
