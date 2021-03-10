@@ -49,10 +49,10 @@ pybind_includes = [
 ]
 
 skbuild.setup(
-    name = 'dlisio',
+    name = 'test-ignore-eqdlis',
     description = 'DLIS v1',
     long_description = 'DLIS v1',
-    url = 'https://github.com/equinor/dlisio',
+    url = 'https://github.com/achaikou/dlisio',
     packages = ['dlisio', 'dlisio.dlis', 'dlisio.lis', 'dlisio.common', 'dlisio.dlis.utils'],
     license = 'LGPL-3.0',
     platforms = 'any',
