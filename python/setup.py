@@ -78,5 +78,5 @@ skbuild.setup(
     # skbuild's test imples develop, which is pretty obnoxious instead, use a
     # manually integrated pytest.
     cmdclass = { 'test': setuptools.command.test.test },
-    **getversion()
+    #**getversion()
 )
