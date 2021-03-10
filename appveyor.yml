@@ -7,21 +7,20 @@ os: Visual Studio 2019
 image: Visual Studio 2019
 
 platform:
-    - x86
     - x64
 
 environment:
+    TWINE_REPOSITORY:
+        https://test.pypi.org/legacy/
+    TWINE_USERNAME:
+        __token__
     TWINE_PASSWORD:
-        secure: l6EOt89SzIItVoVNEMhf/fhrJ0o+HVNn0vQmE0Opt9Y=
+        pypi-AgENdGVzdC5weXBpLm9yZwIkMzc4NjcwODctMzMwNS00MDcxLTllOGUtOTA0YThiMDk1MzExAAJDeyJwZXJtaXNzaW9ucyI6IHsicHJvamVjdHMiOiBbInRlc3QtaWdub3JlLWVxZGxpcyJdfSwgInZlcnNpb24iOiAxfQAABiDXboqFWX9ywWhXGSec_zpTOQPxzfCqqeE_elQxytiarg
     matrix:
-        - PYTHON: C:\Python36
-          PYTHON_VERSION: 36
         - PYTHON: C:\Python37
           PYTHON_VERSION: 37
         - PYTHON: C:\Python38
           PYTHON_VERSION: 38
-        - PYTHON: C:\Python39
-          PYTHON_VERSION: 39
 
 matrix:
     fast_finish: true
@@ -89,17 +88,11 @@ build_script:
     - IF DEFINED PYTHON python setup.py bdist_wheel -G %generator%
     - ps: popd
 
-before_deploy:
     - ps: pushd python
-
-after_deploy:
-    - ps: popd
-
-deploy_script:
     - ps: |
-          Write-Host "TAG: $env:APPVEYOR_REPO_TAG"
-          If ($env:APPVEYOR_REPO_TAG -eq "false") { return }
+          Write-Host "REPO: $env:TWINE_REPOSITORY"
 
           Write-Host "Uploading wheels to pypi"
-          Invoke-Expression "twine upload -u statoil-travis --skip-existing dist/*"
+          Invoke-Expression "twine upload --skip-existing dist/*"
           If ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }
+    - ps: popd
