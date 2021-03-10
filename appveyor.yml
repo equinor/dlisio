@@ -29,6 +29,7 @@ matrix:
 install:
     - IF DEFINED PYTHON (IF "%platform%" == "x64" SET PYTHON=%PYTHON%-x64)
     - IF DEFINED PYTHON SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+    - IF DEFINED PYTHON pip install --upgrade pip --user
     - IF DEFINED PYTHON pip install --upgrade
         twine
         wheel
