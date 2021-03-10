@@ -10,8 +10,9 @@ platform:
     - x64
 
 environment:
+    # URL is https://test.pypi.org/legacy/
     TWINE_REPOSITORY:
-        https://test.pypi.org/legacy/
+        testpypi
     TWINE_USERNAME:
         __token__
     TWINE_PASSWORD:
