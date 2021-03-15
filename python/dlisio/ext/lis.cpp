@@ -282,7 +282,7 @@ void init_lis_extension(py::module_ &m) {
 
     py::class_< lis::iodevice >( m, "lis_stream" )
         .def( "__repr__", [](const lis::iodevice&) {
-            return "lis::iodevice";
+            return "dlisio.core.iodevice";
         })
         .def( "read_record",   &lis::iodevice::read_record )
         .def( "index_records", &lis::iodevice::index_records )
@@ -313,7 +313,7 @@ void init_lis_extension(py::module_ &m) {
     py::class_< lis::lrheader >( m, "lrheader" )
         .def_readonly( "type", &lis::lrheader::type )
         .def( "__repr__", []( const lis::lrheader& x ) {
-            return "lis::lrheader(type={})"_s.format( x.type );
+            return "dlisio.core.lrheader(type={})"_s.format( x.type );
         })
     ;
 
@@ -324,7 +324,7 @@ void init_lis_extension(py::module_ &m) {
         .def( "__repr__", [](const lis::prheader& x) {
             bool prev = x.attributes & lis::prheader::predces;
             bool succ = x.attributes & lis::prheader::succses;
-            return "lis::prheader(length={}, pred={}, succ={})"_s.format(
+            return "dlisio.core.prheader(length={}, pred={}, succ={})"_s.format(
                 x.length,
                 prev,
                 succ
@@ -334,7 +334,7 @@ void init_lis_extension(py::module_ &m) {
 
     py::class_< lis::record_info >( m, "lis_record_info" )
         .def( "__repr__", [](const lis::record_info& x) {
-            return "lis::record_info(type={}, ltell={})"_s.format(
+            return "dlisio.core.record_info(type={}, ltell={})"_s.format(
                 x.type, x.ltell
             );
         })
@@ -346,7 +346,7 @@ void init_lis_extension(py::module_ &m) {
     py::class_< lis::record >( m, "lis_record", py::buffer_protocol() )
         .def_readonly( "info", &lis::record::info )
         .def( "__repr__", [](const lis::record& x) {
-            return "lis::record(type={}, ltell={}, size={})"_s.format(
+            return "dlisio.core.record(type={}, ltell={}, size={})"_s.format(
                 x.info.type, x.info.ltell, x.data.size()
             );
         })
@@ -368,7 +368,7 @@ void init_lis_extension(py::module_ &m) {
         .def( "implicits", &lis::record_index::implicits )
         .def( "size",      &lis::record_index::size )
         .def( "__repr__", [](const lis::record_index& x) {
-            return "lis::record_info(size={})"_s.format(
+            return "dlisio.core.record_info(size={})"_s.format(
                 x.size()
             );
         })
@@ -414,14 +414,14 @@ void init_lis_extension(py::module_ &m) {
     py::class_< lis::file_header, lis::detail::file_record >( m, "file_header" )
         .def_readonly( "prev_file_name", &lis::file_header::prev_file_name )
         .def( "__repr__", []( const lis::file_header& ) {
-                return "lis::file_header";
+                return "dlisio.core.file_header";
         })
     ;
 
     py::class_< lis::file_trailer, lis::detail::file_record >( m, "file_trailer" )
         .def_readonly( "next_file_name", &lis::file_trailer::next_file_name )
         .def( "__repr__", []( const lis::file_trailer& ) {
-                return "lis::file_trailer";
+                return "dlisio.core.file_trailer";
         })
     ;
 
@@ -437,28 +437,28 @@ void init_lis_extension(py::module_ &m) {
     py::class_< lis::tape_header, lis::detail::reel_tape_record >( m, "tape_header" )
         .def_readonly( "prev_tape_name", &lis::tape_header::prev_tape_name )
         .def( "__repr__", []( const lis::tape_header& ) {
-                return "lis::tape_header";
+                return "dlisio.core.tape_header";
         })
     ;
 
     py::class_< lis::tape_trailer, lis::detail::reel_tape_record >( m, "tape_trailer" )
         .def_readonly( "next_tape_name", &lis::tape_trailer::next_tape_name )
         .def( "__repr__", []( const lis::tape_trailer& ) {
-                return "lis::tape_trailer";
+                return "dlisio.core.tape_trailer";
         })
     ;
 
     py::class_< lis::reel_header, lis::detail::reel_tape_record >( m, "reel_header" )
         .def_readonly( "prev_reel_name", &lis::reel_header::prev_reel_name )
         .def( "__repr__", []( const lis::reel_header& ) {
-                return "lis::reel_header";
+                return "dlisio.core.reel_header";
         })
     ;
 
     py::class_< lis::reel_trailer, lis::detail::reel_tape_record >( m, "reel_trailer" )
         .def_readonly( "next_reel_name", &lis::reel_trailer::next_reel_name )
         .def( "__repr__", []( const lis::reel_trailer& ) {
-                return "lis::reel_trailer";
+                return "dlisio.core.reel_trailer";
         })
     ;
     ;
