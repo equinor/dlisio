@@ -371,3 +371,37 @@ TEST_CASE("Component Block", "[protocol]") {
         CHECK_THROWS_AS(lis::read_component_block( rec, 0 ), dlisio::truncation_error);
     }
 }
+
+TEST_CASE("Information Record", "[protocol]") {
+    lis::record rec;
+    rec.data = std::vector< char > {
+        0x02, // type
+        0x41, // representation code 65 (lis::string)
+        0x02, // size
+        0x03, // category
+        0x44, 0x45, 0x50, 0x54, // mnemonic
+        0x2E, 0x31, 0x49, 0x4E, // units
+        0x35, 0x34, // Component
+
+        0x02, // type
+        0x38, // representation code 56 (lis::i8)
+        0x01, // size
+        0x03, // category
+        0x44, 0x45, 0x50, 0x54, // mnemonic
+        0x2E, 0x31, 0x49, 0x4E, // units
+        0x04, // Component
+    };
+
+    const auto inforec = lis::parse_info_record( rec );
+    CHECK( inforec.components.size() == 2 );
+
+    auto component = inforec.components.at(0);
+    CHECK( mpark::holds_alternative< lis::string >(component.component) );
+    const auto v0 = lis::decay( mpark::get< lis::string >(component.component) );
+    CHECK( v0 == std::string("54") );
+
+    component = inforec.components.at(1);
+    CHECK( mpark::holds_alternative< lis::i8 >(component.component) );
+    const auto v1 = lis::decay( mpark::get< lis::i8 >(component.component) );
+    CHECK( v1 == 4 );
+}

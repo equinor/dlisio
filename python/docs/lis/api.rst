@@ -261,6 +261,23 @@ Reel Trailer (RTLR)
 
         :type: str
 
+Job Identification
+..................
+
+Job Identification Logical Records implement the interface of
+:class:`dlisio.lis.InformationRecord`
+
+Tool String Info
+................
+
+Tool String Info Logical Records implement the interface of
+:class:`dlisio.lis.InformationRecord`
+
+Wellsite Data
+.............
+
+Wellsite Data Logical Records implement the interface of
+:class:`dlisio.lis.InformationRecord`
 
 LIS Structures
 --------------

@@ -419,6 +419,22 @@ void init_lis_extension(py::module_ &m) {
         })
     ;
 
+    py::class_< lis::information_record >( m, "information_record" )
+        .def_readonly( "info",        &lis::information_record::info       )
+        .def_readonly( "components",  &lis::information_record::components )
+        .def_property_readonly( "isstructured", []( const lis::information_record& x ) {
+            if (x.components.size() == 0) return false;
+            const auto& cb = x.components.at(0);
+            return lis::decay(cb.type_nb) == 73;
+        })
+        .def( "__repr__", []( const lis::information_record& x ) {
+            return "dlisio.core.information_record(type={}, ncomponents={})"_s.format(
+                x.info.type,
+                x.components.size()
+            );
+        })
+    ;
+
     py::class_< lis::detail::file_record >( m, "file_record" )
         .def_readonly( "file_name",           &lis::detail::file_record::file_name           )
         .def_readonly( "service_sublvl_name", &lis::detail::file_record::service_sublvl_name )
@@ -496,6 +512,8 @@ void init_lis_extension(py::module_ &m) {
     m.def( "parse_dfsr", &lis::parse_dfsr );
     m.def("dfs_formatstring", &lis::dfs_fmtstr);
     /* end - parse.hpp */
+
+    m.def( "parse_info_record", &lis::parse_info_record );
 
     m.def("read_data_records", read_data_records);
 }

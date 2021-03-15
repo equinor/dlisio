@@ -516,6 +516,21 @@ noexcept (false) {
     return component;
 }
 
+information_record parse_info_record( const lis::record& rec )
+noexcept (false) {
+    lis::information_record inforec;
+    inforec.info = rec.info; //carry over the header information of the record
+
+    std::size_t offset = 0;
+    while ( offset < rec.data.size() ) {
+        const auto component = read_component_block(rec, offset);
+        offset += lis::component_block::fixed_size + lis::decay(component.size);
+        inforec.components.push_back( std::move(component) );
+    }
+
+    return inforec;
+}
+
 namespace {
 
 void parse_name( const char* cur, lis::file_header& rec ) {
