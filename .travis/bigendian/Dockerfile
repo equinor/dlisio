@@ -31,6 +31,7 @@ RUN make install
 WORKDIR /home/ci
 COPY . /home/ci/dlisio
 WORKDIR /home/ci/dlisio
+RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --user -r python/requirements-dev.txt
 WORKDIR /home/ci/dlisio/build
 RUN cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib -DPYTHON_EXECUTABLE=`which python3` ..

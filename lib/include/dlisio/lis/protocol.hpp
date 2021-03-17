@@ -187,6 +187,8 @@ using value_type = mpark::variant<
     lis::mask
 >;
 
+// Data Format Specification Records
+
 enum class entry_type : std::uint8_t {
     terminator         = 0,
     data_rec_type      = 1,
@@ -291,6 +293,37 @@ struct dfsr {
 dfsr parse_dfsr( const lis::record& ) noexcept (false);
 
 std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false);
+
+// Information Records
+
+struct component_block {
+    lis::byte   type_nb;
+    lis::byte   reprc;
+    lis::byte   size;
+    lis::byte   category; // Category is undefined by LIS79
+    lis::string mnemonic; // Fixed size string (4 bytes)
+    lis::string units;    // Fixed size string (4 bytes)
+
+    value_type component;
+
+    static constexpr const int fixed_size = 12;
+};
+
+component_block read_component_block(const record&, std::size_t)
+noexcept (false);
+
+/* Information Records as defined in ch 3.3.1. Data Information Record and ch
+ * 4.1.3. Types 32, 34, 39: Information Records.
+ *
+ * dlisio's implementation of Information Records does *not* include Encrypted
+ * Table Dump- and Table Dump Records.
+ */
+struct information_record {
+    record_info info;
+    std::vector< component_block > components;
+};
+
+information_record parse_info_record( const lis::record& ) noexcept (false);
 
 namespace detail {
 

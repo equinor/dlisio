@@ -1,6 +1,7 @@
 import logging
 
 from .. import core
+from .information_record import InformationRecord
 
 
 class HeaderTrailer():
@@ -214,6 +215,45 @@ class LogicalFile():
         recs = [self.io.read_record(x) for x in ex if x.type == dfs]
         return [parse_record(x) for x in recs]
 
+    def job_identification(self):
+        """ Job Identification Logical Records
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.lis.InformationRecord`
+        """
+        rectype = core.lis_rectype.job_identification
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [InformationRecord(parse_record(x)) for x in recs]
+
+    def wellsite_data(self):
+        """ Wellsite Data Logical Records
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.lis.InformationRecord`
+        """
+        rectype = core.lis_rectype.wellsite_data
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [InformationRecord(parse_record(x)) for x in recs]
+
+    def tool_string_info(self):
+        """ Tool String Info Logical Records
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.lis.InformationRecord`
+        """
+        rectype = core.lis_rectype.tool_string_info
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [InformationRecord(parse_record(x)) for x in recs]
+
 class PhysicalFile(tuple):
     """ Physical File - A regular file on disk
 
@@ -312,13 +352,16 @@ def parse_record(rec):
     """
     rtype = rec.info.type
     types = core.lis_rectype
-    if rtype   == types.data_format_spec: return core.parse_dfsr(rec)
-    elif rtype == types.file_header:      return core.parse_file_header(rec)
-    elif rtype == types.file_trailer:     return core.parse_file_trailer(rec)
-    elif rtype == types.reel_header:      return core.parse_reel_header(rec)
-    elif rtype == types.reel_trailer:     return core.parse_reel_trailer(rec)
-    elif rtype == types.tape_header:      return core.parse_tape_header(rec)
-    elif rtype == types.tape_trailer:     return core.parse_tape_trailer(rec)
+    if rtype   == types.data_format_spec:   return core.parse_dfsr(rec)
+    elif rtype == types.file_header:        return core.parse_file_header(rec)
+    elif rtype == types.file_trailer:       return core.parse_file_trailer(rec)
+    elif rtype == types.reel_header:        return core.parse_reel_header(rec)
+    elif rtype == types.reel_trailer:       return core.parse_reel_trailer(rec)
+    elif rtype == types.tape_header:        return core.parse_tape_header(rec)
+    elif rtype == types.tape_trailer:       return core.parse_tape_trailer(rec)
+    elif rtype == types.wellsite_data:      return core.parse_info_record(rec)
+    elif rtype == types.tool_string_info:   return core.parse_info_record(rec)
+    elif rtype == types.job_identification: return core.parse_info_record(rec)
     else:
         msg = "No parsing rule for {} Records"
         raise NotImplementedError(msg.format(core.rectype_tostring(rtype)))

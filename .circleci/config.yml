@@ -74,7 +74,9 @@ commands:
             sudo ldconfig /usr/local/lib
       - run:
           name: install python dependencies
-          command: python -m pip install --user -r python/requirements-dev.txt
+          command: |
+            python -m pip install --upgrade pip
+            python -m pip install --user -r python/requirements-dev.txt
       - run:
           name: build python
           command: |
@@ -96,7 +98,9 @@ commands:
     steps:
       - run:
           name: install python extra
-          command: python3 -m pip install --user -r python/requirements-dev.txt
+          command: |
+            python3 -m pip install --upgrade pip
+            python3 -m pip install --user -r python/requirements-dev.txt
       - run:
           name: configure
           command: |

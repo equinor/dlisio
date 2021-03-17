@@ -1,6 +1,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <dlisio/exception.hpp>
 #include <dlisio/lis/types.hpp>
 #include <dlisio/lis/protocol.hpp>
 
@@ -269,4 +270,138 @@ TEST_CASE("Data Format Specification Record", "[protocol]") {
     CHECK( lis::decay(spec.service_id)       == std::string("SLB   ")   );
     CHECK( lis::decay(spec.service_order_nr) == std::string("      54") );
     CHECK( lis::decay(spec.units)            == std::string(".1IN")     );
+}
+
+TEST_CASE("Component Block", "[protocol]") {
+    SECTION("Well-formatted - lis::i8") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x02, // type
+            0x38, // representation code 56 (lis::i8)
+            0x01, // size
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x04, // Component
+        };
+
+        const auto component = lis::read_component_block( rec, 0 );
+
+        CHECK( lis::decay(component.type_nb)  == 2  );
+        CHECK( lis::decay(component.reprc)    == 56 );
+        CHECK( lis::decay(component.size)     == 1  );
+        CHECK( lis::decay(component.category) == 3  );
+        CHECK( lis::decay(component.mnemonic) == std::string("DEPT") );
+        CHECK( lis::decay(component.units)    == std::string(".1IN") );
+
+        CHECK( mpark::holds_alternative< lis::i8 >(component.component) );
+        const auto value = lis::decay( mpark::get< lis::i8 >(component.component) );
+        CHECK( value == 4 );
+    }
+
+    SECTION("Well-formatted - lis::string") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x02, // type
+            0x41, // representation code 65 (lis::string)
+            0x02, // size
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x35, 0x34 // Component
+        };
+
+        const auto component = lis::read_component_block( rec, 0 );
+
+        CHECK( lis::decay(component.type_nb)  == 2  );
+        CHECK( lis::decay(component.reprc)    == 65 );
+        CHECK( lis::decay(component.size)     == 2  );
+        CHECK( lis::decay(component.category) == 3  );
+        CHECK( lis::decay(component.mnemonic) == std::string("DEPT") );
+        CHECK( lis::decay(component.units)    == std::string(".1IN") );
+
+        CHECK( mpark::holds_alternative< lis::string >(component.component) );
+        const auto value = lis::decay( mpark::get< lis::string >(component.component) );
+        CHECK( value == std::string("54") );
+    }
+
+    SECTION("Can be read from arbitrary offset") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x00, // dummy data
+            0x02, // type
+            0x38, // representation code 56 (lis::i8)
+            0x01, // size
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x04, // Component
+        };
+
+        const auto component = lis::read_component_block( rec, 1 );
+
+        CHECK( lis::decay(component.type_nb)  == 2  );
+        CHECK( lis::decay(component.reprc)    == 56 );
+        CHECK( lis::decay(component.size)     == 1  );
+        CHECK( lis::decay(component.category) == 3  );
+        CHECK( lis::decay(component.mnemonic) == std::string("DEPT") );
+        CHECK( lis::decay(component.units)    == std::string(".1IN") );
+
+        CHECK( mpark::holds_alternative< lis::i8 >(component.component) );
+        const auto value = lis::decay( mpark::get< lis::i8 >(component.component) );
+        CHECK( value == 4 );
+    }
+
+    SECTION("Too little data to parse entry") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x02, // type
+            0x38, // representation code 56 (lis::i8)
+            0x0b, // size
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x35, // Component
+        };
+
+        CHECK_THROWS_AS(lis::read_component_block( rec, 0 ), dlisio::truncation_error);
+    }
+}
+
+TEST_CASE("Information Record", "[protocol]") {
+    lis::record rec;
+    rec.data = std::vector< char > {
+        0x02, // type
+        0x41, // representation code 65 (lis::string)
+        0x02, // size
+        0x03, // category
+        0x44, 0x45, 0x50, 0x54, // mnemonic
+        0x2E, 0x31, 0x49, 0x4E, // units
+        0x35, 0x34, // Component
+
+        0x02, // type
+        0x38, // representation code 56 (lis::i8)
+        0x01, // size
+        0x03, // category
+        0x44, 0x45, 0x50, 0x54, // mnemonic
+        0x2E, 0x31, 0x49, 0x4E, // units
+        0x04, // Component
+    };
+
+    const auto inforec = lis::parse_info_record( rec );
+    CHECK( inforec.components.size() == 2 );
+
+    auto component = inforec.components.at(0);
+    CHECK( mpark::holds_alternative< lis::string >(component.component) );
+    const auto v0 = lis::decay( mpark::get< lis::string >(component.component) );
+    CHECK( v0 == std::string("54") );
+
+    component = inforec.components.at(1);
+    CHECK( mpark::holds_alternative< lis::i8 >(component.component) );
+    const auto v1 = lis::decay( mpark::get< lis::i8 >(component.component) );
+    CHECK( v1 == 4 );
 }

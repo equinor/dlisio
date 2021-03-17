@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <cstring>
 
 namespace dlisio {
 

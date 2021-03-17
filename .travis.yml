@@ -108,6 +108,7 @@ before_install:
     - before_install
 
 install:
+    - pip install --upgrade pip
     - pip install --upgrade -r python/requirements-dev.txt
     - bandit -c bandit.yml -r python/
 

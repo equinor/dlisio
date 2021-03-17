@@ -183,7 +183,7 @@ PYBIND11_MODULE(core, m) {
         .def_readonly( "prev", &dlisio::tapemark::prev )
         .def_readonly( "next", &dlisio::tapemark::next )
         .def( "__repr__", []( const dlisio::tapemark& x ) {
-            return "lis::tapemark(type={}, prev={}, next={})"_s.format(
+            return "dlisio.core.tapemark(type={}, prev={}, next={})"_s.format(
                     x.type, x.prev, x.next );
         })
     ;
