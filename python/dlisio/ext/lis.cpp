@@ -35,7 +35,7 @@ struct type_caster< mpark::variant< T... > > :
  */
 template < typename T >
 struct lis_caster {
-    PYBIND11_TYPE_CASTER(T, _("lisio.core.type.")+_(lis::typeinfo< T >::name));
+    PYBIND11_TYPE_CASTER(T, _("dlisio.core.type.")+_(lis::typeinfo< T >::name));
 
     static handle cast( const T& src, return_value_policy, handle ) {
         return py::cast( lis::decay( src ) ).release();
