@@ -22,4 +22,5 @@ RUN make install
 WORKDIR /home/ci
 COPY . /home/ci/dlisio_requirements
 WORKDIR /home/ci/dlisio_requirements
+RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --user -r python/requirements-dev.txt
