@@ -108,3 +108,35 @@ def test_layout_tif_09():
     assert_load_correctly(fpath, [lf])
 
 
+def test_padding_01():
+    # non-tifed file where some PR's sizes are not divisible by 4, no padding
+    fpath = 'data/lis/layouts/padding_01.lis'
+    assert_load_correctly(fpath, [Expected()])
+
+def test_padding_02():
+    # tifed file where some PR's sizes are not divisible by 4, no padding
+    fpath = 'data/lis/layouts/padding_02.lis'
+    assert_load_correctly(fpath, [Expected()])
+
+def test_padding_03():
+    # valid 00 padding to assure minimal record length
+    fpath = 'data/lis/layouts/padding_03.lis'
+    assert_load_correctly(fpath, [Expected()])
+
+def test_padding_04():
+    # 00 padding of some PRs to assure PR size % 4 = 0
+    fpath = 'data/lis/layouts/padding_04.lis'
+    assert_load_correctly(fpath, [Expected()])
+
+@pytest.mark.xfail(strict=True)
+def test_padding_05():
+    # non-00 padding of some PRs to assure PR size % 4 = 0
+    fpath = 'data/lis/layouts/padding_05.lis'
+    assert_load_correctly(fpath, [Expected()])
+
+def test_padding_06():
+    # padding at the very end - 00
+    fpath = 'data/lis/layouts/padding_06.lis'
+    assert_load_correctly(fpath, [Expected()])
+
+

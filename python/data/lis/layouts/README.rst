@@ -34,6 +34,17 @@ layout_tif_08.lis  New reel follows after missing TTLR and RTLR. Omitting TM(0):
 layout_tif_09.lis  Basic layout, but missing RTLR
 
 
+padding_01.lis     Non-TIFed file with PRs of size not divisible by 4 and no
+                   additional padding
+padding_02.lis     TIFed file with PRs of size not divisible by 4 and no
+                   additional padding
+padding_03.lis     TIFed file with padding that assures minimal custom PR size
+padding_04.lis     TIFed file with 00 padding that assures PR size is divisible
+                   by 4
+padding_05.lis     TIFed file with non-00 padding that assures PR size is
+                   divisible by 4
+padding_06.lis     TIFed file with 00es after last tapemark to assure file size
+                   is divisible by custom number
 
 
 ================== ===========================================================
