@@ -58,6 +58,10 @@ def curves(f, dfsr, strict=True):
         for workaround
 
     NotImplementedError
+        If the DFSR contains one or more channel where the type of the samples
+        is either lis::string or lis::mask
+
+    NotImplementedError
         If the DFSR contains one or more multi-dimensional channel(s). I.e.
         curves where each sample contains multiple values.
 
