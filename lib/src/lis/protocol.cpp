@@ -449,15 +449,26 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
             case rpc::f32low: { f=LIS_FMT_F32LOW; s=LIS_SIZEOF_F32LOW; break; }
             case rpc::f32fix: { f=LIS_FMT_F32FIX; s=LIS_SIZEOF_F32FIX; break; }
             case rpc::byte:   { f=LIS_FMT_BYTE;   s=LIS_SIZEOF_BYTE;   break; }
-
-            /* Assume for now that repcode 65 (lis::string) and repcode 77
-             * (lis::mask) cannot be used as types in the frame.
+            case rpc::string:
+            case rpc::mask: {
+            /* lis::string and lis::mask is a bit special in that they are
+             * variable length types, but do not encode their own length. From
+             * real world experience we have seen that these types are actually
+             * used in curves.
              *
-             * repcode 65 and 77 are variable length, but the length is not
-             * encoded in the type itself. Rather, it must come from an
-             * external source. It doesn't seem like DFSR and IFLR have a
-             * mechanism of specifying such sizes.
+             * These would require special handling as we need to assume
+             * that the each sample only contains a single entry, and then
+             * calculate the entry length from the reserved size and number of
+             * samples.
+             *
+             * For now, just throw a not implemented error.
              */
+                std::string msg = "lis::dfs_fmtstr: Cannot create formatstring"
+                                  ". Unsupported repcode ({}) in channel ({})";
+                const auto code = lis::decay(spec.reprc);
+                const auto mnem = lis::decay(spec.mnemonic);
+                throw dlisio::not_implemented(fmt::format(msg, code, mnem));
+            }
             default: {
                 std::string msg = "lis::dfs_fmtstr: Cannot create formatstring"
                                   ". Invalid repcode ({}) in channel ({})";

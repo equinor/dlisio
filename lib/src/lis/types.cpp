@@ -324,3 +324,18 @@ const char* lis_mask(const char* xs, const std::int32_t len, char* x) {
     return xs + len;
 }
 
+int lis_sizeof_type(int reprc) {
+    switch( reprc ) {
+        case LIS_I8:     return LIS_SIZEOF_I8;
+        case LIS_I16:    return LIS_SIZEOF_I16;
+        case LIS_I32:    return LIS_SIZEOF_I32;
+        case LIS_F16:    return LIS_SIZEOF_F16;
+        case LIS_F32:    return LIS_SIZEOF_F32;
+        case LIS_F32LOW: return LIS_SIZEOF_F32LOW;
+        case LIS_F32FIX: return LIS_SIZEOF_F32FIX;
+        case LIS_STRING: return LIS_SIZEOF_STRING;
+        case LIS_BYTE:   return LIS_SIZEOF_BYTE;
+        case LIS_MASK:   return LIS_SIZEOF_MASK;
+        default:         return -1;
+    }
+}

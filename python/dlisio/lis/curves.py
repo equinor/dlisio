@@ -58,6 +58,14 @@ def curves(f, dfsr, strict=True):
         for workaround
 
     NotImplementedError
+        If the DFSR contains one or more channel where the type of the samples
+        is either lis::string or lis::mask
+
+    NotImplementedError
+        If the DFSR contains one or more multi-dimensional channel(s). I.e.
+        curves where each sample contains multiple values.
+
+    NotImplementedError
         If the DFSR contains one or more "Fast Channels". These are channels
         that are recorded at a higher sampling rate than the rest of the
         channels. dlisio does not currently support fast channels.
@@ -122,6 +130,10 @@ def dfsr_dtype(dfsr, strict=True):
         (ch.mnemonic, np.dtype(nptype[core.lis_reprc(ch.reprc)]))
         for ch in dfsr.specs
     ]
+
+    sizeof = core.lis_sizeof_type
+    if any(x for x in dfsr.specs if x.reserved_size > sizeof(x.reprc)):
+        raise NotImplementedError("Multidimensional channels not supported")
 
     if any(x for x in dfsr.specs if x.samples > 1):
         raise NotImplementedError("Fast channel not implemented")
