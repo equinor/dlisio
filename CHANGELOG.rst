@@ -6,12 +6,12 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
-0.3.1_ - 2020.03.10
+0.3.1_ - 2021.03.10
 -------------------
 * Solves an issue in the Windows deploy pipeline on Appveyor that resulted in
   the pipeline failing to upload the python wheels to PyPi.
 
-0.3.0_ - 2020.03.09
+0.3.0_ - 2021.03.09
 -------------------
 * Added an initial pass at a Log Information Standard 79 (LIS79) reader. Like
   the DLIS reader, the new LIS reader is mainly implemented in C/C++ with
