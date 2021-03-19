@@ -550,3 +550,38 @@ TEST_CASE("Mask - n-byte bitmask", "[type]") {
 
 }
 
+TEST_CASE("Size of type", "[protocol]") {
+    SECTION("8-bit signed integer (lis::i8)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_I8) == LIS_SIZEOF_I8 );
+    }
+    SECTION("16-bit signed integer (lis::i16)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_I16) == LIS_SIZEOF_I16 );
+    }
+    SECTION("32-bit signed integer (lis::i32)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_I32) == LIS_SIZEOF_I32 );
+    }
+    SECTION("16-bit floating point (lis::f16)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_F16) == LIS_SIZEOF_F16 );
+    }
+    SECTION("32-bit floating point (lis::f32)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_F32) == LIS_SIZEOF_F32 );
+    }
+    SECTION("32-bit low resolution floating point (lis::f32low)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_F32LOW) == LIS_SIZEOF_F32LOW );
+    }
+    SECTION("32-bit fixed point (lis::f32fix)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_F32FIX) == LIS_SIZEOF_F32FIX );
+    }
+    SECTION("Alphanumeric (lis::string)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_STRING) == LIS_SIZEOF_STRING );
+    }
+    SECTION("Byte (lis::byte)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_BYTE) == LIS_SIZEOF_BYTE );
+    }
+    SECTION("Mask - bitmask (lis::mask)", "[protocol]") {
+        CHECK( lis_sizeof_type(LIS_MASK) == LIS_SIZEOF_MASK );
+    }
+    SECTION("Undefined code", "[protocol]") {
+        CHECK( lis_sizeof_type(34) == -1 );
+    }
+}

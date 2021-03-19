@@ -148,6 +148,16 @@ const char* lis_mask(const char*, const std::int32_t, char*);
 #define LIS_FMT_BYTE   'B' // (reprc 66) Byte
 #define LIS_FMT_MASK   'M' // (reprc 77) Mask - bitmask
 
+/** Byte size of a LIS type
+ *
+ * get the size (in bytes) of a particular data type. Expects a LIS_F32 or
+ * similar type code.
+ *
+ * Returns a negative value passed an invalid type code.
+ */
+DLISIO_API
+int lis_sizeof_type(int);
+
 #ifdef __cplusplus
 }
 #endif
