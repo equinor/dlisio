@@ -6,6 +6,15 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.3.2_ - 2021.03.19
+-------------------
+
+* Added support for reading the LIS79 record types: Job Identification,
+  Wellsite Data and Tool String Info.
+* Fixes a bug that led dlisio to attempt to read curves with multiple entries
+  in each sample, even though such support was never implemented. Now a
+  NotImplementedError is raised.
+
 0.3.1_ - 2021.03.10
 -------------------
 * Solves an issue in the Windows deploy pipeline on Appveyor that resulted in
@@ -217,6 +226,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.3.2: https://github.com/equinor/dlisio/compare/v0.3.1...v0.3.2
 .. _0.3.1: https://github.com/equinor/dlisio/compare/v0.3.0...v0.3.1
 .. _0.3.0: https://github.com/equinor/dlisio/compare/v0.2.6...v0.3.0
 .. _0.2.6: https://github.com/equinor/dlisio/compare/v0.2.5...v0.2.6
