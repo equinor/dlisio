@@ -47,4 +47,11 @@ padding_06.lis     TIFed file with 00es after last tapemark to assure file size
                    is divisible by custom number
 
 
+successor_00.lis   File is correctly divided into several successive PRs
+successor_01.lis   Successive PR expected, but new PR follows
+successor_02.lis   Successive PR expected, but RHLR follows
+successor_03.lis   Successive PR expected, but THLR follows
+successor_04.lis   Successive PR expected, but FHLR follows
+
+
 ================== ===========================================================
