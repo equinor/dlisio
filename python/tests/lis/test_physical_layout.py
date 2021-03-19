@@ -190,3 +190,63 @@ def test_successor_04(assert_error):
     assert_error("Stopped indexing")
 
 
+@pytest.mark.parametrize('filename', [
+    'truncated_01.lis',
+    'truncated_02.lis',
+    'truncated_03.lis',
+    'truncated_04.lis',
+    'truncated_05.lis',
+    'truncated_06.lis',
+    'truncated_07.lis',
+    'truncated_08.lis',
+    'truncated_09.lis',
+    'truncated_10.lis',
+    'truncated_11.lis',
+    'truncated_12.lis',
+    'truncated_13.lis',
+    'truncated_14.lis',
+])
+def test_truncated(filename, assert_error):
+    # Truncation happens in various places of the data
+    fpath = 'data/lis/layouts/' + filename
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("File likely truncated")
+
+# TODO: all wrong file tests have same error message, may be precised
+
+@pytest.mark.parametrize('filename', [
+    'wrong_01.lis',
+    'wrong_02.lis',
+])
+def test_wrong_not_lis(filename, assert_error):
+    # not a LIS file
+    fpath = 'data/lis/layouts/' + filename
+    assert_load_correctly(fpath, [])
+    assert_error("Stopped indexing")
+
+@pytest.mark.xfail(strict=True, reason="Current behavior: File is loaded OK."
+                                       "Expected behavior: undefined")
+def test_wrong_zeroed(assert_error):
+    # file is zeroed from certain point
+    fpath = 'data/lis/layouts/wrong_03.lis'
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("Stopped indexing")
+
+def test_wrong_TM(assert_error):
+    # TM before File Trailer fails the prev < next check
+    fpath = 'data/lis/layouts/wrong_04.lis'
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("Stopped indexing")
+
+# TODO: missing tests and good failures for files with broken PR length
+# due to not enough constraints we can wrongly index the big whole file before we
+# eventually fail somewhere. See if we come up with more constrains and tests
+def test_wrong_LR_type(assert_error):
+    # due to wrong PR length (real error) "LR" for the next "PR" has wrong type
+    fpath = 'data/lis/layouts/wrong_05.lis'
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("Stopped indexing")

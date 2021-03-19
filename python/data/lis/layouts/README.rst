@@ -54,4 +54,26 @@ successor_03.lis   Successive PR expected, but THLR follows
 successor_04.lis   Successive PR expected, but FHLR follows
 
 
+truncated_01.lis   File is truncated where successive PR is expected
+truncated_02.lis   File is truncated in the middle of the data
+truncated_03.lis   File is truncated after LR header
+truncated_04.lis   File is truncated in LR header
+truncated_05.lis   File is truncated after PR header
+truncated_06.lis   File is truncated in PR header
+truncated_07.lis   TIFed file is truncated where successive PR is expected
+truncated_08.lis   TIFed file is truncated in the middle of the data
+truncated_09.lis   TIFed file is truncated after LR header
+truncated_10.lis   TIFed file is truncated in LR header
+truncated_11.lis   TIFed file is truncated after PR header
+truncated_12.lis   TIFed file is truncated in PR header
+truncated_13.lis   TIFed file is truncated after TM
+truncated_14.lis   TIFed file is truncated in TM
+truncated_15.lis   File is truncated in second LF
+
+
+wrong_01.lis       Not a LIS file
+wrong_02.lis       Not a LIS TIFed file
+wrong_03.lis       File zeroed from certain point
+wrong_04.lis       TIF TM is wrong
+wrong_05.lis       LR Type is wrong
 ================== ===========================================================
