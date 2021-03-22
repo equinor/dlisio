@@ -146,49 +146,16 @@ def test_successor_00():
     lf = Expected(records=3)
     assert_load_correctly(fpath, [lf])
 
-@pytest.mark.xfail(strict=True, reason="Current behavior: PRs are read as one."
-                                       "Expected behavior: undefined")
-def test_successor_01(assert_error):
-    # After PR with expected successor comes PR with no predecessor
-    fpath = 'data/lis/layouts/successor_01.lis'
-    # expected behavior is undefined yet
-    lf = Expected(records=4)
-    assert_load_correctly(fpath, [lf])
-    assert_error("Stopped indexing")
-
-@pytest.mark.xfail(strict=True, reason="Current behavior: new Reel is ignored."
-                                       "Expected behavior: undefined")
-def test_successor_02(assert_error):
-    # warning: file not see in real life, test is based on current expectations
-    # PR is expected, but Reel Header follows
-    fpath = 'data/lis/layouts/successor_02.lis'
-    # expected behavior is undefined yet
+@pytest.mark.parametrize('filename', [
+    'data/lis/layouts/successor_01.lis',
+    'data/lis/layouts/successor_02.lis',
+    'data/lis/layouts/successor_03.lis',
+    'data/lis/layouts/successor_04.lis',
+])
+def test_successor(filename, assert_error):
     lf = Expected(records=1, ttlr=None, rtlr=None)
-    assert_load_correctly(fpath, [lf])
-    assert_error("Stopped indexing")
-
-@pytest.mark.xfail(strict=True, reason="Current behavior: new Tape is ignored."
-                                       "Expected behavior: undefined")
-def test_successor_03(assert_error):
-    # warning: file not see in real life, test is based on current expectations
-    # PR is expected, but Tape Header follows
-    fpath = 'data/lis/layouts/successor_03.lis'
-    # expected behavior is undefined yet
-    lf = Expected(records=1, ttlr=None)
-    assert_load_correctly(fpath, [lf])
-    assert_error("Stopped indexing")
-
-@pytest.mark.xfail(strict=True, reason="Current behavior: new Tape is ignored."
-                                       "Expected behavior: undefined")
-def test_successor_04(assert_error):
-    # warning: file not see in real life, test is based on current expectations
-    # PR is expected, but File Header follows
-    fpath = 'data/lis/layouts/successor_04.lis'
-    # expected behavior is undefined yet
-    lf = Expected(records=1)
-    assert_load_correctly(fpath, [lf, Expected()])
-    assert_error("Stopped indexing")
-
+    assert_load_correctly(filename, [lf])
+    assert_error("Indexing failed")
 
 @pytest.mark.parametrize('filename', [
     'truncated_01.lis',

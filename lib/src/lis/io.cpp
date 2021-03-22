@@ -262,7 +262,72 @@ lis::lrheader iodevice::read_logical_header() noexcept (false) {
     return lis::read_lrh(buf);
 }
 
+namespace {
+
+/*
+ * store attributes in a string to use the short-string optimisation if
+ * available. Just before commit, these are checked for consistency, i.e.
+ * that PRHs don't report inconsistent information.
+ */
+template < typename T >
+using shortvec = std::basic_string< T >;
+
+bool attr_consistent( const shortvec<std::uint16_t>& attrs ) noexcept (true) {
+    /* For attributes to be considered consistent across all PRHs in a
+     * record, the following needs to hold:
+     *
+     *  1) the predecessor bit should be set in all PRHs but the first
+     *  2) the successor bit should be set in all PRHs but the last
+     *
+     *      PRH   predecessor  successor
+     *      0          0            1
+     *      1          1            1
+     *      ..
+     *      n - 1      1            1
+     *      n          1            0
+     *
+     */
+    if (attrs.size() == 0) return true;
+    if (attrs.size() == 1) {
+        const auto attr = attrs.at(0);
+        return not (attr & lis::prheader::succses) and
+               not (attr & lis::prheader::predces);
+    }
+
+    /* This lambda is a bit convoluted - but it accomplishes the
+     * (in)consistency checking, for both attributes with a single iteration.
+     *
+     * For predecessor and successor we use the fact that the lambda is called
+     * with pair-wise elements like so, which means we have an easy check for
+     * all the '1' bits:
+     *
+     * n =  [attrs.begin(),     attrs.end() - 1) and
+     * n1 = [attrs.begin() + 1, attrs.end)
+     *
+     * The first predecessor and last successor, which should be 0, needs special
+     * care.
+     */
+    std::size_t pos  = 0;
+    std::size_t size = attrs.size() - 1;
+
+    auto inconsistent = [pos, size](const std::uint16_t& n,
+                                    const std::uint16_t& n1) mutable {
+        if (pos++ == 0    and n  & lis::prheader::predces) return true;
+        if (pos   == size and n1 & lis::prheader::succses) return true;
+        return not (n & lis::prheader::succses) or
+               not (n1 & lis::prheader::predces);
+    };
+
+    return std::adjacent_find(attrs.begin(),
+                              attrs.end(),
+                              inconsistent) == attrs.end();
+}
+
+} // namespace
+
 lis::record_info iodevice::index_record() noexcept (false) {
+    shortvec< std::uint16_t > attributes;
+
     /* There is no explicitly defined "last" record in a logical file.
      *
      * A logical file is terminated when an exhausted record is followed by
@@ -277,6 +342,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
     std::int64_t ltell = this->ltell() - lis::prheader::size;
 
     std::size_t length = prh.length;
+    attributes.push_back( prh.attributes );
 
     lis::lrheader lrh;
     try {
@@ -327,10 +393,17 @@ lis::record_info iodevice::index_record() noexcept (false) {
         try {
             prh = this->read_physical_header();
             length += prh.length;
+            attributes.push_back( prh.attributes );
         } catch( const dlisio::eof_error& e ) {
             const auto msg = "iodevice::index_record: Missing next PRH. ({})";
             throw dlisio::truncation_error( fmt::format(msg, e.what()) );
         }
+    }
+
+    if (not attr_consistent( attributes )) {
+        const auto msg = "iodevice::index_record: "
+                         "predecessor/successor inconsistency";
+        throw std::runtime_error(msg);
     }
 
     record_info info;

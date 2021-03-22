@@ -190,6 +190,11 @@ public:
      *
      * The returned record_index is a lightweight LR index which essentially
      * provides random-access to the LR's within the LF.
+     *
+     * If, for various reasons, the underlying index_record should fail to
+     * index a new record, the indexing is stopped and the index is returned as
+     * is. In that case the correctness of the index is not guaranteed. dlisio
+     * does not attempt to recover state in any way.
      */
     record_index index_records() noexcept (true);
 
@@ -203,6 +208,8 @@ public:
      *      unable to read enough bytes from disk (not EOF)
      * @throw lis::truncation_error
      *      unable to read enough bytes from disk (EOF)
+     * @throw std::runtime_error
+     *      Inconsistency in the predecessor and successor bits
      */
     record_info index_record() noexcept (false);
     record read_record( const record_info& ) noexcept (false);
