@@ -41,6 +41,10 @@ bool record_index::is_incomplete() const noexcept (true) {
     return this->incomplete;
 }
 
+const std::string& record_index::errmsg() const noexcept (true) {
+    return this->err;
+}
+
 const std::vector< record_info >& record_index::explicits() const noexcept (true) {
     return this->expls;
 }
@@ -346,6 +350,7 @@ record_index iodevice::index_records() noexcept (true) {
     std::vector< record_info > ex;
     std::vector< record_info > im;
     bool incomplete = false;
+    auto err = std::string{};
 
     lis::record_info info;
 
@@ -381,14 +386,8 @@ record_index iodevice::index_records() noexcept (true) {
              * report EOF until we try to read _past_ the last byte.
              */
             break;
-        } catch ( const std::exception& ) {
-            /* For now just treat any other error as a truncation error - which
-             * it probably means anyway. However, the error should in the future
-             * be properly communitcated downstream, either by logging it or
-             * setting the error msg on the handle.
-             */
-
-            //TODO log this error
+        } catch ( const std::exception& e ) {
+            err = e.what();
             incomplete = true;
             break;
         }
@@ -443,7 +442,7 @@ record_index iodevice::index_records() noexcept (true) {
         break;
     }
 
-    return record_index( std::move(ex), std::move(im), incomplete );
+    return record_index(std::move(ex), std::move(im), incomplete, std::move(err));
 }
 
 record iodevice::read_record(const record_info& info) noexcept (false) {

@@ -44,8 +44,9 @@ struct record_index {
 public:
     record_index( std::vector< record_info > ex,
                   std::vector< record_info > im,
-                  bool c) :
-        expls( std::move(ex) ), impls( std::move(im) ), incomplete( c ) {};
+                  bool c,
+                  std::string e) :
+        expls(std::move(ex)), impls(std::move(im)), incomplete(c), err(e) {};
 
     /** Return all assosiated iflr's given a Data Format Specification Record
      * (DFSR)
@@ -100,11 +101,16 @@ public:
      */
     bool is_incomplete() const noexcept (true);
 
+    /* Returns the error msg from the (if applicable) failed indexing process
+     */
+    const std::string& errmsg() const noexcept (true);
+
 private:
     std::vector< record_info > expls {}; //and fixed
     std::vector< record_info > impls {};
 
     bool incomplete;
+    std::string err;
 };
 
 /** LIS aware IO device

@@ -368,6 +368,7 @@ void init_lis_extension(py::module_ &m) {
         .def( "implicits",    &lis::record_index::implicits )
         .def( "size",         &lis::record_index::size )
         .def( "isincomplete", &lis::record_index::is_incomplete)
+        .def( "errmsg",       &lis::record_index::errmsg)
         .def( "__repr__", [](const lis::record_index& x) {
             return "dlisio.core.record_info(size={})"_s.format(
                 x.size()

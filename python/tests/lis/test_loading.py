@@ -30,7 +30,7 @@ def test_filehandles_closed_when_load_fails(tmpdir, assert_error):
     with lis.load(tmp) as files:
         assert len(files) == 2
     # TODO: change for explicit raise here as assert_error is nor reliable
-    assert_error("File likely truncated")
+    assert_error("Indexing failed")
 
     os.remove(tmp)
 

@@ -137,9 +137,9 @@ def load(path):
         if index.isincomplete(): break
 
     if index.isincomplete():
-        msg =  'dlisio.lis.load: Stopped indexing around tell {}\n'
-        msg += 'Reason: File likely truncated\nFilepath: {}'
-        logging.error(msg.format(offset, path))
+        msg =  'dlisio.lis.load: Indexing failed around tell {}\n'
+        msg += 'Reason: {}\nFilepath: {}'
+        logging.error(msg.format(offset, index.errmsg(), path))
 
     return PhysicalFile(logical_files)
 
