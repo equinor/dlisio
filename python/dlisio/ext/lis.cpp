@@ -382,6 +382,11 @@ void init_lis_extension(py::module_ &m) {
         .def_readonly( "size",  &lis::entry_block::size  )
         .def_readonly( "reprc", &lis::entry_block::reprc )
         .def_readonly( "value", &lis::entry_block::value )
+        .def( "__repr__", [](const lis::entry_block& x) {
+            return "dlisio.core.entry_block(type={}, val={})"_s.format(
+                x.type, x.value
+            );
+        })
     ;
 
     py::class_< lis::detail::spec_block >( m, "spec_block" )
@@ -397,10 +402,20 @@ void init_lis_extension(py::module_ &m) {
 
     py::class_< lis::spec_block0, lis::detail::spec_block >( m, "spec_block0" )
         // TODO implement spec_block 0 specific fields
+        .def( "__repr__", [](const lis::spec_block0& x) {
+            return "dlisio.core.spec_block0(mnemonic={})"_s.format(
+                x.mnemonic
+            );
+        })
     ;
 
     py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block1" )
         // TODO implement spec_block 1 specific fields
+        .def( "__repr__", [](const lis::spec_block1& x) {
+            return "dlisio.core.spec_block1(mnemonic={})"_s.format(
+                x.mnemonic
+            );
+        })
     ;
 
     py::class_< lis::component_block >( m, "component_block" )
@@ -501,6 +516,11 @@ void init_lis_extension(py::module_ &m) {
         .def_readonly( "info",    &lis::dfsr::info    )
         .def_readonly( "entries", &lis::dfsr::entries )
         .def_readonly( "specs",   &lis::dfsr::specs   )
+        .def( "__repr__", []( const lis::dfsr& x ) {
+            return "dlisio.core.dfsr(nchannels={})"_s.format(
+                x.specs.size()
+            );
+        })
     ;
 
     m.def( "parse_file_header",  &lis::parse_file_header );
