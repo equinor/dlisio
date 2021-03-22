@@ -74,10 +74,9 @@ def load(path):
             break
 
         index = f.index_records()
-        truncated = f.istruncated()
 
         # If not a single record could be indexed, close the file and stop here
-        if index.size() == 0 and truncated:
+        if index.size() == 0 and index.isincomplete():
             f.close()
             break
 
@@ -135,9 +134,9 @@ def load(path):
             logfile = LogicalFile(path, f, index, reel, tape)
             logical_files.append(logfile)
 
-        if truncated: break
+        if index.isincomplete(): break
 
-    if truncated:
+    if index.isincomplete():
         msg =  'dlisio.lis.load: Stopped indexing around tell {}\n'
         msg += 'Reason: File likely truncated\nFilepath: {}'
         logging.error(msg.format(offset, path))

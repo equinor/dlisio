@@ -43,8 +43,9 @@ private:
 struct record_index {
 public:
     record_index( std::vector< record_info > ex,
-                  std::vector< record_info > im ) :
-        expls( std::move(ex) ), impls( std::move(im) ) {};
+                  std::vector< record_info > im,
+                  bool c) :
+        expls( std::move(ex) ), impls( std::move(im) ), incomplete( c ) {};
 
     /** Return all assosiated iflr's given a Data Format Specification Record
      * (DFSR)
@@ -91,9 +92,19 @@ public:
 
     /* The number of records in the index */
     std::size_t size() const noexcept (true);
+
+    /** Returns true if the indexing process failed prematurely.
+     *
+     * Note that dlisio does not guarantee the correctness of the index if it
+     * is incomplete.
+     */
+    bool is_incomplete() const noexcept (true);
+
 private:
     std::vector< record_info > expls {}; //and fixed
     std::vector< record_info > impls {};
+
+    bool incomplete;
 };
 
 /** LIS aware IO device

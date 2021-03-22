@@ -37,6 +37,10 @@ std::size_t record_index::size() const noexcept (true) {
     return this->impls.size() + this->expls.size();
 }
 
+bool record_index::is_incomplete() const noexcept (true) {
+    return this->incomplete;
+}
+
 const std::vector< record_info >& record_index::explicits() const noexcept (true) {
     return this->expls;
 }
@@ -353,6 +357,7 @@ namespace {
 record_index iodevice::index_records() noexcept (true) {
     std::vector< record_info > ex;
     std::vector< record_info > im;
+    bool incomplete = false;
 
     lis::record_info info;
 
@@ -396,7 +401,7 @@ record_index iodevice::index_records() noexcept (true) {
              */
 
             //TODO log this error
-            this->is_truncated = true;
+            incomplete = true;
             break;
         }
 
@@ -451,7 +456,8 @@ record_index iodevice::index_records() noexcept (true) {
     }
 
     this->is_indexed = true;
-    return record_index( std::move(ex), std::move(im) );
+    this->is_truncated = incomplete;
+    return record_index( std::move(ex), std::move(im), incomplete );
 }
 
 record iodevice::read_record(const record_info& info) noexcept (false) {
