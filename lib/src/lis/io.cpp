@@ -99,18 +99,6 @@ noexcept (false) {
 
 
 /* iodevice */
-bool iodevice::truncated() const noexcept (false) {
-    if ( not this->indexed() ) {
-        const auto msg = "iodevice: cannot tell if un-indexed file is truncated";
-        throw std::runtime_error(msg);
-    }
-    return this->is_truncated;
-}
-
-bool iodevice::indexed() const noexcept (true) {
-    return this->is_indexed;
-}
-
 lis::prheader iodevice::read_physical_header() noexcept (false) {
     char buf[lis::prheader::size];
 
@@ -455,8 +443,6 @@ record_index iodevice::index_records() noexcept (true) {
         break;
     }
 
-    this->is_indexed = true;
-    this->is_truncated = incomplete;
     return record_index( std::move(ex), std::move(im), incomplete );
 }
 

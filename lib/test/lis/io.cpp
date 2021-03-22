@@ -497,7 +497,7 @@ TEST_CASE("Padding after last PRH is considered a valid EOF") {
         const auto index = file.index_records();
 
         CHECK( index.size() == 1 );
-        CHECK( file.truncated() == false );
+        CHECK( index.is_incomplete() == false );
     }
 
     SECTION("N-padbytes < PRH size"){
@@ -545,7 +545,7 @@ TEST_CASE("Padbytes can be identified and skipped") {
         const auto index = file.index_records();
 
         CHECK( index.size() == 2 );
-        CHECK( file.truncated() == false );
+        CHECK( index.is_incomplete() == false );
     }
 
     file.close();

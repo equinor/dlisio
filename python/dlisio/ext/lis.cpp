@@ -289,7 +289,6 @@ void init_lis_extension(py::module_ &m) {
         .def( "index_records", &lis::iodevice::index_records )
         .def( "index_record",  &lis::iodevice::index_record )
         .def( "ptell",         &lis::iodevice::ptell )
-        .def( "istruncated",   &lis::iodevice::truncated )
         .def( "close",         &lis::iodevice::close )
         .def( "seek",          &lis::iodevice::seek )
         .def( "eof",           &lis::iodevice::eof )

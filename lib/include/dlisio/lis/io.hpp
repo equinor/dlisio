@@ -200,12 +200,6 @@ public:
      */
     record_info index_record() noexcept (false);
     record read_record( const record_info& ) noexcept (false);
-
-    bool truncated() const noexcept (false);
-    bool indexed() const noexcept (true);
-private:
-    bool is_indexed   = false;
-    bool is_truncated = false;
 };
 
 /** Factory function for creating an iodevice
