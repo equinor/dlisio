@@ -296,7 +296,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
         * Thus we rely on a fully zero'd out record to be caught elsewhere.
         */
         const auto msg = "iodevice::index_record: "
-                         "Found invalid record type ({}) when reading  "
+                         "Found invalid record type ({}) when reading "
                          "header at ptell ({})";
         const auto tell = this->ptell() - lis::lrheader::size;
         throw std::runtime_error(fmt::format( msg, lis::decay(lrh.type), tell));
