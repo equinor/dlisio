@@ -108,7 +108,7 @@ def curves(f, dfsr, strict=True):
     #
     # TODO: implement support
     if any(x for x in dfsr.entries if x.type == 13 and x.value == 1):
-        msg = "lis::curves: depth recording mode == 1"
+        msg = "lis.curves: depth recording mode == 1"
         raise NotImplementedError(msg)
 
     fmt   = core.dfs_formatstring(dfsr)
