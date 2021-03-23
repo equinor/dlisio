@@ -142,7 +142,7 @@ def dfsr_dtype(dfsr, strict=True):
         dtype = np.dtype(types)
     except ValueError as exc:
         msg = "duplicated mnemonics in frame '{}': {}"
-        logging.error(msg.format(self.name, exc))
+        logging.error(msg.format(dfsr, exc))
         if strict: raise
 
         types = mkunique(types)

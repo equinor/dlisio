@@ -552,10 +552,73 @@ TEST_CASE("Padbytes can be identified and skipped") {
 
 }
 
-TEST_CASE("Inconsistent PR headers") {
-    SECTION("PRH1(succ=0), PRH2(pred=1)") {}
+TEST_CASE("Consistency in PR headers") {
 
-    SECTION("PRH1(succ=1), PRH2(pred=0)") {}
+    SECTION("Single PR - consistent") {
+        const auto contents = std::vector< unsigned char > {
+            0x00, 0x06, 0x00, 0x00, // prh(len=6, pred=0, succ=0)
+            0x80, 0x00,
+        };
+        auto* cfile = lfp_cfile( tempfile( contents ) );
+        auto file = lis::iodevice( cfile );
+
+        const auto rec = file.index_record();
+        CHECK( rec.type == lis::record_type::file_header );
+    }
+
+    SECTION("Single PR, pred=1 - Inconsistent") {
+        const auto contents = std::vector< unsigned char > {
+            0x00, 0x06, 0x00, 0x02, // prh(len=6, pred=1, succ=0)
+            0x80, 0x00,
+        };
+        auto* cfile = lfp_cfile( tempfile( contents ) );
+        auto file = lis::iodevice( cfile );
+
+        CHECK_THROWS_AS(file.index_record(), std::runtime_error);
+    }
+
+    SECTION("Two PRs- Consistent") {
+        const auto contents = std::vector< unsigned char > {
+            0x00, 0x06, 0x00, 0x01, // prh(len=6, pred=0, succ=1)
+            0x80, 0x00,
+            0x00, 0x04, 0x00, 0x02, // prh(len=4, pred=1, succ=0)
+        };
+
+        auto* cfile = lfp_cfile( tempfile( contents ) );
+        auto file = lis::iodevice( cfile );
+
+        const auto rec = file.index_record();
+        CHECK( rec.type == lis::record_type::file_header );
+    }
+
+    SECTION("Three PRs- Consistent") {
+        const auto contents = std::vector< unsigned char > {
+            0x00, 0x06, 0x00, 0x01, // prh(len=6, pred=0, succ=1)
+            0x80, 0x00,
+            0x00, 0x04, 0x00, 0x03, // prh(len=4, pred=1, succ=1)
+            0x00, 0x04, 0x00, 0x02, // prh(len=4, pred=1, succ=0)
+        };
+
+        auto* cfile = lfp_cfile( tempfile( contents ) );
+        auto file = lis::iodevice( cfile );
+
+        const auto rec = file.index_record();
+        CHECK( rec.type == lis::record_type::file_header );
+    }
+
+    SECTION("pred=0 in non-first PRH - Inconsistent") {
+        const auto contents = std::vector< unsigned char > {
+            0x00, 0x06, 0x00, 0x01, // prh(len=6, pred=0, succ=1)
+            0x80, 0x00,
+            0x00, 0x04, 0x00, 0x01, // prh(len=4, pred=0, succ=1)
+            0x00, 0x04, 0x00, 0x02, // prh(len=4, pred=1, succ=0)
+        };
+
+        auto* cfile = lfp_cfile( tempfile( contents ) );
+        auto file = lis::iodevice( cfile );
+
+        CHECK_THROWS_AS(file.index_record(), std::runtime_error);
+    }
 }
 
 TEST_CASE("Implicit records are stored seperatly from explicits/fixed") {
