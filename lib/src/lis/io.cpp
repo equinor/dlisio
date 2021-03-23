@@ -37,6 +37,14 @@ std::size_t record_index::size() const noexcept (true) {
     return this->impls.size() + this->expls.size();
 }
 
+bool record_index::is_incomplete() const noexcept (true) {
+    return this->incomplete;
+}
+
+const std::string& record_index::errmsg() const noexcept (true) {
+    return this->err;
+}
+
 const std::vector< record_info >& record_index::explicits() const noexcept (true) {
     return this->expls;
 }
@@ -95,18 +103,6 @@ noexcept (false) {
 
 
 /* iodevice */
-bool iodevice::truncated() const noexcept (false) {
-    if ( not this->indexed() ) {
-        const auto msg = "iodevice: cannot tell if un-indexed file is truncated";
-        throw std::runtime_error(msg);
-    }
-    return this->is_truncated;
-}
-
-bool iodevice::indexed() const noexcept (true) {
-    return this->is_indexed;
-}
-
 lis::prheader iodevice::read_physical_header() noexcept (false) {
     char buf[lis::prheader::size];
 
@@ -300,7 +296,7 @@ lis::record_info iodevice::index_record() noexcept (false) {
         * Thus we rely on a fully zero'd out record to be caught elsewhere.
         */
         const auto msg = "iodevice::index_record: "
-                         "Found invalid record type ({}) when reading  "
+                         "Found invalid record type ({}) when reading "
                          "header at ptell ({})";
         const auto tell = this->ptell() - lis::lrheader::size;
         throw std::runtime_error(fmt::format( msg, lis::decay(lrh.type), tell));
@@ -353,6 +349,8 @@ namespace {
 record_index iodevice::index_records() noexcept (true) {
     std::vector< record_info > ex;
     std::vector< record_info > im;
+    bool incomplete = false;
+    auto err = std::string{};
 
     lis::record_info info;
 
@@ -388,15 +386,9 @@ record_index iodevice::index_records() noexcept (true) {
              * report EOF until we try to read _past_ the last byte.
              */
             break;
-        } catch ( const std::exception& ) {
-            /* For now just treat any other error as a truncation error - which
-             * it probably means anyway. However, the error should in the future
-             * be properly communitcated downstream, either by logging it or
-             * setting the error msg on the handle.
-             */
-
-            //TODO log this error
-            this->is_truncated = true;
+        } catch ( const std::exception& e ) {
+            err = e.what();
+            incomplete = true;
             break;
         }
 
@@ -450,8 +442,7 @@ record_index iodevice::index_records() noexcept (true) {
         break;
     }
 
-    this->is_indexed = true;
-    return record_index( std::move(ex), std::move(im) );
+    return record_index(std::move(ex), std::move(im), incomplete, std::move(err));
 }
 
 record iodevice::read_record(const record_info& info) noexcept (false) {

@@ -211,9 +211,7 @@ def test_truncated(filename, assert_error):
     fpath = 'data/lis/layouts/' + filename
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
-    assert_error("File likely truncated")
-
-# TODO: all wrong file tests have same error message, may be precised
+    assert_error("Indexing failed")
 
 @pytest.mark.parametrize('filename', [
     'wrong_01.lis',
@@ -223,7 +221,7 @@ def test_wrong_not_lis(filename, assert_error):
     # not a LIS file
     fpath = 'data/lis/layouts/' + filename
     assert_load_correctly(fpath, [])
-    assert_error("Stopped indexing")
+    assert_error("Indexing failed")
 
 @pytest.mark.xfail(strict=True, reason="Current behavior: File is loaded OK."
                                        "Expected behavior: undefined")
@@ -239,7 +237,7 @@ def test_wrong_TM(assert_error):
     fpath = 'data/lis/layouts/wrong_04.lis'
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
-    assert_error("Stopped indexing")
+    assert_error("file corrupt: head.next")
 
 # TODO: missing tests and good failures for files with broken PR length
 # due to not enough constraints we can wrongly index the big whole file before we
@@ -249,4 +247,4 @@ def test_wrong_LR_type(assert_error):
     fpath = 'data/lis/layouts/wrong_05.lis'
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
-    assert_error("Stopped indexing")
+    assert_error("Found invalid record type")

@@ -289,7 +289,6 @@ void init_lis_extension(py::module_ &m) {
         .def( "index_records", &lis::iodevice::index_records )
         .def( "index_record",  &lis::iodevice::index_record )
         .def( "ptell",         &lis::iodevice::ptell )
-        .def( "istruncated",   &lis::iodevice::truncated )
         .def( "close",         &lis::iodevice::close )
         .def( "seek",          &lis::iodevice::seek )
         .def( "eof",           &lis::iodevice::eof )
@@ -365,9 +364,11 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::record_index >( m, "lis_record_index" )
-        .def( "explicits", &lis::record_index::explicits )
-        .def( "implicits", &lis::record_index::implicits )
-        .def( "size",      &lis::record_index::size )
+        .def( "explicits",    &lis::record_index::explicits )
+        .def( "implicits",    &lis::record_index::implicits )
+        .def( "size",         &lis::record_index::size )
+        .def( "isincomplete", &lis::record_index::is_incomplete)
+        .def( "errmsg",       &lis::record_index::errmsg)
         .def( "__repr__", [](const lis::record_index& x) {
             return "dlisio.core.record_info(size={})"_s.format(
                 x.size()
