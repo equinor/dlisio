@@ -16,6 +16,7 @@ nptype = {
     core.lis_reprc.i16    : 'i2', # 16-bit signed integer
     core.lis_reprc.i32    : 'i4', # 32-bit signed integer
     core.lis_reprc.byte   : 'u1', # Byte
+    core.lis_reprc.string : 'O',  # String
 }
 
 
@@ -59,7 +60,7 @@ def curves(f, dfsr, strict=True):
 
     NotImplementedError
         If the DFSR contains one or more channel where the type of the samples
-        is either lis::string or lis::mask
+        is lis::mask
 
     NotImplementedError
         If the DFSR contains one or more multi-dimensional channel(s). I.e.
@@ -137,6 +138,13 @@ def spec_dtype(spec):
         raise ValueError(msg.format(
             spec, spec.reserved_size, spec.samples, sample_size
         ))
+
+    # As strings does not have encoded length, the length is implicitly given
+    # by the number of reserved bytes for one *sample*. This means that
+    # channels that use lis::string as their data type _always_ have exactly
+    # one entry
+    if core.lis_reprc(spec.reprc) == core.lis_reprc.string:
+        return np.dtype((nptype[core.lis_reprc(spec.reprc)]))
 
     reprsize = core.lis_sizeof_type(spec.reprc)
     entries  = sample_size / reprsize

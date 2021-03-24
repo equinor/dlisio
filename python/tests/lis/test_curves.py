@@ -212,7 +212,6 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
         assert curves['F32L'] == [-0.25]
         assert curves['F32F'] == [153.25]
 
-@pytest.mark.xfail(strict=True, reason="strings would be supported soon")
 def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fdata-repcodes-string.lis')
 
@@ -227,7 +226,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfs)
-        assert fmt == 'A'
+        assert fmt == 'a32'
 
         curves = lis.curves(f, dfs)
         assert curves['STR '] == "Now this is a string of size 32 "
