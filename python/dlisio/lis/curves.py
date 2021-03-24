@@ -124,9 +124,35 @@ def curves(f, dfsr, strict=True):
         alloc,
     )
 
+def spec_dtype(spec):
+    if spec.samples < 1:
+        msg =  "Cannot create numpy.dtype for {}, "
+        msg += "samples < 1 (was: {})"
+        raise ValueError(msg.format(spec, spec.samples))
+
+    sample_size = spec.reserved_size / spec.samples
+    if sample_size % 1:
+        msg =  "Cannot create numpy.dtype for {}, "
+        msg += "reserve_size % samples != 0 (was: {}/{}={})"
+        raise ValueError(msg.format(
+            spec, spec.reserved_size, spec.samples, sample_size
+        ))
+
+    reprsize = core.lis_sizeof_type(spec.reprc)
+    entries  = sample_size / reprsize
+    if entries % 1:
+        msg =  "Cannot create numpy.dtype for {}"
+        msg += "reserved_size % (samples * sizeof(reprc)) != 0 "
+        msg += "(was: {}/({} * {}) = {})"
+        raise ValueError(msg.format(
+            spec, spec.reserved_size, spec.samples, reprsize, entries
+        ))
+
+    return np.dtype(nptype[core.lis_reprc(spec.reprc)])
+
 def dfsr_dtype(dfsr, strict=True):
     types = [
-        (ch.mnemonic, np.dtype(nptype[core.lis_reprc(ch.reprc)]))
+        (ch.mnemonic, spec_dtype(ch))
         for ch in dfsr.specs
     ]
 
