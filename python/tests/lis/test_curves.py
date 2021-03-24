@@ -10,7 +10,7 @@ def test_dfsr_fmtstring():
         dfsr = lf.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfsr)
-        assert fmt == 'D' * 44
+        assert fmt == 'f' * 44
 
 def test_dfsr_dtype():
     path = 'data/lis/MUD_LOG_1.LIS'
@@ -200,7 +200,7 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfs)
-        assert fmt == 'B8OI1D2F'
+        assert fmt == 'bsilefrp'
 
         curves = lis.curves(f, dfs)
         assert curves['BYTE'] == [89]
@@ -247,7 +247,7 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
 
         with pytest.raises(NotImplementedError):
             fmt = core.dfs_formatstring(dfs)
-            assert fmt == 'M'
+            assert fmt == 'm'
 
         with pytest.raises(NotImplementedError):
             curves = lis.curves(f, dfs)

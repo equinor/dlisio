@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Parse and pack arbitrary data
  *
- * The lis_packf (inspired by sscanf) reads arbitrary bytes in RP66 format,
+ * The lis_packf (inspired by sscanf) reads arbitrary bytes in LIS79 format,
  * and pack them into the dst area as native C data. No padding bytes are
  * inserted, which means the data can be read from this array by computing the
  * correct offset and memcpy'd into a typed variable.
@@ -20,9 +20,6 @@ extern "C" {
  * I8 is int8_t, and F32 is float. The arguments to a lis_type() function in
  * lisio/types.h is the type being used as a target type for a conversion
  * specifier.
- *
- * String types are always written as int32_t + len bytes, without a zero
- * terminator.
  *
  * Example:
  *
@@ -36,7 +33,7 @@ extern "C" {
  * uint8_t C3;
  *
  * unsigned char bytes[2 + 2*4 + 4];
- * err = lis_packf("ODDB", src, bytes);
+ * err = lis_packf("iffb", src, bytes);
  * if (err) exit(1);
  *
  * memcpy(&C1, bytes,      sizeof(C1));
