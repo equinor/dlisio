@@ -125,7 +125,6 @@ def curves(f, dfsr, strict=True):
     )
 
 def dfsr_dtype(dfsr, strict=True):
-    types =[]
     types = [
         (ch.mnemonic, np.dtype(nptype[core.lis_reprc(ch.reprc)]))
         for ch in dfsr.specs

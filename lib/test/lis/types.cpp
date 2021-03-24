@@ -102,9 +102,11 @@ TEST_CASE("32-bit signed integer", "[type]") {
 }
 
 TEST_CASE("16-bit floating point", "[type]") {
-    const std::array< unsigned char[2], 7 > inputs = {{
+    const std::array< unsigned char[2], 9 > inputs = {{
         { 0x00, 0x00 }, // 0
-        { 0x7F, 0xF0 }, // 1
+        { 0x40, 0x01 }, // 1
+        { 0x00, 0x1B }, // 1
+        { 0x7F, 0xF0 }, // ~1
         { 0x19, 0x24 }, // ~3.14
         { 0x4C, 0x88 }, // 153
         { 0xB3, 0x88 }, // -153
@@ -115,6 +117,8 @@ TEST_CASE("16-bit floating point", "[type]") {
     /* type fits well inside float boundaries, so no limit tests required */
     const std::array< float, inputs.size() > expected = {
         0,
+        1,
+        1,
         1,
         3.14,
         153,
