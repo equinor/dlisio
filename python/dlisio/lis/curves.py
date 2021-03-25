@@ -20,7 +20,7 @@ nptype = {
 }
 
 
-def curves(f, dfsr, strict=True):
+def curves(f, dfsr, strict=True, skip_fast=False):
     """ Read curves
 
     Read the curves described by Data Format Spec Record (DFSR). The curves are
@@ -44,6 +44,13 @@ def curves(f, dfsr, strict=True):
         this restriction and dlisio will append numerical values (i.e. 0, 1, 2
         ..) to the labels used for column-names in the returned array.
 
+    skip_fast : boolean, optional
+        By default (skip_fast=False) curves() will raise if the dfsr contains
+        one or more fast channels. A fast channel is one that is sampled at a
+        higher frequency than the rest of the channels in the dfsr.
+        skip_fast=True will drop all the fast channels and return a numpy array
+        of all normal channels.
+
     Returns
     -------
 
@@ -61,10 +68,6 @@ def curves(f, dfsr, strict=True):
     NotImplementedError
         If the DFSR contains one or more channel where the type of the samples
         is lis::mask
-
-    NotImplementedError
-        If the DFSR contains one or more multi-dimensional channel(s). I.e.
-        curves where each sample contains multiple values.
 
     NotImplementedError
         If the DFSR contains one or more "Fast Channels". These are channels
@@ -112,6 +115,9 @@ def curves(f, dfsr, strict=True):
         msg = "lis.curves: depth recording mode == 1"
         raise NotImplementedError(msg)
 
+    if any(x for x in dfsr.specs if x.samples > 1) and not skip_fast:
+        raise NotImplementedError("Fast channel not implemented")
+
     fmt   = core.dfs_formatstring(dfsr)
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)
@@ -156,20 +162,17 @@ def spec_dtype(spec):
             spec, spec.reserved_size, spec.samples, reprsize, entries
         ))
 
-    return np.dtype(nptype[core.lis_reprc(spec.reprc)])
+    reprc = core.lis_reprc(spec.reprc)
+    if entries == 1: dtype = np.dtype((nptype[reprc]))
+    else:            dtype = np.dtype((nptype[reprc], int(entries)))
+    return dtype
 
 def dfsr_dtype(dfsr, strict=True):
     types = [
         (ch.mnemonic, spec_dtype(ch))
-        for ch in dfsr.specs if ch.reserved_size > 0
+        for ch in dfsr.specs
+        if ch.reserved_size > 0 and ch.samples == 1
     ]
-
-    sizeof = core.lis_sizeof_type
-    if any(x for x in dfsr.specs if x.reserved_size > sizeof(x.reprc)):
-        raise NotImplementedError("Multidimensional channels not supported")
-
-    if any(x for x in dfsr.specs if x.samples > 1):
-        raise NotImplementedError("Fast channel not implemented")
 
     try:
         dtype = np.dtype(types)

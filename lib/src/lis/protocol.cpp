@@ -495,6 +495,15 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
             continue;
         }
 
+        /* For now just suppress all fast channels in the DFSR. Whether or not
+         * this is acceptable should be up to the interface to decide
+         */
+        if ( lis::decay(spec.samples) > 1 )  {
+            std::int16_t reserved_size = std::abs( size );
+            fmt += (LIS_FMT_SUPPRESS + std::to_string( reserved_size ));
+           continue;
+        }
+
         /* A lis::string do not encode its own length, hence we have to embed
          * the length into the format-string. E.g. the format-string of a 256
          * character lis::string is "a256".
