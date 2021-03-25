@@ -1,7 +1,35 @@
 import pytest
 import numpy as np
 
-from dlisio import lis
+from dlisio import lis, core
+
+@pytest.fixture(scope="module")
+def fpath(tmpdir_factory, merge_lis_prs):
+    """
+    Resulted file contains examples of Information Records
+    """
+    path = str(tmpdir_factory.mktemp('lis-semantic').join('inforecs.lis'))
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/FHLR-1.lis.part',
+        'data/lis/records/job-identification.lis.part',
+        'data/lis/records/wellsite-data.lis.part',
+        'data/lis/records/tool-string-info.lis.part',
+        'data/lis/records/encrypted-table-dump.lis.part',
+        'data/lis/records/table-dump.lis.part',
+        'data/lis/records/FTLR-1.lis.part',
+        'data/lis/records/TTLR-1.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(path, content)
+    return path
+
+@pytest.fixture(scope="module")
+def f(fpath):
+    with lis.load(fpath) as (f, *_):
+        yield f
+
 
 def test_inforec_components():
     path = 'data/lis/records/inforec_01.lis'
@@ -150,3 +178,61 @@ def test_inforec_empty_table():
     assert name == 'CONS'
 
     np.testing.assert_array_equal(wellsite.table(), np.empty(0))
+
+def test_inforecords(f):
+    assert len(f.job_identification()) == 1
+    assert len(f.wellsite_data())      == 1
+    assert len(f.tool_string_info())   == 1
+
+    data = {
+        f.job_identification()[0] : 'JOB ',
+        f.wellsite_data()[0]      : 'WELL',
+        f.tool_string_info()[0]   : 'TOOL',
+    }
+
+    for inforec, type in data.items():
+        components = inforec.components()
+
+        assert len(components) == 3
+
+        assert components[0].type_nb   == 73
+        assert components[0].reprc     == 65
+        assert components[0].size      == 4
+        assert components[0].category  == 0
+        assert components[0].mnemonic  == 'TYPE'
+        assert components[0].units     == '    '
+        assert components[0].component == type
+
+        assert components[1].type_nb   == 0
+        assert components[1].reprc     == 65
+        assert components[1].size      == 6
+        assert components[1].category  == 1
+        assert components[1].mnemonic  == 'R1C1'
+        assert components[1].units     == '    '
+        assert components[1].component == 'VALue1'
+
+        assert components[2].type_nb   == 69
+        assert components[2].reprc     == 73
+        assert components[2].size      == 4
+        assert components[2].category  == 0
+        assert components[2].mnemonic  == 'R1C2'
+        assert components[2].units     == 'unit'
+        assert components[2].component == 89
+
+def test_table_dump(f):
+    table_dumps = [f.io.read_record(x)
+                  for x in f.explicits()
+                  if x.type == core.lis_rectype.table_dump]
+
+    with pytest.raises(NotImplementedError) as exc:
+        lis.parse_record(table_dumps[0])
+    assert "No parsing rule for Table Dump Records" in str(exc.value)
+
+def test_encrypted_table_dump(f):
+    encrypted_table_dumps = [f.io.read_record(x)
+                  for x in f.explicits()
+                  if x.type == core.lis_rectype.enc_table_dump]
+
+    with pytest.raises(NotImplementedError) as exc:
+        lis.parse_record(encrypted_table_dumps[0])
+    assert "No parsing rule for Encrypted Table Dump Records" in str(exc.value)
