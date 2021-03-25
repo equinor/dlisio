@@ -161,7 +161,7 @@ def spec_dtype(spec):
 def dfsr_dtype(dfsr, strict=True):
     types = [
         (ch.mnemonic, spec_dtype(ch))
-        for ch in dfsr.specs
+        for ch in dfsr.specs if ch.reserved_size > 0
     ]
 
     sizeof = core.lis_sizeof_type

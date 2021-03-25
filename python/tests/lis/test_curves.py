@@ -450,7 +450,6 @@ def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
                "repcode(79) for channel CH01" in str(exc.value)
 
 
-@pytest.mark.xfail(strict=True, reason="coming soon")
 def test_fdata_suppressed(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'suppressed.lis')
 

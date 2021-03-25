@@ -126,6 +126,11 @@ noexcept (false) {
             return;
         }
 
+        else if (*f == LIS_FMT_SUPPRESS) {
+            char* next;
+            ptr += std::strtol(++f, &next, 10);
+            f = next;
+        }
 
         else if (*f == LIS_FMT_STRING) {
             char* next;

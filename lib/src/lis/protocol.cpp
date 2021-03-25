@@ -480,13 +480,27 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
 
         const auto size = lis::decay(spec.reserved_size);
 
+        /* Suppressed output
+         *
+         * If the reserved_size in the Spec Block are negative, the bytes are
+         * reserved in the file, but the output is suppressed. I.e. should be
+         * ignored.
+         *
+         * This is communicated in the format-string with the fmt-code
+         * LIS_FMT_SUPPRESS.
+         */
+        if ( size < 0 ) {
+            std::int16_t reserved_size = std::abs( size );
+            fmt += (LIS_FMT_SUPPRESS + std::to_string( reserved_size ));
+            continue;
+        }
+
         /* A lis::string do not encode its own length, hence we have to embed
          * the length into the format-string. E.g. the format-string of a 256
          * character lis::string is "a256".
          */
         if ( f == LIS_FMT_STRING ) {
-            std::int16_t entry_size = std::abs( size );
-            fmt += (f + std::to_string( entry_size ));
+            fmt += (f + std::to_string( size ));
             continue;
         }
 
