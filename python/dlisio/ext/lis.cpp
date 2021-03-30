@@ -110,14 +110,49 @@ void read_frame( const std::string& fmt,
                  const char* end,
                  unsigned char*& dst )
 noexcept (false) {
+    auto swap_pointer = [&](py::object obj)
+    {
+        PyObject* p;
+        std::memcpy(&p, dst, sizeof(p));
+        Py_DECREF(p);
+        p = obj.inc_ref().ptr();
+        std::memcpy(dst, &p, sizeof(p));
+        dst += sizeof(p);
+    };
 
-    int src_skip, dst_skip;
+    const char* f = fmt.c_str();
+    while (true) {
+        if (*f == LIS_FMT_EOL) {
+            return;
+        }
 
-    lis_packflen(fmt.c_str(), ptr, &src_skip, &dst_skip);
-    assert_overflow(ptr, end, src_skip);
-    lis_packf(fmt.c_str(), ptr, dst);
-    dst += dst_skip;
-    ptr += src_skip;
+        else if (*f == LIS_FMT_SUPPRESS) {
+            char* next;
+            ptr += std::strtol(++f, &next, 10);
+            f = next;
+        }
+
+        else if (*f == LIS_FMT_STRING) {
+            char* next;
+            auto len = std::strtol(++f, &next, 10);
+            f = next;
+
+            auto str = py::str(ptr, len);
+            swap_pointer(str);
+            ptr += len;
+        }
+
+        else {
+            int src_skip, dst_skip;
+            const char localfmt[] = {*f, '\0'};
+            lis_packflen(localfmt, ptr, &src_skip, &dst_skip);
+            assert_overflow(ptr, end, src_skip);
+            lis_packf(localfmt, ptr, dst);
+            dst += dst_skip;
+            ptr += src_skip;
+            ++f;
+        }
+    }
 }
 
 void read_data_record( const std::string& fmt,

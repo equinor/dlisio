@@ -123,30 +123,32 @@ const char* lis_mask(const char*, const std::int32_t, char*);
 #define LIS_VARIABLE_LENGTH 0
 
 // values below represent size on disk (in bytes)
-#define LIS_SIZEOF_I8     1
-#define LIS_SIZEOF_I16    2
-#define LIS_SIZEOF_I32    4
-#define LIS_SIZEOF_F16    2
-#define LIS_SIZEOF_F32    4
-#define LIS_SIZEOF_F32LOW 4
-#define LIS_SIZEOF_F32FIX 4
-#define LIS_SIZEOF_STRING LIS_VARIABLE_LENGTH
-#define LIS_SIZEOF_BYTE   1
-#define LIS_SIZEOF_MASK   LIS_VARIABLE_LENGTH
+#define LIS_SIZEOF_I8       1
+#define LIS_SIZEOF_I16      2
+#define LIS_SIZEOF_I32      4
+#define LIS_SIZEOF_F16      2
+#define LIS_SIZEOF_F32      4
+#define LIS_SIZEOF_F32LOW   4
+#define LIS_SIZEOF_F32FIX   4
+#define LIS_SIZEOF_STRING   LIS_VARIABLE_LENGTH
+#define LIS_SIZEOF_BYTE     1
+#define LIS_SIZEOF_MASK     LIS_VARIABLE_LENGTH
+#define LIS_SIZEOF_SUPPRESS LIS_VARIABLE_LENGTH
 
 // Format string representation
 // Defined by the ASCII codes in Appendix B, lis79
-#define LIS_FMT_EOL    '\0'
-#define LIS_FMT_I8     '8' // (reprc 56) 8-bit signed integer
-#define LIS_FMT_I16    'O' // (reprc 79) 16-bit signed integer
-#define LIS_FMT_I32    'I' // (reprc 73) 32-bit signed integer
-#define LIS_FMT_F16    '1' // (reprc 49) 16-bit floating point
-#define LIS_FMT_F32    'D' // (reprc 68) 32-bit floating point
-#define LIS_FMT_F32LOW '2' // (reprc 50) 32-bit low resolution floating point
-#define LIS_FMT_F32FIX 'F' // (reprc 70) 32-bit fixed point
-#define LIS_FMT_STRING 'A' // (reprc 65) Alphanumeric  - variable length string
-#define LIS_FMT_BYTE   'B' // (reprc 66) Byte
-#define LIS_FMT_MASK   'M' // (reprc 77) Mask - bitmask
+#define LIS_FMT_EOL      '\0'
+#define LIS_FMT_I8       's' // (reprc 56) 8-bit signed integer
+#define LIS_FMT_I16      'i' // (reprc 79) 16-bit signed integer
+#define LIS_FMT_I32      'l' // (reprc 73) 32-bit signed integer
+#define LIS_FMT_F16      'e' // (reprc 49) 16-bit floating point
+#define LIS_FMT_F32      'f' // (reprc 68) 32-bit floating point
+#define LIS_FMT_F32LOW   'r' // (reprc 50) 32-bit low resolution floating point
+#define LIS_FMT_F32FIX   'p' // (reprc 70) 32-bit fixed point
+#define LIS_FMT_STRING   'a' // (reprc 65) Alphanumeric - variable length string
+#define LIS_FMT_BYTE     'b' // (reprc 66) Byte
+#define LIS_FMT_MASK     'm' // (reprc 77) Mask - bitmask
+#define LIS_FMT_SUPPRESS 'S' // Suppressed output
 
 /** Byte size of a LIS type
  *

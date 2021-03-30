@@ -449,7 +449,7 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
             case rpc::f32low: { f=LIS_FMT_F32LOW; s=LIS_SIZEOF_F32LOW; break; }
             case rpc::f32fix: { f=LIS_FMT_F32FIX; s=LIS_SIZEOF_F32FIX; break; }
             case rpc::byte:   { f=LIS_FMT_BYTE;   s=LIS_SIZEOF_BYTE;   break; }
-            case rpc::string:
+            case rpc::string: { f=LIS_FMT_STRING; s=LIS_SIZEOF_STRING; break; }
             case rpc::mask: {
             /* lis::string and lis::mask is a bit special in that they are
              * variable length types, but do not encode their own length. From
@@ -479,14 +479,49 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
         }
 
         const auto size = lis::decay(spec.reserved_size);
-        if( size % s ) {
+
+        /* Suppressed output
+         *
+         * If the reserved_size in the Spec Block are negative, the bytes are
+         * reserved in the file, but the output is suppressed. I.e. should be
+         * ignored.
+         *
+         * This is communicated in the format-string with the fmt-code
+         * LIS_FMT_SUPPRESS.
+         */
+        if ( size < 0 ) {
+            std::int16_t reserved_size = std::abs( size );
+            fmt += (LIS_FMT_SUPPRESS + std::to_string( reserved_size ));
+            continue;
+        }
+
+        /* For now just suppress all fast channels in the DFSR. Whether or not
+         * this is acceptable should be up to the interface to decide
+         */
+        if ( lis::decay(spec.samples) > 1 )  {
+            std::int16_t reserved_size = std::abs( size );
+            fmt += (LIS_FMT_SUPPRESS + std::to_string( reserved_size ));
+           continue;
+        }
+
+        /* A lis::string do not encode its own length, hence we have to embed
+         * the length into the format-string. E.g. the format-string of a 256
+         * character lis::string is "a256".
+         */
+        if ( f == LIS_FMT_STRING ) {
+            fmt += (f + std::to_string( size ));
+            continue;
+        }
+
+        if ( size % s ) {
             std::string msg  = "lis::dfs_fmtstr: Cannot compute an integral "
                 "number of entries from size ({}) / repcode({}) for channel {}";
             const auto code = lis::decay(spec.reprc);
             const auto mnem = lis::decay(spec.mnemonic);
             throw std::runtime_error(fmt::format(msg, size, code, mnem));
         }
-        std::int16_t entries = size / s;
+
+        std::int16_t entries = std::abs( size ) / s;
         fmt.append( entries, f );
     }
 

@@ -10,7 +10,7 @@ def test_dfsr_fmtstring():
         dfsr = lf.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfsr)
-        assert fmt == 'D' * 44
+        assert fmt == 'f' * 44
 
 def test_dfsr_dtype():
     path = 'data/lis/MUD_LOG_1.LIS'
@@ -200,7 +200,7 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfs)
-        assert fmt == 'B8OI1D2F'
+        assert fmt == 'bsilefrp'
 
         curves = lis.curves(f, dfs)
         assert curves['BYTE'] == [89]
@@ -212,7 +212,6 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
         assert curves['F32L'] == [-0.25]
         assert curves['F32F'] == [153.25]
 
-@pytest.mark.xfail(strict=True, reason="strings would be supported soon")
 def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fdata-repcodes-string.lis')
 
@@ -227,7 +226,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfs)
-        assert fmt == 'A'
+        assert fmt == 'a32'
 
         curves = lis.curves(f, dfs)
         assert curves['STR '] == "Now this is a string of size 32 "
@@ -247,7 +246,7 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
 
         with pytest.raises(NotImplementedError):
             fmt = core.dfs_formatstring(dfs)
-            assert fmt == 'M'
+            assert fmt == 'm'
 
         with pytest.raises(NotImplementedError):
             curves = lis.curves(f, dfs)
@@ -416,7 +415,6 @@ def test_depth_mode_1_spacing_inconsistent(tmpdir, merge_lis_prs, dfsr_filename)
         assert "Depth spacing is inconsistent." in str(exc.value)
 
 
-@pytest.mark.xfail(strict=True, reason="coming soon")
 def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dimensional-ints.lis')
 
@@ -429,10 +427,13 @@ def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
-
         curves = lis.curves(f, dfs)
-        assert curves['CH01'] == np.array([[1, 2], [4, 5]])
-        assert curves['CH02'] == np.array([3, 6])
+
+        expected = np.array([[1, 2], [4, 5]])
+        np.testing.assert_array_equal(expected, curves['CH01'])
+
+        expected = np.array([3, 6])
+        np.testing.assert_array_equal(expected, curves['CH02'])
 
 def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dimensional-bad.lis')
@@ -451,7 +452,6 @@ def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
                "repcode(79) for channel CH01" in str(exc.value)
 
 
-@pytest.mark.xfail(strict=True, reason="coming soon")
 def test_fdata_suppressed(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'suppressed.lis')
 
@@ -474,6 +474,27 @@ def test_fdata_suppressed(tmpdir, merge_lis_prs):
         with pytest.raises(ValueError):
             _ = curves['CH04']
 
+
+def test_fdata_curves_skip_fast(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-ints.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-int.lis.part',
+        'data/lis/records/curves/fdata-fast-int.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(NotImplementedError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Fast channel not implemented" in str(exc.value)
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        assert curves.dtype == np.dtype([('CH02', 'i4')])
+        np.testing.assert_array_equal(curves['CH02'], np.array([3, 6]))
 
 @pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_ints(tmpdir, merge_lis_prs):

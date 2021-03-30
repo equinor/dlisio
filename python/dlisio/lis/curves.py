@@ -16,10 +16,11 @@ nptype = {
     core.lis_reprc.i16    : 'i2', # 16-bit signed integer
     core.lis_reprc.i32    : 'i4', # 32-bit signed integer
     core.lis_reprc.byte   : 'u1', # Byte
+    core.lis_reprc.string : 'O',  # String
 }
 
 
-def curves(f, dfsr, strict=True):
+def curves(f, dfsr, strict=True, skip_fast=False):
     """ Read curves
 
     Read the curves described by Data Format Spec Record (DFSR). The curves are
@@ -43,6 +44,13 @@ def curves(f, dfsr, strict=True):
         this restriction and dlisio will append numerical values (i.e. 0, 1, 2
         ..) to the labels used for column-names in the returned array.
 
+    skip_fast : boolean, optional
+        By default (skip_fast=False) curves() will raise if the dfsr contains
+        one or more fast channels. A fast channel is one that is sampled at a
+        higher frequency than the rest of the channels in the dfsr.
+        skip_fast=True will drop all the fast channels and return a numpy array
+        of all normal channels.
+
     Returns
     -------
 
@@ -59,11 +67,7 @@ def curves(f, dfsr, strict=True):
 
     NotImplementedError
         If the DFSR contains one or more channel where the type of the samples
-        is either lis::string or lis::mask
-
-    NotImplementedError
-        If the DFSR contains one or more multi-dimensional channel(s). I.e.
-        curves where each sample contains multiple values.
+        is lis::mask
 
     NotImplementedError
         If the DFSR contains one or more "Fast Channels". These are channels
@@ -111,6 +115,9 @@ def curves(f, dfsr, strict=True):
         msg = "lis.curves: depth recording mode == 1"
         raise NotImplementedError(msg)
 
+    if any(x for x in dfsr.specs if x.samples > 1) and not skip_fast:
+        raise NotImplementedError("Fast channel not implemented")
+
     fmt   = core.dfs_formatstring(dfsr)
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)
@@ -124,18 +131,48 @@ def curves(f, dfsr, strict=True):
         alloc,
     )
 
+def spec_dtype(spec):
+    if spec.samples < 1:
+        msg =  "Cannot create numpy.dtype for {}, "
+        msg += "samples < 1 (was: {})"
+        raise ValueError(msg.format(spec, spec.samples))
+
+    sample_size = spec.reserved_size / spec.samples
+    if sample_size % 1:
+        msg =  "Cannot create numpy.dtype for {}, "
+        msg += "reserve_size % samples != 0 (was: {}/{}={})"
+        raise ValueError(msg.format(
+            spec, spec.reserved_size, spec.samples, sample_size
+        ))
+
+    # As strings does not have encoded length, the length is implicitly given
+    # by the number of reserved bytes for one *sample*. This means that
+    # channels that use lis::string as their data type _always_ have exactly
+    # one entry
+    if core.lis_reprc(spec.reprc) == core.lis_reprc.string:
+        return np.dtype((nptype[core.lis_reprc(spec.reprc)]))
+
+    reprsize = core.lis_sizeof_type(spec.reprc)
+    entries  = sample_size / reprsize
+    if entries % 1:
+        msg =  "Cannot create numpy.dtype for {}"
+        msg += "reserved_size % (samples * sizeof(reprc)) != 0 "
+        msg += "(was: {}/({} * {}) = {})"
+        raise ValueError(msg.format(
+            spec, spec.reserved_size, spec.samples, reprsize, entries
+        ))
+
+    reprc = core.lis_reprc(spec.reprc)
+    if entries == 1: dtype = np.dtype((nptype[reprc]))
+    else:            dtype = np.dtype((nptype[reprc], int(entries)))
+    return dtype
+
 def dfsr_dtype(dfsr, strict=True):
     types = [
-        (ch.mnemonic, np.dtype(nptype[core.lis_reprc(ch.reprc)]))
+        (ch.mnemonic, spec_dtype(ch))
         for ch in dfsr.specs
+        if ch.reserved_size > 0 and ch.samples == 1
     ]
-
-    sizeof = core.lis_sizeof_type
-    if any(x for x in dfsr.specs if x.reserved_size > sizeof(x.reprc)):
-        raise NotImplementedError("Multidimensional channels not supported")
-
-    if any(x for x in dfsr.specs if x.samples > 1):
-        raise NotImplementedError("Fast channel not implemented")
 
     try:
         dtype = np.dtype(types)
