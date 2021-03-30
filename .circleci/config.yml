@@ -180,6 +180,29 @@ jobs:
                      --inline-suppr \
                      --project=compile_commands.json \
 
+  valgrind:
+    docker:
+      - image: debian:stable
+    steps:
+      - checkout
+      - install_build_deps:
+          extra: valgrind
+      - run:
+          name: build
+          command: |
+            mkdir build
+            cd build
+            cmake -DBUILD_SHARED_LIBS=ON \
+                  -DCMAKE_BUILD_TYPE=Release \
+                  -DBUILD_PYTHON=OFF \
+                  ..
+            make
+      - run:
+          name: run valgrind
+          command: |
+            valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 build/lib/test-dlis
+            valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 build/lib/test-lis
+
   python-36:
     docker:
       - image: circleci/python:3.6
@@ -481,6 +504,10 @@ workflows:
     jobs:
       - cppcheck
       - scan-build
+
+  dynamic-analysis:
+    jobs:
+      - valgrind
 
   python:
     jobs:
