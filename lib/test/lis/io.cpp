@@ -564,6 +564,8 @@ TEST_CASE("Consistency in PR headers") {
 
         const auto rec = file.index_record();
         CHECK( rec.type == lis::record_type::file_header );
+
+        file.close();
     }
 
     SECTION("Single PR, pred=1 - Inconsistent") {
@@ -575,6 +577,8 @@ TEST_CASE("Consistency in PR headers") {
         auto file = lis::iodevice( cfile );
 
         CHECK_THROWS_AS(file.index_record(), std::runtime_error);
+
+        file.close();
     }
 
     SECTION("Two PRs- Consistent") {
@@ -589,6 +593,8 @@ TEST_CASE("Consistency in PR headers") {
 
         const auto rec = file.index_record();
         CHECK( rec.type == lis::record_type::file_header );
+
+        file.close();
     }
 
     SECTION("Three PRs- Consistent") {
@@ -604,6 +610,8 @@ TEST_CASE("Consistency in PR headers") {
 
         const auto rec = file.index_record();
         CHECK( rec.type == lis::record_type::file_header );
+
+        file.close();
     }
 
     SECTION("pred=0 in non-first PRH - Inconsistent") {
@@ -618,6 +626,8 @@ TEST_CASE("Consistency in PR headers") {
         auto file = lis::iodevice( cfile );
 
         CHECK_THROWS_AS(file.index_record(), std::runtime_error);
+
+        file.close();
     }
 }
 
