@@ -269,6 +269,67 @@ def test_fdata_repcodes_invalid(tmpdir, merge_lis_prs):
         assert "Invalid repcode (170) in channel (WTF )" in str(exc.value)
 
 
+@pytest.mark.xfail(strict=True)
+def test_fdata_samples_0(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-samples-0.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-samples-0.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "samples < 1 (was: 0)" in str(exc.value)
+
+
+@pytest.mark.skip(reason="1, 3: infinite loop, 2: data read as 2 frames, "
+                         "4: segmentation fault. Divide tests if needed")
+@pytest.mark.parametrize('dfsr_filename', [
+    'dfsr-size-0-one-block.lis.part',
+    'dfsr-size-0-two-blocks.lis.part',
+    'dfsr-entries-default.lis.part',
+    'dfsr-size-0-string.lis.part',
+])
+def test_fdata_size_0_one_channel(tmpdir, merge_lis_prs, dfsr_filename):
+    fpath = os.path.join(str(tmpdir), 'dfsr-size-0.lis')
+
+    content = headers + [
+        'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/fdata-size.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "size == 0" in str(exc.value)
+
+def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-size-lt-repcode-size.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-size-lt-repcode.lis.part',
+        'data/lis/records/curves/fdata-size.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "number of entries from size (2) / repcode(73)" in str(exc.value)
+
+
 # DEPTH:
 # 1. placeholders. currently expected behavior may be changed on implementation
 # 2. more tests needed if depth can be negative

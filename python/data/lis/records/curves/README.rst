@@ -48,7 +48,13 @@ dfsr-repcodes-fixed.lis.part    Channels of 8 fixed-sized repcodes: 1 byte,
 dfsr-repcodes-invalid.lis.part  Channel has unknown repcode.
 dfsr-repcodes-mask.lis.part     Channel of mask type.
 dfsr-repcodes-string.lis.part   Channel of string type.
+dfsr-samples-0.lis.part         One channel with samples=0.
 dfsr-simple.lis.part            3 channels with samples=1, size=4, repc=int32.
+dfsr-size-0-one-block.lis.part  One channel with size=0.
+dfsr-size-0-string.lis.part     First channel is int with size 4, second is
+                                string with size=0.
+dfsr-size-0-two-blocks.lis.part First channel with size=0, second with size 4.
+dfsr-size-lt-repcode.lis.part   Total size is 2, repcode size is 4.
 dfsr-subtype0.lis.part          Record subtype: 0. All values defined.
 dfsr-subtype1.lis.part          Record subtype: 1. All values defined.
 dfsr-suppressed.lis.part        Reserved size: CH01 4, CH02 -4, CH03 1, CH04 -1.
@@ -85,6 +91,7 @@ fdata-fast-two.lis.part         Data: 1, (2, 3)s, (4, 5, 6)s, 7;
 fdata-repcodes-fixed.lis.part   One frame of data with fixed-size values
 fdata-repcodes-mask.lis.part    One frame of data with mask value
 fdata-repcodes-string.lis.part  One frame of data with string value
+fdata-size.lis.part             Data: 1 (4B), 2 (4B)
 fdata-suppressed.lis.part       Data: 1 (4B), 2 (4B), 3(1B), 4(1B)
 =============================== ================================================
 
