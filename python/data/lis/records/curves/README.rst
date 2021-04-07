@@ -4,7 +4,7 @@ LIS Logical Records - Curves
 Parts for various curves tests: DFSR PRs
 
 =============================== ================================================
-Filename        Desciption
+Filename                        Description
 =============================== ================================================
 dfsr-depth-dir-down.lis.part    Depth default file. Depth recoding mode (13): 1.
                                 Direction (4): DOWN. Frame Spacing (8): 1.
@@ -24,31 +24,43 @@ dfsr-dimensional-bad.lis.part   CH01 has 2 size of 5, when size(repc) is 2.
 dfsr-dimensional-int.lis.part   CH01 has 2 int entries per sample, CH02 has 1.
 dfsr-entries-default.lis.part   No entries but terminator defined.
 dfsr-entries-defined.lis.part   All entries have a value.
-dfsr-fast-bad.lis.part          CH01 has 2 int samples, when size is 5,
-                                size(repc) is 1.
 dfsr-fast-depth.lis.part        Depth default file. CH01 has 2 byte samples.
                                 CH02 has 1 int32 sample
-dfsr-fast-dimensional.lis.part  CHO1 has 2 byte samples with size 6. CH02 has
-                                1 int32 sample.
-dfsr-fast-int.lis.part          CH01 has 2 int samples, CH02 has 1 int sample.
-dfsr-fast-str.lis.part          CH01 has 2 str samples, CH02 has 1 str sample.
-dfsr-fast-two.lis.part          CH01 has 2 int samples, CH02 has 3 int samples.
-                                CHO3 has 1 int sample.
+dfsr-fast-dimensional.lis.part  CHO1 has 1 int32 sample, CH02 has 2 byte samples
+                                with size 6, CH03 has 1 int32 sample.
+dfsr-fast-first.lis.part        CH01 has 2 int samples, CH02 has 1 int sample,
+                                CH03 has 1 int sample.
+dfsr-fast-index.lis.part        Depth recoding mode (13): 0. Direction (4):
+                                DOWN. CH01 has 1 int sample, CH02 has 2 int
+                                samples, CH03 has 1 int sample.
+dfsr-fast-int-bad.lis.part      CH01 has 1 int sample, CH02 has 3 int samples,
+                                when size is 4, size(repc) is 1, CH03 has 1 int
+                                sample
+dfsr-fast-int.lis.part          CH01 has 1 int sample, CH02 has 2 int samples,
+                                CH03 has 1 int sample.
+dfsr-fast-str.lis.part          CH01 has 1 int sample, CH02 has 2 str samples,
+                                CH03 has 1 str sample.
+dfsr-fast-two.lis.part          CH01 has 1 int sample, CH02 has 2 int samples,
+                                CH03 has 3 int samples, CHO4 has 1 int sample.
 dfsr-repcodes-fixed.lis.part    Channels of 8 fixed-sized repcodes: 1 byte,
                                 3 ints and 4 floats.
 dfsr-repcodes-invalid.lis.part  Channel has unknown repcode.
 dfsr-repcodes-mask.lis.part     Channel of mask type.
 dfsr-repcodes-string.lis.part   Channel of string type.
+dfsr-simple.lis.part            3 channels with samples=1, size=4, repc=int32.
 dfsr-subtype0.lis.part          Record subtype: 0. All values defined.
 dfsr-subtype1.lis.part          Record subtype: 1. All values defined.
-dfsr-suppressed.lis.part        Reserved size: CH1 4, CH2 -4, CH3 1, CH4 -1
+dfsr-suppressed.lis.part        Reserved size: CH01 4, CH02 -4, CH03 1, CH04 -1.
+dfsr-suppressed-bad.lis.part    Reserved size: CH01 4, CH02 -4, CH03 1, CH04 -1.
+                                CH04 has mismatching repcode of size 2.
 =============================== ================================================
 
 Parts for various curves tests: Fdata PRs corresponding to respective DFSRs
 
 =============================== ================================================
-Filename        Desciption
+Filename                        Description
 =============================== ================================================
+fdata-bad-fdata.lis.part        Bytes: [0, 0, 0, 1, 0, 0, 0, 2, 0, 0]
 fdata-depth-down-PR1.lis.part   Depth: 1, Data: 16; 17
 fdata-depth-down-PR2.lis.part   Depth: 3, Data: 18; 19
 fdata-depth-down-PR3.lis.part   Depth: 5, Data: 20;
@@ -57,13 +69,18 @@ fdata-depth-up-RP2.lis.part     Depth: 51, Data: 35; 34
 fdata-depth-up-RP3.lis.part     Depth: 49, Data: 33;
 fdata-dimensional-int.lis.part  Data: [1, 2], 3; [4, 5], 6
 fdata-fast-depth.lis.part       Depth: 1, Data (2, 3)s, 4; (5, 6)s, 7
-fdata-fast-dimensional.lis.part Data: ([1, 2, 3], [4, 5, 6])s, 7;
-                                ([8, 9, 10], [11, 12, 13])s, 14;
-fdata-fast-int.lis.part         Data: (1, 2)s, 3; (4, 5)s, 6
-fdata-fast-str.lis.part         Data: ("STR sample 1    ", "STR sample 2    ")s,
-                                "STR not sampled "
-fdata-fast-two.lis.part         Data: (1, 2)s, (3, 4, 5)s, 6;
-                                (7, 8)s, (9, 10, 11)s, 12
+fdata-fast-dimensional.lis.part Data: 1, ([2, 3, 4], [5, 6, 7])s, 8;
+                                9, ([10, 11, 12], [13, 14, 15])s, 16;
+fdata-fast-index1.lis.part      Data: 1, (2, 3)s, 4;
+fdata-fast-index2.lis.part      Data: 5, (6, 7)s, 8;
+fdata-fast-index3.lis.part      Data: 9, (10, 11)s, 12;
+fdata-fast-index4.lis.part      Data: 13, (14, 15)s, 16;
+fdata-fast-int.lis.part         Data: 1, (2, 3)s, 4; 5, (6, 7)s, 8
+fdata-fast-str.lis.part         Data: 1,
+                                      ("STR sample 1    ", "STR sample 2    ")s,
+                                      "STR not sampled "
+fdata-fast-two.lis.part         Data: 1, (2, 3)s, (4, 5, 6)s, 7;
+                                8, (9, 10)s, (11, 12, 13)s, 14;
 fdata-repcodes-fixed.lis.part   One frame of data with fixed-size values
 fdata-repcodes-mask.lis.part    One frame of data with mask value
 fdata-repcodes-string.lis.part  One frame of data with string value
