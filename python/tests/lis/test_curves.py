@@ -766,3 +766,26 @@ def test_fdata_bad_data(tmpdir, merge_lis_prs):
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
         assert "corrupted record: fmtstr would read past end" in str(exc.value)
+
+
+def test_duplicated_mnemonics(tmpdir, merge_lis_prs, assert_error,
+                              assert_message_count):
+    fpath = os.path.join(str(tmpdir), 'same-mnemonics.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-mnemonics-same.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+    with lis.load(fpath) as (f, *_):
+        dfs = f.data_format_specs()[0]
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "field 'NAME' occurs more than once" in str(exc.value)
+        assert_error("duplicated mnemonics")
+
+        curves = lis.curves(f, dfs, strict=False)
+        assert_message_count("duplicated mnemonics", 2)
+
+        names  = curves.dtype.names
+        assert names == ('NAME(0)', 'NAME(1)', 'TEST', 'NAME(2)')

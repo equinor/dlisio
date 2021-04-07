@@ -213,7 +213,7 @@ def mkunique(types):
     labels = [label for label, _ in types]
     duplicates = [x for x, count in Counter(labels).items() if count > 1]
 
-    # Update each occurance of duplicated labels. Each set of duplicates
+    # Update each occurrence of duplicated labels. Each set of duplicates
     # requires its own tail-count, so update the list one label at the time.
     for duplicate in duplicates:
         tailcount = 0

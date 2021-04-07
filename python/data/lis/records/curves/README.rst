@@ -42,6 +42,7 @@ dfsr-fast-str.lis.part          CH01 has 1 int sample, CH02 has 2 str samples,
                                 CH03 has 1 str sample.
 dfsr-fast-two.lis.part          CH01 has 1 int sample, CH02 has 2 int samples,
                                 CH03 has 3 int samples, CHO4 has 1 int sample.
+dfsr-mnemonics-same.lis.part    Contains channels: NAME, NAME, TEST, NAME
 dfsr-repcodes-fixed.lis.part    Channels of 8 fixed-sized repcodes: 1 byte,
                                 3 ints and 4 floats.
 dfsr-repcodes-invalid.lis.part  Channel has unknown repcode.
