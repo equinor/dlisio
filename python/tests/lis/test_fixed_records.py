@@ -1,6 +1,7 @@
 import pytest
 
 from dlisio import lis
+import os
 
 @pytest.fixture(scope="module")
 def fpath(tmpdir_factory, merge_lis_prs):
@@ -122,3 +123,102 @@ def test_tape_trailer(f):
                 'This is supposed to be the first tape on the reel')
     assert_tape(f2.tape.trailer(), 'Tape0002', '02', ' ' * 8,
                 'This is supposed to be the second tape on the reel')
+
+
+# note that message is different from similar in Tape/Reel
+def test_fixed_file_header_too_short(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'FHLR-too-short.lis')
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/FHLR-too-short.lis.part',
+        'data/lis/records/FTLR-1.lis.part',
+        'data/lis/records/TTLR-1.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f, *_):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.header()
+        msg = 'File Header Records are 56 bytes, raw record is only 46'
+        assert msg in str(exc.value)
+
+@pytest.mark.xfail(strict=True, reason="no upper bound check. do we want it?")
+def test_fixed_file_header_too_long(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'FHLR-too-long.lis')
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/FHLR-too-long.lis.part',
+        'data/lis/records/FTLR-1.lis.part',
+        'data/lis/records/TTLR-1.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f, *_):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.header()
+        msg = 'File Header Records are 56 bytes, raw record is 58'
+        assert msg in str(exc.value)
+
+@pytest.mark.xfail(strict=True, reason="no structure check, unclear if we want "
+                                       "to return broken data")
+def test_fixed_file_trailer_broken_structure(tmpdir, merge_lis_prs):
+    """
+    Real files situation: Fixed record doesn't match the structure per spaces
+    """
+    fpath = os.path.join(str(tmpdir), 'FTLR-broken-structure.lis')
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/FHLR-1.lis.part',
+        'data/lis/records/FTLR-broken-structure.lis.part',
+        'data/lis/records/TTLR-1.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f, *_):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.trailer()
+        assert 'structure is broken' in str(exc.value)
+
+def test_fixed_tape_trailer_too_short(tmpdir, merge_lis_prs):
+    """
+    Real files situation: Fixed record is shorter than expected
+    """
+    fpath = os.path.join(str(tmpdir), 'TTLR-too-short.lis')
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/FHLR-1.lis.part',
+        'data/lis/records/FTLR-1.lis.part',
+        'data/lis/records/TTLR-too-short.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f, *_):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.tape.trailer()
+        assert 'Expected 126 bytes, raw record is only 124' in str(exc.value)
+
+@pytest.mark.xfail(strict=True, reason="no upper bound check. do we want it?")
+def test_fixed_tape_trailer_too_long(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'TTLR-too-long.lis')
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/FHLR-1.lis.part',
+        'data/lis/records/FTLR-1.lis.part',
+        'data/lis/records/TTLR-too-long.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f, *_):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.tape.trailer()
+        assert 'Expected 126 bytes, raw record is 138' in str(exc.value)
