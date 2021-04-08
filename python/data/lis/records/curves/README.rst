@@ -91,6 +91,7 @@ fdata-fast-two.lis.part         Data: 1, (2, 3)s, (4, 5, 6)s, 7;
 fdata-repcodes-fixed.lis.part   One frame of data with fixed-size values
 fdata-repcodes-mask.lis.part    One frame of data with mask value
 fdata-repcodes-string.lis.part  One frame of data with string value
+fdata-simple.lis.part           Data: 1, 2, 3
 fdata-size.lis.part             Data: 1 (4B), 2 (4B)
 fdata-suppressed.lis.part       Data: 1 (4B), 2 (4B), 3(1B), 4(1B)
 =============================== ================================================
