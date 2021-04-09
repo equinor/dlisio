@@ -328,7 +328,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < lis::entry_block::fixed_size ) {
         const auto msg = "lis::entry_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw std::runtime_error( fmt::format(
                     msg, left, lis::entry_block::fixed_size) );
@@ -342,7 +342,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < lis::decay( entry.size ) ) {
         const auto msg = "lis::entry_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw std::runtime_error(fmt::format(msg, left, lis::decay(entry.size)));
     }
@@ -362,7 +362,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < T::size ) {
         const auto msg = "lis::spec_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw std::runtime_error(fmt::format(msg, left, T::size));
     }
@@ -535,7 +535,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < lis::component_block::fixed_size ) {
         const auto msg = "lis::component_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw dlisio::truncation_error( fmt::format(
                     msg, left, lis::component_block::fixed_size) );
@@ -552,7 +552,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < lis::decay( component.size ) ) {
         const auto msg = "lis::component_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw dlisio::truncation_error(fmt::format(msg, left, lis::decay(component.size)));
     }
