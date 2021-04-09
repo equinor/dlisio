@@ -324,7 +324,7 @@ noexcept (false) {
 lis::entry_block read_entry_block( const lis::record& rec, std::size_t offset )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
-    const auto* end = cur + rec.data.size();
+    const auto* end = rec.data.data() + rec.data.size();
 
     if ( std::distance(cur, end) < lis::entry_block::fixed_size ) {
         const auto msg = "lis::entry_block: "
@@ -358,7 +358,7 @@ template < typename T >
 void read_spec_block( const lis::record& rec, std::size_t offset, T& spec )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
-    const auto* end = cur + rec.data.size();
+    const auto* end = rec.data.data() + rec.data.size();
 
     if ( std::distance(cur, end) < T::size ) {
         const auto msg = "lis::spec_block: "
@@ -531,7 +531,7 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
 lis::component_block read_component_block( const lis::record& rec, std::size_t offset )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
-    const auto* end = cur + rec.data.size();
+    const auto* end = rec.data.data() + rec.data.size();
 
     if ( std::distance(cur, end) < lis::component_block::fixed_size ) {
         const auto msg = "lis::component_block: "
