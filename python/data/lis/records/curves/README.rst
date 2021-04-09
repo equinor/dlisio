@@ -22,6 +22,8 @@ dfsr-depth-spacing-no.lis.part  Same as default, but Frame Spacing (8) not
                                 present.
 dfsr-dimensional-bad.lis.part   CH01 has 2 size of 5, when size(repc) is 2.
 dfsr-dimensional-int.lis.part   CH01 has 2 int entries per sample, CH02 has 1.
+dfsr-entries-bad-reprc.lis.part Entry reprc is 0x53.
+dfsr-entries-bad-type.lis.part  Entry type is 0x41.
 dfsr-entries-default.lis.part   No entries but terminator defined.
 dfsr-entries-defined.lis.part   All entries have a value.
 dfsr-fast-depth.lis.part        Depth default file. CH01 has 2 byte samples.

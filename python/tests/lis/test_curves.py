@@ -126,6 +126,21 @@ def test_entries_default_values(tmpdir, merge_lis_prs):
         assert entries[16] == 0
 
 
+@pytest.mark.xfail(strict=True, reason="check missing")
+def test_entries_invalid_type():
+    path = 'data/lis/records/curves/dfsr-entries-bad-type.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "invalid type" in str(exc.value)
+
+def test_entries_invalid_repcode():
+    path = 'data/lis/records/curves/dfsr-entries-bad-reprc.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "unknown representation code 83" in str(exc.value)
+
 #TODO:
 # depending on where transformation is going to happen, next tests are needed
 # in Python or in C++:
