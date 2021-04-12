@@ -6,8 +6,17 @@ Note that the actual Logical Records contain dummy data and can't be parsed by
 any parsing routine. 
 
 ================== ===========================================================
-Filename           Desciption
+Filename           Description
 ================== ===========================================================
+attributes_01.lis  Bit 16 (unreserved) is set [real files].
+attributes_02.lis  Bit 16 set, File Number and Record Number present
+attributes_03.lis  Bit 16 set, File Number, Record Number and mock Checksum
+                   present
+attributes_04.lis  Parity error bit set in File Trailer
+attributes_05.lis  Checksum error bit set in File Trailer
+attributes_06.lis  File Number and Record Number attributes set. PR length is 6.
+
+
 layout_00.lis      RHLR, THLR, FHLR, FTLR, TTLR, RTLR
 layout_01.lis      Size of some PRs is not divisible by 2
 

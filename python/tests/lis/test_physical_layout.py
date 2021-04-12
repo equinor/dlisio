@@ -140,6 +140,36 @@ def test_padding_06():
     assert_load_correctly(fpath, [Expected()])
 
 
+@pytest.mark.parametrize('filename', [
+    'attributes_01.lis',
+    'attributes_02.lis',
+    'attributes_03.lis',
+])
+def test_attributes(filename):
+    # various present attributes shouldn't make a difference
+    fpath = 'data/lis/layouts/' + filename
+    assert_load_correctly(fpath, [Expected()])
+
+@pytest.mark.xfail(strict=True, reason="No error reported at the moment")
+@pytest.mark.parametrize('filename', [
+    'attributes_04.lis',
+    'attributes_05.lis',
+])
+def test_attributes_error(filename, assert_error):
+    # checksum/parity error
+    fpath = 'data/lis/layouts/' + filename
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("Attribute error")
+
+def test_attributes_too_short(assert_error):
+    # record is too short
+    fpath = 'data/lis/layouts/attributes_06.lis'
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("Too short record length (was 6 bytes)")
+
+
 def test_successor_00():
     # LRs are correctly divided into PRs
     fpath = 'data/lis/layouts/successor_00.lis'
