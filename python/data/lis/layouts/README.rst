@@ -78,6 +78,7 @@ truncated_12.lis   TIFed file is truncated in PR header
 truncated_13.lis   TIFed file is truncated after TM
 truncated_14.lis   TIFed file is truncated in TM
 truncated_15.lis   File is truncated in second LF
+truncated_16.lis   Padded file is truncated while successive PR is expected
 
 
 wrong_01.lis       Not a LIS file

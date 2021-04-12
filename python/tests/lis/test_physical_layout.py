@@ -202,9 +202,12 @@ def test_successor(filename, assert_error):
     'truncated_12.lis',
     'truncated_13.lis',
     'truncated_14.lis',
+    'truncated_16.lis',
 ])
 def test_truncated(filename, assert_error):
     # Truncation happens in various places of the data
+    # problematic LF is still added to the logical files list
+    # problematic PR is not stored
     fpath = 'data/lis/layouts/' + filename
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
