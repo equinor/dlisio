@@ -227,6 +227,55 @@ def test_dfsr_cut():
             _ = f.data_format_specs()
         assert "lis::spec_block: 32 bytes left in record" in str(exc.value)
 
+def test_dfsr_many(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-many.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        assert len(lis.curves(f, f.data_format_specs()[0])) == 0
+        assert len(lis.curves(f, f.data_format_specs()[1])) == 1
+        assert len(lis.curves(f, f.data_format_specs()[2])) == 0
+        assert len(lis.curves(f, f.data_format_specs()[3])) == 2
+
+def test_dfsr_invalid_tell(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-prerequisites.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+    fpath = os.path.join(str(tmpdir), 'dfsr-invalid-tell.lis')
+
+    content = headers + [
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+    assert "Could not find DFS record at tell" in str(exc.value)
+
 
 def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fdata-repcodes-fixed.lis')
