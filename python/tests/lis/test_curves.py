@@ -125,6 +125,26 @@ def test_entries_default_values(tmpdir, merge_lis_prs):
         assert entries[15] == None
         assert entries[16] == 0
 
+def test_entries_cut_in_fixed():
+    path = 'data/lis/records/curves/dfsr-entries-cut-fixed.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "2 bytes left in record, expected at least 3" in str(exc.value)
+
+def test_entries_cut_in_value():
+    path = 'data/lis/records/curves/dfsr-entries-cut-value.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "lis::entry_block: 6 bytes left in record" in str(exc.value)
+
+def test_entries_cut_before_terminator():
+    path = 'data/lis/records/curves/dfsr-entries-cut-end.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "0 bytes left in record, expected at least 3" in str(exc.value)
 
 @pytest.mark.xfail(strict=True, reason="check missing")
 def test_entries_invalid_type():
@@ -199,6 +219,13 @@ def test_dfsr_subtype1(tmpdir, merge_lis_prs):
 
         curves = lis.curves(f, dfs)
         assert len(curves) == 0
+
+def test_dfsr_cut():
+    path = 'data/lis/records/curves/dfsr-cut.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "lis::spec_block: 32 bytes left in record" in str(exc.value)
 
 
 def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):

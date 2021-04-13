@@ -166,6 +166,14 @@ def test_inforec_empty():
     assert wellsite.isstructured() == False
     assert len(wellsite.components()) == 0
 
+    with pytest.raises(ValueError) as exc:
+        _ = wellsite.table_name()
+    assert "Record is not structured as a table" in str(exc.value)
+
+    with pytest.raises(ValueError) as exc:
+        _ = wellsite.table()
+    assert "Record is not structured as a table" in str(exc.value)
+
 def test_inforec_empty_table():
     path = 'data/lis/records/inforec_07.lis'
     f, = lis.load(path)
@@ -178,6 +186,22 @@ def test_inforec_empty_table():
     assert name == 'CONS'
 
     np.testing.assert_array_equal(wellsite.table(), np.empty(0))
+
+def test_inforec_cut_in_fixed_size():
+    path = 'data/lis/records/inforec-cut-in-fixed.lis.part'
+    f, = lis.load(path)
+
+    with pytest.raises(RuntimeError) as exc:
+        _ = f.wellsite_data()
+    assert "lis::component_block: 10 bytes left in record" in str(exc.value)
+
+def test_inforec_cut_in_component():
+    path = 'data/lis/records/inforec-cut-in-value.lis.part'
+    f, = lis.load(path)
+
+    with pytest.raises(RuntimeError) as exc:
+        _ = f.wellsite_data()
+    assert "2 bytes left in record, expected at least 4" in str(exc.value)
 
 def test_inforecords(f):
     assert len(f.job_identification()) == 1
@@ -236,3 +260,4 @@ def test_encrypted_table_dump(f):
     with pytest.raises(NotImplementedError) as exc:
         lis.parse_record(encrypted_table_dumps[0])
     assert "No parsing rule for Encrypted Table Dump Records" in str(exc.value)
+
