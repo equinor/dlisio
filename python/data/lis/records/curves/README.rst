@@ -38,8 +38,11 @@ dfsr-fast-dimensional.lis.part  CHO1 has 1 int32 sample, CH02 has 2 byte samples
                                 with size 6, CH03 has 1 int32 sample.
 dfsr-fast-first.lis.part        CH01 has 2 int samples, CH02 has 1 int sample,
                                 CH03 has 1 int sample.
-dfsr-fast-index.lis.part        Depth recoding mode (13): 0. Direction (4):
+dfsr-fast-index-down.lis.part   Depth recoding mode (13): 0. Direction (4):
                                 DOWN. CH01 has 1 int sample, CH02 has 2 int
+                                samples, CH03 has 1 int sample.
+dfsr-fast-index-up.lis.part     Depth recoding mode (13): 0. Direction (4):
+                                UP. CH01 has 1 int sample, CH02 has 2 int
                                 samples, CH03 has 1 int sample.
 dfsr-fast-int-bad.lis.part      CH01 has 1 int sample, CH02 has 3 int samples,
                                 when size is 4, size(repc) is 1, CH03 has 1 int
@@ -76,6 +79,8 @@ Parts for various curves tests: Fdata PRs corresponding to respective DFSRs
 Filename                        Description
 =============================== ================================================
 fdata-bad-fdata.lis.part        Bytes: [0, 0, 0, 1, 0, 0, 0, 2, 0, 0]
+fdata-depth-down-PR-2.lis.part  Depth: -3, Data: 12; 13
+fdata-depth-down-PR-1.lis.part  Depth: -1, Data: 14; 15
 fdata-depth-down-PR1.lis.part   Depth: 1, Data: 16; 17
 fdata-depth-down-PR2.lis.part   Depth: 3, Data: 18; 19
 fdata-depth-down-PR3.lis.part   Depth: 5, Data: 20;
@@ -87,6 +92,8 @@ fdata-encoded.lis.part          Data koi8-r encoded: значение
 fdata-fast-depth.lis.part       Depth: 1, Data (2, 3)s, 4; (5, 6)s, 7
 fdata-fast-dimensional.lis.part Data: 1, ([2, 3, 4], [5, 6, 7])s, 8;
                                 9, ([10, 11, 12], [13, 14, 15])s, 16;
+fdata-fast-index-2.lis.part     Data: -5, (-6, -7)s, -8;
+fdata-fast-index-1.lis.part     Data: -1, (-2, -3)s, -4;
 fdata-fast-index1.lis.part      Data: 1, (2, 3)s, 4;
 fdata-fast-index2.lis.part      Data: 5, (6, 7)s, 8;
 fdata-fast-index3.lis.part      Data: 9, (10, 11)s, 12;

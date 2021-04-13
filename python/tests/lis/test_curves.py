@@ -443,6 +443,8 @@ def test_depth_mode_1_direction_down(tmpdir, merge_lis_prs, dfsr_filename):
 
     content = headers + [
         'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/fdata-depth-down-PR-2.lis.part',
+        'data/lis/records/curves/fdata-depth-down-PR-1.lis.part',
         'data/lis/records/curves/fdata-depth-down-PR1.lis.part',
         'data/lis/records/curves/fdata-depth-down-PR2.lis.part',
         'data/lis/records/curves/fdata-depth-down-PR3.lis.part',
@@ -453,8 +455,8 @@ def test_depth_mode_1_direction_down(tmpdir, merge_lis_prs, dfsr_filename):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         curves = lis.curves(f, dfs)
-        assert curves['DEPT'] == [1, 2, 3, 4, 5]
-        assert curves['CH01'] == [16, 17, 18, 19, 20]
+        assert curves['DEPT'] == [-3, -2, -1, 0, 1, 2, 3, 4, 5]
+        assert curves['CH01'] == [12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 @pytest.mark.xfail(strict=True)
 def test_depth_mode_1_direction_up(tmpdir, merge_lis_prs):
@@ -788,6 +790,54 @@ def test_fdata_fast_channel_depth(tmpdir, merge_lis_prs):
         #   sample1: CH01: 5, CH02: 7, Depth: 2.5
         #   sample2: CH01: 6, CH02: 7, Depth: 3
 
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_down(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-down.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
+        'data/lis/records/curves/fdata-fast-index-2.lis.part',
+        'data/lis/records/curves/fdata-fast-index-1.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([-5, -1, 1, 5]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Call other method to get fast channel data" in str(exc.value)
+
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_up(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-up.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-up.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+        'data/lis/records/curves/fdata-fast-index-1.lis.part',
+        'data/lis/records/curves/fdata-fast-index-2.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([5, 1, -1, -5]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Call other method to get fast channel data" in str(exc.value)
+
 # broken DEPTH0 as index
 # unclear if that should matter at all for non-fast channels setups
 # also unclear if we should care, or if inconsistent index is user's problem
@@ -797,7 +847,7 @@ def test_fdata_fast_channel_index_direction_mixed(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-mixed.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-fast-index.lis.part',
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
         'data/lis/records/curves/fdata-fast-index1.lis.part',
         'data/lis/records/curves/fdata-fast-index4.lis.part',
         'data/lis/records/curves/fdata-fast-index2.lis.part',
@@ -820,7 +870,7 @@ def test_fdata_fast_channel_index_direction_mismatch(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-mismatch.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-fast-index.lis.part',
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
         'data/lis/records/curves/fdata-fast-index3.lis.part',
         'data/lis/records/curves/fdata-fast-index2.lis.part',
         'data/lis/records/curves/fdata-fast-index1.lis.part',
@@ -844,7 +894,7 @@ def test_fdata_fast_channel_index_spacing_inconsistent(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-index-bad-spacing.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-fast-index.lis.part',
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
         'data/lis/records/curves/fdata-fast-index1.lis.part',
         'data/lis/records/curves/fdata-fast-index2.lis.part',
         'data/lis/records/curves/fdata-fast-index4.lis.part',
