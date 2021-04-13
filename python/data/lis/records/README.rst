@@ -30,6 +30,8 @@ FHLR-too-short.lis.part         File Header has too few bytes.
 FTLR-broken-structure.lis.part  Data is present where spaces are supposed to be
 inforec-cut-in-fixed.lis.part   Component block is cut after mnemonic
 inforec-cut-in-value.lis.part   Component blick is cur in component value
+inforec-encoded.lis.part        Mnemonic, units and value are encoded in koi8-r
+TTLR-encoded.lis.part           Name and some other values are encoded in koi8-r
 TTLR-too-long.lis.part          Tape Trailer has more bytes than fixed size.
 TTLR-too-short.lis.part         Tape Trailer is 2 bytes short of expected size.
 =============================== ================================================
