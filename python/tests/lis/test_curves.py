@@ -125,6 +125,41 @@ def test_entries_default_values(tmpdir, merge_lis_prs):
         assert entries[15] == None
         assert entries[16] == 0
 
+def test_entries_cut_in_fixed():
+    path = 'data/lis/records/curves/dfsr-entries-cut-fixed.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "2 bytes left in record, expected at least 3" in str(exc.value)
+
+def test_entries_cut_in_value():
+    path = 'data/lis/records/curves/dfsr-entries-cut-value.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "lis::entry_block: 6 bytes left in record" in str(exc.value)
+
+def test_entries_cut_before_terminator():
+    path = 'data/lis/records/curves/dfsr-entries-cut-end.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "0 bytes left in record, expected at least 3" in str(exc.value)
+
+@pytest.mark.xfail(strict=True, reason="check missing")
+def test_entries_invalid_type():
+    path = 'data/lis/records/curves/dfsr-entries-bad-type.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "invalid type" in str(exc.value)
+
+def test_entries_invalid_repcode():
+    path = 'data/lis/records/curves/dfsr-entries-bad-reprc.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "unknown representation code 83" in str(exc.value)
 
 #TODO:
 # depending on where transformation is going to happen, next tests are needed
@@ -184,6 +219,62 @@ def test_dfsr_subtype1(tmpdir, merge_lis_prs):
 
         curves = lis.curves(f, dfs)
         assert len(curves) == 0
+
+def test_dfsr_cut():
+    path = 'data/lis/records/curves/dfsr-cut.lis.part'
+    with lis.load(path) as (f,):
+        with pytest.raises(RuntimeError) as exc:
+            _ = f.data_format_specs()
+        assert "lis::spec_block: 32 bytes left in record" in str(exc.value)
+
+def test_dfsr_many(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-many.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        assert len(lis.curves(f, f.data_format_specs()[0])) == 0
+        assert len(lis.curves(f, f.data_format_specs()[1])) == 1
+        assert len(lis.curves(f, f.data_format_specs()[2])) == 0
+        assert len(lis.curves(f, f.data_format_specs()[3])) == 2
+
+def test_dfsr_invalid_tell(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-prerequisites.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+    fpath = os.path.join(str(tmpdir), 'dfsr-invalid-tell.lis')
+
+    content = headers + [
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/fdata-simple.lis.part',
+        'data/lis/records/curves/dfsr-simple.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+    assert "Could not find DFS record at tell" in str(exc.value)
 
 
 def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
@@ -269,6 +360,67 @@ def test_fdata_repcodes_invalid(tmpdir, merge_lis_prs):
         assert "Invalid repcode (170) in channel (WTF )" in str(exc.value)
 
 
+@pytest.mark.xfail(strict=True)
+def test_fdata_samples_0(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-samples-0.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-samples-0.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "samples < 1 (was: 0)" in str(exc.value)
+
+
+@pytest.mark.skip(reason="1, 3: infinite loop, 2: data read as 2 frames, "
+                         "4: segmentation fault. Divide tests if needed")
+@pytest.mark.parametrize('dfsr_filename', [
+    'dfsr-size-0-one-block.lis.part',
+    'dfsr-size-0-two-blocks.lis.part',
+    'dfsr-entries-default.lis.part',
+    'dfsr-size-0-string.lis.part',
+])
+def test_fdata_size_0_one_channel(tmpdir, merge_lis_prs, dfsr_filename):
+    fpath = os.path.join(str(tmpdir), 'dfsr-size-0.lis')
+
+    content = headers + [
+        'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/fdata-size.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "size == 0" in str(exc.value)
+
+def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-size-lt-repcode-size.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-size-lt-repcode.lis.part',
+        'data/lis/records/curves/fdata-size.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "number of entries from size (2) / repcode(73)" in str(exc.value)
+
+
 # DEPTH:
 # 1. placeholders. currently expected behavior may be changed on implementation
 # 2. more tests needed if depth can be negative
@@ -291,6 +443,8 @@ def test_depth_mode_1_direction_down(tmpdir, merge_lis_prs, dfsr_filename):
 
     content = headers + [
         'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/fdata-depth-down-PR-2.lis.part',
+        'data/lis/records/curves/fdata-depth-down-PR-1.lis.part',
         'data/lis/records/curves/fdata-depth-down-PR1.lis.part',
         'data/lis/records/curves/fdata-depth-down-PR2.lis.part',
         'data/lis/records/curves/fdata-depth-down-PR3.lis.part',
@@ -301,8 +455,8 @@ def test_depth_mode_1_direction_down(tmpdir, merge_lis_prs, dfsr_filename):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         curves = lis.curves(f, dfs)
-        assert curves['DEPT'] == [1, 2, 3, 4, 5]
-        assert curves['CH01'] == [16, 17, 18, 19, 20]
+        assert curves['DEPT'] == [-3, -2, -1, 0, 1, 2, 3, 4, 5]
+        assert curves['CH01'] == [12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 @pytest.mark.xfail(strict=True)
 def test_depth_mode_1_direction_up(tmpdir, merge_lis_prs):
@@ -369,6 +523,25 @@ def test_depth_mode_1_direction_no_match(tmpdir, merge_lis_prs, dfsr_filename):
             _ = lis.curves(f, dfs)
         assert "Declared direction doesn't match actual data" in str(exc.value)
 
+# unclear if we want to check it and if that should count as failure or warning
+@pytest.mark.xfail(strict=True)
+def test_depth_mode_1_direction_inconsistent(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'depth-dir-inconsistent')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-depth-dir-down.lis.part',
+        'data/lis/records/curves/fdata-depth-up-PR1.lis.part',
+        'data/lis/records/curves/fdata-depth-up-PR2.lis.part',
+        'data/lis/records/curves/fdata-depth-up-PR3.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Declared direction doesn't match actual data" in str(exc.value)
 
 @pytest.mark.xfail(strict=True)
 @pytest.mark.parametrize('dfsr_filename', [
@@ -406,8 +579,6 @@ def test_depth_mode_1_spacing_inconsistent(tmpdir, merge_lis_prs, dfsr_filename)
 
     merge_lis_prs(fpath, content)
 
-    merge_lis_prs(fpath, content)
-
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         with pytest.raises(RuntimeError) as exc:
@@ -435,6 +606,11 @@ def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
         expected = np.array([3, 6])
         np.testing.assert_array_equal(expected, curves['CH02'])
 
+# fdata - should we allow skipping broken channels for whatever reason?
+# at the moment we do that for suppressed and fast channels, but not in case
+# where samples=1, size>0
+# while the situation is unlikely to arise in real world, it creates
+# inconsistency
 def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dimensional-bad.lis')
 
@@ -451,12 +627,15 @@ def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
         assert "Cannot compute an integral number of entries from size (5) / " \
                "repcode(79) for channel CH01" in str(exc.value)
 
-
-def test_fdata_suppressed(tmpdir, merge_lis_prs):
+@pytest.mark.parametrize('dfsr_filename', [
+    'dfsr-suppressed.lis.part',
+    'dfsr-suppressed-bad.lis.part', #broken channels can be suppressed
+])
+def test_fdata_suppressed(tmpdir, merge_lis_prs, dfsr_filename):
     fpath = os.path.join(str(tmpdir), 'suppressed.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-suppressed.lis.part',
+        'data/lis/records/curves/' + dfsr_filename,
         'data/lis/records/curves/fdata-suppressed.lis.part',
     ] + trailers
 
@@ -475,11 +654,15 @@ def test_fdata_suppressed(tmpdir, merge_lis_prs):
             _ = curves['CH04']
 
 
-def test_fdata_curves_skip_fast(tmpdir, merge_lis_prs):
+@pytest.mark.parametrize('dfsr_filename', [
+    'dfsr-fast-int.lis.part',
+    'dfsr-fast-int-bad.lis.part', #broken channel can be skipped if size matches
+])
+def test_fdata_fast_channel_skip(tmpdir, merge_lis_prs, dfsr_filename):
     fpath = os.path.join(str(tmpdir), 'fast-channel-ints.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-fast-int.lis.part',
+        'data/lis/records/curves/' + dfsr_filename,
         'data/lis/records/curves/fdata-fast-int.lis.part',
     ] + trailers
 
@@ -493,8 +676,9 @@ def test_fdata_curves_skip_fast(tmpdir, merge_lis_prs):
         assert "Fast channel not implemented" in str(exc.value)
 
         curves = lis.curves(f, dfs, skip_fast=True)
-        assert curves.dtype == np.dtype([('CH02', 'i4')])
-        np.testing.assert_array_equal(curves['CH02'], np.array([3, 6]))
+        assert curves.dtype == np.dtype([('CH01', 'i4'), ('CH03', 'i4')])
+        np.testing.assert_array_equal(curves['CH01'], np.array([1, 5]))
+        np.testing.assert_array_equal(curves['CH03'], np.array([4, 8]))
 
 @pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_ints(tmpdir, merge_lis_prs):
@@ -514,9 +698,9 @@ def test_fdata_fast_channel_ints(tmpdir, merge_lis_prs):
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
         assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is fast, CH02 is not
-        # frame1: sample1: (1, 3), sample2: (2, 3)
-        # frame2: sample1: (4, 6), sample2: (5, 6)
+        # CH01 is index, CH02 is fast, CH03 is not
+        # Data: 1, (2, 3)s, 4;
+        #       5, (6, 7)s, 8;
 
 @pytest.mark.xfail(strict=True, reason="would we support sampled strings")
 def test_fdata_fast_channel_strings(tmpdir, merge_lis_prs):
@@ -535,16 +719,15 @@ def test_fdata_fast_channel_strings(tmpdir, merge_lis_prs):
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
         assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is fast, CH02 is not
-        # frame1: sample1: ("STR sample 1    ", "STR not sampled "),
-        #         sample2: ("STR sample 2    ", "STR not sampled "),
+        # CH01 is index, CH02 is fast, CH03 is not
+        # Data: 1, ("STR sample 1    ", "STR sample 2    ")s, "STR not sampled ";
 
 @pytest.mark.xfail(strict=True, reason="coming soon")
 def test_fdata_fast_channel_bad(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-bad.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-fast-bad.lis.part',
+        'data/lis/records/curves/dfsr-fast-int-bad.lis.part',
     ] + trailers
 
     merge_lis_prs(fpath, content)
@@ -575,9 +758,9 @@ def test_fdata_fast_channel_dimensional(tmpdir, merge_lis_prs):
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
         assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is fast, CH02 is not
-        # Data: ([1, 2, 3],  [4, 5, 6])s,     7;
-        #       ([8, 9, 10], [11, 12, 13])s, 14;
+        # CH01 is index, CH02 is fast, CH03 is not
+        # Data: 1, ([2, 3, 4],  [5, 6, 7])s,     8;
+        #       9, ([10, 11, 12], [13, 14, 15])s, 16;
 
 # 1. depending on implementation might need test where depth_mode=1,
 # but spacing is not present. We still might try to deduce it.
@@ -607,6 +790,128 @@ def test_fdata_fast_channel_depth(tmpdir, merge_lis_prs):
         #   sample1: CH01: 5, CH02: 7, Depth: 2.5
         #   sample2: CH01: 6, CH02: 7, Depth: 3
 
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_down(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-down.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
+        'data/lis/records/curves/fdata-fast-index-2.lis.part',
+        'data/lis/records/curves/fdata-fast-index-1.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([-5, -1, 1, 5]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Call other method to get fast channel data" in str(exc.value)
+
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_up(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-up.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-up.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+        'data/lis/records/curves/fdata-fast-index-1.lis.part',
+        'data/lis/records/curves/fdata-fast-index-2.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([5, 1, -1, -5]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Call other method to get fast channel data" in str(exc.value)
+
+# broken DEPTH0 as index
+# unclear if that should matter at all for non-fast channels setups
+# also unclear if we should care, or if inconsistent index is user's problem
+# at least warning would be nice though.
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_index_direction_mixed(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-mixed.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+        'data/lis/records/curves/fdata-fast-index4.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([1, 13, 5]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Index is inconsistent" in str(exc.value)
+
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_index_direction_mismatch(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-mismatch.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
+        'data/lis/records/curves/fdata-fast-index3.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([9, 5, 1]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        # warning?
+        assert "Index direction mismatches declared: DOWN" in str(exc.value)
+
+@pytest.mark.xfail(strict=True)
+def test_fdata_fast_channel_index_spacing_inconsistent(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-index-bad-spacing.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-index-down.lis.part',
+        'data/lis/records/curves/fdata-fast-index1.lis.part',
+        'data/lis/records/curves/fdata-fast-index2.lis.part',
+        'data/lis/records/curves/fdata-fast-index4.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs, skip_fast=True)
+        np.testing.assert_array_equal(curves['CH01'], np.array([1, 5, 13]))
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Index spacing is DOWN, but inconsistent" in str(exc.value)
+
 @pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_two(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-two-channels.lis')
@@ -625,7 +930,64 @@ def test_fdata_fast_channel_two(tmpdir, merge_lis_prs):
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
         assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is fast, CH02 is fast, CH03 is not
-        # frame1: CHO1: (1, 2)s, CH02: (3, 4, 5)s, CH03: 6
-        # frame2: CH01: (7, 8)s, CH02: (9, 10, 11)s, CH03: 12
+        # CH01 is index, CH02 is fast, CH03 is fast, CH04 is not
+        # frame1: CHO1: 1, CH02: (2, 3)s, CH03: (4, 5, 6)s, CH04: 7
+        # frame2: CH01: 8, CH02: (9, 10)s, CH03: (11, 12, 13)s, CH04: 14
 
+@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
+def test_fdata_fast_channel_first_fast(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channel-is-first.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-first.lis.part',
+        'data/lis/records/curves/fdata-fast-int.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Index is fast. You can't define index channel" in str(exc.value)
+
+
+def test_fdata_bad_data(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fdata-bad-data.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-bad-fdata.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "corrupted record: fmtstr would read past end" in str(exc.value)
+
+
+def test_duplicated_mnemonics(tmpdir, merge_lis_prs, assert_error,
+                              assert_message_count):
+    fpath = os.path.join(str(tmpdir), 'same-mnemonics.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-mnemonics-same.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+    with lis.load(fpath) as (f, *_):
+        dfs = f.data_format_specs()[0]
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "field 'NAME' occurs more than once" in str(exc.value)
+        assert_error("duplicated mnemonics")
+
+        curves = lis.curves(f, dfs, strict=False)
+        assert_message_count("duplicated mnemonics", 2)
+
+        names  = curves.dtype.names
+        assert names == ('NAME(0)', 'NAME(1)', 'TEST', 'NAME(2)')

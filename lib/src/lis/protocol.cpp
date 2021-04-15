@@ -324,11 +324,11 @@ noexcept (false) {
 lis::entry_block read_entry_block( const lis::record& rec, std::size_t offset )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
-    const auto* end = cur + rec.data.size();
+    const auto* end = rec.data.data() + rec.data.size();
 
     if ( std::distance(cur, end) < lis::entry_block::fixed_size ) {
         const auto msg = "lis::entry_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw std::runtime_error( fmt::format(
                     msg, left, lis::entry_block::fixed_size) );
@@ -342,7 +342,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < lis::decay( entry.size ) ) {
         const auto msg = "lis::entry_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw std::runtime_error(fmt::format(msg, left, lis::decay(entry.size)));
     }
@@ -358,11 +358,11 @@ template < typename T >
 void read_spec_block( const lis::record& rec, std::size_t offset, T& spec )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
-    const auto* end = cur + rec.data.size();
+    const auto* end = rec.data.data() + rec.data.size();
 
     if ( std::distance(cur, end) < T::size ) {
         const auto msg = "lis::spec_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw std::runtime_error(fmt::format(msg, left, T::size));
     }
@@ -531,11 +531,11 @@ std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false) {
 lis::component_block read_component_block( const lis::record& rec, std::size_t offset )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
-    const auto* end = cur + rec.data.size();
+    const auto* end = rec.data.data() + rec.data.size();
 
     if ( std::distance(cur, end) < lis::component_block::fixed_size ) {
         const auto msg = "lis::component_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw dlisio::truncation_error( fmt::format(
                     msg, left, lis::component_block::fixed_size) );
@@ -552,7 +552,7 @@ noexcept (false) {
 
     if ( std::distance(cur, end) < lis::decay( component.size ) ) {
         const auto msg = "lis::component_block: "
-                         "{} bytes left in record, expected at least {} more";
+                         "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
         throw dlisio::truncation_error(fmt::format(msg, left, lis::decay(component.size)));
     }

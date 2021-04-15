@@ -13,7 +13,7 @@ def test_1reel_1tape(tmpdir, merge_lis_prs):
     #        |-> Logical File 1
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), '1reel1tape.dlis')
+    fpath = os.path.join(str(tmpdir), '1reel1tape.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -62,7 +62,7 @@ def test_1reel_2tape(tmpdir, merge_lis_prs):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), '1reel2tape.dlis')
+    fpath = os.path.join(str(tmpdir), '1reel2tape.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -114,7 +114,7 @@ def test_2reel_1tape(tmpdir, merge_lis_prs):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), '2reel1tape.dlis')
+    fpath = os.path.join(str(tmpdir), '2reel1tape.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -168,7 +168,7 @@ def test_missing_fhlr(tmpdir, merge_lis_prs, assert_log):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_first_rh.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_first_rh.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -223,7 +223,7 @@ def test_missing_ftlr(tmpdir, merge_lis_prs, assert_info):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_first_rh.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_first_rh.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -279,7 +279,7 @@ def test_missing_first_rhlr(tmpdir, merge_lis_prs):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_first_rh.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_first_rh.lis')
     content = [
         # Missing first RHLR
         'data/lis/records/THLR-1.lis.part',
@@ -333,7 +333,7 @@ def test_missing_other_rhlr(tmpdir, merge_lis_prs, assert_log):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_other_rh.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_other_rh.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -388,7 +388,7 @@ def test_missing_last_rtlr(tmpdir, merge_lis_prs, assert_info):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_last_rt.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_last_rt.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -443,7 +443,7 @@ def test_missing_other_rtlr(tmpdir, merge_lis_prs, assert_info):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_other_rt.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_other_rt.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -498,7 +498,7 @@ def test_missing_other_thlr(tmpdir, merge_lis_prs, assert_log):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_other_th.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_other_th.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -553,7 +553,7 @@ def test_missing_other_ttlr(tmpdir, merge_lis_prs, assert_info):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_other_tt.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_other_tt.lis')
     content = [
         'data/lis/records/RHLR-1.lis.part',
         'data/lis/records/THLR-1.lis.part',
@@ -608,7 +608,7 @@ def test_missing_many_delimiters(tmpdir, merge_lis_prs):
     #    |-> Tape 2
     #        |-> Logical File 2
     #
-    fpath = os.path.join(str(tmpdir), 'missing_many_delimiters.dlis')
+    fpath = os.path.join(str(tmpdir), 'missing_many_delimiters.lis')
     content = [
         # Missing first RHLR
         # Missing first THLR
@@ -664,7 +664,7 @@ def test_nodelimiters(tmpdir, merge_lis_prs, assert_log):
     #
     # This is now essentially just a file with 2 Logical Files without tape or
     # reel information. I.e. all structure is lost
-    fpath = os.path.join(str(tmpdir), 'nodelimiters.dlis')
+    fpath = os.path.join(str(tmpdir), 'nodelimiters.lis')
     content = [
         'data/lis/records/FHLR-1.lis.part',
         'data/lis/records/FTLR-1.lis.part',
@@ -695,3 +695,45 @@ def test_nodelimiters(tmpdir, merge_lis_prs, assert_log):
         assert f2.tape.trailer() == None
         assert f2.reel.header()  == None
         assert f2.reel.trailer() == None
+
+def test_missing_logical_file(tmpdir, merge_lis_prs):
+    # Real-world example:
+    #
+    # file.lis
+    # |
+    # |->Reel 1
+    #    |-> Tape 1
+    #        |-> data (seen as Logical File 1)
+    #        |-> Logical File 2
+    #
+    fpath = os.path.join(str(tmpdir), 'missing-logical-file.lis')
+    content = [
+        'data/lis/records/RHLR-1.lis.part',
+        'data/lis/records/THLR-1.lis.part',
+        'data/lis/records/wellsite-data.lis.part',
+        'data/lis/records/FHLR-1.lis.part',
+        'data/lis/records/FTLR-1.lis.part',
+        'data/lis/records/TTLR-1.lis.part',
+        'data/lis/records/RTLR-1.lis.part',
+    ]
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f1, f2, *tail):
+        assert len(tail) == 0
+
+        # f1 belongs to Reel 1 and Tape 1
+        assert f1.header()  == None
+        assert f1.trailer() == None
+        assert f1.tape.header().name  == 'Tape0001'
+        assert f1.tape.trailer().name == 'Tape0001'
+        assert f1.reel.header().name  == 'Reel1234'
+        assert f1.reel.trailer().name == 'Reel1234'
+        assert len(f1.explicits()) == 1
+
+        # f2 belongs to Reel 1 and Tape 1
+        assert f2.header().file_name  == 'LISTST.001'
+        assert f2.trailer().file_name == 'LISTST.001'
+        assert f2.tape.header().name  == 'Tape0001'
+        assert f2.tape.trailer().name == 'Tape0001'
+        assert f2.reel.header().name  == 'Reel1234'
+        assert f2.reel.trailer().name == 'Reel1234'

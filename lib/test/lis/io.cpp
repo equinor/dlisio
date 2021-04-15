@@ -476,6 +476,36 @@ TEST_CASE("A record spanning three PRs can be indexed and read", "[iodevice]") {
     file.close();
 }
 
+TEST_CASE("A record with trailer can be indexed and read", "[iodevice]") {
+    const auto contents = std::vector< unsigned char > {
+        0x00, 0x0C, 0x86, 0x01, // prh(len=8, filenum, recnum, pred=0, succ=1)
+        0x84, 0x00,             // lrh(type=132)
+        0x01, 0x02,             // dummy data
+        0x00, 0x04,             // recnum=4
+        0x00, 0x01,             // filenum=1
+
+        0x00, 0x0C, 0x86, 0x02, // prh(len=8, filenum, recnum, pred=1, succ=0)
+        0x03, 0x04, 0x05, 0x06, // dummy data
+        0x00, 0x05,             // recnum=5
+        0x00, 0x01,             // filenum=1
+    };
+
+    const auto expected = std::vector< char > {
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06
+    };
+
+    auto* cfile = lfp_cfile( tempfile( contents ) );
+    auto file = lis::iodevice( cfile );
+
+    auto index = file.index_records();
+    auto explicits = index.explicits();
+    auto info = explicits[0];
+    auto rec = file.read_record( info );
+    CHECK_THAT( rec.data, Equals(expected) );
+
+    file.close();
+}
+
 TEST_CASE("Padding after last PRH is considered a valid EOF") {
     const auto contents = std::vector< unsigned char > {
         0x00, 0x08, 0x00, 0x00, // prh(len=8, pred=0, succ=0)
