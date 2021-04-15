@@ -487,6 +487,16 @@ void init_lis_extension(py::module_ &m) {
         })
     ;
 
+    py::class_< lis::text_record >( m, "text_record" )
+        .def_readonly( "message", &lis::text_record::message )
+        .def_readonly( "type",    &lis::text_record::type    )
+        .def( "__repr__", []( const lis::text_record& x ) {
+            return "dlisio.core.text_record(type={})"_s.format(
+                x.type
+            );
+        })
+    ;
+
     py::class_< lis::detail::file_record >( m, "file_record" )
         .def_readonly( "file_name",           &lis::detail::file_record::file_name           )
         .def_readonly( "service_sublvl_name", &lis::detail::file_record::service_sublvl_name )
@@ -558,6 +568,8 @@ void init_lis_extension(py::module_ &m) {
             );
         })
     ;
+
+    m.def( "parse_text_record", &lis::parse_text_record );
 
     m.def( "parse_file_header",  &lis::parse_file_header );
     m.def( "parse_file_trailer", &lis::parse_file_trailer );

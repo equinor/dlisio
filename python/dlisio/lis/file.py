@@ -254,6 +254,58 @@ class LogicalFile():
         recs = [self.io.read_record(x) for x in ex if x.type == rectype]
         return [InformationRecord(parse_record(x)) for x in recs]
 
+    def operator_command_inputs(self):
+        """ Operator Command Inputs
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.core.text_record`
+        """
+        rectype = core.lis_rectype.op_command_inputs
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [parse_record(x) for x in recs]
+
+    def operator_response_inputs(self):
+        """ Operator Response Inputs
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.core.text_record`
+        """
+        rectype = core.lis_rectype.op_response_inputs
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [parse_record(x) for x in recs]
+
+    def system_outputs_to_operator(self):
+        """ System Outputs to Operator
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.core.text_record`
+        """
+        rectype = core.lis_rectype.system_outputs
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [parse_record(x) for x in recs]
+
+    def flic_comment(self):
+        """ Comment Record
+
+        Returns
+        -------
+
+        records : list of :class:`dlisio.core.text_record`
+        """
+        rectype = core.lis_rectype.flic_comment
+        ex = self.explicits()
+        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return [parse_record(x) for x in recs]
+
 class PhysicalFile(tuple):
     """ Physical File - A regular file on disk
 
@@ -362,6 +414,10 @@ def parse_record(rec):
     elif rtype == types.wellsite_data:      return core.parse_info_record(rec)
     elif rtype == types.tool_string_info:   return core.parse_info_record(rec)
     elif rtype == types.job_identification: return core.parse_info_record(rec)
+    elif rtype == types.op_command_inputs:  return core.parse_text_record(rec)
+    elif rtype == types.op_response_inputs: return core.parse_text_record(rec)
+    elif rtype == types.system_outputs:     return core.parse_text_record(rec)
+    elif rtype == types.flic_comment:       return core.parse_text_record(rec)
     else:
         msg = "No parsing rule for {} Records"
         raise NotImplementedError(msg.format(core.rectype_tostring(rtype)))

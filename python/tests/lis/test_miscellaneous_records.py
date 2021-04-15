@@ -1,5 +1,6 @@
 import pytest
 
+import dlisio
 from dlisio import lis
 
 @pytest.fixture(scope="module")
@@ -25,29 +26,34 @@ def fpath(tmpdir_factory, merge_lis_prs):
 
 @pytest.fixture(scope="module")
 def f(fpath):
-    with lis.load(fpath) as (f, *_):
+    prev_encodings = dlisio.common.get_encodings()
+    dlisio.common.set_encodings([])
+    try:
+        f, = lis.load(fpath)
         yield f
+    finally:
+        f.close()
+        dlisio.common.set_encodings(prev_encodings)
 
 
-@pytest.mark.xfail(strict=True)
 def test_operator_command_inputs(f):
-    exp = "Operator Command Inputs: this can be trash or something readable"
+    # file contains return characters. String is read fully regardless
+    exp = "Operator Command Inputs: this can be trash or something readable" \
+          "\r Don't read that?"
     assert len(f.operator_command_inputs()) == 1
     assert f.operator_command_inputs()[0].message == exp
 
-@pytest.mark.xfail(strict=True)
 def test_operator_response_inputs(f):
     exp = "Operator Response Inputs: this can be trash or something readable."
     assert len(f.operator_response_inputs()) == 1
     assert f.operator_response_inputs()[0].message == exp
 
-@pytest.mark.xfail(strict=True)
 def test_system_outputs_to_operator(f):
-    exp = "System Outputs to Operator: trash or not trash?"
+    # file contains random bytes after carriage return. Data is read as bytes
+    exp = b"System Outputs to Operator: trash or not trash?"
     assert len(f.system_outputs_to_operator()) == 1
-    assert f.system_outputs_to_operator()[0].message == exp
+    assert exp in f.system_outputs_to_operator()[0].message
 
-@pytest.mark.xfail(strict=True)
 def test_flic_comment(f):
     exp = "FLIC Comment: good comment"
     assert len(f.flic_comment()) == 1
