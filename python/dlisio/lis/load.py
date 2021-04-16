@@ -1,9 +1,10 @@
 import logging
 
 from .. import core
+from .. import common
 from .file import LogicalFile, PhysicalFile, HeaderTrailer, parse_record
 
-def load(path):
+def load(path, error_handler = None):
     """ Loads and indexes a LIS file
 
     Load does more than just opening the file. A LIS file has no random access
@@ -25,6 +26,11 @@ def load(path):
     path : str_like
         path to lis-file
 
+    error_handler : dlisio.common.ErrorHandler, optional
+        Error handling rules. Default rules will apply if none supplied.
+        Note that parameter affects load only and is not passed further
+        to logical files.
+
     Returns
     -------
 
@@ -37,6 +43,9 @@ def load(path):
             f.close()
             msg = 'Cannot read {} first bytes of file: {}'
             raise IOError(msg.format(offset + 12, path))
+
+    if not error_handler:
+        error_handler = common.ErrorHandler()
 
     offset = 0
     f = core.open(path, offset)
@@ -68,9 +77,13 @@ def load(path):
         except EOFError:
             break
         except OSError as e:
-            msg =  'dlisio.lis.load: stopped indexing at tell {}\n'
-            msg += 'Reason: {}\nFilepath: {}'
-            logging.error(msg.format(offset, e, path))
+            error_handler.log(
+                core.error_severity.critical,
+                "dlisio.lis.load: file {}".format(path),
+                e,
+                "",
+                "Indexing stopped",
+                "Physical tell: {} (dec)".format(offset))
             break
 
         index = f.index_records()
@@ -100,13 +113,18 @@ def load(path):
                 f.close()
             except Exception as e:
                 # This is very unlikely to happen as index_records has already
-                # done the sanity checking needed for succesfully reading the
+                # done the sanity checking needed for successfully reading the
                 # record.
                 # However read_records can in theory still fail on blocked IO
                 # and other non-LIS related issues.
-                msg =  'dlisio.lis.load: Could not read record {}, indexing stopped\n'
-                msg += 'Reason: {}\nFilepath: {}'
-                logging.error(msg.format(first, e, path))
+                msg =  "dlisio.lis.load: file {}, record {}"
+                error_handler.log(
+                    core.error_severity.critical,
+                    msg.format(path, first),
+                    e,
+                    "",
+                    "Indexing stopped",
+                    "Physical tell: {} (dec)".format(offset))
                 f.close()
                 break
 
@@ -137,9 +155,13 @@ def load(path):
         if index.isincomplete(): break
 
     if index.isincomplete():
-        msg =  'dlisio.lis.load: Indexing failed around tell {}\n'
-        msg += 'Reason: {}\nFilepath: {}'
-        logging.error(msg.format(offset, index.errmsg(), path))
+        error_handler.log(
+            core.error_severity.critical,
+            "dlisio.lis.load: file {}".format(path),
+            index.errmsg(),
+            "",
+            "Indexing stopped",
+            "Physical tell: {} (dec)".format(offset))
 
     return PhysicalFile(logical_files)
 

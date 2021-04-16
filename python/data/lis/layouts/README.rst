@@ -86,4 +86,5 @@ wrong_02.lis       Not a LIS TIFed file
 wrong_03.lis       File zeroed from certain point
 wrong_04.lis       TIF TM is wrong
 wrong_05.lis       LR Type is wrong
+wrong_06.lis       TIF TM is wrong on "start" of new file
 ================== ===========================================================

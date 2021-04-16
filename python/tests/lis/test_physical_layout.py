@@ -6,7 +6,7 @@ Please refer to data/lis/layouts/README.rst for what each file is designed to
 test.
 """
 
-from dlisio import lis, core
+from dlisio import lis, core, common
 import pytest
 
 class Expected:
@@ -30,7 +30,10 @@ def assert_load_correctly(fpath, expected):
         else:
             assert actual == None
 
-    with lis.load(fpath) as files:
+    errorhandler = common.ErrorHandler(
+        critical=common.Actions.LOG_ERROR)
+
+    with lis.load(fpath, errorhandler) as files:
         assert len(files) == len(expected)
 
         for i, f in enumerate(files):
@@ -150,7 +153,8 @@ def test_attributes(filename):
     fpath = 'data/lis/layouts/' + filename
     assert_load_correctly(fpath, [Expected()])
 
-@pytest.mark.xfail(strict=True, reason="No error reported at the moment")
+@pytest.mark.xfail(strict=True, reason="No error or warning reported at the "
+                                       "moment. Expected behavior undefined.")
 @pytest.mark.parametrize('filename', [
     'attributes_04.lis',
     'attributes_05.lis',
@@ -160,7 +164,7 @@ def test_attributes_error(filename, assert_error):
     fpath = 'data/lis/layouts/' + filename
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
-    assert_error("Attribute error")
+    assert_error("Attribute error") # or warning
 
 def test_attributes_too_short(assert_error):
     # record is too short
@@ -185,33 +189,35 @@ def test_successor_00():
 def test_successor(filename, assert_error):
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(filename, [lf])
-    assert_error("Indexing failed")
+    assert_error("predecessor/successor inconsistency")
 
-@pytest.mark.parametrize('filename', [
-    'truncated_01.lis',
-    'truncated_02.lis',
-    'truncated_03.lis',
-    'truncated_04.lis',
-    'truncated_05.lis',
-    'truncated_06.lis',
-    'truncated_07.lis',
-    'truncated_08.lis',
-    'truncated_09.lis',
-    'truncated_10.lis',
-    'truncated_11.lis',
-    'truncated_12.lis',
-    'truncated_13.lis',
-    'truncated_14.lis',
-    'truncated_16.lis',
+tif_eof = 'tapeimage: unexpected EOF when reading record - '
+@pytest.mark.parametrize('filename, specific_error',[
+    ('truncated_01.lis', 'index_record: Missing next PRH'),
+    ('truncated_02.lis', 'index_record: physical record truncated'),
+    ('truncated_03.lis', 'index_record: physical record truncated'),
+    ('truncated_04.lis', 'read_logical_header: could not read full header'),
+    ('truncated_05.lis', 'read_logical_header: unexpected end-of-file'),
+    ('truncated_06.lis', 'read_physical_header: unexpected end-of-file'),
+    ('truncated_07.lis', 'index_record: Missing next PRH'),
+    ('truncated_08.lis', tif_eof + 'got 0 bytes, expected there to be 1 more'),
+    ('truncated_09.lis', tif_eof + 'got 0 bytes, expected there to be 1 more'),
+    ('truncated_10.lis', tif_eof + 'got 1 bytes, expected there to be 47 more'),
+    ('truncated_11.lis', tif_eof + 'got 0 bytes, expected there to be 48 more'),
+    ('truncated_12.lis', tif_eof + 'got 2 bytes, expected there to be 50 more'),
+    ('truncated_13.lis', tif_eof + 'got 0 bytes, expected there to be 52 more'),
+    ('truncated_14.lis', 'tapeimage: unexpected EOF when reading header'),
+    ('truncated_16.lis', 'index_record: Missing next PRH'),
 ])
-def test_truncated(filename, assert_error):
+def test_truncated(filename, assert_error, specific_error):
     # Truncation happens in various places of the data
     # problematic LF is still added to the logical files list
     # problematic PR is not stored
     fpath = 'data/lis/layouts/' + filename
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
-    assert_error("Indexing failed")
+    assert_error("Indexing stopped")
+    assert_error(specific_error)
 
 @pytest.mark.parametrize('filename', [
     'wrong_01.lis',
@@ -221,7 +227,7 @@ def test_wrong_not_lis(filename, assert_error):
     # not a LIS file
     fpath = 'data/lis/layouts/' + filename
     assert_load_correctly(fpath, [])
-    assert_error("Indexing failed")
+    assert_error("index_record: Missing next PRH")
 
 @pytest.mark.xfail(strict=True, reason="Current behavior: File is loaded OK."
                                        "Expected behavior: undefined")
@@ -239,12 +245,18 @@ def test_wrong_TM(assert_error):
     assert_load_correctly(fpath, [lf])
     assert_error("file corrupt: head.next")
 
-# TODO: missing tests and good failures for files with broken PR length
-# due to not enough constraints we can wrongly index the big whole file before we
-# eventually fail somewhere. See if we come up with more constrains and tests
 def test_wrong_LR_type(assert_error):
     # due to wrong PR length (real error) "LR" for the next "PR" has wrong type
     fpath = 'data/lis/layouts/wrong_05.lis'
     lf = Expected(records=1, ttlr=None, rtlr=None)
     assert_load_correctly(fpath, [lf])
     assert_error("Found invalid record type")
+
+def test_wrong_TM_on_open(assert_error):
+    # based on real error
+    # due to wrong PR length next "PR" has type 80
+    # file is TIFed, so rewind happens and next "logical file" is spoiled
+    fpath = 'data/lis/layouts/wrong_06.lis'
+    lf = Expected(records=1, ttlr=None, rtlr=None)
+    assert_load_correctly(fpath, [lf])
+    assert_error("lis::open: Cannot open lis::iodevice (ptell=206)")
