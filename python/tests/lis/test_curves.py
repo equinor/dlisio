@@ -586,6 +586,23 @@ def test_depth_mode_1_spacing_inconsistent(tmpdir, merge_lis_prs, dfsr_filename)
         assert "Depth spacing is inconsistent." in str(exc.value)
 
 
+@pytest.mark.xfail(strict=True)
+def test_depth_mode_1_conversion(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'depth-int-float-conversion')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-depth-conversion.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Spacing is float, depth repcode is int" in str(exc.value)
+
+
 def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dimensional-ints.lis')
 
@@ -913,12 +930,12 @@ def test_fdata_fast_channel_index_spacing_inconsistent(tmpdir, merge_lis_prs):
         assert "Index spacing is DOWN, but inconsistent" in str(exc.value)
 
 @pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
-def test_fdata_fast_channel_two(tmpdir, merge_lis_prs):
-    fpath = os.path.join(str(tmpdir), 'fast-channel-two-channels.lis')
+def test_fdata_fast_channel_two_different(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channels-sampled-differently.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-fast-two.lis.part',
-        'data/lis/records/curves/fdata-fast-two.lis.part',
+        'data/lis/records/curves/dfsr-fast-two-diff.lis.part',
+        'data/lis/records/curves/fdata-fast-two-diff.lis.part',
     ] + trailers
 
     merge_lis_prs(fpath, content)
@@ -931,8 +948,52 @@ def test_fdata_fast_channel_two(tmpdir, merge_lis_prs):
             _ = lis.curves(f, dfs)
         assert "Call other method to get fast channel data" in str(exc.value)
         # CH01 is index, CH02 is fast, CH03 is fast, CH04 is not
-        # frame1: CHO1: 1, CH02: (2, 3)s, CH03: (4, 5, 6)s, CH04: 7
-        # frame2: CH01: 8, CH02: (9, 10)s, CH03: (11, 12, 13)s, CH04: 14
+        # frame1: CHO1: 1, CH02: (2, 3)s, CH03: (4, 5, 6)s, CH04: 13
+        # frame2: CH01: 7, CH02: (8, 9)s, CH03: (10, 11, 12)s, CH04: 14
+
+@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
+def test_fdata_fast_channel_two_same(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channels-sampled-same.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-two-same.lis.part',
+        'data/lis/records/curves/fdata-fast-two-same.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        # interface unclear.
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "Call other method to get fast channel data" in str(exc.value)
+        # CH01 is index, CH02 is fast, CH03 is fast
+        # frame1: CHO1: 1, CH02: (2, 3)s, CH03: (4, 5)s
+        # frame2: CH01: 9, CH02: (10, 11)s, CH03: (12, 13)s
+
+@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
+def test_fdata_fast_channel_index_conversion(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fast-channels-index-conversion.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-conversion.lis.part',
+        'data/lis/records/curves/fdata-fast-conversion.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        # interface unclear.
+        with pytest.raises(RuntimeError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "You index is bad" in str(exc.value)
+        # CH01 is index, CH02 is fast
+        # frame1: CHO1: 1, CH02: (5, 6)s
+        # frame2: CH01: 2, CH02: (7, 8)s
 
 @pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_first_fast(tmpdir, merge_lis_prs):

@@ -7,6 +7,9 @@ Parts for various curves tests: DFSR PRs
 Filename                        Description
 =============================== ================================================
 dfsr-cut.lis.part               Spec block is cut in the middle.
+dfsr-depth-conversion.lis.part  Depth recoding mode (13): 1.
+                                Direction (4): DOWN. Frame Spacing (8): 0.25.
+                                Depth reprc (15): int32.
 dfsr-depth-dir-down.lis.part    Depth default file. Depth recoding mode (13): 1.
                                 Direction (4): DOWN. Frame Spacing (8): 1.
                                 Units for frame spacing (9): .1IN. Units of
@@ -32,6 +35,7 @@ dfsr-entries-cut-fixed.lis.part Entry data is cut after size
 dfsr-entries-cut-value.lis.part Entry data is cut in the value
 dfsr-entries-default.lis.part   No entries but terminator defined.
 dfsr-entries-defined.lis.part   All entries have a value.
+dfsr-fast-conversion.lis.part   CH01 has 1 int sample, CH02 has 2 int samples.
 dfsr-fast-depth.lis.part        Depth default file. CH01 has 2 byte samples.
                                 CH02 has 1 int32 sample
 dfsr-fast-dimensional.lis.part  CHO1 has 1 int32 sample, CH02 has 2 byte samples
@@ -51,8 +55,10 @@ dfsr-fast-int.lis.part          CH01 has 1 int sample, CH02 has 2 int samples,
                                 CH03 has 1 int sample.
 dfsr-fast-str.lis.part          CH01 has 1 int sample, CH02 has 2 str samples,
                                 CH03 has 1 str sample.
-dfsr-fast-two.lis.part          CH01 has 1 int sample, CH02 has 2 int samples,
+dfsr-fast-two-diff.lis.part     CH01 has 1 int sample, CH02 has 2 int samples,
                                 CH03 has 3 int samples, CHO4 has 1 int sample.
+dfsr-fast-two-same.lis.part     CH01 has 1 int sample, CH02 has 2 int samples,
+                                CH03 has 2 int samples.
 dfsr-mnemonics-same.lis.part    Contains channels: NAME, NAME, TEST, NAME
 dfsr-repcodes-fixed.lis.part    Channels of 8 fixed-sized repcodes: 1 byte,
                                 3 ints and 4 floats.
@@ -89,6 +95,7 @@ fdata-depth-up-RP2.lis.part     Depth: 51, Data: 35; 34
 fdata-depth-up-RP3.lis.part     Depth: 49, Data: 33;
 fdata-dimensional-int.lis.part  Data: [1, 2], 3; [4, 5], 6
 fdata-encoded.lis.part          Data koi8-r encoded: значение
+fdata-fast-conversion.lis.part  Data: 1, (5, 6)s; 2, (7, 8)s
 fdata-fast-depth.lis.part       Depth: 1, Data (2, 3)s, 4; (5, 6)s, 7
 fdata-fast-dimensional.lis.part Data: 1, ([2, 3, 4], [5, 6, 7])s, 8;
                                 9, ([10, 11, 12], [13, 14, 15])s, 16;
@@ -102,8 +109,10 @@ fdata-fast-int.lis.part         Data: 1, (2, 3)s, 4; 5, (6, 7)s, 8
 fdata-fast-str.lis.part         Data: 1,
                                       ("STR sample 1    ", "STR sample 2    ")s,
                                       "STR not sampled "
-fdata-fast-two.lis.part         Data: 1, (2, 3)s, (4, 5, 6)s, 7;
-                                8, (9, 10)s, (11, 12, 13)s, 14;
+fdata-fast-two-diff.lis.part    Data: 1, (2, 3)s, (4, 5, 6)s, 13;
+                                7, (8, 9)s, (10, 11, 12)s, 14;
+fdata-fast-two-same.lis.part    Data: 1, (2, 3)s, (4, 5)s;
+                                9, (10, 11)s, (12, 13);
 fdata-repcodes-fixed.lis.part   One frame of data with fixed-size values
 fdata-repcodes-mask.lis.part    One frame of data with mask value
 fdata-repcodes-string.lis.part  One frame of data with string value
