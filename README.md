@@ -140,7 +140,7 @@ with lis.load('myfile.lis') as files:
             # Do something with the curves
 ```
 
-In both cases the curves are returned as [strucutured
+In both cases the curves are returned as [structured
 numpy.ndarray](https://numpy.org/doc/stable/user/basics.rec.html) with the
 curve mnemonics as field names (column names).
 
