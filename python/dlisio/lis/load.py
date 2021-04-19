@@ -1,8 +1,6 @@
-import logging
-
 from .. import core
 from .. import common
-from .file import LogicalFile, PhysicalFile, HeaderTrailer, parse_record
+from .file import LogicalFile, PhysicalFile, HeaderTrailer
 
 def load(path, error_handler = None):
     """ Loads and indexes a LIS file
@@ -36,70 +34,97 @@ def load(path, error_handler = None):
 
     lis : dlisio.lis.PhysicalFile
     """
-    def read_as_tapemark(f):
-        try:
-            return core.read_tapemark(f)
-        except:
-            f.close()
-            msg = 'Cannot read {} first bytes of file: {}'
-            raise IOError(msg.format(offset + 12, path))
-
     if not error_handler:
         error_handler = common.ErrorHandler()
 
-    offset = 0
-    f = core.open(path, offset)
-
-    # Read the first 12 bytes of the file assuming TapeImageFormat.
-    # Verify assumption before moving on.
-    tm = read_as_tapemark(f)
-    is_tif = core.valid_tapemark(tm)
-
-    # Some TapeImageFormat files start with tapemark(s) of type 1 (EOF-tapemark)
-    # Opening a lfp tapeimage protocol at a type 1 tapemarks causes an instant
-    # EOF. Hence we have to find the offset of the first type 0 tapemark, which
-    # will be the start of our logical file.
-    if is_tif:
-        while tm.type != 0:
-            tm = read_as_tapemark(f)
-        offset = f.ptell - 12
-
-    f.close()
-
-    logical_files = []
-    reel = HeaderTrailer()
-    tape = HeaderTrailer()
-
-    while True:
-        # Open a new file-handle until we hit EOF
+    indexer = FileIndexer(path, error_handler)
+    while not indexer.complete:
         try:
-            f = core.openlis(path, offset, is_tif)
+            indexer.index_logical_file()
+        except:
+            indexer.close()
+            raise
+
+    return PhysicalFile(indexer.logical_files)
+
+class FileIndexer:
+    """ Logical Files Indexer
+
+    Contains all the internal information required to correctly parse logical
+    files.
+    """
+    def __init__(self, path, error_handler):
+        self.error_handler = error_handler
+        self.path = path
+        self.complete = False
+
+        self.logical_files = []
+        self.reel = HeaderTrailer()
+        self.tape = HeaderTrailer()
+
+        self.check_for_tapemarks()
+
+    def check_for_tapemarks(self):
+        """ Checks whether file is TIFed and adjusts initial offset accordingly
+        """
+        initial_offset = 0
+        f = core.open(self.path, initial_offset)
+
+        def read_as_tapemark(f):
+            try:
+                return core.read_tapemark(f)
+            except:
+                f.close()
+                msg = 'Cannot read {} first bytes of file: {}'
+                raise IOError(msg.format(initial_offset + 12, self.path))
+
+        # Read the first 12 bytes of the file assuming TapeImageFormat.
+        # Verify assumption before moving on.
+        tm = read_as_tapemark(f)
+        self.is_tif = core.valid_tapemark(tm)
+
+        # Some TapeImageFormat files start with tapemark(s) of type 1
+        # (EOF-tapemark).
+        # Opening a lfp tapeimage protocol at a type 1 tapemarks causes an
+        # instant EOF. Hence we have to find the offset of the first type 0
+        # tapemark, which will be the start of our logical file.
+        if self.is_tif:
+            while tm.type != 0:
+                tm = read_as_tapemark(f)
+            initial_offset = f.ptell - 12
+
+        self.offset = initial_offset
+        f.close()
+
+    def index_logical_file(self):
+        """ Open a file and index it.
+        """
+        try:
+            file = core.openlis(self.path, self.offset, self.is_tif)
         except EOFError:
-            break
+            self.complete = True
+            return
         except OSError as e:
-            error_handler.log(
+            self.error_handler.log(
                 core.error_severity.critical,
-                "dlisio.lis.load: file {}".format(path),
+                "dlisio.lis.load: file {}".format(self.path),
                 e,
                 "",
                 "Indexing stopped",
-                "Physical tell: {} (dec)".format(offset))
-            break
+                "Physical tell: {} (dec)".format(self.offset))
+            self.complete = True
+            return
 
-        index = f.index_records()
-
-        # If not a single record could be indexed, close the file and stop here
-        if index.size() == 0 and index.isincomplete():
-            f.close()
-            break
+        index = file.index_records()
 
         # Update the offset at which stopped indexing. Due to inconsistent use
         # of tapemarks in files, we have to manually update the offset.
 
         # TODO: this logic should see further improvements to be more robust
         #       against different file configurations/layouts.
-        offset = f.ptell()
-        if is_tif and not f.eof(): offset = offset - 12
+        self.offset = file.ptell()
+        if self.is_tif and not file.eof():
+            self.offset = self.offset - 12
 
         # Special handling of Records that serve as delimiters.
         #
@@ -108,62 +133,89 @@ def load(path, error_handler = None):
         # case the filehandle is closed before we continue indexing the file.
         first = index.explicits()[0] if len(index.explicits()) else None
         if is_delimiter(first):
+            if index.size() != 1:
+                # this never should happen. Basically assert
+                msg = "dlisio.lis.load: file {}, record {}"
+                self.error_handler.log(
+                    core.error_severity.critical,
+                    msg.format(self.path, first),
+                    "Delimiter file size is {} != 1".format(index.size()),
+                    "",
+                    "Indexing stopped",
+                    "Physical tell: {} (dec)".format(self.offset))
+                self.complete = True
+                file.close()
+                return
+
             try:
-                record = f.read_record(first)
-                f.close()
+                record = file.read_record(first)
             except Exception as e:
                 # This is very unlikely to happen as index_records has already
                 # done the sanity checking needed for successfully reading the
                 # record.
                 # However read_records can in theory still fail on blocked IO
                 # and other non-LIS related issues.
-                msg =  "dlisio.lis.load: file {}, record {}"
-                error_handler.log(
+                msg = "dlisio.lis.load: file {}, record {}"
+                self.error_handler.log(
                     core.error_severity.critical,
-                    msg.format(path, first),
+                    msg.format(self.path, first),
                     e,
                     "",
                     "Indexing stopped",
-                    "Physical tell: {} (dec)".format(offset))
-                f.close()
-                break
+                    "Physical tell: {} (dec)".format(self.offset))
+                self.complete = True
+                return
+            finally:
+                file.close()
 
-            if first.type == core.lis_rectype.reel_header:
-                reel = HeaderTrailer(record)
-
-            elif first.type == core.lis_rectype.reel_trailer:
-                # The reel is already assigned to the LF's at this point, so
-                # just assign the trailer to that instance before initiating a
-                # new instance for the next reel.
-                reel.rawtrailer = record
-                reel = HeaderTrailer()
-
-            elif first.type == core.lis_rectype.tape_header:
-                tape = HeaderTrailer(record)
-
-            elif first.type == core.lis_rectype.tape_trailer:
-                # The tape is already assigned to the LF's at this point, so
-                # just assign the trailer to that instance before initiating a
-                # new instance for the next tape.
-                tape.rawtrailer = record
-                tape = HeaderTrailer()
-
+            self.adjust_reel_tape(first, record)
         else:
-            logfile = LogicalFile(path, f, index, reel, tape)
-            logical_files.append(logfile)
+            if index.size():
+                logfile = LogicalFile(
+                    self.path, file, index,self. reel, self.tape)
+                self.logical_files.append(logfile)
+            else:
+                file.close()
 
-        if index.isincomplete(): break
+        if index.isincomplete():
+            self.error_handler.log(
+                core.error_severity.critical,
+                "dlisio.lis.load: file {}".format(self.path),
+                index.errmsg(),
+                "",
+                "Indexing stopped",
+                "Physical tell: {} (dec)".format(self.offset))
+            self.complete = True
 
-    if index.isincomplete():
-        error_handler.log(
-            core.error_severity.critical,
-            "dlisio.lis.load: file {}".format(path),
-            index.errmsg(),
-            "",
-            "Indexing stopped",
-            "Physical tell: {} (dec)".format(offset))
 
-    return PhysicalFile(logical_files)
+    def adjust_reel_tape(self, first, record):
+        if first.type == core.lis_rectype.reel_header:
+            self.reel = HeaderTrailer(record)
+
+        elif first.type == core.lis_rectype.reel_trailer:
+            # The reel is already assigned to the LF's at this point, so
+            # just assign the trailer to that instance before initiating a
+            # new instance for the next reel.
+            self.reel.rawtrailer = record
+            self.reel = HeaderTrailer()
+
+        elif first.type == core.lis_rectype.tape_header:
+            self.tape = HeaderTrailer(record)
+
+        elif first.type == core.lis_rectype.tape_trailer:
+            # The tape is already assigned to the LF's at this point, so
+            # just assign the trailer to that instance before initiating a
+            # new instance for the next tape.
+            self.tape.rawtrailer = record
+            self.tape = HeaderTrailer()
+
+    def close(self):
+        """ Closes parser
+
+        Closes all processed logical files
+        """
+        for f in self.logical_files:
+            f.close()
 
 
 def is_delimiter(recinfo):
