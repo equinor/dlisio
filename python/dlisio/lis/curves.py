@@ -104,6 +104,7 @@ def curves(f, dfsr, strict=True, skip_fast=False):
         (16678259., 852606., 2237., 852606.)])
 
     """
+    validate_dfsr(dfsr)
 
     # Check depth recording mode flag (type 13)
     #
@@ -133,47 +134,38 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     )
 
 def spec_dtype(spec):
-    if spec.samples < 1:
-        msg =  "Cannot create numpy.dtype for {}, "
-        msg += "samples < 1 (was: {})"
-        raise ValueError(msg.format(spec, spec.samples))
-
-    sample_size = spec.reserved_size / spec.samples
-    if sample_size % 1:
-        msg =  "Cannot create numpy.dtype for {}, "
-        msg += "reserve_size % samples != 0 (was: {}/{}={})"
-        raise ValueError(msg.format(
-            spec, spec.reserved_size, spec.samples, sample_size
-        ))
-
     # As strings does not have encoded length, the length is implicitly given
     # by the number of reserved bytes for one *sample*. This means that
     # channels that use lis::string as their data type _always_ have exactly
     # one entry
-    if core.lis_reprc(spec.reprc) == core.lis_reprc.string:
-        return np.dtype((nptype[core.lis_reprc(spec.reprc)]))
-
-    reprsize = core.lis_sizeof_type(spec.reprc)
-    entries  = sample_size / reprsize
-    if entries % 1:
-        msg =  "Cannot create numpy.dtype for {}"
-        msg += "reserved_size % (samples * sizeof(reprc)) != 0 "
-        msg += "(was: {}/({} * {}) = {})"
-        raise ValueError(msg.format(
-            spec, spec.reserved_size, spec.samples, reprsize, entries
-        ))
-
     reprc = core.lis_reprc(spec.reprc)
-    if entries == 1: dtype = np.dtype((nptype[reprc]))
-    else:            dtype = np.dtype((nptype[reprc], int(entries)))
+    if reprc == core.lis_reprc.string:
+        return np.dtype(( nptype[reprc] ))
+
+    sample_size = spec.reserved_size / spec.samples
+    entries     = sample_size / core.lis_sizeof_type(spec.reprc)
+
+    if entries == 1: dtype = np.dtype(( nptype[reprc] ))
+    else:            dtype = np.dtype(( nptype[reprc], int(entries) ))
     return dtype
 
 def dfsr_dtype(dfsr, strict=True):
-    types = [
-        (ch.mnemonic, spec_dtype(ch))
-        for ch in dfsr.specs
-        if ch.reserved_size > 0 and ch.samples == 1
-    ]
+    """ Crate a valid numpy.dtype for the given DFSR
+
+    Warnings
+    --------
+
+    This function does not do any sanity-checking of the DFSR itself. It's only
+    guaranteed to create a valid fmtstr if validate_dfsr() returns successfully
+    for the given DFSR.
+    """
+    types = []
+
+    for ch in dfsr.specs:
+        if ch.reserved_size < 0: continue
+        if ch.samples > 1: continue
+
+        types.append((ch.mnemonic, spec_dtype(ch)))
 
     try:
         dtype = np.dtype(types)
@@ -186,6 +178,75 @@ def dfsr_dtype(dfsr, strict=True):
         dtype = np.dtype(types)
 
     return dtype
+
+def validate_reprc(reprc, mnemonic):
+    if reprc is None:
+        msg = "Invalid representation code ({}) in curve {}"
+        raise ValueError(msg.format(reprc, mnemonic))
+
+    if core.lis_reprc(reprc) == core.lis_reprc.mask:
+        msg = "lis::mask is not supported as a curve type"
+        raise NotImplementedError(msg)
+
+    if core.lis_reprc(reprc) not in nptype:
+        msg = "Invalid representation code ({}) in curve {}"
+        raise ValueError(msg.format(int(reprc), mnemonic))
+
+
+def validate_dfsr(dfsr):
+    """ Sanity check the Data Format Spec
+
+    I.e. verify that it's possible to create valid format-strings and
+    numpy.dtype from its content.
+    """
+
+    mode = dfsr.depth_mode
+    if mode != 0 and mode != 1:
+        raise ValueError("Invalid depth recording mode")
+
+    index_mnem = dfsr.specs[0].mnemonic if mode == 0 else 'DEPT'
+    index_repr = dfsr.specs[0].reprc    if mode == 0 else dfsr.depth_reprc
+
+    validate_reprc(index_repr, index_mnem)
+
+    if mode == 0:
+        index = dfsr.specs[0]
+        if index.reserved_size < 0:
+            raise ValueError("Index channel is suppressed")
+
+        if index.samples > 1:
+            msg = "Index channel cannot be a fast channel (samples={})"
+            raise ValueError(msg.format(index.samples))
+
+    if mode == 1:
+        if core.lis_reprc(dfsr.depth_reprc) == core.lis_reprc.string:
+            msg = "Invalid type for index (string)"
+            raise ValueError(msg)
+
+    for spec in dfsr.specs:
+        if spec.samples < 1:
+            msg =  "Invalid number of samples ({}) for curve {}, "
+            msg += "should be > 0)"
+            raise ValueError(msg.format(spec.samples, spec.mnemonic))
+
+        sample_size = spec.reserved_size / spec.samples
+        if sample_size % 1:
+            msg =  "Invalid sample size ({}) for curve {}, "
+            msg += "should be an integral number of bytes"
+            raise ValueError(msg.format(sample_size, spec.mnemonic))
+
+        validate_reprc(spec.reprc, spec.mnemonic)
+        reprc = core.lis_reprc(spec.reprc)
+
+        if reprc == core.lis_reprc.string or reprc == core.lis_reprc.mask:
+            continue
+
+        reprsize = core.lis_sizeof_type(spec.reprc)
+        entries  = sample_size / reprsize
+        if entries % 1:
+            msg =  "Invalid number of entries per sample ({}) in curve {}. "
+            msg += "should be an integral number of entries"
+            raise ValueError(msg.format(entries, spec.mnemonic))
 
 def mkunique(types):
     """ Append a tail to duplicated labels in types

@@ -350,12 +350,11 @@ def test_fdata_repcodes_invalid(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Invalid repcode (170) in channel (WTF )" in str(exc.value)
+        assert "Invalid representation code (170)" in str(exc.value)
 
 
-@pytest.mark.xfail(strict=True)
 def test_fdata_samples_0(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dfsr-samples-0.lis')
 
@@ -370,7 +369,7 @@ def test_fdata_samples_0(tmpdir, merge_lis_prs):
 
         with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "samples < 1 (was: 0)" in str(exc.value)
+        assert "Invalid number of samples (0) for curve BAD" in str(exc.value)
 
 
 @pytest.mark.skip(reason="1, 3: infinite loop, 2: data read as 2 frames, "
@@ -411,9 +410,9 @@ def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "number of entries from size (2) / repcode(73)" in str(exc.value)
+        assert "Invalid number of entries per sample" in str(exc.value)
 
 
 # DEPTH:
@@ -624,31 +623,31 @@ def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
 # where samples=1, size>0
 # while the situation is unlikely to arise in real world, it creates
 # inconsistency
-def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
+@pytest.mark.parametrize('dfsr_filename', [
+    'dfsr-dimensional-bad.lis.part',
+    'dfsr-suppressed-bad.lis.part',
+])
+def test_fdata_dimensional_bad(tmpdir, merge_lis_prs, dfsr_filename):
     fpath = os.path.join(str(tmpdir), 'dimensional-bad.lis')
 
     content = headers + [
-        'data/lis/records/curves/dfsr-dimensional-bad.lis.part',
+        'data/lis/records/curves/' + dfsr_filename,
     ] + trailers
 
     merge_lis_prs(fpath, content)
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Cannot compute an integral number of entries from size (5) / " \
-               "repcode(79) for channel CH01" in str(exc.value)
+        assert "Invalid number of entries per sample" in str(exc.value)
 
-@pytest.mark.parametrize('dfsr_filename', [
-    'dfsr-suppressed.lis.part',
-    'dfsr-suppressed-bad.lis.part', #broken channels can be suppressed
-])
-def test_fdata_suppressed(tmpdir, merge_lis_prs, dfsr_filename):
+
+def test_fdata_suppressed(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'suppressed.lis')
 
     content = headers + [
-        'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/dfsr-suppressed.lis.part',
         'data/lis/records/curves/fdata-suppressed.lis.part',
     ] + trailers
 
@@ -667,15 +666,11 @@ def test_fdata_suppressed(tmpdir, merge_lis_prs, dfsr_filename):
             _ = curves['CH04']
 
 
-@pytest.mark.parametrize('dfsr_filename', [
-    'dfsr-fast-int.lis.part',
-    'dfsr-fast-int-bad.lis.part', #broken channel can be skipped if size matches
-])
-def test_fdata_fast_channel_skip(tmpdir, merge_lis_prs, dfsr_filename):
+def test_fdata_fast_channel_skip(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-ints.lis')
 
     content = headers + [
-        'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/dfsr-fast-int.lis.part',
         'data/lis/records/curves/fdata-fast-int.lis.part',
     ] + trailers
 
