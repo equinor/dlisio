@@ -239,6 +239,25 @@ class DataFormatSpec():
         eb = core.lis_ebtype.spec_bloc_subtype
         return self.entry_value(eb, default=0)
 
+    def directional_spacing(self):
+        if self.spacing is None:
+            raise ValueError('No spacing recorded')
+
+        # direction == 1 means that the logset is logged going up-hole. I.e the
+        # depth (or other index) is _decreasing_. The spacing, which is used to
+        # calculate next depths, is always positive. Here we flip its sign such
+        # that later depth calculation can always *add* spacing and get the
+        # correct result:
+        #
+        #  next = current + (-spacing)
+        #
+        # I.e. decreasing
+        if self.direction == 1:   return -self.spacing
+        if self.direction == 255: return self.spacing
+
+        msg = 'Invalid direction (UP/DOWN flag). was: {}'
+        raise ValueError(msg.format(self.direction))
+
     def entry_value(self, entry_type, default=None):
         entry = self.find_entry(entry_type)
         return entry.value if not entry is None else default

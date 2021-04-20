@@ -9,8 +9,9 @@ def test_dfsr_fmtstring():
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        fmt = lis.dfsr_fmtstr(dfsr)
-        assert fmt == 'f' * 44
+        indexfmt, fmt = lis.dfsr_fmtstr(dfsr)
+        assert indexfmt == 'f1'
+        assert fmt      == 'f1' * 43
 
 def test_dfsr_dtype():
     path = 'data/lis/MUD_LOG_1.LIS'
@@ -285,8 +286,9 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        fmt = lis.dfsr_fmtstr(dfs)
-        assert fmt == 'bsilefrp'
+        indexfmt, fmt = lis.dfsr_fmtstr(dfs)
+        assert indexfmt == 'b1'
+        assert      fmt == 's1i1l1e1f1r1p1'
 
         curves = lis.curves(f, dfs)
         assert curves['BYTE'] == [89]
@@ -311,8 +313,9 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        fmt = lis.dfsr_fmtstr(dfs)
-        assert fmt == 'ia32'
+        indexfmt, fmt = lis.dfsr_fmtstr(dfs)
+        assert indexfmt == 'i1'
+        assert fmt      == 'a32'
 
         curves = lis.curves(f, dfs)
         assert curves['STR '] == "Now this is a string of size 32 "
@@ -333,7 +336,7 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
         with pytest.raises(NotImplementedError):
             lis.validate_dfsr(dfs)
 
-        assert lis.dfsr_fmtstr(dfs) == 'im4'
+        assert lis.dfsr_fmtstr(dfs) == ('i1', 'm4')
 
         with pytest.raises(NotImplementedError):
             curves = lis.curves(f, dfs)
@@ -427,11 +430,25 @@ def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
 # Suggestion is to fail on all wrong or missing important information cases
 # until we get the real file with these situations.
 
-@pytest.mark.xfail(strict=True)
+def test_depth_mode_1_dir_down_nospace(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'depth-dir-down.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-depth-spacing-no.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert "No spacing recorded" in str(exc.value)
+
 @pytest.mark.parametrize('dfsr_filename', [
     'dfsr-depth-dir-down.lis.part',
     'dfsr-depth-reprc-size.lis.part',
-    'dfsr-depth-spacing-no.lis.part', #put it into own test if not supported
 ])
 def test_depth_mode_1_direction_down(tmpdir, merge_lis_prs, dfsr_filename):
     fpath = os.path.join(str(tmpdir), 'depth-dir-down.lis')
@@ -450,10 +467,13 @@ def test_depth_mode_1_direction_down(tmpdir, merge_lis_prs, dfsr_filename):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         curves = lis.curves(f, dfs)
-        assert curves['DEPT'] == [-3, -2, -1, 0, 1, 2, 3, 4, 5]
-        assert curves['CH01'] == [12, 13, 14, 15, 16, 17, 18, 19, 20]
 
-@pytest.mark.xfail(strict=True)
+        expected = np.array([-3, -2, -1, 0, 1, 2, 3, 4, 5])
+        np.testing.assert_array_equal(curves['DEPT'], expected)
+
+        expected = np.array([12, 13, 14, 15, 16, 17, 18, 19, 20])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
 def test_depth_mode_1_direction_up(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'depth-dir-up.lis')
 
@@ -469,15 +489,16 @@ def test_depth_mode_1_direction_up(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         curves = lis.curves(f, dfs)
-        assert curves['DEPT'] == [53, 52, 51, 50, 49]
-        assert curves['CH01'] == [37, 36, 35, 34, 33]
 
-# unclear if we want to support something from here
-@pytest.mark.xfail(strict=True)
+        expected = np.array([53, 52, 51, 50, 49])
+        np.testing.assert_array_equal(curves['DEPT'], expected)
+
+        expected = np.array([37, 36, 35, 34, 33])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
 @pytest.mark.parametrize('dfsr_filename', [
     'dfsr-depth-dir-none.lis.part',
     'dfsr-depth-dir-invalid.lis.part',
-    'dfsr-depth-dir-no.lis.part', #should we try to deduce direction from data?
 ])
 def test_depth_mode_1_direction_bad(tmpdir, merge_lis_prs, dfsr_filename):
     fpath = os.path.join(str(tmpdir), 'depth-dir-bad.lis')
@@ -490,9 +511,9 @@ def test_depth_mode_1_direction_bad(tmpdir, merge_lis_prs, dfsr_filename):
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Direction flag incompatible with depth mode = 1" in str(exc.value)
+        assert "Invalid direction (UP/DOWN flag)" in str(exc.value)
 
 # unclear if we want to check it. (If we do, depth mode 0 tests would be useful)
 @pytest.mark.xfail(strict=True)
@@ -538,7 +559,6 @@ def test_depth_mode_1_direction_inconsistent(tmpdir, merge_lis_prs):
             _ = lis.curves(f, dfs)
         assert "Declared direction doesn't match actual data" in str(exc.value)
 
-@pytest.mark.xfail(strict=True)
 @pytest.mark.parametrize('dfsr_filename', [
     'dfsr-depth-reprc-bad.lis.part',
     'dfsr-depth-reprc-none.lis.part',
@@ -554,9 +574,9 @@ def test_depth_mode_1_repcode_invalid(tmpdir, merge_lis_prs, dfsr_filename):
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Depth reprc is invalid or missing." in str(exc.value)
+        assert "Invalid representation code" in str(exc.value)
 
 @pytest.mark.xfail(strict=True)
 @pytest.mark.parametrize('dfsr_filename', [
@@ -581,7 +601,6 @@ def test_depth_mode_1_spacing_inconsistent(tmpdir, merge_lis_prs, dfsr_filename)
         assert "Depth spacing is inconsistent." in str(exc.value)
 
 
-@pytest.mark.xfail(strict=True)
 def test_depth_mode_1_conversion(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'depth-int-float-conversion')
 
@@ -596,7 +615,7 @@ def test_depth_mode_1_conversion(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Spacing is float, depth repcode is int" in str(exc.value)
+        assert "Unable to create integral index" in str(exc.value)
 
 
 def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):

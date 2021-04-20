@@ -75,11 +75,6 @@ def curves(f, dfsr, strict=True, skip_fast=False):
         that are recorded at a higher sampling rate than the rest of the
         channels. dlisio does not currently support fast channels.
 
-    NotImplementedError
-        If Depth Record Mode == 1. The depth recording mode is mainly an
-        internal detail about how the depth-index is recorded in the file.
-        Currently dlisio only supports the default recording mode (0).
-
     Examples
     --------
 
@@ -106,30 +101,23 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     """
     validate_dfsr(dfsr)
 
-    # Check depth recording mode flag (type 13)
-    #
-    # If present and type 1, depth only occurs once in each data record, before
-    # the first frame. The depth of all other frames in the data record follows
-    # a constant sampling given by other entry blocks
-    #
-    # TODO: implement support
-    if any(x for x in dfsr.entries if x.type == 13 and x.value == 1):
-        msg = "lis.curves: depth recording mode == 1"
-        raise NotImplementedError(msg)
-
     if any(x for x in dfsr.specs if x.samples > 1) and not skip_fast:
         raise NotImplementedError("Fast channel not implemented")
 
-    fmt   = dfsr_fmtstr(dfsr)
-    dtype = dfsr_dtype(dfsr, strict=strict)
-    alloc = lambda size: np.empty(shape = size, dtype = dtype)
+    mode      = dfsr.depth_mode
+    spacing   = dfsr.directional_spacing() if mode == 1 else 0
+    idx, fmt  = dfsr_fmtstr(dfsr)
+    dtype     = dfsr_dtype(dfsr, strict=strict)
+    framesize = dtype.itemsize
+
+    config = core.frameconfig(idx, fmt, 1, mode, spacing, framesize)
+    alloc  = lambda size: np.empty(shape = size, dtype = dtype)
 
     return core.read_data_records(
-        fmt,
         f.io,
         f.index,
         dfsr.info,
-        dtype.itemsize,
+        config,
         alloc,
     )
 
@@ -150,28 +138,92 @@ def reprc2fmt(reprc):
     return chr(fmt)
 
 
+def is_index(i, mode):
+    """ Returns true if the i-th channel is an index channel, otherwise, False
+    """
+    if mode == 0 and i == 0: return True
+    else:                    return False
+
 def dfsr_fmtstr(dfsr):
-    """Create a fmtstr for the current dfsr"""
+    """Create a fmtstr for the current dfsr
+
+    The fmtstr is an internal string representation of the channels in a DFSR
+    used to instruct the parsing routines how to interpret the Implicit Data
+    Records. Each channel is represented by a FMT char + a number:
+
+        fmt + count
+
+    fmt is a dlisio defined character, corresponding to a specific lis datatype. E.g.
+    "l" corresponds to lis::i32. The count is defined differently depending on the value
+    of fmt. For all int and float channels:
+
+        fmt(spec.reprc) + number of entries pr sample
+
+    string-channels are a bit special in that they are limited to one entry pr sample. In this
+    case the count refers to the length of the fixed-size string:
+
+        fmt(spec.reprc) + length of string
+
+    If a channel is suppressed, a special fmt char is used and the count refers
+    to the total number of bytes that are to be ignored:
+
+       "S" + abs(spec.reserved_size)
+
+    Notes
+    -----
+
+    Number of samples is not embedded into the format string
+
+    Warnings
+    --------
+
+    This function does not do any sanity-checking of the DFSR itself. It's only
+    guaranteed to create a valid fmtstr if validate_dfsr() returns successfully
+    for the given DFSR.
+
+    Returns
+    -------
+
+    str, str : fmtstr of the index, fmtstr of all non-index channels (in order
+               of appearance in dfsr)
+
+    """
+
+    indexfmt = None
+    if dfsr.depth_mode == 1:
+        reprc = core.lis_reprc( dfsr.depth_reprc )
+    else:
+        index_channel = dfsr.specs[0]
+        reprc = core.lis_reprc( index_channel.reprc )
+
+    indexfmt = reprc2fmt(reprc) + '1'
 
     fmtstr = []
-    for spec in dfsr.specs:
-        size = spec.reserved_size
-        if size < 0 or spec.samples > 1:
-            fmtstr.append(chr(core.lis_fmt.suppress) + str(abs(size)))
+    for i, spec in enumerate(dfsr.specs):
+        if is_index(i, dfsr.depth_mode): continue
+
+        if spec.reserved_size < 0:
+            suppress = chr(core.lis_fmt.suppress) + str(abs(spec.reserved_size))
+            fmtstr.append(suppress)
             continue
 
-        sample_size = size / spec.samples
+        if spec.samples > 1:
+            suppress = chr(core.lis_fmt.suppress) + str(abs(spec.reserved_size))
+            fmtstr.append(suppress)
+            continue
+
+        sample_size = abs(int( spec.reserved_size  / spec.samples) )
 
         reprc  = core.lis_reprc(spec.reprc)
         if reprc == core.lis_reprc.string or reprc == core.lis_reprc.mask:
             fmt = reprc2fmt(reprc) + str(int(sample_size))
         else:
             entry_size = core.lis_sizeof_type(reprc)
-            fmt = reprc2fmt(reprc) * int(sample_size / entry_size)
+            fmt = reprc2fmt(reprc) + str(int(sample_size / entry_size))
 
         fmtstr.append(fmt)
 
-    return ''.join(fmtstr)
+    return indexfmt, ''.join(fmtstr)
 
 def spec_dtype(spec):
     # As strings does not have encoded length, the length is implicitly given
@@ -200,6 +252,9 @@ def dfsr_dtype(dfsr, strict=True):
     for the given DFSR.
     """
     types = []
+    if dfsr.depth_mode == 1:
+        reprc = core.lis_reprc( dfsr.depth_reprc )
+        types.append(('DEPT', nptype[reprc]))
 
     for ch in dfsr.specs:
         if ch.reserved_size < 0: continue
