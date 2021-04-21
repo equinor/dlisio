@@ -279,6 +279,31 @@ Wellsite Data
 Wellsite Data Logical Records implement the interface of
 :class:`dlisio.lis.InformationRecord`
 
+Operator Command Inputs
+.......................
+
+Operator Command Inputs Records implement the interface of
+:class:`dlisio.core.text_record`
+
+Operator Response Inputs
+........................
+
+Operator Response Inputs Records are used to store input issued to the operator in
+response to a system request for information. They implement the interface of
+:class:`dlisio.core.text_record`
+
+System Outputs to Operator
+..........................
+
+System Outputs to Operator Records are used to store system output messages
+issued by the operator. They implement the interface of
+:class:`dlisio.core.text_record`
+
+FLIC Comment
+............
+
+Comment Records implement the interface of :class:`dlisio.core.text_record`
+
 LIS Structures
 --------------
 
@@ -340,3 +365,17 @@ Other structures defined by LIS79
 Utilities
 ---------
 .. autoclass:: dlisio.lis.HeaderTrailer
+
+.. class:: dlisio.core.text_record
+
+    Describes Miscellaneous records which contain one text field.
+
+    .. attribute:: message
+
+        Complete content of the record. Text might be fully human-readable,
+        partly human-readable or be just a bytes sequence.
+        To get more control over the returned value refer to
+        :ref:`Strings and encodings`.
+
+        :type: str or bytes
+

@@ -577,6 +577,26 @@ noexcept (false) {
     return inforec;
 }
 
+text_record parse_text_record( const lis::record& raw)
+noexcept (false) {
+    const auto type = static_cast< lis::record_type >(lis::decay(raw.info.type));
+    if ( not (type == lis::record_type::op_command_inputs or
+              type == lis::record_type::op_response_inputs or
+              type == lis::record_type::system_outputs or
+              type == lis::record_type::flic_comment) ) {
+
+        const auto type = lis::decay(raw.info.type);
+        const auto type_str = lis::record_type_str(raw.info.type);
+        const auto msg = "parse_text_record: Invalid record type, {} ({})";
+        throw std::runtime_error(fmt::format(msg, type, type_str));
+    }
+    lis::text_record rec;
+    rec.type = raw.info.type;
+    cast(raw.data.data(), rec.message, raw.data.size());
+
+    return rec;
+}
+
 namespace {
 
 void parse_name( const char* cur, lis::file_header& rec ) {

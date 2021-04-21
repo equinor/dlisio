@@ -325,6 +325,16 @@ struct information_record {
 
 information_record parse_info_record( const lis::record& ) noexcept (false);
 
+/* Text Records. Types 224, 225, 227, 232.
+ * Records contain all record bytes, regardless of present terminators.
+ */
+struct text_record {
+    lis::record_type type;
+    lis::string message;
+};
+
+text_record parse_text_record( const lis::record& ) noexcept (false);
+
 namespace detail {
 
 struct file_record {
