@@ -10,6 +10,24 @@ def load(path, error_handler = None):
     enumlate random access. The file is also segmented into Logical Files, see
     :class:`PhysicalFile` and :class:`LogicalFile`.
 
+    ** Incorrectly written files **
+
+    It is not uncommon that LIS files are written incorrectly, meaning they are
+    violating the LIS79 specification. Typically it's only a very small portion
+    of the file that is incorrect, often down to a couple of bytes.
+    Unfortunately, because of how the internal structure of LIS files is
+    defined, the bytes following the incorrect part become unreadable too. In
+    most cases there is little dlisio can do about this as it's unclear what
+    the original intention was.
+
+    However, it may be possible to read the file up until the incorrect part
+    occurs. load has an escape hatch for this, which essentially returns
+    everything that it believes to be successfully indexed prior to the
+    point-of-failure. The caveat being that there is no guarantee that the
+    file is interpreted correctly by dlisio at this point. This escape hatch is
+    controlled by the parameter ``error_handler``. Please refer to the examples
+    section for more details of it's use.
+
     Notes
     -----
 
@@ -25,14 +43,38 @@ def load(path, error_handler = None):
         path to lis-file
 
     error_handler : dlisio.common.ErrorHandler, optional
-        Error handling rules. Default rules will apply if none supplied.
-        Note that parameter affects load only and is not passed further
-        to logical files.
+        Defines how load will behave when encountering any errors while
+        indexing the file.
 
     Returns
     -------
 
     lis : dlisio.lis.PhysicalFile
+
+    Examples
+    --------
+
+    Opening a file is straightforward. :func:`dlisio.lis.load` is designed to
+    work like python's own ``open()``. That is, it can be used both with- and
+    without python's ```with``-statments:
+
+    >>> from dlisio import lis
+    >>> with lis.load(filepath) as files:
+    ...     pass
+
+    If ``load`` raises a RuntimeError this is likely due to the file being
+    incorrectly written. You can instruct dlisio to return to you what it did
+    manage to index before it failed:
+
+    >>> from dlisio.common import ErrorHandler, Actions
+    >>> handler = ErrorHandler(critical=Actions.LOG_ERROR)
+    >>> with lis.load(filepath, handler) as files:
+    ...     pass
+
+    What this effectively does is to turn the ``RuntimeError`` into a
+    ``logging.error`` and load now returns a partially indexed file. dlisio
+    does not guarantee that what's being returned is correct at this point, and
+    you should verify for yourself that the data it serves you looks sane.
     """
     if not error_handler:
         error_handler = common.ErrorHandler()
