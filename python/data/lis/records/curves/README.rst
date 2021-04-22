@@ -25,7 +25,8 @@ dfsr-depth-reprc-size.lis.part  Same as default, but Depth reprc (15) is stored
 dfsr-depth-spacing-no.lis.part  Same as default, but Frame Spacing (8) not
                                 present.
 dfsr-dimensional-bad.lis.part   CH01 has 2 size of 5, when size(repc) is 2.
-dfsr-dimensional-int.lis.part   CH01 has 2 int entries per sample, CH02 has 1.
+dfsr-dimensional-int.lis.part   INDX is int, CH01 has 2 int entries per sample,
+                                CH02 has 1.
 dfsr-encoded.lis.part           Entry value, dfsr mnemonic and units are encoded
                                 in koi8-r. dfsr contains one string channel.
 dfsr-entries-bad-reprc.lis.part Entry reprc is 0x53.
@@ -36,8 +37,8 @@ dfsr-entries-cut-value.lis.part Entry data is cut in the value
 dfsr-entries-default.lis.part   No entries but terminator defined.
 dfsr-entries-defined.lis.part   All entries have a value.
 dfsr-fast-conversion.lis.part   CH01 has 1 int sample, CH02 has 2 int samples.
-dfsr-fast-depth.lis.part        Depth default file. CH01 has 2 byte samples.
-                                CH02 has 1 int32 sample
+dfsr-fast-depth.lis.part        Depth default file, but Frame Spacing (8): 2.
+                                CH01 has 2 byte samples. CH02 has 1 int32 sample
 dfsr-fast-dimensional.lis.part  CHO1 has 1 int32 sample, CH02 has 2 byte samples
                                 with size 6, CH03 has 1 int32 sample.
 dfsr-fast-first.lis.part        CH01 has 2 int samples, CH02 has 1 int sample,
@@ -63,8 +64,8 @@ dfsr-mnemonics-same.lis.part    Contains channels: NAME, NAME, TEST, NAME
 dfsr-repcodes-fixed.lis.part    Channels of 8 fixed-sized repcodes: 1 byte,
                                 3 ints and 4 floats.
 dfsr-repcodes-invalid.lis.part  Channel has unknown repcode.
-dfsr-repcodes-mask.lis.part     Channel of mask type.
-dfsr-repcodes-string.lis.part   Channel of string type.
+dfsr-repcodes-mask.lis.part     Index channel and one channel of mask type.
+dfsr-repcodes-string.lis.part   Index channel and one channel of string type.
 dfsr-samples-0.lis.part         One channel with samples=0.
 dfsr-simple.lis.part            3 channels with samples=1, size=4, repc=int32.
 dfsr-size-0-one-block.lis.part  One channel with size=0.
@@ -93,7 +94,7 @@ fdata-depth-down-PR3.lis.part   Depth: 5, Data: 20;
 fdata-depth-up-RP1.lis.part     Depth: 53, Data: 37; 36
 fdata-depth-up-RP2.lis.part     Depth: 51, Data: 35; 34
 fdata-depth-up-RP3.lis.part     Depth: 49, Data: 33;
-fdata-dimensional-int.lis.part  Data: [1, 2], 3; [4, 5], 6
+fdata-dimensional-int.lis.part  Data: 12, [1, 2], 3; 10, [4, 5], 6
 fdata-encoded.lis.part          Data koi8-r encoded: значение
 fdata-fast-conversion.lis.part  Data: 1, (5, 6)s; 2, (7, 8)s
 fdata-fast-depth.lis.part       Depth: 1, Data (2, 3)s, 4; (5, 6)s, 7
@@ -114,8 +115,8 @@ fdata-fast-two-diff.lis.part    Data: 1, (2, 3)s, (4, 5, 6)s, 13;
 fdata-fast-two-same.lis.part    Data: 1, (2, 3)s, (4, 5)s;
                                 9, (10, 11)s, (12, 13);
 fdata-repcodes-fixed.lis.part   One frame of data with fixed-size values
-fdata-repcodes-mask.lis.part    One frame of data with mask value
-fdata-repcodes-string.lis.part  One frame of data with string value
+fdata-repcodes-mask.lis.part    One frame of data with index and mask value
+fdata-repcodes-string.lis.part  One frame of data with index and string value
 fdata-simple.lis.part           Data: 1, 2, 3
 fdata-size.lis.part             Data: 1 (4B), 2 (4B)
 fdata-suppressed.lis.part       Data: 1 (4B), 2 (4B), 3(1B), 4(1B)

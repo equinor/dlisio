@@ -317,7 +317,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         fmt = core.dfs_formatstring(dfs)
-        assert fmt == 'a32'
+        assert fmt == 'ia32'
 
         curves = lis.curves(f, dfs)
         assert curves['STR '] == "Now this is a string of size 32 "
@@ -592,6 +592,7 @@ def test_depth_mode_1_conversion(tmpdir, merge_lis_prs):
 
     content = headers + [
         'data/lis/records/curves/dfsr-depth-conversion.lis.part',
+        'data/lis/records/curves/fdata-depth-down-PR1.lis.part',
     ] + trailers
 
     merge_lis_prs(fpath, content)
