@@ -261,6 +261,10 @@ Reel Trailer (RTLR)
 
         :type: str
 
+Data Format Specification
+.........................
+.. autoclass:: dlisio.lis.DataFormatSpec()
+
 Job Identification
 ..................
 

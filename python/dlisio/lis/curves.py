@@ -23,9 +23,10 @@ nptype = {
 def curves(f, dfsr, strict=True, skip_fast=False):
     """ Read curves
 
-    Read the curves described by Data Format Spec Record (DFSR). The curves are
-    read into a Numpy Structured Array [1]. The mnemonics - as described by the
-    DFSR - of the channels are used as column names.
+    Read the curves described by the :ref:`Data Format Specification` Record
+    (DFSR). The curves are read into a Numpy Structured Array [1]. The
+    mnemonics - as described by the DFSR - of the channels are used as column
+    names.
 
     [1] https://numpy.org/doc/stable/user/basics.rec.html
 
@@ -35,7 +36,7 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     f : LogicalFile
         The logcal file that the dfsr belongs to
 
-    dfsr: dlisio.core.dfsr
+    dfsr: dlisio.lis.DataFormatSpec
         Data Format Specification Record
 
     strict : boolean, optional
@@ -118,7 +119,7 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     if any(x for x in dfsr.specs if x.samples > 1) and not skip_fast:
         raise NotImplementedError("Fast channel not implemented")
 
-    fmt   = core.dfs_formatstring(dfsr)
+    fmt   = core.dfs_formatstring(dfsr.attic)
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)
 

@@ -294,6 +294,26 @@ void init_lis_extension(py::module_ &m) {
         .value( "image"               , lis::record_type::image               )
     ;
 
+    py::enum_< lis::entry_type >( m, "lis_ebtype")
+        .value( "terminator"         , lis::entry_type::terminator         )
+        .value( "data_rec_type"      , lis::entry_type::data_rec_type      )
+        .value( "spec_block_type"    , lis::entry_type::spec_block_type    )
+        .value( "frame_size"         , lis::entry_type::frame_size         )
+        .value( "up_down_flag"       , lis::entry_type::up_down_flag       )
+        .value( "depth_scale_units"  , lis::entry_type::depth_scale_units  )
+        .value( "ref_point"          , lis::entry_type::ref_point          )
+        .value( "ref_point_units"    , lis::entry_type::ref_point_units    )
+        .value( "spacing"            , lis::entry_type::spacing            )
+        .value( "spacing_units"      , lis::entry_type::spacing_units      )
+        .value( "undefined"          , lis::entry_type::undefined          )
+        .value( "max_frames_pr_rec"  , lis::entry_type::max_frames_pr_rec  )
+        .value( "absent_value"       , lis::entry_type::absent_value       )
+        .value( "depth_rec_mode"     , lis::entry_type::depth_rec_mode     )
+        .value( "units_of_depth"     , lis::entry_type::units_of_depth     )
+        .value( "reprc_output_depth" , lis::entry_type::reprc_output_depth )
+        .value( "spec_bloc_subtype"  , lis::entry_type::spec_bloc_subtype  )
+    ;
+
     py::enum_< lis::representation_code >( m, "lis_reprc")
         .value( "i8"     , lis::representation_code::i8     )
         .value( "i16"    , lis::representation_code::i16    )

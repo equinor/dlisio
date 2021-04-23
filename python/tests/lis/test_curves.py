@@ -9,7 +9,7 @@ def test_dfsr_fmtstring():
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        fmt = core.dfs_formatstring(dfsr)
+        fmt = core.dfs_formatstring(dfsr.attic)
         assert fmt == 'f' * 44
 
 def test_dfsr_dtype():
@@ -72,27 +72,26 @@ def test_entries(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
         assert len(dfs.entries) == 17
 
-        # TODO: better interface, now user doesn't know what entries mean
         entries = {entry.type : entry.value for entry in dfs.entries}
-        assert entries[0]  == 60
-        assert entries[1]  == 0
-        assert entries[2]  == 0
-        assert entries[3]  == 32
-        assert entries[4]  == 0 #"none"
-        assert entries[5]  == 255 #"meters"
-        assert entries[6]  == -4
-        assert entries[7]  == "INCH"
-        assert entries[8]  == 60
-        assert entries[9]  == "INCH"
-        assert entries[10] == "UNDEFINE" #field undefined, should be missing
-        assert entries[11] == 8
-        assert entries[12] == -15988.0
-        assert entries[13] == 1 #True
-        assert entries[14] == "INCH"
-        assert entries[15] == 73 #reprc_int_32
-        assert entries[16] == 1
+        assert entries[0]  == 60         # Terminator, no interface defined
+        assert entries[10] == "UNDEFINE" # field undefined, should be missing
 
-@pytest.mark.xfail(strict=True, reason="default values not supported yet")
+        assert dfs.record_type             == 0
+        assert dfs.spec_block_type         == 0
+        assert dfs.frame_size              == 32
+        assert dfs.direction               == 0 #"none"
+        assert dfs.optical_log_depth_units == 255 #"meters"
+        assert dfs.reference_point         == -4
+        assert dfs.reference_point_units   == "INCH"
+        assert dfs.spacing                 == 60
+        assert dfs.spacing_units           == "INCH"
+        assert dfs.max_frames              == 8
+        assert dfs.absent_value            == -15988.0
+        assert dfs.depth_mode              == 1 #True
+        assert dfs.depth_units             == "INCH"
+        assert dfs.depth_reprc             == 73 #reprc_int_32
+        assert dfs.spec_block_subtype      == 1
+
 def test_entries_default_values(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'entries-default.lis')
 
@@ -104,26 +103,22 @@ def test_entries_default_values(tmpdir, merge_lis_prs):
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
-        assert len(dfs.entries) == 17
 
-        entries = {entry.type : entry.value for entry in dfs.entries}
-        assert entries[0]  == 60
-        assert entries[1]  == 0
-        assert entries[2]  == 0
-        assert entries[3]  == None
-        assert entries[4]  == 1 #"up"
-        assert entries[5]  == 1 #"feet"
-        assert entries[6]  == None
-        assert entries[7]  == ".1IN"
-        assert entries[8]  == None
-        assert entries[9]  == ".1IN"
-        assert entries[10] == None #field undefined, should be missing
-        assert entries[11] == None
-        #assert entries[12] == -999.25 or None: unknown
-        assert entries[13] == 0 #False
-        assert entries[14] == ".1IN"
-        assert entries[15] == None
-        assert entries[16] == 0
+        assert dfs.record_type             == 0
+        assert dfs.spec_block_type         == 0
+        assert dfs.frame_size              == None
+        assert dfs.direction               == 1 #"up"
+        assert dfs.optical_log_depth_units == 1 #"feet"
+        assert dfs.reference_point         == None
+        assert dfs.reference_point_units   == ".1IN"
+        assert dfs.spacing                 == None
+        assert dfs.spacing_units           == ".1IN"
+        assert dfs.max_frames              == None
+        assert dfs.absent_value            == -999.25
+        assert dfs.depth_mode              == 0 #False
+        assert dfs.depth_units             == ".1IN"
+        assert dfs.depth_reprc             == None
+        assert dfs.spec_block_subtype      == 0
 
 def test_entries_cut_in_fixed():
     path = 'data/lis/records/curves/dfsr-entries-cut-fixed.lis.part'
@@ -290,7 +285,7 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        fmt = core.dfs_formatstring(dfs)
+        fmt = core.dfs_formatstring(dfs.attic)
         assert fmt == 'bsilefrp'
 
         curves = lis.curves(f, dfs)
@@ -316,7 +311,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        fmt = core.dfs_formatstring(dfs)
+        fmt = core.dfs_formatstring(dfs.attic)
         assert fmt == 'ia32'
 
         curves = lis.curves(f, dfs)
@@ -336,7 +331,7 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         with pytest.raises(NotImplementedError):
-            fmt = core.dfs_formatstring(dfs)
+            fmt = core.dfs_formatstring(dfs.attic)
             assert fmt == 'm'
 
         with pytest.raises(NotImplementedError):
