@@ -314,6 +314,21 @@ void init_lis_extension(py::module_ &m) {
         .value( "spec_bloc_subtype"  , lis::entry_type::spec_bloc_subtype  )
     ;
 
+    py::enum_< lis::fmtchr >( m, "lis_fmt" )
+        .value( "eol"     , lis::fmtchr::eol      )
+        .value( "i8"      , lis::fmtchr::i8       )
+        .value( "i16"     , lis::fmtchr::i16      )
+        .value( "i32"     , lis::fmtchr::i32      )
+        .value( "f16"     , lis::fmtchr::f16      )
+        .value( "f32"     , lis::fmtchr::f32      )
+        .value( "f32low"  , lis::fmtchr::f32low   )
+        .value( "f32fix"  , lis::fmtchr::f32fix   )
+        .value( "string"  , lis::fmtchr::string   )
+        .value( "byte"    , lis::fmtchr::byte     )
+        .value( "mask"    , lis::fmtchr::mask     )
+        .value( "suppress", lis::fmtchr::suppress )
+    ;
+
     py::enum_< lis::representation_code >( m, "lis_reprc")
         .value( "i8"     , lis::representation_code::i8     )
         .value( "i16"    , lis::representation_code::i16    )
@@ -599,7 +614,6 @@ void init_lis_extension(py::module_ &m) {
     m.def( "parse_reel_trailer", &lis::parse_reel_trailer );
 
     m.def( "parse_dfsr", &lis::parse_dfsr );
-    m.def("dfs_formatstring", &lis::dfs_fmtstr);
     /* end - parse.hpp */
 
     m.def( "parse_info_record", &lis::parse_info_record );

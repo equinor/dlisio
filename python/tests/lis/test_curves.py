@@ -9,7 +9,7 @@ def test_dfsr_fmtstring():
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        fmt = core.dfs_formatstring(dfsr.attic)
+        fmt = lis.dfsr_fmtstr(dfsr)
         assert fmt == 'f' * 44
 
 def test_dfsr_dtype():
@@ -285,7 +285,7 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        fmt = core.dfs_formatstring(dfs.attic)
+        fmt = lis.dfsr_fmtstr(dfs)
         assert fmt == 'bsilefrp'
 
         curves = lis.curves(f, dfs)
@@ -311,7 +311,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        fmt = core.dfs_formatstring(dfs.attic)
+        fmt = lis.dfsr_fmtstr(dfs)
         assert fmt == 'ia32'
 
         curves = lis.curves(f, dfs)
@@ -331,8 +331,9 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         with pytest.raises(NotImplementedError):
-            fmt = core.dfs_formatstring(dfs.attic)
-            assert fmt == 'm'
+            lis.validate_dfsr(dfs)
+
+        assert lis.dfsr_fmtstr(dfs) == 'im4'
 
         with pytest.raises(NotImplementedError):
             curves = lis.curves(f, dfs)

@@ -120,7 +120,7 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     if any(x for x in dfsr.specs if x.samples > 1) and not skip_fast:
         raise NotImplementedError("Fast channel not implemented")
 
-    fmt   = core.dfs_formatstring(dfsr.attic)
+    fmt   = dfsr_fmtstr(dfsr)
     dtype = dfsr_dtype(dfsr, strict=strict)
     alloc = lambda size: np.empty(shape = size, dtype = dtype)
 
@@ -132,6 +132,46 @@ def curves(f, dfsr, strict=True, skip_fast=False):
         dtype.itemsize,
         alloc,
     )
+
+def reprc2fmt(reprc):
+    if   reprc == core.lis_reprc.i8:     fmt = core.lis_fmt.i8
+    elif reprc == core.lis_reprc.i16:    fmt = core.lis_fmt.i16
+    elif reprc == core.lis_reprc.i32:    fmt = core.lis_fmt.i32
+    elif reprc == core.lis_reprc.f16:    fmt = core.lis_fmt.f16
+    elif reprc == core.lis_reprc.f32:    fmt = core.lis_fmt.f32
+    elif reprc == core.lis_reprc.f32low: fmt = core.lis_fmt.f32low
+    elif reprc == core.lis_reprc.f32fix: fmt = core.lis_fmt.f32fix
+    elif reprc == core.lis_reprc.string: fmt = core.lis_fmt.string
+    elif reprc == core.lis_reprc.byte:   fmt = core.lis_fmt.byte
+    elif reprc == core.lis_reprc.mask:   fmt = core.lis_fmt.mask
+    else:
+        raise ValueError("Invalid representation code")
+
+    return chr(fmt)
+
+
+def dfsr_fmtstr(dfsr):
+    """Create a fmtstr for the current dfsr"""
+
+    fmtstr = []
+    for spec in dfsr.specs:
+        size = spec.reserved_size
+        if size < 0 or spec.samples > 1:
+            fmtstr.append(chr(core.lis_fmt.suppress) + str(abs(size)))
+            continue
+
+        sample_size = size / spec.samples
+
+        reprc  = core.lis_reprc(spec.reprc)
+        if reprc == core.lis_reprc.string or reprc == core.lis_reprc.mask:
+            fmt = reprc2fmt(reprc) + str(int(sample_size))
+        else:
+            entry_size = core.lis_sizeof_type(reprc)
+            fmt = reprc2fmt(reprc) * int(sample_size / entry_size)
+
+        fmtstr.append(fmt)
+
+    return ''.join(fmtstr)
 
 def spec_dtype(spec):
     # As strings does not have encoded length, the length is implicitly given
