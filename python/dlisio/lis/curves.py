@@ -222,6 +222,11 @@ def validate_dfsr(dfsr):
             msg = "Index channel cannot be a fast channel (samples={})"
             raise ValueError(msg.format(index.samples))
 
+        reprsize = core.lis_sizeof_type(index.reprc)
+        if  index.reserved_size > reprsize:
+            msg = "Index channel cannot have multiple entries per sample"
+            raise ValueError(msg)
+
     for spec in dfsr.specs:
         if spec.samples < 1:
             msg =  "Invalid number of samples ({}) for curve {}, "

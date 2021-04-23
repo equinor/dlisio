@@ -623,11 +623,11 @@ def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
 # where samples=1, size>0
 # while the situation is unlikely to arise in real world, it creates
 # inconsistency
-@pytest.mark.parametrize('dfsr_filename', [
-    'dfsr-dimensional-bad.lis.part',
-    'dfsr-suppressed-bad.lis.part',
+@pytest.mark.parametrize('dfsr_filename, msg', [
+    ('dfsr-dimensional-bad.lis.part', 'cannot have multiple entries per sample'),
+    ('dfsr-suppressed-bad.lis.part', 'Invalid number of entries per sample')
 ])
-def test_fdata_dimensional_bad(tmpdir, merge_lis_prs, dfsr_filename):
+def test_fdata_dimensional_bad(tmpdir, merge_lis_prs, dfsr_filename, msg):
     fpath = os.path.join(str(tmpdir), 'dimensional-bad.lis')
 
     content = headers + [
@@ -640,7 +640,7 @@ def test_fdata_dimensional_bad(tmpdir, merge_lis_prs, dfsr_filename):
         dfs = f.data_format_specs()[0]
         with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Invalid number of entries per sample" in str(exc.value)
+        assert msg in str(exc.value)
 
 
 def test_fdata_suppressed(tmpdir, merge_lis_prs):
