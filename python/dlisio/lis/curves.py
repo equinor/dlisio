@@ -209,6 +209,10 @@ def validate_dfsr(dfsr):
 
     validate_reprc(index_repr, index_mnem)
 
+    if core.lis_reprc(index_repr) == core.lis_reprc.string:
+        msg = "Invalid type for index (string)"
+        raise ValueError(msg)
+
     if mode == 0:
         index = dfsr.specs[0]
         if index.reserved_size < 0:
@@ -217,11 +221,6 @@ def validate_dfsr(dfsr):
         if index.samples > 1:
             msg = "Index channel cannot be a fast channel (samples={})"
             raise ValueError(msg.format(index.samples))
-
-    if mode == 1:
-        if core.lis_reprc(dfsr.depth_reprc) == core.lis_reprc.string:
-            msg = "Invalid type for index (string)"
-            raise ValueError(msg)
 
     for spec in dfsr.specs:
         if spec.samples < 1:
