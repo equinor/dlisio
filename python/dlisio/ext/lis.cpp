@@ -140,6 +140,44 @@ public:
        current  = x;
     };
 
+    /* Get the currently set (sample) value
+     *
+     * This method calculates the correct (sample) value for a given sample in
+     * the frame. This is defined in LIS79 ch 3.3.2.2:
+     *
+     *  > The depth (or other index) of the frame applies to the last of the
+     *    multiple samples with earlier samples' depths interpolated between
+     *    the current and previous frame depth.
+     *
+     * Note that this means that calling this method with sample == samples is
+     * equal to calling the index() method, and will return the (sample) value
+     * of the current frame. Hence its use is not limited to fast channels
+     * only.
+     */
+    double value( std::int8_t sample, std::uint8_t samples ) const
+    noexcept (false) {
+        /* Using "0" as index value when the value cannot be calculated
+         *
+         * Note that it is impossible for dlisio to calculate the index value
+         * of a sub-frame for the very first frame. This is because we don't
+         * yet have a previous value to use for calculations.
+         *
+         * We therefore have to choose a value in its place. Unfortunately,
+         * there is no universal "nan" value for all the different lis79 types
+         * (i.e. ints and floats) the index can be recorded as. Therefore,
+         * the choice fell on "0", which is representable in all possible types
+         * that the index can be.
+         */
+        if ( sample == samples )      return index();
+        if ( std::isnan( previous ) ) return 0;
+
+        if ( sample > samples ) {
+            throw std::runtime_error("Invalid subframe");
+        }
+        double interval = (index() - previous) / samples;
+        return previous + interval * sample;
+    };
+
 private:
     double current  = std::nan("Un-initialized");
     double previous = std::nan("Un-initialized");
@@ -327,18 +365,47 @@ void read_frame( const char*&       ptr,
 noexcept (false) {
     bool fast = ( fconf.samples > 1 ) ? true : false;
 
+    /* Store the index - for future calculations
+     *
+     * If mode == 0 and we are in the process of reading fast channels, we will
+     * need to store the value of the index such that we can later calculate the
+     * appropriate depths for the subframes.
+     *
+     * This is also true for mode == 1, regardless if we read fast channels or
+     * not. However mode == 1 depths are read prior to this function, hence we
+     * have already done all the necessary work.
+     */
+    if ( fconf.mode == 0 and fast ) {
+        ptr = read_index( ptr, end, fconf, index );
+    }
+
     /* Writing the index to dst
      *
      * The trivial case is when the index channel is recorded as a regular
      * channel (mode=0) and we don't have fast channels. Then, there is no need
      * for the intermediate storage of the index values and we can write
      * directly from record (ptr) to dst.
+     *
+     * In any other case, we need to write the index from the intermediate
+     * index storage to dst. For fast channels, the index values for all
+     * subframes are written, and the dst pointer is rewinded to the first
+     * "real" channel in the first subframe.
      */
     if ( fconf.mode == 0 and not fast ) {
         const char* indexfmt = fconf.indexfmt.c_str();
         read_sample( indexfmt, ptr, end, dst );
     } else {
-        dst = write_index( dst, fconf, index.index() );
+        auto* current = dst;
+
+        for ( int subframe = 1; subframe <= fconf.samples; subframe++ ) {
+            auto value = index.value( subframe, fconf.samples );
+            current = write_index( dst, fconf, value );
+
+            /* Skip ahead to the next sub-frame */
+            dst += fconf.framesize;
+        }
+
+        dst = current - (fconf.framesize * (fconf.samples - 1) );
     }
 
     /* Read the curves
@@ -363,8 +430,22 @@ noexcept (false) {
             continue;
         }
 
-        fmt = read_sample(fmt, ptr, end, dst);
+        auto* channelstart = dst;
+        auto* samplefmt    = fmt;
+
+        for ( int sample = 0; sample < fconf.samples; ++sample ) {
+            dst = channelstart + fconf.framesize * sample;
+            fmt = read_sample(samplefmt, ptr, end, dst);
+        }
+
+        /* Move the dst-pointer to the next frame subframes */
+        dst -= (fconf.framesize * (fconf.samples - 1));
     }
+
+    /* Move the dst-pointer to right after the last subframe. I.e. where the
+     * next frame will start.
+     */
+    dst += fconf.framesize * ( fconf.samples - 1 );
 }
 
 void read_data_record( const lis::record& src,
@@ -390,7 +471,7 @@ noexcept (false) {
     }
 
     while (ptr < end) {
-        if (frames == allocated_rows) {
+        if (frames  == allocated_rows) {
             resize(frames * 2);
             dst += (frames * fconf.framesize);
         }
@@ -437,7 +518,7 @@ noexcept (false) {
      * replaced) here.
      */
     auto implicits = idx.implicits_of( recinfo.ltell );
-    auto allocated_rows = implicits.size();
+    auto allocated_rows = implicits.size() * fconf.samples;
     auto dstobj = alloc(allocated_rows);
     auto dstb = py::buffer(dstobj);
     auto info = dstb.request(true);

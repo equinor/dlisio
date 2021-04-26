@@ -20,7 +20,7 @@ nptype = {
 }
 
 
-def curves(f, dfsr, strict=True, skip_fast=False):
+def curves(f, dfsr, sample_rate=None, strict=True):
     """ Read curves
 
     Read the curves described by the :ref:`Data Format Specification` Record
@@ -28,7 +28,60 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     mnemonics - as described by the DFSR - of the channels are used as column
     names.
 
-    [1] https://numpy.org/doc/stable/user/basics.rec.html
+    **Fast Channels**
+
+    Some log sets contain curves that are sampled at unequal sampling rate.
+    More specifically, curves can be sampled at a greater frequency than the
+    recorded index. These are referred to in the LIS79 specification as Fast
+    Channels. The sample rate is not absolute, but rather a factor relative to
+    the index. E.g. a sampling rate of 1 means that the curve are sampled at the same
+    frequency as the index, while a sample rate of 6 means the channel is sampled
+    at 6 times the frequency of the index.
+
+    When the sampling rate of a curve is higher than the index, the index is
+    linearly interpolated to create the missing values samples. This is the
+    LIS79 defined behavior [2]. Note that this is *only* true for the index.
+    Other channels will not be re-sampled.
+
+    These LIS79 mechanics of multiple sampling rates within a logset do mean
+    that the result of the entire logset is a sparse array. That is, curves at
+    lower sampling rates will have a lot of undefined samples. Take this example
+    with 2 channels, ``CH01`` and ``CH02``, where ``CH01`` has a sample rate of
+    1, and ``CH02`` has a sample rate of 3. The full log set would then look
+    like this::
+
+        DEPTH       CH01        CH02
+        ----------------------------
+        0           -           1
+        0           -           2
+        300         500         3
+        310         -           4
+        320         -           5
+        330         510         6
+
+    The only depth samples that are recorded in the file are ``300`` and
+    ``330``. The rest is interpolated between these depth samples.  Notice how
+    the first depth samples are 0. That is because there is no prior recorded
+    depth to interpolate against - and constant spacing is not guaranteed.
+
+    Looking at ``CH01`` in the above logset we see that only a third of the
+    samples contains actual measurements. Remember, no interpolation rules are
+    defined for curves that are not the index. This is an undesirable situation
+    both from dlisio's point-of-view - and from the consumer of the log. dlisio
+    would have to fill all these undefined samples with some value on behalf of
+    the user, as there is no such thing as a sparse numpy array. This will have
+    a negative effect on memory consumption. And, depending on the application
+    of course, the consumer of the log would likely want to filter out the
+    "absent-values" and re-sample the logs anyway. To avoid this, **only
+    equally sampled curves can be read into the same numpy array by**
+    :func:`dlisio.lis.curves`. **This means that multiple calls to this
+    function  are required to read all the curves in the logset.** The
+    parameter ``sample_rate`` is used to define which curves to read. Please
+    refer to the example section for more details.
+
+    [1] Structured Arrays, https://numpy.org/doc/stable/user/basics.rec.html
+
+    [2] LIS79 ch 3.3.2.2,  http://w3.energistics.org/LIS/lis-79.pdf
 
     Parameters
     ----------
@@ -39,18 +92,17 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     dfsr: dlisio.lis.DataFormatSpec
         Data Format Specification Record
 
+    sample_rate : None
+        Read channels matching a specific sampling rate (relative to the
+        recorded index). If all curves are sampled equally compared to the
+        index, this can be omitted. If not, a value must be given to tell which
+        subset of the curves in the log set should be read.
+
     strict : boolean, optional
         By default (strict=True) curves() raises a ValueError if there are
         multiple channels with the same mnemonic. Setting strict=False lifts
         this restriction and dlisio will append numerical values (i.e. 0, 1, 2
         ..) to the labels used for column-names in the returned array.
-
-    skip_fast : boolean, optional
-        By default (skip_fast=False) curves() will raise if the dfsr contains
-        one or more fast channels. A fast channel is one that is sampled at a
-        higher frequency than the rest of the channels in the dfsr.
-        skip_fast=True will drop all the fast channels and return a numpy array
-        of all normal channels.
 
     Returns
     -------
@@ -69,11 +121,6 @@ def curves(f, dfsr, strict=True, skip_fast=False):
     NotImplementedError
         If the DFSR contains one or more channel where the type of the samples
         is lis::mask
-
-    NotImplementedError
-        If the DFSR contains one or more "Fast Channels". These are channels
-        that are recorded at a higher sampling rate than the rest of the
-        channels. dlisio does not currently support fast channels.
 
     Examples
     --------
@@ -98,19 +145,51 @@ def curves(f, dfsr, strict=True, skip_fast=False):
         (16677259., 852606., 2233., 852606.),
         (16678259., 852606., 2237., 852606.)])
 
-    """
-    validate_dfsr(dfsr)
+    When the logset described by the DFSR contains channels with different
+    sampling rates, multiple calls to curves are necessary to read all the
+    curves. E.g. we can read *all* curves that are sampled at the same rate as
+    the index:
 
-    if any(x for x in dfsr.specs if x.samples > 1) and not skip_fast:
-        raise NotImplementedError("Fast channel not implemented")
+    >>> dlisio.lis.curves(f, dfsr, sample_rate=1)
+    array([(300, 500),
+           (330, 510)],
+      dtype=[('DEPT', '<i4'), ('CH01', '<i4')])
+
+    As we can see the outputted logset contains the index curve (DEPT) and
+    CH01. However, we know from examination of the current dfsr that there is
+    another channel in this logset, ``CH02``, which is sampled at 3 times the
+    rate of the index. This curve (and all other curves which are sampled equally
+    to it) can be read by a separate call to curves:
+
+    >>> dlisio.lis.curves(f, dfsr, sample_rate=3)
+    array([(  0, 1),
+           (  0, 2),
+           (300, 3),
+           (310, 4),
+           (320, 5),
+           (330, 6)],
+      dtype=[('DEPT', '<i4'), ('CH02', '<i4')])
+
+    Note that it's the same index curve as previously, only re-sampled to fit
+    the higher sampling rate of ``CH02``.
+    """
+
+    if not uniform_sampling(dfsr) and sample_rate is None:
+        msg =  "Multiple sampling rates in file, "
+        msg += "please explicitly specify which to read"
+        raise RuntimeError(msg)
+
+    if sample_rate is None: sample_rate = 1
+
+    validate_dfsr(dfsr)
 
     mode      = dfsr.depth_mode
     spacing   = dfsr.directional_spacing() if mode == 1 else 0
-    idx, fmt  = dfsr_fmtstr(dfsr)
-    dtype     = dfsr_dtype(dfsr, strict=strict)
+    idx, fmt  = dfsr_fmtstr(dfsr, sample_rate=sample_rate)
+    dtype     = dfsr_dtype(dfsr, sample_rate=sample_rate, strict=strict)
     framesize = dtype.itemsize
 
-    config = core.frameconfig(idx, fmt, 1, mode, spacing, framesize)
+    config = core.frameconfig(idx, fmt, sample_rate, mode, spacing, framesize)
     alloc  = lambda size: np.empty(shape = size, dtype = dtype)
 
     return core.read_data_records(
@@ -120,6 +199,18 @@ def curves(f, dfsr, strict=True, skip_fast=False):
         config,
         alloc,
     )
+
+
+def uniform_sampling(dfsr):
+    """ Returns True if all channels (except index channel) are sampled equally,
+    otherwise returns False """
+    rates = set()
+    for i, ch in enumerate(dfsr.specs):
+        if is_index(i, dfsr.depth_mode): continue
+        rates.add(ch.samples)
+
+    return len(rates) <= 1
+
 
 def reprc2fmt(reprc):
     if   reprc == core.lis_reprc.i8:     fmt = core.lis_fmt.i8
@@ -144,7 +235,7 @@ def is_index(i, mode):
     if mode == 0 and i == 0: return True
     else:                    return False
 
-def dfsr_fmtstr(dfsr):
+def dfsr_fmtstr(dfsr, sample_rate):
     """Create a fmtstr for the current dfsr
 
     The fmtstr is an internal string representation of the channels in a DFSR
@@ -188,7 +279,6 @@ def dfsr_fmtstr(dfsr):
                of appearance in dfsr)
 
     """
-
     indexfmt = None
     if dfsr.depth_mode == 1:
         reprc = core.lis_reprc( dfsr.depth_reprc )
@@ -207,7 +297,7 @@ def dfsr_fmtstr(dfsr):
             fmtstr.append(suppress)
             continue
 
-        if spec.samples > 1:
+        if spec.samples != sample_rate:
             suppress = chr(core.lis_fmt.suppress) + str(abs(spec.reserved_size))
             fmtstr.append(suppress)
             continue
@@ -241,7 +331,7 @@ def spec_dtype(spec):
     else:            dtype = np.dtype(( nptype[reprc], int(entries) ))
     return dtype
 
-def dfsr_dtype(dfsr, strict=True):
+def dfsr_dtype(dfsr, sample_rate, strict=True):
     """ Crate a valid numpy.dtype for the given DFSR
 
     Warnings
@@ -252,15 +342,15 @@ def dfsr_dtype(dfsr, strict=True):
     for the given DFSR.
     """
     types = []
-    if dfsr.depth_mode == 1:
+    mode = dfsr.depth_mode
+    if mode == 1:
         reprc = core.lis_reprc( dfsr.depth_reprc )
         types.append(('DEPT', nptype[reprc]))
 
-    for ch in dfsr.specs:
+    for i, ch in enumerate(dfsr.specs):
         if ch.reserved_size < 0: continue
-        if ch.samples > 1: continue
-
-        types.append((ch.mnemonic, spec_dtype(ch)))
+        if is_index(i, mode) or ch.samples == sample_rate:
+            types.append((ch.mnemonic, spec_dtype(ch)))
 
     try:
         dtype = np.dtype(types)

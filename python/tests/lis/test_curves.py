@@ -9,7 +9,7 @@ def test_dfsr_fmtstring():
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        indexfmt, fmt = lis.dfsr_fmtstr(dfsr)
+        indexfmt, fmt = lis.dfsr_fmtstr(dfsr, sample_rate=1)
         assert indexfmt == 'f1'
         assert fmt      == 'f1' * 43
 
@@ -19,7 +19,7 @@ def test_dfsr_dtype():
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        dtype = lis.dfsr_dtype(dfsr)
+        dtype = lis.dfsr_dtype(dfsr, sample_rate=1)
 
         expected = np.dtype([
             (ch.mnemonic, np.float32)
@@ -286,7 +286,7 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        indexfmt, fmt = lis.dfsr_fmtstr(dfs)
+        indexfmt, fmt = lis.dfsr_fmtstr(dfs, sample_rate=1)
         assert indexfmt == 'b1'
         assert      fmt == 's1i1l1e1f1r1p1'
 
@@ -313,7 +313,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        indexfmt, fmt = lis.dfsr_fmtstr(dfs)
+        indexfmt, fmt = lis.dfsr_fmtstr(dfs, sample_rate=1)
         assert indexfmt == 'i1'
         assert fmt      == 'a32'
 
@@ -336,7 +336,7 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
         with pytest.raises(NotImplementedError):
             lis.validate_dfsr(dfs)
 
-        assert lis.dfsr_fmtstr(dfs) == ('i1', 'm4')
+        assert lis.dfsr_fmtstr(dfs, sample_rate=1) == ('i1', 'm4')
 
         with pytest.raises(NotImplementedError):
             curves = lis.curves(f, dfs)
@@ -699,16 +699,15 @@ def test_fdata_fast_channel_skip(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        with pytest.raises(NotImplementedError) as exc:
+        with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Fast channel not implemented" in str(exc.value)
+        assert "Multiple sampling rates in file" in str(exc.value)
 
-        curves = lis.curves(f, dfs, skip_fast=True)
+        curves = lis.curves(f, dfs, sample_rate=1)
         assert curves.dtype == np.dtype([('CH01', 'i4'), ('CH03', 'i4')])
         np.testing.assert_array_equal(curves['CH01'], np.array([1, 5]))
         np.testing.assert_array_equal(curves['CH03'], np.array([4, 8]))
 
-@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_ints(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-ints.lis')
 
@@ -722,15 +721,28 @@ def test_fdata_fast_channel_ints(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        # interface unclear.
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is index, CH02 is fast, CH03 is not
-        # Data: 1, (2, 3)s, 4;
-        #       5, (6, 7)s, 8;
+        assert "Multiple sampling rates in file" in str(exc.value)
 
-@pytest.mark.xfail(strict=True, reason="would we support sampled strings")
+        curves = lis.curves(f, dfs, sample_rate=1)
+        assert curves.dtype == np.dtype([('CH01', 'i4'), ('CH03', 'i4')])
+
+        curves = lis.curves(f, dfs, sample_rate=1)
+        expected = np.array([1, 5])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([4, 8])
+        np.testing.assert_array_equal(curves['CH03'], expected)
+
+        curves = lis.curves(f, dfs, sample_rate=2)
+        assert curves.dtype == np.dtype([('CH01', 'i4'), ('CH02', 'i2')])
+        expected = np.array([0, 1, 3, 5])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([2, 3, 6, 7])
+        np.testing.assert_array_equal(curves['CH02'], expected)
+
 def test_fdata_fast_channel_strings(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-strings.lis')
 
@@ -744,13 +756,18 @@ def test_fdata_fast_channel_strings(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is index, CH02 is fast, CH03 is not
-        # Data: 1, ("STR sample 1    ", "STR sample 2    ")s, "STR not sampled ";
+        curves = lis.curves(f, dfs, sample_rate=1)
+        np.testing.assert_array_equal(curves['CH01'], np.array([1]))
 
-@pytest.mark.xfail(strict=True, reason="coming soon")
+        expected = np.array(["STR not sampled "])
+        np.testing.assert_array_equal(curves['CH03'], expected)
+
+        curves = lis.curves(f, dfs, sample_rate=2)
+        np.testing.assert_array_equal(curves['CH01'], np.array([0, 1]))
+
+        expected = np.array(["STR sample 1    ", "STR sample 2    "])
+        np.testing.assert_array_equal(curves['CH02'], expected)
+
 def test_fdata_fast_channel_bad(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-bad.lis')
 
@@ -763,13 +780,14 @@ def test_fdata_fast_channel_bad(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        # call correct method to get the error
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Cannot compute an integral size for samples" in str(exc.value)
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs, sample_rate=1)
+        assert "Invalid sample size" in str(exc.value)
 
-# we have no confirmation that our understanding is correct
-@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs, sample_rate=2)
+        assert "Invalid sample size" in str(exc.value)
+
 def test_fdata_fast_channel_dimensional(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-dimensional.lis')
 
@@ -783,17 +801,25 @@ def test_fdata_fast_channel_dimensional(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is index, CH02 is fast, CH03 is not
-        # Data: 1, ([2, 3, 4],  [5, 6, 7])s,     8;
-        #       9, ([10, 11, 12], [13, 14, 15])s, 16;
+        curves = lis.curves(f, dfs, sample_rate=1)
+        expected = np.array([1, 9])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([8, 16])
+        np.testing.assert_array_equal(curves['CH03'], expected)
+
+        # Curves with sampling rate x2 the index.
+        curves = lis.curves(f, dfs, sample_rate=2)
+
+        expected = np.array([0, 1, 5, 9])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([[2, 3, 4],  [5, 6, 7], [10, 11, 12], [13, 14, 15]])
+        np.testing.assert_array_equal(curves['CH02'], expected)
 
 # 1. depending on implementation might need test where depth_mode=1,
 # but spacing is not present. We still might try to deduce it.
 # 2. unclear if this must have any impact on depth when depth_mode=0
-@pytest.mark.xfail(strict=True, reason="coming soon?")
 def test_fdata_fast_channel_depth(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-depth.lis')
 
@@ -810,16 +836,27 @@ def test_fdata_fast_channel_depth(tmpdir, merge_lis_prs):
 
         with pytest.raises(RuntimeError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is fast, CH02 is not, depth is recorded separately
-        # frame1: depth 1.
-        #   sample1: CH01: 2, CH02: 4, Depth: 1.5
-        #   sample2: CH01: 3, CH02: 4, Depth: 2
-        # frame2: depth 2.
-        #   sample1: CH01: 5, CH02: 7, Depth: 2.5
-        #   sample2: CH01: 6, CH02: 7, Depth: 3
+        assert "please explicitly specify which to read" in str(exc.value)
 
-@pytest.mark.xfail(strict=True)
+        # Curves with sampling rate x1 the index.
+        curves = lis.curves(f, dfs, sample_rate=1)
+
+        expected = np.array([1, 3, 5, 7])
+        np.testing.assert_array_equal(curves['DEPT'], expected)
+
+        expected = np.array([4, 7, 10, 13])
+        np.testing.assert_array_equal(curves['CH02'], expected)
+
+        # Curves with sampling rate x2 the index.
+        curves = lis.curves(f, dfs, sample_rate=2)
+
+        expected = np.array([0, 1, 2, 3, 4, 5, 6, 7])
+        np.testing.assert_array_equal(curves['DEPT'], expected)
+
+        expected = np.array([2,  3,  5,  6,  8,  9, 11, 12])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+
 def test_fdata_fast_channel_down(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-down.lis')
 
@@ -836,14 +873,13 @@ def test_fdata_fast_channel_down(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        curves = lis.curves(f, dfs, skip_fast=True)
-        np.testing.assert_array_equal(curves['CH01'], np.array([-5, -1, 1, 5]))
+        curves = lis.curves(f, dfs, sample_rate=2)
+        expected = np.array([0, -5, -3, -1, 0, 1, 3, 5])
+        np.testing.assert_array_equal(curves['CH01'], expected)
 
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
+        expected = np.array([-6, -7, -2, -3, 2, 3, 6, 7])
+        np.testing.assert_array_equal(curves['CH02'], expected)
 
-@pytest.mark.xfail(strict=True)
 def test_fdata_fast_channel_up(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-up.lis')
 
@@ -860,12 +896,12 @@ def test_fdata_fast_channel_up(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        curves = lis.curves(f, dfs, skip_fast=True)
-        np.testing.assert_array_equal(curves['CH01'], np.array([5, 1, -1, -5]))
+        curves = lis.curves(f, dfs, sample_rate=2)
+        expected = np.array([0, 5, 3,  1, 0, -1, -3, -5])
+        np.testing.assert_array_equal(curves['CH01'], expected)
 
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
+        expected = np.array([6, 7, 2, 3, -2, -3, -6, -7])
+        np.testing.assert_array_equal(curves['CH02'], expected)
 
 # broken DEPTH0 as index
 # unclear if that should matter at all for non-fast channels setups
@@ -941,7 +977,6 @@ def test_fdata_fast_channel_index_spacing_inconsistent(tmpdir, merge_lis_prs):
             _ = lis.curves(f, dfs)
         assert "Index spacing is DOWN, but inconsistent" in str(exc.value)
 
-@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_two_different(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channels-sampled-differently.lis')
 
@@ -955,15 +990,33 @@ def test_fdata_fast_channel_two_different(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        # interface unclear.
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is index, CH02 is fast, CH03 is fast, CH04 is not
-        # frame1: CHO1: 1, CH02: (2, 3)s, CH03: (4, 5, 6)s, CH04: 13
-        # frame2: CH01: 7, CH02: (8, 9)s, CH03: (10, 11, 12)s, CH04: 14
+        assert lis.dfsr_fmtstr(dfs, sample_rate=1) == ('l1', 'S2S3l1')
+        curves = lis.curves(f, dfs, sample_rate=1)
 
-@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
+        expected = np.array([1, 7])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([13, 14])
+        np.testing.assert_array_equal(curves['CH04'], expected)
+
+        assert lis.dfsr_fmtstr(dfs, sample_rate=2) == ('l1', 'b1S3S4')
+        curves = lis.curves(f, dfs, sample_rate=2)
+
+        expected = np.array([0, 1, 4, 7])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([2, 3, 8, 9])
+        np.testing.assert_array_equal(curves['CH02'], expected)
+
+        assert lis.dfsr_fmtstr(dfs, sample_rate=3) ==  ('l1', 'S2b1S4')
+        curves = lis.curves(f, dfs, sample_rate=3)
+
+        expected = np.array([0, 0, 1, 3, 5, 7])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+
+        expected = np.array([4, 5, 6, 10, 11, 12])
+        np.testing.assert_array_equal(curves['CH03'], expected)
+
 def test_fdata_fast_channel_two_same(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channels-sampled-same.lis')
 
@@ -976,16 +1029,17 @@ def test_fdata_fast_channel_two_same(tmpdir, merge_lis_prs):
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
+        curves = lis.curves(f, dfs, sample_rate=2)
 
-        # interface unclear.
-        with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "Call other method to get fast channel data" in str(exc.value)
-        # CH01 is index, CH02 is fast, CH03 is fast
-        # frame1: CHO1: 1, CH02: (2, 3)s, CH03: (4, 5)s
-        # frame2: CH01: 9, CH02: (10, 11)s, CH03: (12, 13)s
+        expected = np.array([0, 1, 5, 9])
+        np.testing.assert_array_equal(curves['CH01'], expected)
 
-@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
+        expected = np.array([2, 3, 10, 11])
+        np.testing.assert_array_equal(curves['CH02'], expected)
+
+        expected = np.array([4, 5, 12, 13])
+        np.testing.assert_array_equal(curves['CH03'], expected)
+
 def test_fdata_fast_channel_index_conversion(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channels-index-conversion.lis')
 
@@ -999,15 +1053,10 @@ def test_fdata_fast_channel_index_conversion(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        # interface unclear.
         with pytest.raises(RuntimeError) as exc:
-            _ = lis.curves(f, dfs)
-        assert "You index is bad" in str(exc.value)
-        # CH01 is index, CH02 is fast
-        # frame1: CHO1: 1, CH02: (5, 6)s
-        # frame2: CH01: 2, CH02: (7, 8)s
+            _ = lis.curves(f, dfs, sample_rate=2)
+        assert "Unable to create integral index" in str(exc.value)
 
-@pytest.mark.xfail(strict=True, reason="coming soon, interface unclear")
 def test_fdata_fast_channel_first_fast(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-is-first.lis')
 
@@ -1021,9 +1070,9 @@ def test_fdata_fast_channel_first_fast(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "Index is fast. You can't define index channel" in str(exc.value)
+        assert "Index channel cannot be a fast channel" in str(exc.value)
 
 
 def test_fdata_bad_data(tmpdir, merge_lis_prs):
