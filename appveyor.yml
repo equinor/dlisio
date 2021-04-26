@@ -46,6 +46,7 @@ before_build:
     - git clone https://github.com/fmtlib/fmt.git
     - ps: mkdir fmt/build
     - ps: pushd fmt/build
+    - git checkout 7.1.3
     - cmake -G %generator%
             -DFMT_TEST=OFF
             -DFMT_DOC=OFF ..
