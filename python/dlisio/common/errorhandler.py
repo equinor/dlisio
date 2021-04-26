@@ -163,7 +163,7 @@ class ErrorHandler(core.error_handler):
         self.major    = major
         self.critical = critical
 
-    def log(self, severity, context, problem, spec, action, debug):
+    def log(self, severity, context='', problem='', spec='', action='', debug=''):
         msg = ErrorHandler.format_error(
             severity, context, problem, spec, action, debug)
 

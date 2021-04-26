@@ -147,13 +147,14 @@ class FileIndexer:
             self.complete = True
             return
         except OSError as e:
-            self.error_handler.log(
-                core.error_severity.critical,
-                "dlisio.lis.load: file {}".format(self.path),
-                e,
-                "",
-                "Indexing stopped",
-                "Physical tell: {} (dec)".format(self.offset))
+            issue = {
+                'severity' : core.error_severity.critical,
+                'context'  : "dlisio.lis.load: file {}".format(self.path),
+                'problem'  : e,
+                'action'   : "Indexing stopped at physical tell {} (dec)"
+                    .format(self.offset),
+            }
+            self.error_handler.log(**issue)
             self.complete = True
             return
 
@@ -177,14 +178,16 @@ class FileIndexer:
         if is_delimiter(first):
             if index.size() != 1:
                 # this never should happen. Basically assert
-                msg = "dlisio.lis.load: file {}, record {}"
-                self.error_handler.log(
-                    core.error_severity.critical,
-                    msg.format(self.path, first),
-                    "Delimiter file size is {} != 1".format(index.size()),
-                    "",
-                    "Indexing stopped",
-                    "Physical tell: {} (dec)".format(self.offset))
+                issue = {
+                    'severity': core.error_severity.critical,
+                    'context' : "dlisio.lis.load: file {}, record {}"
+                        .format(self.path, first),
+                    'problem' : "Delimiter file size is {} != 1"
+                        .format(index.size()),
+                    'action'  : "Indexing stopped at physical tell {} (dec)"
+                        .format(self.offset),
+                }
+                self.error_handler.log(**issue)
                 self.complete = True
                 file.close()
                 return
@@ -197,14 +200,15 @@ class FileIndexer:
                 # record.
                 # However read_records can in theory still fail on blocked IO
                 # and other non-LIS related issues.
-                msg = "dlisio.lis.load: file {}, record {}"
-                self.error_handler.log(
-                    core.error_severity.critical,
-                    msg.format(self.path, first),
-                    e,
-                    "",
-                    "Indexing stopped",
-                    "Physical tell: {} (dec)".format(self.offset))
+                issue = {
+                    'severity': core.error_severity.critical,
+                    'context' : "dlisio.lis.load: file {}, record {}"
+                        .format(self.path, first),
+                    'problem' : e,
+                    'action'  : "Indexing stopped at physical tell {} (dec)"
+                        .format(self.offset),
+                }
+                self.error_handler.log(**issue)
                 self.complete = True
                 return
             finally:
@@ -220,13 +224,14 @@ class FileIndexer:
                 file.close()
 
         if index.isincomplete():
-            self.error_handler.log(
-                core.error_severity.critical,
-                "dlisio.lis.load: file {}".format(self.path),
-                index.errmsg(),
-                "",
-                "Indexing stopped",
-                "Physical tell: {} (dec)".format(self.offset))
+            issue = {
+                'severity': core.error_severity.critical,
+                'context' : "dlisio.lis.load: file {}".format(self.path),
+                'problem' : index.errmsg(),
+                'action'  : "Indexing stopped at physical tell {} (dec)"
+                    .format(self.offset),
+            }
+            self.error_handler.log(**issue)
             self.complete = True
 
 
