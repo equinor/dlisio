@@ -15,6 +15,7 @@ RUN make install
 WORKDIR /home/ci
 RUN git clone https://github.com/fmtlib/fmt.git
 WORKDIR /home/ci/fmt/build
+RUN git checkout 7.1.3
 RUN cmake -DFMT_TEST=OFF -DFMT_DOC=OFF ..
 RUN make -j4
 RUN make install
