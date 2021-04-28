@@ -8,19 +8,29 @@ import pytest
 import shutil
 import os
 
-from dlisio import lis, core
+from dlisio import lis, core, common
 
 def test_filehandles_closed(tmpdir):
     # Copy the test file to a tmpdir in order to make this test reliable.
     tmp = str(tmpdir.join('file'))
     shutil.copyfile('data/lis/layouts/layout_tif_01.lis', tmp)
 
+    load_failure_escape = str(tmpdir.join('truncated.lis'))
+    shutil.copyfile('data/lis/layouts/truncated_15.lis', load_failure_escape)
+
     with lis.load(tmp) as files:
         assert len(files) == 4
 
-    os.remove(tmp)
+    errorhandler = common.ErrorHandler(
+        critical=common.Actions.LOG_ERROR)
+    # file is truncated, but 2 LFs were already processed successfully
+    with lis.load(load_failure_escape, error_handler=errorhandler) as files:
+        assert len(files) == 2
 
-def test_filehandles_closed_when_load_fails(tmpdir, merge_lis_prs, assert_error):
+    os.remove(tmp)
+    os.remove(load_failure_escape)
+
+def test_filehandles_closed_when_load_fails(tmpdir, merge_lis_prs):
     # majority of exceptions in load are hard to invoke, so they are not tested
     empty = os.path.join(str(tmpdir), 'empty.lis')
     merge_lis_prs(empty, [])
@@ -28,17 +38,21 @@ def test_filehandles_closed_when_load_fails(tmpdir, merge_lis_prs, assert_error)
     truncated = str(tmpdir.join('truncated.lis'))
     shutil.copyfile('data/lis/layouts/truncated_15.lis', truncated)
 
+    openlis = str(tmpdir.join('openlis-error.lis'))
+    shutil.copyfile('data/lis/layouts/wrong_06.lis', openlis)
+
     with pytest.raises(OSError):
         _ =  lis.load(empty)
 
-    # file is truncated, but 2 LFs was already processed successfully
-    with lis.load(truncated) as files:
-        assert len(files) == 2
-    # TODO: update with explicit raise here as well.
-    assert_error("Indexing failed")
+    with pytest.raises(RuntimeError):
+        _ = lis.load(truncated)
+
+    with pytest.raises(RuntimeError):
+        _ = lis.load(openlis)
 
     os.remove(empty)
     os.remove(truncated)
+    os.remove(openlis)
 
 def test_load_nonexisting_file():
     with pytest.raises(OSError) as exc:
