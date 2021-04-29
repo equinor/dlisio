@@ -98,6 +98,91 @@ template <> struct type_caster< lis::mask   > : lis_caster< lis::mask   > {};
 
 namespace {
 
+struct frameconfig {
+    std::string  indexfmt;
+    std::string  fmtstr;
+    std::uint8_t samples;
+    int          mode;
+    double       spacing;   // signed spacing (Undefined when mode == 0)
+    std::size_t  framesize; // size of one row in output
+};
+
+/* Keep track of the current (sample) value of the index.
+ *
+ * When a record contains fast channels or the depth is recorded prior to any
+ * channels (depth recording mode 1) the parsing routines will have to
+ * calculate depths that are not explicitly present in the file. This class
+ * book-keeps the index value for a given frame, and supplies an interface for
+ * calculating "implicit" depths.
+ *
+ * The property 'current' stores the (sample) value from of index of the
+ * current frame. If (depth recording mode 0) this is the sample value from the
+ * index channel. If (depth recording more 1) this is the depth recorded at the
+ * start of the record + spacing depending on which frame in the record we are
+ * at.
+ *
+ * Use update() to set the index value for the current frame.
+ *
+ * Note that the index value is book-kept using "double" - a datatype big
+ * enough to contain all possible types represented by lis.
+ */
+class indexchannel {
+public:
+    double index() const noexcept (false) {
+        if ( std::isnan( current ) ) {
+            throw std::runtime_error("No value for Uninitialized index");
+        }
+        return current;
+    }
+
+    void update( double x ) noexcept (true) {
+       previous = current;
+       current  = x;
+    };
+
+    /* Get the currently set (sample) value
+     *
+     * This method calculates the correct (sample) value for a given sample in
+     * the frame. This is defined in LIS79 ch 3.3.2.2:
+     *
+     *  > The depth (or other index) of the frame applies to the last of the
+     *    multiple samples with earlier samples' depths interpolated between
+     *    the current and previous frame depth.
+     *
+     * Note that this means that calling this method with sample == samples is
+     * equal to calling the index() method, and will return the (sample) value
+     * of the current frame. Hence its use is not limited to fast channels
+     * only.
+     */
+    double value( std::int8_t sample, std::uint8_t samples ) const
+    noexcept (false) {
+        /* Using "0" as index value when the value cannot be calculated
+         *
+         * Note that it is impossible for dlisio to calculate the index value
+         * of a sub-frame for the very first frame. This is because we don't
+         * yet have a previous value to use for calculations.
+         *
+         * We therefore have to choose a value in its place. Unfortunately,
+         * there is no universal "nan" value for all the different lis79 types
+         * (i.e. ints and floats) the index can be recorded as. Therefore,
+         * the choice fell on "0", which is representable in all possible types
+         * that the index can be.
+         */
+        if ( sample == samples )      return index();
+        if ( std::isnan( previous ) ) return 0;
+
+        if ( sample > samples ) {
+            throw std::runtime_error("Invalid subframe");
+        }
+        double interval = (index() - previous) / samples;
+        return previous + interval * sample;
+    };
+
+private:
+    double current  = std::nan("Un-initialized");
+    double previous = std::nan("Un-initialized");
+};
+
 void assert_overflow(const char* ptr, const char* end, int skip) {
     if (ptr + skip > end) {
         const auto msg = "corrupted record: fmtstr would read past end";
@@ -105,11 +190,11 @@ void assert_overflow(const char* ptr, const char* end, int skip) {
     }
 }
 
-void read_frame( const std::string& fmt,
-                 const char*& ptr,
-                 const char* end,
-                 unsigned char*& dst )
-noexcept (false) {
+const char* read_sample( const char*     fmt,
+                         const char*&    ptr,
+                         const char*     end,
+                         unsigned char*& dst) {
+
     auto swap_pointer = [&](py::object obj)
     {
         PyObject* p;
@@ -120,73 +205,294 @@ noexcept (false) {
         dst += sizeof(p);
     };
 
-    const char* f = fmt.c_str();
-    while (true) {
-        if (*f == LIS_FMT_EOL) {
-            return;
-        }
-
-        else if (*f == LIS_FMT_SUPPRESS) {
+    switch (*fmt) {
+        case LIS_FMT_I8:
+        case LIS_FMT_I16:
+        case LIS_FMT_I32:
+        case LIS_FMT_F16:
+        case LIS_FMT_F32:
+        case LIS_FMT_F32LOW:
+        case LIS_FMT_F32FIX:
+        case LIS_FMT_BYTE: {
+            const char localfmt[] = {*fmt, '\0'};
             char* next;
-            ptr += std::strtol(++f, &next, 10);
-            f = next;
-        }
+            auto entries = std::strtol(++fmt, &next, 10);
+            fmt = next;
 
-        else if (*f == LIS_FMT_STRING) {
+            for (int i = 0; i < entries; ++i) {
+                int src_skip, dst_skip;
+                lis_packflen(localfmt, ptr, &src_skip, &dst_skip);
+                assert_overflow(ptr, end, src_skip);
+                lis_packf(localfmt, ptr, dst);
+                dst += dst_skip;
+                ptr += src_skip;
+            }
+
+            break;
+        }
+        case LIS_FMT_STRING: {
             char* next;
-            auto len = std::strtol(++f, &next, 10);
-            f = next;
+            auto len = std::strtol(++fmt, &next, 10);
+            fmt = next;
 
             auto str = py::str(ptr, len);
             swap_pointer(str);
             ptr += len;
-        }
 
-        else {
-            int src_skip, dst_skip;
-            const char localfmt[] = {*f, '\0'};
-            lis_packflen(localfmt, ptr, &src_skip, &dst_skip);
-            assert_overflow(ptr, end, src_skip);
-            lis_packf(localfmt, ptr, dst);
-            dst += dst_skip;
-            ptr += src_skip;
-            ++f;
+            break;
+        }
+        default: {
+            const auto msg = "Invalid format code " + std::string(fmt);
+            throw std::runtime_error(msg);
         }
     }
+
+    return fmt;
 }
 
-void read_data_record( const std::string& fmt,
-                       const lis::record& src,
+template <
+    typename T,
+    typename std::enable_if<std::is_integral<T>::value>::type* = nullptr
+>
+void to_dst( unsigned char*& dst, double index ) noexcept (false) {
+    if ( std::fmod( index, 1.0 ) ) {
+        const auto msg = "Unable to create integral index";
+        throw std::runtime_error(msg);
+    }
+    auto x = static_cast< T >(index);
+    std::memcpy(dst, &x, sizeof(T));
+    dst += sizeof(T);
+}
+
+template <
+    typename T,
+    typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr
+>
+void to_dst( unsigned char*& dst, double index ) noexcept (false) {
+    auto x = static_cast< T >(index);
+    std::memcpy(dst, &x, sizeof(T));
+    dst += sizeof(T);
+}
+
+unsigned char* write_index( unsigned char*      dst,
+                            const frameconfig&  fconf,
+                            double              index )
+noexcept (false) {
+    using namespace std;
+
+    const char* indexfmt = fconf.indexfmt.c_str();
+    switch (*indexfmt) {
+        case LIS_FMT_I8:     { to_dst< int8_t  >(dst, index); break; }
+        case LIS_FMT_I16:    { to_dst< int16_t >(dst, index); break; }
+        case LIS_FMT_I32:    { to_dst< int32_t >(dst, index); break; }
+        case LIS_FMT_F16:    { to_dst< float   >(dst, index); break; }
+        case LIS_FMT_F32:    { to_dst< float   >(dst, index); break; }
+        case LIS_FMT_F32LOW: { to_dst< float   >(dst, index); break; }
+        case LIS_FMT_F32FIX: { to_dst< float   >(dst, index); break; }
+        case LIS_FMT_BYTE:   { to_dst< uint8_t >(dst, index); break; }
+        case LIS_FMT_STRING:
+        case LIS_FMT_MASK: {
+            const auto msg = "Unsupported datatype for index channel, was: ";
+            throw std::runtime_error(msg + fconf.indexfmt);
+        }
+        default: {
+            const auto msg = "Invalid datatype for index channel, was: ";
+            throw std::runtime_error(msg + fconf.indexfmt);
+        }
+    }
+
+    return dst;
+}
+
+template< typename T >
+double from_src( const char*&       ptr,
+                 const char*        end,
+                 const frameconfig& fconf )
+noexcept (false) {
+    std::array< unsigned char, sizeof(T) > buf;
+    auto* dst = static_cast< unsigned char* >(buf.data());
+
+    const char* indexfmt = fconf.indexfmt.c_str();
+    read_sample( indexfmt, ptr, end, dst );
+
+    T idx;
+    std::memcpy(&idx, buf.data(), sizeof(T));
+    return static_cast< double >(idx);
+}
+
+const char* read_index( const char*        src,
+                        const char*        end,
+                        const frameconfig& fconf,
+                        indexchannel&      channel )
+noexcept (false) {
+    using namespace std;
+
+    double x;
+    const char* indexfmt = fconf.indexfmt.c_str();
+    switch (*indexfmt) {
+        case LIS_FMT_I8:     { x=from_src< int8_t  >(src, end, fconf); break; }
+        case LIS_FMT_I16:    { x=from_src< int16_t >(src, end, fconf); break; }
+        case LIS_FMT_I32:    { x=from_src< int32_t >(src, end, fconf); break; }
+        case LIS_FMT_F16:    { x=from_src< float   >(src, end, fconf); break; }
+        case LIS_FMT_F32:    { x=from_src< float   >(src, end, fconf); break; }
+        case LIS_FMT_F32LOW: { x=from_src< float   >(src, end, fconf); break; }
+        case LIS_FMT_F32FIX: { x=from_src< float   >(src, end, fconf); break; }
+        case LIS_FMT_BYTE:   { x=from_src< uint8_t >(src, end, fconf); break; }
+        case LIS_FMT_STRING:
+        case LIS_FMT_MASK: {
+            const auto msg = "Unsupported datatype for index channel, was: ";
+            throw std::runtime_error(msg + fconf.indexfmt);
+        }
+        default: {
+            const auto msg = "Invalid datatype for index channel, was: ";
+            throw std::runtime_error(msg + fconf.indexfmt);
+        }
+    }
+
+    /* TODO: consider validating the index value. There is no requirement from
+     *       LIS79 to do so, but it might be a good idea still. This can be
+     *       done here, or as a post-process in python.
+     */
+    channel.update(x);
+    return src;
+}
+
+void read_frame( const char*&       ptr,
+                 const char*        end,
+                 unsigned char*&    dst,
+                 indexchannel&      index,
+                 const frameconfig& fconf )
+noexcept (false) {
+    bool fast = ( fconf.samples > 1 ) ? true : false;
+
+    /* Store the index - for future calculations
+     *
+     * If mode == 0 and we are in the process of reading fast channels, we will
+     * need to store the value of the index such that we can later calculate the
+     * appropriate depths for the subframes.
+     *
+     * This is also true for mode == 1, regardless if we read fast channels or
+     * not. However mode == 1 depths are read prior to this function, hence we
+     * have already done all the necessary work.
+     */
+    if ( fconf.mode == 0 and fast ) {
+        ptr = read_index( ptr, end, fconf, index );
+    }
+
+    /* Writing the index to dst
+     *
+     * The trivial case is when the index channel is recorded as a regular
+     * channel (mode=0) and we don't have fast channels. Then, there is no need
+     * for the intermediate storage of the index values and we can write
+     * directly from record (ptr) to dst.
+     *
+     * In any other case, we need to write the index from the intermediate
+     * index storage to dst. For fast channels, the index values for all
+     * subframes are written, and the dst pointer is rewinded to the first
+     * "real" channel in the first subframe.
+     */
+    if ( fconf.mode == 0 and not fast ) {
+        const char* indexfmt = fconf.indexfmt.c_str();
+        read_sample( indexfmt, ptr, end, dst );
+    } else {
+        auto* current = dst;
+
+        for ( int subframe = 1; subframe <= fconf.samples; subframe++ ) {
+            auto value = index.value( subframe, fconf.samples );
+            current = write_index( dst, fconf, value );
+
+            /* Skip ahead to the next sub-frame */
+            dst += fconf.framesize;
+        }
+
+        dst = current - (fconf.framesize * (fconf.samples - 1) );
+    }
+
+    /* Read the curves
+     *
+     * The index written to dst in its entirety at this point (Including
+     * potential subframes). Both fmt, ptr and dst are appropriately aligned
+     * such that we can go ahead and read all the non-index channels.
+     */
+    const char* fmt = fconf.fmtstr.c_str();
+    while ( *fmt != LIS_FMT_EOL ) {
+        /* Suppression of Channels
+         *
+         * Suppression doesn't care about the structure of the recorded
+         * channel. I.e.  number of samples or number of entries. It simply
+         * skips over all bytes in the record (ptr) that is associated with a
+         * channel.
+         */
+        if ( *fmt == LIS_FMT_SUPPRESS) {
+            char* next;
+            ptr += std::strtol(++fmt, &next, 10);
+            fmt = next;
+            continue;
+        }
+
+        auto* channelstart = dst;
+        auto* samplefmt    = fmt;
+
+        for ( int sample = 0; sample < fconf.samples; ++sample ) {
+            dst = channelstart + fconf.framesize * sample;
+            fmt = read_sample(samplefmt, ptr, end, dst);
+        }
+
+        /* Move the dst-pointer to the next frame subframes */
+        dst -= (fconf.framesize * (fconf.samples - 1));
+    }
+
+    /* Move the dst-pointer to right after the last subframe. I.e. where the
+     * next frame will start.
+     */
+    dst += fconf.framesize * ( fconf.samples - 1 );
+}
+
+void read_data_record( const lis::record& src,
                        unsigned char*&    dst,
                        int& frames,
-                       const std::size_t& itemsize,
+                       indexchannel& index,
+                       const frameconfig& fconf,
                        std::size_t allocated_rows,
                        std::function<void (std::size_t)> resize )
 noexcept (false) {
 
+
     const auto* ptr = src.data.data();
     const auto* end = ptr + src.data.size();
 
-    /* get frame number and slots */
+    /* Store the index value
+     *
+     * In depth recording mode == 1 the index is not recorded as part of the
+     * frames, but rather occurs once, before the first frame in the record.
+     */
+    if ( fconf.mode == 1 ) {
+        ptr = read_index( ptr, end, fconf, index );
+    }
+
     while (ptr < end) {
-        if (frames == allocated_rows) {
+        if (frames  == allocated_rows) {
             resize(frames * 2);
-            dst += (frames * itemsize);
+            dst += (frames * fconf.framesize);
         }
 
-        read_frame(fmt, ptr, end, dst);
+        read_frame(ptr, end, dst, index, fconf);
+        frames += fconf.samples;
 
-        ++frames;
+        if ( fconf.mode == 1 and ptr < end ) {
+            /* Add spacing to the index */
+            index.update( index.index() + fconf.spacing );
+        }
+
     }
 }
 
 
-py::object read_data_records(const std::string& fmt,
-                             lis::iodevice& file,
-                             const lis::record_index& index,
-                             const lis::record_info& recinfo,
-                             std::size_t itemsize,
-                             py::object alloc)
+py::object read_data_records( lis::iodevice& file,
+                              const lis::record_index& idx,
+                              const lis::record_info& recinfo,
+                              const frameconfig& fconf,
+                              py::object alloc )
 noexcept (false) {
     /*
      * TODO: veriy that format string is valid
@@ -211,8 +517,8 @@ noexcept (false) {
      * default-constructed (set to None) by numpy, or properly created (and
      * replaced) here.
      */
-    auto implicits = index.implicits_of( recinfo.ltell );
-    auto allocated_rows = implicits.size();
+    auto implicits = idx.implicits_of( recinfo.ltell );
+    auto allocated_rows = implicits.size() * fconf.samples;
     auto dstobj = alloc(allocated_rows);
     auto dstb = py::buffer(dstobj);
     auto info = dstb.request(true);
@@ -235,15 +541,16 @@ noexcept (false) {
     };
 
     int frames = 0;
+    auto index = indexchannel();
 
     for ( const auto& head : implicits ) {
         /* get record */
         auto record = file.read_record( head );
-        read_data_record( fmt,
-                          record,
+        read_data_record( record,
                           dst,
                           frames,
-                          itemsize,
+                          index,
+                          fconf,
                           allocated_rows,
                           resize );
     }
@@ -292,6 +599,41 @@ void init_lis_extension(py::module_ &m) {
         .value( "blank_record"        , lis::record_type::blank_record        )
         .value( "picture"             , lis::record_type::picture             )
         .value( "image"               , lis::record_type::image               )
+    ;
+
+    py::enum_< lis::entry_type >( m, "lis_ebtype")
+        .value( "terminator"         , lis::entry_type::terminator         )
+        .value( "data_rec_type"      , lis::entry_type::data_rec_type      )
+        .value( "spec_block_type"    , lis::entry_type::spec_block_type    )
+        .value( "frame_size"         , lis::entry_type::frame_size         )
+        .value( "up_down_flag"       , lis::entry_type::up_down_flag       )
+        .value( "depth_scale_units"  , lis::entry_type::depth_scale_units  )
+        .value( "ref_point"          , lis::entry_type::ref_point          )
+        .value( "ref_point_units"    , lis::entry_type::ref_point_units    )
+        .value( "spacing"            , lis::entry_type::spacing            )
+        .value( "spacing_units"      , lis::entry_type::spacing_units      )
+        .value( "undefined"          , lis::entry_type::undefined          )
+        .value( "max_frames_pr_rec"  , lis::entry_type::max_frames_pr_rec  )
+        .value( "absent_value"       , lis::entry_type::absent_value       )
+        .value( "depth_rec_mode"     , lis::entry_type::depth_rec_mode     )
+        .value( "units_of_depth"     , lis::entry_type::units_of_depth     )
+        .value( "reprc_output_depth" , lis::entry_type::reprc_output_depth )
+        .value( "spec_bloc_subtype"  , lis::entry_type::spec_bloc_subtype  )
+    ;
+
+    py::enum_< lis::fmtchr >( m, "lis_fmt" )
+        .value( "eol"     , lis::fmtchr::eol      )
+        .value( "i8"      , lis::fmtchr::i8       )
+        .value( "i16"     , lis::fmtchr::i16      )
+        .value( "i32"     , lis::fmtchr::i32      )
+        .value( "f16"     , lis::fmtchr::f16      )
+        .value( "f32"     , lis::fmtchr::f32      )
+        .value( "f32low"  , lis::fmtchr::f32low   )
+        .value( "f32fix"  , lis::fmtchr::f32fix   )
+        .value( "string"  , lis::fmtchr::string   )
+        .value( "byte"    , lis::fmtchr::byte     )
+        .value( "mask"    , lis::fmtchr::mask     )
+        .value( "suppress", lis::fmtchr::suppress )
     ;
 
     py::enum_< lis::representation_code >( m, "lis_reprc")
@@ -579,10 +921,22 @@ void init_lis_extension(py::module_ &m) {
     m.def( "parse_reel_trailer", &lis::parse_reel_trailer );
 
     m.def( "parse_dfsr", &lis::parse_dfsr );
-    m.def("dfs_formatstring", &lis::dfs_fmtstr);
     /* end - parse.hpp */
 
     m.def( "parse_info_record", &lis::parse_info_record );
 
     m.def("read_data_records", read_data_records);
+
+    /* ext/lis.cpp */
+    py::class_< frameconfig >( m, "frameconfig" )
+        .def(py::init<
+            const std::string&,
+            const std::string&,
+            std::uint8_t,
+            int,
+            double,
+            std::size_t
+        >())
+    ;
+    /* end - ext/lis.cpp */
 }

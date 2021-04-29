@@ -2,6 +2,7 @@ import logging
 
 from .. import core
 from .information_record import InformationRecord
+from .dataformatspec import DataFormatSpec
 
 
 class HeaderTrailer():
@@ -207,13 +208,13 @@ class LogicalFile():
         Returns
         -------
 
-        records : list of dlisio.core.dfsr
+        records : list of dlisio.lis.DataFormatSpec
         """
         # TODO duplication checking
         ex = self.explicits()
         dfs = core.lis_rectype.data_format_spec
         recs = [self.io.read_record(x) for x in ex if x.type == dfs]
-        return [parse_record(x) for x in recs]
+        return [DataFormatSpec(parse_record(x)) for x in recs]
 
     def job_identification(self):
         """ Job Identification Logical Records

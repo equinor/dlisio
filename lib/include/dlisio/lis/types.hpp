@@ -26,6 +26,21 @@ enum class representation_code : std::uint8_t {
     mask   = LIS_MASK,
 };
 
+enum class fmtchr : std::uint8_t {
+    eol      = LIS_FMT_EOL     ,
+    i8       = LIS_FMT_I8      ,
+    i16      = LIS_FMT_I16     ,
+    i32      = LIS_FMT_I32     ,
+    f16      = LIS_FMT_F16     ,
+    f32      = LIS_FMT_F32     ,
+    f32low   = LIS_FMT_F32LOW  ,
+    f32fix   = LIS_FMT_F32FIX  ,
+    string   = LIS_FMT_STRING  ,
+    byte     = LIS_FMT_BYTE    ,
+    mask     = LIS_FMT_MASK    ,
+    suppress = LIS_FMT_SUPPRESS,
+};
+
 /* It's _very_ often necessary to access the raw underlying type of the strong
  * type aliases for comparisons, literals, or conversions. dl::decay inspects
  * the argument type and essentially static casts it, regardless of which dl

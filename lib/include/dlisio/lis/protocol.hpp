@@ -292,8 +292,6 @@ struct dfsr {
 
 dfsr parse_dfsr( const lis::record& ) noexcept (false);
 
-std::string dfs_fmtstr( const dfsr& dfs ) noexcept (false);
-
 // Information Records
 
 struct component_block {
