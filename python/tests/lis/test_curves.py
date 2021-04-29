@@ -780,7 +780,8 @@ def test_fdata_fast_channel_depth(tmpdir, merge_lis_prs):
 
     content = headers + [
         'data/lis/records/curves/dfsr-fast-depth.lis.part',
-        'data/lis/records/curves/fdata-fast-depth.lis.part',
+        'data/lis/records/curves/fdata-fast-depth-1.lis.part',
+        'data/lis/records/curves/fdata-fast-depth-2.lis.part',
     ] + trailers
 
     merge_lis_prs(fpath, content)

@@ -97,7 +97,8 @@ fdata-depth-up-RP3.lis.part     Depth: 49, Data: 33;
 fdata-dimensional-int.lis.part  Data: 12, [1, 2], 3; 10, [4, 5], 6
 fdata-encoded.lis.part          Data koi8-r encoded: значение
 fdata-fast-conversion.lis.part  Data: 1, (5, 6)s; 2, (7, 8)s
-fdata-fast-depth.lis.part       Depth: 1, Data (2, 3)s, 4; (5, 6)s, 7
+fdata-fast-depth-1.lis.part     Depth: 1, Data (2, 3)s, 4; (5, 6)s, 7
+fdata-fast-depth-2.lis.part     Depth: 5, Data (8, 9)s, 10; (11, 12)s, 13
 fdata-fast-dimensional.lis.part Data: 1, ([2, 3, 4], [5, 6, 7])s, 8;
                                 9, ([10, 11, 12], [13, 14, 15])s, 16;
 fdata-fast-index-2.lis.part     Data: -5, (-6, -7)s, -8;
