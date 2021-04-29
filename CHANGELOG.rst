@@ -6,9 +6,34 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+
+0.3.3_ - 2021.04.30
+-------------------
+* ``lis.load`` now raises by default when a file cannot be successfully
+  indexed. In previous versions only a warning was issued and a partially
+  indexed file was returned.
+* ``lis.load`` now accepts a ``dlisio.ErrorHandler``-instance similar to
+  ``dlis.load``. This allows the caller to decide how load behaves when a file
+  cannot be properly indexed.
+* dlisio has learned to parse the following LIS records: Operator Command
+  Inputs, Operator Response Inputs, System Outputs to Operator and FLIC
+  Comment.
+* LIS Data Format Specification Records have been given a more user-friendly
+  interface through ``lis.DataFormatSpec``.
+* dlisio has learned to read LIS curves where the index is recorded in depth
+  recording mode 1.
+* dlisio has learned to read LIS curves that are sampled at a higher rate than
+  the recorded index (Fast Channels)
+* dlisio has learned to read LIS curves with non-scalar sample-values.
+* dlisio has learned to read LIS curves containing strings.
+* Added safe-guards against ZeroDevisionError's in lis.curves
+* The predecessor and successor bits in the LIS Physical Records Headers are
+  checked for consistency during the indexing routines.
+* Error messages emitted from the indexing routines at ``lis.load`` are now
+  properly communicated to the caller.
+
 0.3.2_ - 2021.03.19
 -------------------
-
 * Added support for reading the LIS79 record types: Job Identification,
   Wellsite Data and Tool String Info.
 * Fixes a bug that led dlisio to attempt to read curves with multiple entries
@@ -226,6 +251,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.3.3: https://github.com/equinor/dlisio/compare/v0.3.2...v0.3.3
 .. _0.3.2: https://github.com/equinor/dlisio/compare/v0.3.1...v0.3.2
 .. _0.3.1: https://github.com/equinor/dlisio/compare/v0.3.0...v0.3.1
 .. _0.3.0: https://github.com/equinor/dlisio/compare/v0.2.6...v0.3.0
