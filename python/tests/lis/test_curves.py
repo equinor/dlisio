@@ -378,16 +378,12 @@ def test_fdata_samples_0(tmpdir, merge_lis_prs):
             _ = lis.curves(f, dfs)
         assert "Invalid number of samples (0) for curve BAD" in str(exc.value)
 
-
-@pytest.mark.skip(reason="1, 3: infinite loop, 2: data read as 2 frames, "
-                         "4: segmentation fault. Divide tests if needed")
 @pytest.mark.parametrize('dfsr_filename', [
     'dfsr-size-0-one-block.lis.part',
     'dfsr-size-0-two-blocks.lis.part',
-    'dfsr-entries-default.lis.part',
     'dfsr-size-0-string.lis.part',
 ])
-def test_fdata_size_0_one_channel(tmpdir, merge_lis_prs, dfsr_filename):
+def test_fdata_size_0(tmpdir, merge_lis_prs, dfsr_filename):
     fpath = os.path.join(str(tmpdir), 'dfsr-size-0.lis')
 
     content = headers + [
@@ -402,7 +398,26 @@ def test_fdata_size_0_one_channel(tmpdir, merge_lis_prs, dfsr_filename):
 
         with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert "size == 0" in str(exc.value)
+        msg = "Invalid size (0) for curve BAD , should be != 0"
+        assert msg in str(exc.value)
+
+def test_fdata_no_channels(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'dfsr-no-channels.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-entries-default.lis.part',
+        'data/lis/records/curves/fdata-size.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        msg = "DataFormatSpec() has no channels"
+        assert msg in str(exc.value)
 
 def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dfsr-size-lt-repcode-size.lis')
