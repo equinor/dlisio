@@ -319,6 +319,35 @@ noexcept (false) {
     return xs;
 }
 
+void validate_entry( const lis::entry_block& entry ) {
+    const auto type = lis::decay(entry.type);
+    if ( type > int(lis::entry_type::spec_bloc_subtype) ) {
+        const auto msg = "lis::validate_entry: unknown entry type {}";
+        throw std::runtime_error( fmt::format(msg, type) );
+    }
+
+    const auto size = lis::decay(entry.size);
+
+    const auto reprc = lis::decay(entry.reprc);
+    const auto reprc_size = lis_sizeof_type(reprc);
+
+    if (reprc_size >= 0) {
+        if (size != reprc_size and size > 0 and reprc_size != LIS_VARIABLE_LENGTH) {
+            const auto msg = "lis::validate_entry: invalid entry (type: {}). "
+                             "Expected size for reprc {} is {}, was {}";
+            throw std::runtime_error( fmt::format(msg, type, reprc, reprc_size,
+                                                  size) );
+        }
+    } else {
+        // will fail with invalid repcode even if entry size is 0.
+        // possible to reconsider if such file ever seen in reality
+        const auto msg = "lis::validate_entry: unknown representation code {}";
+        const auto code = lis::decay(reprc);
+        throw std::runtime_error(fmt::format(msg, code));
+    }
+
+}
+
 } // namespace
 
 lis::entry_block read_entry_block( const lis::record& rec, std::size_t offset )
@@ -336,9 +365,11 @@ noexcept (false) {
 
     lis::entry_block entry;
 
-    cur = cast( cur, entry.type  ); // TODO verify type
+    cur = cast( cur, entry.type  );
     cur = cast( cur, entry.size  );
-    cur = cast( cur, entry.reprc ); // TODO verify reprc
+    cur = cast( cur, entry.reprc );
+
+    validate_entry(entry);
 
     if ( std::distance(cur, end) < lis::decay( entry.size ) ) {
         const auto msg = "lis::entry_block: "

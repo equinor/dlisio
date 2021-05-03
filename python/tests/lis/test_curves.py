@@ -142,13 +142,12 @@ def test_entries_cut_before_terminator():
             _ = f.data_format_specs()
         assert "0 bytes left in record, expected at least 3" in str(exc.value)
 
-@pytest.mark.xfail(strict=True, reason="check missing")
 def test_entries_invalid_type():
     path = 'data/lis/records/curves/dfsr-entries-bad-type.lis.part'
     with lis.load(path) as (f,):
         with pytest.raises(RuntimeError) as exc:
             _ = f.data_format_specs()
-        assert "invalid type" in str(exc.value)
+        assert "unknown entry type 65" in str(exc.value)
 
 def test_entries_invalid_repcode():
     path = 'data/lis/records/curves/dfsr-entries-bad-reprc.lis.part'
