@@ -294,7 +294,6 @@ const char* element( const char* xs,
                      lis::byte reprc,
                      lis::value_type& val )
 noexcept (false) {
-
     auto repr = static_cast< lis::representation_code>( lis::decay(reprc) );
     using rpc = lis::representation_code;
     switch (repr) {
@@ -378,7 +377,8 @@ noexcept (false) {
         throw std::runtime_error(fmt::format(msg, left, lis::decay(entry.size)));
     }
 
-    element(cur, entry.size, entry.reprc, entry.value);
+    if ( lis::decay(entry.size) != 0 )
+        element(cur, entry.size, entry.reprc, entry.value);
 
     return entry;
 }

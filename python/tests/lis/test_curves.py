@@ -104,6 +104,10 @@ def test_entries_default_values(tmpdir, merge_lis_prs):
 
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
+        assert len(dfs.entries) == 1
+
+        entries = {entry.type : entry.value for entry in dfs.entries}
+        assert entries[0]  == 60 # defined with value
 
         assert dfs.record_type             == 0
         assert dfs.spec_block_type         == 0
@@ -120,6 +124,39 @@ def test_entries_default_values(tmpdir, merge_lis_prs):
         assert dfs.depth_units             == ".1IN"
         assert dfs.depth_reprc             == None
         assert dfs.spec_block_subtype      == 0
+
+def test_entries_size_0_values(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'entries-size-0.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-entries-size-0.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        assert len(dfs.entries) == 16
+
+        entries = {entry.type : entry.value for entry in dfs.entries}
+        assert entries[0]  == None #defined with size 0
+
+        assert dfs.record_type             == None
+        assert dfs.spec_block_type         == None
+        assert dfs.frame_size              == None
+        assert dfs.direction               == None
+        assert dfs.optical_log_depth_units == None
+        assert dfs.reference_point         == None
+        assert dfs.reference_point_units   == None
+        assert dfs.spacing                 == None
+        assert dfs.spacing_units           == None
+        assert dfs.max_frames              == None
+        assert dfs.absent_value            == None
+        assert dfs.depth_mode              == None
+        assert dfs.depth_units             == None
+        assert dfs.depth_reprc             == None
+        assert dfs.spec_block_subtype      == None
 
 def test_entries_cut_in_fixed():
     path = 'data/lis/records/curves/dfsr-entries-cut-fixed.lis.part'
