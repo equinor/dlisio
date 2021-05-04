@@ -158,6 +158,28 @@ def test_entries_size_0_values(tmpdir, merge_lis_prs):
         assert dfs.depth_reprc             == None
         assert dfs.spec_block_subtype      == None
 
+def test_entries_same_type(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'entries-same-type.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-entries-same-type.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        entries = [entry.value
+                   for entry in dfs.entries
+                   if entry.type == int(core.lis_ebtype.up_down_flag)]
+        assert entries  == [1, 255]
+
+        with pytest.raises(ValueError) as exc:
+            _ = dfs.direction
+        msg = "Multiple Entry Blocks of type lis_ebtype.up_down_flag"
+        assert msg in str(exc.value)
+
 def test_entries_cut_in_fixed():
     path = 'data/lis/records/curves/dfsr-entries-cut-fixed.lis.part'
     with lis.load(path) as (f,):
