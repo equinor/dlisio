@@ -28,24 +28,6 @@ def test_dfsr_dtype():
 
         assert dtype == expected
 
-def test_read_curves():
-    path = 'data/lis/MUD_LOG_1.LIS'
-
-    #TODO proper curves testing
-    with lis.load(path) as (lf, *tail):
-        dfs = lf.data_format_specs()[1]
-        curves = lis.curves(lf, dfs)
-
-        assert len(curves) == 3946
-
-        ch = curves['DEPT'][0:5]
-        expected = np.array([145.0, 146.0, 147.0, 148.0, 149.0])
-        np.testing.assert_array_equal(expected, ch)
-
-        ch = curves['BDIA'][0:5]
-        expected = np.array([36.0, 36.0, 36.0, 36.0, 36.0])
-        np.testing.assert_array_equal(expected, ch)
-
 
 headers = [
     'data/lis/records/RHLR-1.lis.part',
@@ -214,12 +196,6 @@ def test_entries_invalid_repcode():
         with pytest.raises(RuntimeError) as exc:
             _ = f.data_format_specs()
         assert "unknown representation code 83" in str(exc.value)
-
-#TODO:
-# depending on where transformation is going to happen, next tests are needed
-# in Python or in C++:
-# - Terminator of 00 length (at the moment random value is returned to python)
-# - UP/DOWN flag, Optical Log Scale Units, Depth mode values
 
 
 def test_dfsr_subtype0(tmpdir, merge_lis_prs):
@@ -495,17 +471,6 @@ def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
         assert "Invalid number of entries per sample" in str(exc.value)
 
 
-# DEPTH:
-# 1. placeholders. currently expected behavior may be changed on implementation
-# 2. more tests needed if depth can be negative
-# 3. might need test mode = 0, direction flag inconsistent with actual direction
-# if we decide to implement any checks
-# 4. Issues with inconsistent spacing and units: if depth units (14) != frame
-# spacing units (9), we might have problems with defining inconsistency
-# 5. Some information can be checked or deduced if certain entries are missing.
-# Suggestion is to fail on all wrong or missing important information cases
-# until we get the real file with these situations.
-
 def test_depth_mode_1_dir_down_nospace(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'depth-dir-down.lis')
 
@@ -714,20 +679,11 @@ def test_fdata_dimensional_ints(tmpdir, merge_lis_prs):
         expected = np.array([3, 6])
         np.testing.assert_array_equal(expected, curves['CH02'])
 
-# fdata - should we allow skipping broken channels for whatever reason?
-# at the moment we do that for suppressed and fast channels, but not in case
-# where samples=1, size>0
-# while the situation is unlikely to arise in real world, it creates
-# inconsistency
-@pytest.mark.parametrize('dfsr_filename, msg', [
-    ('dfsr-dimensional-bad.lis.part', 'cannot have multiple entries per sample'),
-    ('dfsr-suppressed-bad.lis.part', 'Invalid number of entries per sample')
-])
-def test_fdata_dimensional_bad(tmpdir, merge_lis_prs, dfsr_filename, msg):
+def test_fdata_dimensional_bad(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'dimensional-bad.lis')
 
     content = headers + [
-        'data/lis/records/curves/' + dfsr_filename,
+        'data/lis/records/curves/dfsr-dimensional-bad.lis.part',
     ] + trailers
 
     merge_lis_prs(fpath, content)
@@ -736,7 +692,7 @@ def test_fdata_dimensional_bad(tmpdir, merge_lis_prs, dfsr_filename, msg):
         dfs = f.data_format_specs()[0]
         with pytest.raises(ValueError) as exc:
             _ = lis.curves(f, dfs)
-        assert msg in str(exc.value)
+        assert 'cannot have multiple entries per sample' in str(exc.value)
 
 
 def test_fdata_suppressed(tmpdir, merge_lis_prs):
@@ -760,6 +716,21 @@ def test_fdata_suppressed(tmpdir, merge_lis_prs):
             _ = curves['CH02']
         with pytest.raises(ValueError):
             _ = curves['CH04']
+
+def test_fdata_suppressed_bad(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'suppressed-bad.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-suppressed-bad.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves(f, dfs)
+        assert 'Invalid number of entries per sample' in str(exc.value)
 
 
 def test_fdata_fast_channel_skip(tmpdir, merge_lis_prs):
@@ -803,8 +774,6 @@ def test_fdata_fast_channel_ints(tmpdir, merge_lis_prs):
 
         curves = lis.curves(f, dfs, sample_rate=1)
         assert curves.dtype == np.dtype([('CH01', 'i4'), ('CH03', 'i4')])
-
-        curves = lis.curves(f, dfs, sample_rate=1)
         expected = np.array([1, 5])
         np.testing.assert_array_equal(curves['CH01'], expected)
 
@@ -893,9 +862,7 @@ def test_fdata_fast_channel_dimensional(tmpdir, merge_lis_prs):
         expected = np.array([[2, 3, 4],  [5, 6, 7], [10, 11, 12], [13, 14, 15]])
         np.testing.assert_array_equal(curves['CH02'], expected)
 
-# 1. depending on implementation might need test where depth_mode=1,
-# but spacing is not present. We still might try to deduce it.
-# 2. unclear if this must have any impact on depth when depth_mode=0
+
 def test_fdata_fast_channel_depth(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-depth.lis')
 
@@ -979,10 +946,6 @@ def test_fdata_fast_channel_up(tmpdir, merge_lis_prs):
         expected = np.array([6, 7, 2, 3, -2, -3, -6, -7])
         np.testing.assert_array_equal(curves['CH02'], expected)
 
-# broken DEPTH0 as index
-# unclear if that should matter at all for non-fast channels setups
-# also unclear if we should care, or if inconsistent index is user's problem
-# at least warning would be nice though.
 @pytest.mark.xfail(strict=True)
 def test_fdata_fast_channel_index_direction_mixed(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'fast-channel-index-dir-mixed.lis')
