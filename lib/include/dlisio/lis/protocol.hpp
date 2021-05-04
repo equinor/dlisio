@@ -271,6 +271,11 @@ struct spec_block1 : public detail::spec_block {
 spec_block0 read_spec_block0(const record&, std::size_t) noexcept (false);
 spec_block1 read_spec_block1(const record&, std::size_t) noexcept (false);
 
+using spec_block_type = mpark::variant<
+    lis::spec_block0,
+    lis::spec_block1
+>;
+
 /** Data Format Specification Record (DFSR)
  *
  * Contains all information needed to parse the sub-sequent implicit (normal
@@ -286,8 +291,8 @@ spec_block1 read_spec_block1(const record&, std::size_t) noexcept (false);
  */
 struct dfsr {
     record_info info;
-    std::vector< entry_block >        entries;
-    std::vector< detail::spec_block > specs;
+    std::vector< entry_block >    entries;
+    std::vector< spec_block_type> specs;
 };
 
 dfsr parse_dfsr( const lis::record& ) noexcept (false);

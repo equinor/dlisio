@@ -354,11 +354,41 @@ noexcept (false) {
 
 namespace {
 
-template < typename T >
-void read_spec_block( const lis::record& rec, std::size_t offset, T& spec )
+/* Visitor for lis::value_type
+ *
+ * Check if the _value_ held by the variant equals "val", regardless of the
+ * type held by the variant. It follows normal C++ comparison rules
+ * between different numeric types.
+ */
+struct contains_numeric_value {
+    explicit contains_numeric_value( float val ) : val(val) {};
+
+    template <
+        typename T,
+        typename std::enable_if<
+            std::is_arithmetic< typename T::value_type >::value>::type* = nullptr
+    >
+    bool operator()( const T& x ) const noexcept (true) {
+        return val == lis::decay(x);
+    }
+
+    template < typename T >
+    bool operator ()( T&& ) const noexcept (true) {
+        return false;
+    }
+
+private:
+    float val;
+};
+
+bool contains_numeric( const lis::value_type& x, float val )
 noexcept (false) {
-    const auto* cur = rec.data.data() + offset;
-    const auto* end = rec.data.data() + rec.data.size();
+    return mpark::visit(contains_numeric_value{val}, x);
+}
+
+template < typename T >
+void read_spec_block( const char* cur, const char* end, T& spec )
+noexcept (false) {
 
     if ( std::distance(cur, end) < T::size ) {
         const auto msg = "lis::spec_block: "
@@ -373,28 +403,53 @@ noexcept (false) {
     cur = cast( cur, spec.service_id,       6 );
     cur = cast( cur, spec.service_order_nr, 8 );
     cur = cast( cur, spec.units,            4 );
-    cur += 4;                       // Skip API codes
+    cur += 4;                       // Skip subtype-specific fields
     cur = cast( cur, spec.filenr );
     cur = cast( cur, spec.reserved_size );
     cur += (2*padbyte);             // Skip padding
-    cur += 1;                       // Skip process level
+    cur += 1;                       // Skip subtype-specific fields
     cur = cast( cur, spec.samples );
     cast( cur, spec.reprc );
-    // Skip 1 padbyte
-    // Skip last 4 bytes (Process indicators)
 }
 
 } // namespace
 
 spec_block0 read_spec_block0(const record& rec, std::size_t offset) noexcept (false) {
+    const auto* cur = rec.data.data() + offset;
+    const auto* end = rec.data.data() + rec.data.size();
+
     lis::spec_block0 spec;
-    read_spec_block(rec, offset, spec);
+    read_spec_block(cur, end, spec);
+
+    /* Skip to API codes */
+    cur += 22;
+    cur = cast( cur, spec.api_log_type    );
+    cur = cast( cur, spec.api_curve_type  );
+    cur = cast( cur, spec.api_curve_class );
+    cur = cast( cur, spec.api_modifier    );
+
+    /* Skip to process level */
+    cur += 6;
+    cast( cur, spec.process_level );
+
     return spec;
 }
 
 spec_block1 read_spec_block1(const record& rec, std::size_t offset) noexcept (false) {
+    const auto* cur = rec.data.data() + offset;
+    const auto* end = rec.data.data() + rec.data.size();
+
     lis::spec_block1 spec;
-    read_spec_block(rec, offset, spec);
+    read_spec_block(cur, end, spec);
+
+    /* Skip to API codes */
+    cur += 22;
+    cur = cast( cur, spec.api_codes );
+
+    /* Skip to process_indicators */
+    cur += 9;
+    cast( cur, spec.process_indicators, 5 );
+
     return spec;
 }
 
@@ -402,17 +457,21 @@ lis::dfsr parse_dfsr( const lis::record& rec ) noexcept (false) {
     lis::dfsr formatspec;
     formatspec.info = rec.info; //carry over the header information of the record
 
-    std::uint8_t subtype = 0;
+    int subtype = 0;
     std::size_t offset = 0;
 
     while (true) {
         const auto entry = read_entry_block(rec, offset);
         const auto type  = static_cast< lis::entry_type >(lis::decay(entry.type));
 
-        offset += lis::entry_block::fixed_size + lis::decay(entry.size);
+        if ( type == lis::entry_type::spec_bloc_subtype ) {
+            if ( contains_numeric( entry.value, 1 ) ) {
+                subtype = 1;
+            }
+        }
 
+        offset += lis::entry_block::fixed_size + lis::decay(entry.size);
         formatspec.entries.push_back( std::move(entry) );
-        // TODO swich on subtype based on entry block
 
         if ( type == lis::entry_type::terminator )
             break;

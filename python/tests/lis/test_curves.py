@@ -176,16 +176,19 @@ def test_dfsr_subtype0(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         ch1 = dfs.specs[0]
-        assert ch1.mnemonic == "CH01"
-        assert ch1.service_id == "testCH"
+        assert ch1.mnemonic         == "CH01"
+        assert ch1.service_id       == "testCH"
         assert ch1.service_order_nr == "  1234  "
-        assert ch1.units == "INCH"
-        #assert ch1.api_codes == "45310011" #unsupported
-        assert ch1.filenr == 1
-        assert ch1.reserved_size == 4
-        #assert ch1.process_level == "FF" #unsupported
-        assert ch1.samples == 1
-        assert ch1.reprc == 73 #should this be int32 instead?
+        assert ch1.units            == "INCH"
+        assert ch1.api_log_type     == 2
+        assert ch1.api_curve_type   == 179
+        assert ch1.api_curve_class  == 96
+        assert ch1.api_modifier     == 59
+        assert ch1.filenr           == 1
+        assert ch1.reserved_size    == 4
+        assert ch1.process_level    == 255
+        assert ch1.samples          == 1
+        assert ch1.reprc            == 73
 
         curves = lis.curves(f, dfs)
         assert len(curves) == 0
@@ -202,16 +205,16 @@ def test_dfsr_subtype1(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
         ch1 = dfs.specs[0]
-        assert ch1.mnemonic == "CH01"
-        assert ch1.service_id == "testCH"
-        assert ch1.service_order_nr == "  1234  "
-        assert ch1.units == "INCH"
-        #assert ch1.api_codes == "45310011" #unsupported
-        assert ch1.filenr == 1
-        assert ch1.reserved_size == 4
-        assert ch1.samples == 1
-        assert ch1.reprc == 73 #should this be int32 instead?
-        #assert ch1.process_indicators == "FF FF FF FF FF" #unsupported
+        assert ch1.mnemonic           == "CH01"
+        assert ch1.service_id         == "testCH"
+        assert ch1.service_order_nr   == "  1234  "
+        assert ch1.units              == "INCH"
+        assert ch1.api_codes          == 45310011
+        assert ch1.filenr             == 1
+        assert ch1.reserved_size      == 4
+        assert ch1.samples            == 1
+        assert ch1.reprc              == 73
+        assert ch1.process_indicators == b'\xff\xff\xff\xff\xff'
 
         curves = lis.curves(f, dfs)
         assert len(curves) == 0

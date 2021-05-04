@@ -779,8 +779,12 @@ void init_lis_extension(py::module_ &m) {
         .def_readonly( "reprc",            &lis::detail::spec_block::reprc            )
     ;
 
-    py::class_< lis::spec_block0, lis::detail::spec_block >( m, "spec_block0" )
-        // TODO implement spec_block 0 specific fields
+    py::class_< lis::spec_block0, lis::detail::spec_block >( m, "spec_block_0" )
+        .def_readonly( "api_log_type",    &lis::spec_block0::api_log_type    )
+        .def_readonly( "api_curve_type",  &lis::spec_block0::api_curve_type  )
+        .def_readonly( "api_curve_class", &lis::spec_block0::api_curve_class )
+        .def_readonly( "api_modifier",    &lis::spec_block0::api_modifier    )
+        .def_readonly( "process_level",   &lis::spec_block0::process_level   )
         .def( "__repr__", [](const lis::spec_block0& x) {
             return "dlisio.core.spec_block0(mnemonic={})"_s.format(
                 x.mnemonic
@@ -788,8 +792,9 @@ void init_lis_extension(py::module_ &m) {
         })
     ;
 
-    py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block1" )
-        // TODO implement spec_block 1 specific fields
+    py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block_1" )
+        .def_readonly( "api_codes",          &lis::spec_block1::api_codes          )
+        .def_readonly( "process_indicators", &lis::spec_block1::process_indicators )
         .def( "__repr__", [](const lis::spec_block1& x) {
             return "dlisio.core.spec_block1(mnemonic={})"_s.format(
                 x.mnemonic
