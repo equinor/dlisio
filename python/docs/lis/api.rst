@@ -313,6 +313,181 @@ LIS Structures
 
 Other structures defined by LIS79
 
+.. class:: dlisio.core.spec_block_0()
+
+    Spec Block - Subtype 0
+
+    A Spec Block contains information needed to correctly parse one channel from
+    a frame. It also contains useful information such as the units of the curve
+    measurement.
+
+    .. note::
+        For those familiar with DLIS, Spec Blocks are analogous to DLIS
+        Channels :class:`dlisio.dlis.Channel`.
+
+    .. attribute:: mnemonic
+
+        Name of the channel
+
+        :type: str
+
+    .. attribute:: service_id
+
+        The service ID identifies the tool, the tool string used to measure the
+        datum, or the name of the computed product.
+
+        :type: str
+
+    .. attribute:: service_order_nr
+
+        A unique number which identifies the logging trip to the well-site.
+
+        :type: str
+
+    .. attribute:: units
+
+        Units of the channel
+
+        :type: str
+
+    .. attribute:: file_nb
+
+        Indicates the file number at the time the data was first acquired and
+        written (for well-site data acquisitions only). This number, together
+        with service_id and service_order_nr will uniquely identify any data
+        string for the purpose of merging or other processing.
+
+        :type: int
+
+    .. attribute:: reserved_size
+
+        The number of bytes reserved for this channel in the frame. If size is
+        negative, the output is suppressed. The space is still reserved, and is
+        the absolute value of this entry.
+
+        :type: int
+
+    .. attribute:: samples
+
+        The number of samples recorded per frame. When samples == 1, the
+        channel is sampled at the same interval as the index of the frame.
+
+        :type: int
+
+    .. attribute:: reprc
+
+        The type of the recorded channel data. This number refers to one of the
+        LIS79-defined data types.
+
+        :type: int
+
+    .. attribute:: api_log_type
+
+        This, together with the attributes :attr:`api_curve_type`,
+        :attr:`api_curve_class` and :attr:`api_modifier` form a largly outdated
+        log/curve code system utilizing a 2 digit curve code. Ref API Bulletin
+        D-9 Feb '79.
+
+        :type: int
+
+    .. attribute:: api_curve_type
+
+        See :attr:`api_log_type`.
+
+        :type: int
+
+    .. attribute:: api_curve_class
+
+        See :attr:`api_log_type`.
+
+        :type: int
+
+    .. attribute:: api_modifier
+
+        See :attr:`api_log_type`.
+
+        :type: int
+
+    .. attribute:: process_level
+
+        Process level is a measure of the amount of processing done to obtain
+        the curve. The size of the number increases in proportion to the amount
+        of processing. However, the system has never been objectively defined.
+
+        :type: int
+
+.. class:: dlisio.core.spec_block_1()
+
+    Spec Block - Subtype 1
+
+    Spec Blocks subtype 1 share most of its attributes with
+    :class:`dlisio.core.spec_block_0`. However, there are 3 notable differences:
+
+    - The ``api_*``-attributes are replaced with :attr:`api_codes`
+    - Subtype 1 has no ``process_level``
+    - Subtype 1 defines :attr:`process_indicators`, which do not exist in subtype 0.
+
+    .. attribute:: mnemonic
+    .. attribute:: service_id
+    .. attribute:: service_order_nr
+    .. attribute:: units
+    .. attribute:: file_nb
+    .. attribute:: reserved_size
+    .. attribute:: samples
+    .. attribute:: reprc
+    .. attribute:: api_codes
+
+        API codes form a log/curve system featuring a 3-digit curve code (Ref:
+        API Bulletin D-9 Jul '79). The API codes are represented as a 32 bit
+        integer. The 8-digit number can be masked out to dd/ddd/dd/d. E.g
+        ``45310011`` should be interpreted as::
+
+        - Log Type    = 45
+        - Curve Type  = 310
+        - Curve Class = 01
+        - Modifier    = 1
+
+        :type: int
+
+    .. attribute:: process_indicators
+
+        Process Indicators are used to define different processes or
+        corrections that have been performed on the channel. The process
+        indicators are defined as a bit-mask of 40 bits:
+
+        ======= ===========================================
+        Bit nr  Definition
+        ======= ===========================================
+        0-1     Original logging direction [1]
+        2       True vertical depth correction
+        3       Data channel not on depth
+        4       Data channel is filtered
+        5       Data channel is calibrated
+        6       Computed (processed thru a function former)
+        7       Derived (computed from more than one tool)
+        8       Tool defined correction Nb 2
+        9       Tool defined correction Nb 1
+        10      Mudcake correction
+        11      Lithology correction
+        12      Inclinometry correction
+        13      Pressure correction
+        14      Hole size correction
+        15      Temperature correction
+        22      Auxiliary data flag
+        23      Schlumberger proprietary
+        ======= ===========================================
+
+        A value of 1 for a specific bit means that the correction or process is
+        applied. Note that bits not listed in the table are undefined /
+        unassigned  by LIS79.
+
+        [1] Bits 0 and 1 form a single entry that defines the original logging
+        direction for this channel. A value of '01' indicates down-hole. '10'
+        indicated up-hole, while '00' indicates an ambiguous direction. I.e.
+        stationary. '11' is undefined.
+
+        :type: bytes
+
 .. class:: dlisio.core.component_block()
 
    Component Block (CB)
