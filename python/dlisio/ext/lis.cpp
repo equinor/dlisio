@@ -73,7 +73,8 @@ template <>
 handle lis_caster< lis::mask >::cast(const lis::mask& src,
                                      return_value_policy,
                                      handle) {
-    return dlisio::detail::decode_str(lis::decay(src));
+    auto pysrc = py::bytes(lis::decay(src));
+    return pysrc.release();
 }
 /*
  * Now *register* the strong-typedef type casters with pybind, so that py::cast
