@@ -388,6 +388,8 @@ def validate_dfsr(dfsr):
     mode = dfsr.depth_mode
     if mode != 0 and mode != 1:
         raise ValueError("Invalid depth recording mode")
+    if not len(dfsr.specs):
+        raise ValueError("{} has no channels".format(dfsr))
 
     index_mnem = dfsr.specs[0].mnemonic if mode == 0 else 'DEPT'
     index_repr = dfsr.specs[0].reprc    if mode == 0 else dfsr.depth_reprc
@@ -413,6 +415,11 @@ def validate_dfsr(dfsr):
             raise ValueError(msg)
 
     for spec in dfsr.specs:
+        if spec.reserved_size == 0:
+            msg =  "Invalid size ({}) for curve {}, "
+            msg += "should be != 0)"
+            raise ValueError(msg.format(spec.reserved_size, spec.mnemonic))
+
         if spec.samples < 1:
             msg =  "Invalid number of samples ({}) for curve {}, "
             msg += "should be > 0)"

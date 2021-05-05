@@ -36,6 +36,8 @@ dfsr-entries-cut-fixed.lis.part Entry data is cut after size
 dfsr-entries-cut-value.lis.part Entry data is cut in the value
 dfsr-entries-default.lis.part   No entries but terminator defined.
 dfsr-entries-defined.lis.part   All entries have a value.
+dfsr-entries-same-type.lis.part Two entries of same type but different values.
+dfsr-entries-size-0.lis.part    All defined entries have size 0.
 dfsr-fast-conversion.lis.part   CH01 has 1 int sample, CH02 has 2 int samples.
 dfsr-fast-depth.lis.part        Depth default file, but Frame Spacing (8): 2.
                                 CH01 has 2 byte samples. CH02 has 1 int32 sample
