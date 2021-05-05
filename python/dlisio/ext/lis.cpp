@@ -73,7 +73,8 @@ template <>
 handle lis_caster< lis::mask >::cast(const lis::mask& src,
                                      return_value_policy,
                                      handle) {
-    return dlisio::detail::decode_str(lis::decay(src));
+    auto pysrc = py::bytes(lis::decay(src));
+    return pysrc.release();
 }
 /*
  * Now *register* the strong-typedef type casters with pybind, so that py::cast
@@ -768,18 +769,22 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::detail::spec_block >( m, "spec_block" )
-        .def_readonly( "mnemonic",         &lis::spec_block0::mnemonic         )
-        .def_readonly( "service_id",       &lis::spec_block0::service_id       )
-        .def_readonly( "service_order_nr", &lis::spec_block0::service_order_nr )
-        .def_readonly( "units",            &lis::spec_block0::units            )
-        .def_readonly( "filenr",           &lis::spec_block0::filenr           )
-        .def_readonly( "reserved_size",    &lis::spec_block0::reserved_size    )
-        .def_readonly( "samples",          &lis::spec_block0::samples          )
-        .def_readonly( "reprc",            &lis::spec_block0::reprc            )
+        .def_readonly( "mnemonic",         &lis::detail::spec_block::mnemonic         )
+        .def_readonly( "service_id",       &lis::detail::spec_block::service_id       )
+        .def_readonly( "service_order_nr", &lis::detail::spec_block::service_order_nr )
+        .def_readonly( "units",            &lis::detail::spec_block::units            )
+        .def_readonly( "filenr",           &lis::detail::spec_block::filenr           )
+        .def_readonly( "reserved_size",    &lis::detail::spec_block::reserved_size    )
+        .def_readonly( "samples",          &lis::detail::spec_block::samples          )
+        .def_readonly( "reprc",            &lis::detail::spec_block::reprc            )
     ;
 
-    py::class_< lis::spec_block0, lis::detail::spec_block >( m, "spec_block0" )
-        // TODO implement spec_block 0 specific fields
+    py::class_< lis::spec_block0, lis::detail::spec_block >( m, "spec_block_0" )
+        .def_readonly( "api_log_type",    &lis::spec_block0::api_log_type    )
+        .def_readonly( "api_curve_type",  &lis::spec_block0::api_curve_type  )
+        .def_readonly( "api_curve_class", &lis::spec_block0::api_curve_class )
+        .def_readonly( "api_modifier",    &lis::spec_block0::api_modifier    )
+        .def_readonly( "process_level",   &lis::spec_block0::process_level   )
         .def( "__repr__", [](const lis::spec_block0& x) {
             return "dlisio.core.spec_block0(mnemonic={})"_s.format(
                 x.mnemonic
@@ -787,8 +792,9 @@ void init_lis_extension(py::module_ &m) {
         })
     ;
 
-    py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block1" )
-        // TODO implement spec_block 1 specific fields
+    py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block_1" )
+        .def_readonly( "api_codes",          &lis::spec_block1::api_codes          )
+        .def_readonly( "process_indicators", &lis::spec_block1::process_indicators )
         .def( "__repr__", [](const lis::spec_block1& x) {
             return "dlisio.core.spec_block1(mnemonic={})"_s.format(
                 x.mnemonic

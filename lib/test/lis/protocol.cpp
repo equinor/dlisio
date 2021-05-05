@@ -204,7 +204,7 @@ TEST_CASE("Spec Block", "[protocol]") {
         0x53, 0x4C, 0x42, 0x20, 0x20, 0x20,             // "SLB     " (blank)
         0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x35, 0x34, // "      54"
         0x2E, 0x31, 0x49, 0x4E,                         // ".1IN"
-        0x30, 0x31, 0x32, 0x33,                         // 0123
+        0x2D, 0x1F, 0x00, 0x0B, // 45;31;00;11 as 4 x uint8 or 757006347 as int32
         0x00, 0x01,                                     // 1
         0x00, 0x08,                                     // size
         0x20, 0x20,                                     // pad-byte
@@ -221,15 +221,36 @@ TEST_CASE("Spec Block", "[protocol]") {
         CHECK( lis::decay(spec.service_id)       == std::string("SLB   ")   );
         CHECK( lis::decay(spec.service_order_nr) == std::string("      54") );
         CHECK( lis::decay(spec.units)            == std::string(".1IN")     );
-        // TODO API codes
-        CHECK( lis::decay(spec.filenr)        == 1 );
-        CHECK( lis::decay(spec.reserved_size) == 8 );
-        CHECK( lis::decay(spec.samples)       == 2 );
-        CHECK( lis::decay(spec.reprc)         == 68 );
+        CHECK( lis::decay(spec.api_log_type)     == 45 );
+        CHECK( lis::decay(spec.api_curve_type)   == 31 );
+        CHECK( lis::decay(spec.api_curve_class)  == 0  );
+        CHECK( lis::decay(spec.api_modifier)     == 11 );
+        CHECK( lis::decay(spec.filenr)           == 1  );
+        CHECK( lis::decay(spec.reserved_size)    == 8  );
+        CHECK( lis::decay(spec.process_level)    == 32 );
+        CHECK( lis::decay(spec.samples)          == 2  );
+        CHECK( lis::decay(spec.reprc)            == 68 );
     }
 
-    SECTION("Well-formatted sub-type 1 can be read") {}
-    SECTION("Too little data to parse entry") { /* TODO */ }
+    SECTION("Well-formatted sub-type 1 can be read") {
+        const auto spec = lis::read_spec_block1( rec, 0 );
+
+        CHECK( lis::decay(spec.mnemonic)           == std::string("DEPT")     );
+        CHECK( lis::decay(spec.service_id)         == std::string("SLB   ")   );
+        CHECK( lis::decay(spec.service_order_nr)   == std::string("      54") );
+        CHECK( lis::decay(spec.units)              == std::string(".1IN")     );
+        CHECK( lis::decay(spec.api_codes)          == 757006347 );
+        CHECK( lis::decay(spec.filenr)             == 1  );
+        CHECK( lis::decay(spec.reserved_size)      == 8  );
+        CHECK( lis::decay(spec.samples)            == 2  );
+        CHECK( lis::decay(spec.reprc)              == 68 );
+        CHECK( lis::decay(spec.process_indicators) == std::string("     ") );
+    }
+
+    SECTION("Too little data to parse entry") {
+        CHECK_THROWS_AS( lis::read_spec_block1( rec, 10 ),
+                         std::runtime_error );
+    }
 }
 
 TEST_CASE("Data Format Specification Record", "[protocol]") {
@@ -261,7 +282,8 @@ TEST_CASE("Data Format Specification Record", "[protocol]") {
     CHECK( formatspec.specs.size()   == 1 );
 
     const auto entry = formatspec.entries.at(0);
-    const auto spec  = formatspec.specs.at(0);
+    const auto sb    = formatspec.specs.at(0);
+    const auto spec  = mpark::get< lis::spec_block0 >(sb);
 
     CHECK( lis::decay(entry.type)  == 0  );
     CHECK( lis::decay(entry.size)  == 1  );

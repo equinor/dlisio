@@ -53,6 +53,17 @@ class DataFormatSpec():
         Gives access to the underlying Spec Blocks. A Spec Block is the LIS79
         structure that defines channels/curves. Each Spec Block defines one
         channel and its properties.
+
+        LIS79 defines 2 different Spec Block types, namely subtype 0 and 1.
+        These mostly share the same attributes, but there are a couple of
+        attributes that differ between the 2 subtypes. :attr:`spec_block_type`
+        defines which of the 2 subtypes is being used in the DFSR.
+
+        See also
+        --------
+
+        dlisio.core.spec_block_0 : Speck Block - subtype 0
+        dlisio.core.spec_block_1 : Speck Block - subtype 1
         """
         return self.attic.specs
 
