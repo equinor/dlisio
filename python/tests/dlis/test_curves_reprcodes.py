@@ -393,8 +393,11 @@ def test_datetime_invalid():
         _ = load_curves(fpath)
     assert "ValueError: day is out of range for month" in str(excinfo.value)
 
-def test_fmt_broken():
-    fpath = 'data/chap4-7/iflr/broken-fmt.dlis'
+@pytest.mark.parametrize('fpath', [
+    'data/chap4-7/iflr/broken-fmt.dlis',
+    'data/chap4-7/iflr/broken-fmt-multiframe.dlis',
+])
+def test_fmt_broken(fpath):
     with pytest.raises(RuntimeError) as exc:
         _ = load_curves(fpath)
     assert "fmtstr would read past end" in str(exc.value)

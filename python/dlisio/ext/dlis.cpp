@@ -638,7 +638,6 @@ noexcept (false) {
     assert(std::string(pre_fmt) == "");
     assert(std::string(post_fmt) == "");
 
-    auto record_dst = dst;
     std::size_t frames = 0;
 
     const auto handle = [&]( const std::string& problem ) {
@@ -650,14 +649,9 @@ noexcept (false) {
         const auto debug = abs_msg + ", " + frames_msg;
         errorhandler.log(dl::error_severity::CRITICAL, context, problem, "",
                          "Record is skipped", debug);
-        // we update the buffer as we go. Hence if error happened we need to
-        // go back and start rewriting updated data
-        dst = record_dst;
     };
 
     for (auto i : indices) {
-        record_dst = dst;
-
         /* get record */
         dl::record record;
         try {
@@ -685,6 +679,13 @@ noexcept (false) {
                               itemsize, allocated_rows, resize);
         } catch (std::exception& e) {
             handle(e.what());
+            /* When failing to write a frame (row) to dst, position of the dst
+             * pointer is left in an undefined state. I.e. it may be left
+             * anywhere within the partially written row. We discard the row
+             * completely by rewinding the dst pointer back to the start of the
+             * row.
+             */
+            dst = static_cast< unsigned char* >(info.ptr) + (frames * itemsize);
         }
         assert(allocated_rows >= frames);
     }
