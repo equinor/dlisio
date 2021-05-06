@@ -187,6 +187,23 @@ def test_inforec_empty_table():
 
     np.testing.assert_array_equal(wellsite.table(), np.empty(0))
 
+def test_inforec_empty_components():
+    path = 'data/lis/records/inforec_08.lis'
+    f, = lis.load(path)
+    wellsite = f.wellsite_data()[0]
+
+    assert wellsite.isstructured()
+    table = wellsite.table(simple=True)
+
+    mnem = np.array(['MN1 ', 'MN2 '], dtype='O')
+    np.testing.assert_array_equal(table['MNEM'], mnem)
+
+    puni = np.array(['val1', 'val2'], dtype='O')
+    np.testing.assert_array_equal(table['VALU'], puni)
+
+    valu = np.array([None, None,], dtype='O')
+    np.testing.assert_array_equal(table['ATTR'], valu)
+
 def test_inforec_cut_in_fixed_size():
     path = 'data/lis/records/inforec-cut-in-fixed.lis.part'
     f, = lis.load(path)
