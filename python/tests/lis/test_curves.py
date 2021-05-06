@@ -471,6 +471,29 @@ def test_fdata_size_less_than_repcode_size(tmpdir, merge_lis_prs):
         assert "Invalid number of entries per sample" in str(exc.value)
 
 
+def test_fdata_many_frames_per_record(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'many-frames-per-record.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-simple.lis.part',
+        'data/lis/records/curves/fdata-frames-in-record.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        dfs = f.data_format_specs()[0]
+
+        curves = lis.curves(f, dfs)
+        assert len(curves) == 4
+        expected = np.array([1, 4, 7, 10])
+        np.testing.assert_array_equal(curves['CH01'], expected)
+        expected = np.array([2, 5, 8, 11])
+        np.testing.assert_array_equal(curves['CH02'], expected)
+        expected = np.array([3, 6, 9, 12])
+        np.testing.assert_array_equal(curves['CH03'], expected)
+
+
 def test_depth_mode_1_dir_down_nospace(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'depth-dir-down.lis')
 

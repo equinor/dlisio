@@ -124,7 +124,7 @@ out-of-order-framenos-two-frames.dlis            2 frames in 2 FDATA with decrea
 out-of-order-framenos-two-frames-multifdata.dlis Frame numbers would be in correct order if FDATA
                                                  order is switched.
 
-two-various-fdata-in-one-iflr.dlis               2 frames in one FDATA, with multiple channels
+various-fdata-in-one-iflr.dlis                   3 frames in one FDATA, with multiple channels
 
 ================================================ ==================================================
 

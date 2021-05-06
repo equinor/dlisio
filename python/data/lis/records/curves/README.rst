@@ -117,6 +117,7 @@ fdata-fast-two-diff.lis.part    Data: 1, (2, 3)s, (4, 5, 6)s, 13;
                                 7, (8, 9)s, (10, 11, 12)s, 14;
 fdata-fast-two-same.lis.part    Data: 1, (2, 3)s, (4, 5)s;
                                 9, (10, 11)s, (12, 13);
+fdata-frames-in-record.lis.part Data: 1, 2, 3; 4, 5, 6; 7, 8, 9; 10, 11, 12;
 fdata-repcodes-fixed.lis.part   One frame of data with fixed-size values
 fdata-repcodes-mask.lis.part    One frame of data with index and mask value
 fdata-repcodes-string.lis.part  One frame of data with index and string value

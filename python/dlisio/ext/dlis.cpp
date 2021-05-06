@@ -542,7 +542,7 @@ void read_fdata_record(const char* pre_fmt,
                        unsigned char*& dst,
                        std::size_t& frames,
                        const std::size_t& itemsize,
-                       std::size_t allocated_rows,
+                       std::size_t& allocated_rows,
                        std::function<void (std::size_t)> resize)
 noexcept (false) {
 
@@ -685,11 +685,10 @@ noexcept (false) {
                               itemsize, allocated_rows, resize);
         } catch (std::exception& e) {
             handle(e.what());
-            continue;
         }
+        assert(allocated_rows >= frames);
     }
 
-    assert(allocated_rows >= frames);
     if (allocated_rows > frames)
         resize(frames);
 
