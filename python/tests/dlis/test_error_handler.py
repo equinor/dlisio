@@ -96,7 +96,20 @@ def test_curves_broken_fmt(assert_error):
         frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
         curves = frame.curves()
         assert_error("fmtstr would read past end")
+
+        assert len(curves) == 2
         assert np.array_equal(curves['FRAMENO'], np.array([1, 3]))
+
+def test_curves_broken_fmt_in_multirecord_frame(assert_error):
+    path = 'data/chap4-7/iflr/broken-fmt-multiframe.dlis'
+    with dlis.load(path, error_handler=errorhandler) as (f, *_):
+        frame = f.object('FRAME', 'FRAME-REPRCODE', 10, 0)
+        curves = frame.curves()
+        assert_error("fmtstr would read past end")
+
+        assert len(curves) == 8
+        expected =  np.array([1, 2, 3, 4, 5, 7, 8, 9])
+        assert np.array_equal(curves['FRAMENO'], expected)
 
 def test_parse_objects_unexpected_attribute_in_set(assert_error):
     path = 'data/chap3/explicit/broken-in-set.dlis'

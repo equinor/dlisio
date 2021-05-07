@@ -454,7 +454,7 @@ void read_data_record( const lis::record& src,
                        int& frames,
                        indexchannel& index,
                        const frameconfig& fconf,
-                       std::size_t allocated_rows,
+                       std::size_t& allocated_rows,
                        std::function<void (std::size_t)> resize )
 noexcept (false) {
 
@@ -554,9 +554,10 @@ noexcept (false) {
                           fconf,
                           allocated_rows,
                           resize );
+
+        assert(allocated_rows >= frames);
     }
 
-    assert(allocated_rows >= frames);
     if (allocated_rows > frames)
         resize(frames);
 

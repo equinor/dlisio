@@ -93,9 +93,14 @@ broken-ascii.dlis                                Ascii with incorrect specified 
                                                  characters are expected, but only 20 are actually
                                                  present
 
-broken-fmt.dlis                                  There is less data in first fdata record than it
-                                                 should be according to fmt string. Second IFLR is
-                                                 correct.
+broken-fmt.dlis                                  There is less data in second fdata record than it
+                                                 should be according to fmt string. First and third
+                                                 IFLR are correct.
+
+broken-fmt-multiframe.dlis                       1st and 3rd records contain 3 correct frames.
+                                                 2nd record contains two good frames and in third
+                                                 one there is less data than it should be according
+                                                 to fmt string.
 
 broken-utf8-ascii.dlis                           Ascii containing non-utf8 characters
 
@@ -124,7 +129,7 @@ out-of-order-framenos-two-frames.dlis            2 frames in 2 FDATA with decrea
 out-of-order-framenos-two-frames-multifdata.dlis Frame numbers would be in correct order if FDATA
                                                  order is switched.
 
-two-various-fdata-in-one-iflr.dlis               2 frames in one FDATA, with multiple channels
+various-fdata-in-one-iflr.dlis                   3 frames in one FDATA, with multiple channels
 
 ================================================ ==================================================
 

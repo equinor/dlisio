@@ -61,8 +61,8 @@ def test_curves_values(f):
     np.testing.assert_array_equal(curves['CHANN2'][2], val)
     np.testing.assert_array_equal(curves[2]['CHANN2'], val)
 
-def test_two_various_fdata_in_one_iflr():
-    fpath = 'data/chap4-7/iflr/two-various-fdata-in-one-iflr.dlis'
+def test_various_fdata_in_one_iflr():
+    fpath = 'data/chap4-7/iflr/various-fdata-in-one-iflr.dlis'
 
     curves = load_curves(fpath)
     assert curves[0][1] == datetime(1971, 3, 21, 18, 4, 14, 386000)
@@ -71,6 +71,9 @@ def test_two_various_fdata_in_one_iflr():
     assert curves[1][1] == datetime(1970, 3, 21, 18, 4, 14, 0)
     assert curves[1][2] == "SECOND-VALUE"
     assert curves[1][3] == -89
+    assert curves[2][1] == datetime(1969, 3, 21, 18, 4, 14, 0)
+    assert curves[2][2] == "THIRD-VALUE"
+    assert curves[2][3] == 122
 
 def test_framenos_out_of_order_one_frame():
     fpath = 'data/chap4-7/iflr/out-of-order-framenos-one-frame.dlis'
