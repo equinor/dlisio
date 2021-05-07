@@ -87,6 +87,21 @@ contribution to the open-source community.
 
    common-api
 
+.. toctree::
+   :caption: Q&A
+   :name: Q&A
+   :maxdepth: 1
+
+   beginner
+   errors
+
+.. toctree::
+   :caption: Advanced
+   :name: Advanced
+   :maxdepth: 0
+
+   investigation
+
 Indices and tables
 ==================
 
