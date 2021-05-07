@@ -195,6 +195,35 @@ TEST_CASE("Entry Block", "[protocol]") {
 
     SECTION("Can be read from arbitrary offset") { /* TODO */ }
     SECTION("Too little data to parse entry") { /* TODO */ }
+
+    SECTION("Too little data to parse entry") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x04, // Size
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("lis::entry_block: "
+                     "2 bytes left in record, expected at least 3"));
+    }
+
+    SECTION("Too little data to parse entry value") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x04, // Size
+            0x49, // Representation code 73 (lis::i32)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("lis::entry_block: "
+                     "1 bytes left in record, expected at least 4"));
+    }
+
 }
 
 TEST_CASE("Process indicators", "[protocol]") {
@@ -285,8 +314,10 @@ TEST_CASE("Spec Block", "[protocol]") {
     }
 
     SECTION("Too little data to parse entry") {
-        CHECK_THROWS_AS( lis::read_spec_block1( rec, 10 ),
-                         std::runtime_error );
+        CHECK_THROWS_WITH(
+            lis::read_spec_block1( rec, 10 ),
+            Contains("lis::spec_block: "
+                     "30 bytes left in record, expected at least 40"));
     }
 }
 
@@ -420,6 +451,20 @@ TEST_CASE("Component Block", "[protocol]") {
             0x45, // type
             0x49, // representation code 73 (lis::i32)
             0x04, // size
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("lis::component_block: "
+                     "3 bytes left in record, expected at least 12"));
+    }
+
+    SECTION("Too little data to parse component value") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x45, // type
+            0x49, // representation code 73 (lis::i32)
+            0x04, // size
             0x03, // category
             0x44, 0x45, 0x50, 0x54, // mnemonic
             0x2E, 0x31, 0x49, 0x4E, // units
@@ -427,7 +472,10 @@ TEST_CASE("Component Block", "[protocol]") {
             0x35, // Component
         };
 
-        CHECK_THROWS_AS(lis::read_component_block( rec, 0 ), dlisio::truncation_error);
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("lis::component_block: "
+                     "1 bytes left in record, expected at least 4"));
     }
 
     SECTION("Wrong type") {

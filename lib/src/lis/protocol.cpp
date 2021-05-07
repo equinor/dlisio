@@ -607,7 +607,7 @@ noexcept (false) {
         const auto msg = "lis::component_block: "
                          "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
-        throw dlisio::truncation_error( fmt::format(
+        throw std::runtime_error( fmt::format(
                     msg, left, lis::component_block::fixed_size) );
     }
 
@@ -626,7 +626,7 @@ noexcept (false) {
         const auto msg = "lis::component_block: "
                          "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
-        throw dlisio::truncation_error(fmt::format(msg, left, lis::decay(component.size)));
+        throw std::runtime_error(fmt::format(msg, left, lis::decay(component.size)));
     }
 
     if ( lis::decay(component.size) != 0 )
