@@ -193,8 +193,27 @@ TEST_CASE("Entry Block", "[protocol]") {
         CHECK( value == std::string(".1IN") );
     }
 
-    SECTION("Can be read from arbitrary offset") { /* TODO */ }
-    SECTION("Too little data to parse entry") { /* TODO */ }
+    SECTION("Can be read from arbitrary offset") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x00, // dummy data
+            0x01, // Type
+            0x01, // Size
+            0x38, // Representation code 56 (lis::i8)
+            0x00, // Entry
+        };
+
+        const auto entry = lis::read_entry_block( rec, 1 );
+
+        CHECK( lis::decay(entry.type)  == 1  );
+        CHECK( lis::decay(entry.size)  == 1  );
+        CHECK( lis::decay(entry.reprc) == 56 );
+
+        CHECK( mpark::holds_alternative< lis::i8 >(entry.value) );
+        const auto value = lis::decay( mpark::get< lis::i8 >(entry.value) );
+        CHECK( value == 0 );
+    }
+
 
     SECTION("Too little data to parse entry") {
         lis::record rec;
@@ -224,6 +243,48 @@ TEST_CASE("Entry Block", "[protocol]") {
                      "1 bytes left in record, expected at least 4"));
     }
 
+    SECTION("Wrong type") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x20, // Type (invalid)
+            0x01, // Size
+            0x38, // Representation code 56 (lis::i8)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("unknown entry type 32"));
+    }
+
+    SECTION("Wrong repcode") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x01, // Size
+            0x7F, // Representation code 127 (invalid)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("unknown representation code 127 for entry (type: 1)"));
+    }
+
+    SECTION("Wrong size") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x02, // Size
+            0x38, // Representation code 56 (lis::i8)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("invalid entry (type: 1). "
+                     "Expected size for reprc 56 is 1, was 2"));
+    }
 }
 
 TEST_CASE("Process indicators", "[protocol]") {
