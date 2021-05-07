@@ -6,6 +6,22 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.3.4_ - 2021.05.07
+-------------------
+* Full support for LIS Spec Block sub-type 0 and 1.
+* dlisio now uses the python type 'bytes' to represent the LIS79 defined
+  datatype 'mask'.
+* The content of DFSRs is checked more thoroughly before attempting to read the
+  curves.
+* Integral parts of LIS Entry Block are sanity checked upon parsing.
+* Fixes a bug that resulted in the curve parsing routines allocating to little
+  memory for the numpy array. That ultimately resulted in a segfault. This bug
+  affected both DLIS and LIS, but only occurs for files that are written in a
+  specific way.
+* Fixes a bug in the DLIS curve parsing that caused dlisio to incorrectly
+  restore state after attempting to read a broken frame from the file,
+  resulting in the following frames being incorrectly written to the outputted
+  numpy array.
 
 0.3.3_ - 2021.04.30
 -------------------
@@ -251,6 +267,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.3.4: https://github.com/equinor/dlisio/compare/v0.3.3...v0.3.4
 .. _0.3.3: https://github.com/equinor/dlisio/compare/v0.3.2...v0.3.3
 .. _0.3.2: https://github.com/equinor/dlisio/compare/v0.3.1...v0.3.2
 .. _0.3.1: https://github.com/equinor/dlisio/compare/v0.3.0...v0.3.1
