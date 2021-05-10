@@ -31,10 +31,12 @@ struct PYBIND11_EXPORT not_found;
 #include <dlisio/tapemark.hpp>
 #include <dlisio/exception.hpp>
 #include <dlisio/dlis/records.hpp>
+#include <dlisio/lis/protocol.hpp>
 
 #include "common.hpp"
 
 namespace dl = dlisio::dlis;
+namespace lis = dlisio::lis79;
 
 namespace {
 /*
@@ -156,6 +158,7 @@ void init_dlis_extension(py::module_ &m);
 
 
 PYBIND11_MAKE_OPAQUE( std::vector< dl::object_set > )
+PYBIND11_MAKE_OPAQUE( std::vector< lis::record > )
 
 PYBIND11_MODULE(core, m) {
     PyDateTime_IMPORT;

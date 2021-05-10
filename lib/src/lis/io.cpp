@@ -561,6 +561,17 @@ record iodevice::read_record(const record_info& info) noexcept (false) {
     return rec;
 }
 
+std::vector<record>
+iodevice::read_records(const record_index& index,
+                       const record_type& type) noexcept(false) {
+    std::vector<record> records;
+    for (const auto& info : index.explicits()) {
+        if (info.type == type) {
+            records.push_back(this->read_record(info));
+        }
+    }
+    return records;
+}
 
 /* miscellaneous */
 iodevice open( const std::string& path, std::int64_t offset, bool tapeimage )

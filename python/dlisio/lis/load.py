@@ -218,7 +218,7 @@ class FileIndexer:
         else:
             if index.size():
                 logfile = LogicalFile(
-                    self.path, file, index,self. reel, self.tape)
+                    self.path, file, index, self.reel, self.tape)
                 self.logical_files.append(logfile)
             else:
                 file.close()
