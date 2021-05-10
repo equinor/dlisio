@@ -41,6 +41,25 @@ trailers = [
     'data/lis/records/RTLR-1.lis.part',
 ]
 
+def test_index_mnem(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'index_mnem.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-subtype0.lis.part',
+        'data/lis/records/curves/dfsr-depth-dir-up.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        fs1, fs2 = f.data_format_specs()
+
+        assert fs1.index_mnem == 'CH01'
+        assert fs1.index_mnem == fs1.specs[0].mnemonic
+
+        assert fs2.index_mnem == 'DEPT'
+        assert fs2.index_mnem == fs2.default_index_mnem
+
 
 def test_entries(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'entries.lis')

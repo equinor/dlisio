@@ -48,6 +48,20 @@ class DataFormatSpec():
         return self.attic.info
 
     @property
+    def index_mnem(self):
+        """ Mnemonic of the index
+
+        Returns
+        -------
+
+        mnemonic : str
+        """
+        nspecs = len(self.specs)
+        if self.depth_mode == 0 and nspecs == 0: return None
+        if self.depth_mode == 0 and nspecs >  0: return self.specs[0].mnemonic
+        if self.depth_mode == 1:                 return self.default_index_mnem
+
+    @property
     def specs(self):
         """ Spec Blocks (SB)
 
