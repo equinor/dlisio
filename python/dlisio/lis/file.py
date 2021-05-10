@@ -211,10 +211,8 @@ class LogicalFile():
         records : list of dlisio.lis.DataFormatSpec
         """
         # TODO duplication checking
-        ex = self.explicits()
-        dfs = core.lis_rectype.data_format_spec
-        recs = [self.io.read_record(x) for x in ex if x.type == dfs]
-        return [DataFormatSpec(parse_record(x)) for x in recs]
+        return [DataFormatSpec(r)
+                for r in self.parse_records(core.lis_rectype.data_format_spec)]
 
     def job_identification(self):
         """ Job Identification Logical Records
@@ -224,10 +222,8 @@ class LogicalFile():
 
         records : list of :class:`dlisio.lis.InformationRecord`
         """
-        rectype = core.lis_rectype.job_identification
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
-        return [InformationRecord(parse_record(x)) for x in recs]
+        return [InformationRecord(r)
+                for r in self.parse_records(core.lis_rectype.job_identification)]
 
     def wellsite_data(self):
         """ Wellsite Data Logical Records
@@ -237,10 +233,8 @@ class LogicalFile():
 
         records : list of :class:`dlisio.lis.InformationRecord`
         """
-        rectype = core.lis_rectype.wellsite_data
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
-        return [InformationRecord(parse_record(x)) for x in recs]
+        return [InformationRecord(r)
+                for r in self.parse_records(core.lis_rectype.wellsite_data)]
 
     def tool_string_info(self):
         """ Tool String Info Logical Records
@@ -250,10 +244,8 @@ class LogicalFile():
 
         records : list of :class:`dlisio.lis.InformationRecord`
         """
-        rectype = core.lis_rectype.tool_string_info
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
-        return [InformationRecord(parse_record(x)) for x in recs]
+        return [InformationRecord(r)
+                for r in self.parse_records(core.lis_rectype.tool_string_info)]
 
     def operator_command_inputs(self):
         """ Operator Command Inputs
@@ -263,10 +255,7 @@ class LogicalFile():
 
         records : list of :class:`dlisio.core.text_record`
         """
-        rectype = core.lis_rectype.op_command_inputs
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
-        return [parse_record(x) for x in recs]
+        return self.parse_records(core.lis_rectype.op_command_inputs)
 
     def operator_response_inputs(self):
         """ Operator Response Inputs
@@ -276,10 +265,7 @@ class LogicalFile():
 
         records : list of :class:`dlisio.core.text_record`
         """
-        rectype = core.lis_rectype.op_response_inputs
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
-        return [parse_record(x) for x in recs]
+        return self.parse_records(core.lis_rectype.op_response_inputs)
 
     def system_outputs_to_operator(self):
         """ System Outputs to Operator
@@ -289,10 +275,7 @@ class LogicalFile():
 
         records : list of :class:`dlisio.core.text_record`
         """
-        rectype = core.lis_rectype.system_outputs
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
-        return [parse_record(x) for x in recs]
+        return self.parse_records(core.lis_rectype.system_outputs)
 
     def flic_comment(self):
         """ Comment Record
@@ -302,9 +285,12 @@ class LogicalFile():
 
         records : list of :class:`dlisio.core.text_record`
         """
-        rectype = core.lis_rectype.flic_comment
-        ex = self.explicits()
-        recs = [self.io.read_record(x) for x in ex if x.type == rectype]
+        return self.parse_records(core.lis_rectype.flic_comment)
+
+
+    def parse_records(self, rectype):
+        """ Parse Explicit records of given type """
+        recs = self.io.read_records(self.index, rectype)
         return [parse_record(x) for x in recs]
 
 class PhysicalFile(tuple):

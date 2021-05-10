@@ -665,6 +665,7 @@ void init_lis_extension(py::module_ &m) {
             return "dlisio.core.iodevice";
         })
         .def( "read_record",   &lis::iodevice::read_record )
+        .def( "read_records",  &lis::iodevice::read_records )
         .def( "index_records", &lis::iodevice::index_records )
         .def( "index_record",  &lis::iodevice::index_record )
         .def( "ptell",         &lis::iodevice::ptell )

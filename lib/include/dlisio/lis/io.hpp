@@ -213,6 +213,8 @@ public:
      */
     record_info index_record() noexcept (false);
     record read_record( const record_info& ) noexcept (false);
+    std::vector<record> read_records(const record_index&,
+                                     const record_type&) noexcept(false);
 };
 
 /** Factory function for creating an iodevice
