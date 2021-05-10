@@ -197,6 +197,43 @@ TEST_CASE("Entry Block", "[protocol]") {
     SECTION("Too little data to parse entry") { /* TODO */ }
 }
 
+TEST_CASE("Process indicators", "[protocol]") {
+    SECTION("Well-formatted process indicators") {
+        const auto buffer = std::vector< unsigned char > {
+            0b10101010,
+            0b01010101,
+            0b11111111,
+            0b00000011,
+            0b00000000,
+        };
+        lis::mask mask{ std::string{ buffer.begin(), buffer.end() } };
+
+        const auto flags = lis::process_indicators( mask );
+        CHECK( flags.original_logging_direction     == 2     );
+        CHECK( flags.true_vertical_depth_correction == true  );
+        CHECK( flags.data_channel_not_on_depth      == false );
+        CHECK( flags.data_channel_is_filtered       == true  );
+        CHECK( flags.data_channel_is_calibrated     == false );
+        CHECK( flags.computed                       == true  );
+        CHECK( flags.derived                        == false );
+        CHECK( flags.tool_defined_correction_nb_2   == false );
+        CHECK( flags.tool_defined_correction_nb_1   == true  );
+        CHECK( flags.mudcake_correction             == false );
+        CHECK( flags.lithology_correction           == true  );
+        CHECK( flags.inclinometry_correction        == false );
+        CHECK( flags.pressure_correction            == true  );
+        CHECK( flags.hole_size_correction           == false );
+        CHECK( flags.temperature_correction         == true  );
+        CHECK( flags.auxiliary_data_flag            == true  );
+        CHECK( flags.schlumberger_proprietary       == true  );
+    }
+
+    SECTION("Invalid mask size") {
+        lis::mask mask{ std::string{"ABCD"} };
+        CHECK_THROWS_AS( lis::process_indicators( mask ), std::runtime_error );
+    }
+}
+
 TEST_CASE("Spec Block", "[protocol]") {
     lis::record rec;
     rec.data = std::vector< char > {

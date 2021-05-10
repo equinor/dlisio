@@ -520,6 +520,33 @@ lis::dfsr parse_dfsr( const lis::record& rec ) noexcept (false) {
 
     return formatspec;
 }
+process_indicators::process_indicators( const lis::mask& mask ) {
+    if ( lis::decay(mask).size() != 5 ) {
+        throw std::runtime_error("Invalid mask length");
+    }
+
+    const char* ptr = lis::decay(mask).data();
+
+    /* Mask out fields                 byte       bit */
+    true_vertical_depth_correction = *(ptr + 0) & 1 << 5;
+    data_channel_not_on_depth      = *(ptr + 0) & 1 << 4;
+    data_channel_is_filtered       = *(ptr + 0) & 1 << 3;
+    data_channel_is_calibrated     = *(ptr + 0) & 1 << 2;
+    computed                       = *(ptr + 0) & 1 << 1;
+    derived                        = *(ptr + 0) & 1 << 0;
+    tool_defined_correction_nb_2   = *(ptr + 1) & 1 << 7;
+    tool_defined_correction_nb_1   = *(ptr + 1) & 1 << 6;
+    mudcake_correction             = *(ptr + 1) & 1 << 5;
+    lithology_correction           = *(ptr + 1) & 1 << 4;
+    inclinometry_correction        = *(ptr + 1) & 1 << 3;
+    pressure_correction            = *(ptr + 1) & 1 << 2;
+    hole_size_correction           = *(ptr + 1) & 1 << 1;
+    temperature_correction         = *(ptr + 1) & 1 << 0;
+    auxiliary_data_flag            = *(ptr + 2) & 1 << 1;
+    schlumberger_proprietary       = *(ptr + 2) & 1 << 0;
+
+    original_logging_direction = (*ptr & (1 << 7 | 1 << 6) ) >> 6;
+}
 
 lis::component_block read_component_block( const lis::record& rec, std::size_t offset )
 noexcept (false) {

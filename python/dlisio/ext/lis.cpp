@@ -794,8 +794,30 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block_1" )
-        .def_readonly( "api_codes",          &lis::spec_block1::api_codes          )
-        .def_readonly( "process_indicators", &lis::spec_block1::process_indicators )
+        .def_readonly( "api_codes", &lis::spec_block1::api_codes )
+        .def_property_readonly( "process_indicators", [](const lis::spec_block1& x) {
+            const auto p = lis::process_indicators(x.process_indicators);
+            auto d = py::dict();
+
+            d["original logging direction"]     = p.original_logging_direction;
+            d["true vertical depth correction"] = p.true_vertical_depth_correction;
+            d["data channel not on depth"]      = p.data_channel_not_on_depth;
+            d["data channel is filtered"]       = p.data_channel_is_filtered;
+            d["data channel is calibrated"]     = p.data_channel_is_calibrated;
+            d["computed"]                       = p.computed;
+            d["derived"]                        = p.derived;
+            d["tool defined correction nb 2"]   = p.tool_defined_correction_nb_2;
+            d["tool defined correction nb 1"]   = p.tool_defined_correction_nb_1;
+            d["mudcake correction"]             = p.mudcake_correction;
+            d["lithology correction"]           = p.lithology_correction;
+            d["inclinometry correction"]        = p.inclinometry_correction;
+            d["pressure correction"]            = p.pressure_correction;
+            d["hole size correction"]           = p.hole_size_correction;
+            d["temperature correction"]         = p.temperature_correction;
+            d["auxiliary data flag"]            = p.auxiliary_data_flag;
+            d["schlumberger proprietary"]       = p.schlumberger_proprietary;
+            return d;
+        })
         .def( "__repr__", [](const lis::spec_block1& x) {
             return "dlisio.core.spec_block1(mnemonic={})"_s.format(
                 x.mnemonic
