@@ -38,6 +38,7 @@ class DataFormatSpec():
 
     def __init__(self, attic):
         self.attic = attic
+        self.default_index_mnem = 'DEPT'
 
     def __repr__(self):
         return 'DataFormatSpec()'

@@ -345,7 +345,7 @@ def dfsr_dtype(dfsr, sample_rate, strict=True):
     mode = dfsr.depth_mode
     if mode == 1:
         reprc = core.lis_reprc( dfsr.depth_reprc )
-        types.append(('DEPT', nptype[reprc]))
+        types.append((dfsr.default_index_mnem, nptype[reprc]))
 
     for i, ch in enumerate(dfsr.specs):
         if ch.reserved_size < 0: continue
