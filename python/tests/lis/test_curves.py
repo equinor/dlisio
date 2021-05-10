@@ -60,6 +60,24 @@ def test_index_mnem(tmpdir, merge_lis_prs):
         assert fs2.index_mnem == 'DEPT'
         assert fs2.index_mnem == fs2.default_index_mnem
 
+def test_index_units(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'index_units.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-subtype0.lis.part',
+        'data/lis/records/curves/dfsr-depth-dir-up.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+
+    with lis.load(fpath) as (f,):
+        fs1, fs2 = f.data_format_specs()
+
+        assert fs1.index_units == 'INCH'
+        assert fs1.index_units == fs1.specs[0].units
+
+        assert fs2.index_units == '.1IN'
+        assert fs2.index_units == fs1.depth_units
 
 def test_entries(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'entries.lis')
