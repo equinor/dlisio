@@ -444,6 +444,27 @@ def validate_dfsr(dfsr):
             msg += "should be an integral number of entries"
             raise ValueError(msg.format(entries, spec.mnemonic))
 
+
+def unique_mnemonics(mnemonics):
+    from collections import Counter
+    tail = '({})'
+    duplicates = [x for x, count in Counter(mnemonics).items() if count > 1]
+
+    # Update each occurrence of duplicated labels. Each set of duplicates
+    # requires its own tail-count, so update the list one label at the time.
+    for duplicate in duplicates:
+        tailcount = 0
+        tmp = []
+        for name in mnemonics:
+            if name == duplicate:
+                name += tail.format(tailcount)
+                tailcount += 1
+            tmp.append(name)
+        mnemonics = tmp
+
+    return mnemonics
+
+
 def mkunique(types):
     """ Append a tail to duplicated labels in types
 
@@ -465,23 +486,7 @@ def mkunique(types):
     >>> mkunique([('TIME', 'i2'), ('TIME', 'i4')])
     [('TIME(0)', 'i2'), ('TIME(1)', 'i4')]
     """
-    from collections import Counter
-
-    tail = '({})'
-    labels = [label for label, _ in types]
-    duplicates = [x for x, count in Counter(labels).items() if count > 1]
-
-    # Update each occurrence of duplicated labels. Each set of duplicates
-    # requires its own tail-count, so update the list one label at the time.
-    for duplicate in duplicates:
-        tailcount = 0
-        tmp = []
-        for name, dtype in types:
-            if name == duplicate:
-                name += tail.format(tailcount)
-                tailcount += 1
-            tmp.append((name, dtype))
-        types = tmp
-
-    return types
+    labels, dtype = zip(*types)
+    labels = unique_mnemonics(labels)
+    return list(zip(labels, dtype))
 
