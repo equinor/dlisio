@@ -458,23 +458,23 @@ Other structures defined by LIS79
         ======= ===========================================
         Bit nr  Definition
         ======= ===========================================
-        0-1     Original logging direction [1]
-        2       True vertical depth correction
-        3       Data channel not on depth
-        4       Data channel is filtered
-        5       Data channel is calibrated
-        6       Computed (processed thru a function former)
-        7       Derived (computed from more than one tool)
-        8       Tool defined correction Nb 2
-        9       Tool defined correction Nb 1
-        10      Mudcake correction
-        11      Lithology correction
-        12      Inclinometry correction
-        13      Pressure correction
-        14      Hole size correction
-        15      Temperature correction
-        22      Auxiliary data flag
-        23      Schlumberger proprietary
+        0-1     original logging direction [1]
+        2       true vertical depth correction
+        3       data channel not on depth
+        4       data channel is filtered
+        5       data channel is calibrated
+        6       computed (processed thru a function former)
+        7       derived (computed from more than one tool)
+        8       tool defined correction nb 2
+        9       tool defined correction nb 1
+        10      mudcake correction
+        11      lithology correction
+        12      inclinometry correction
+        13      pressure correction
+        14      hole size correction
+        15      temperature correction
+        22      auxiliary data flag
+        23      schlumberger proprietary
         ======= ===========================================
 
         A value of 1 for a specific bit means that the correction or process is
@@ -482,11 +482,51 @@ Other structures defined by LIS79
         unassigned  by LIS79.
 
         [1] Bits 0 and 1 form a single entry that defines the original logging
-        direction for this channel. A value of '01' indicates down-hole. '10'
-        indicated up-hole, while '00' indicates an ambiguous direction. I.e.
-        stationary. '11' is undefined.
+        direction for this channel. A value of '01' (1) indicates down-hole.
+        '10' (2) indicated up-hole, while '00' (0) indicates an ambiguous
+        direction. I.e.  stationary. '11' (3) is undefined.
 
-        :type: bytes
+        For convenience the bitmask is expanded to an object with all the above
+        definitions as attributes.
+
+        :type: dlisio.core.process_indicators
+
+.. class:: dlisio.core.process_indicators()
+
+    .. attribute:: original_logging_direction
+        :type: int
+    .. attribute:: true_vertical_depth_correction
+        :type: bool
+    .. attribute:: data_channel_not_on_depth
+        :type: bool
+    .. attribute:: data_channel_is_filtered
+        :type: bool
+    .. attribute:: data_channel_is_calibrated
+        :type: bool
+    .. attribute:: computed
+        :type: bool
+    .. attribute:: derived
+        :type: bool
+    .. attribute:: tool_defined_correction_nb_2
+        :type: bool
+    .. attribute:: tool_defined_correction_nb_1
+        :type: bool
+    .. attribute:: mudcake_correction
+        :type: bool
+    .. attribute:: lithology_correction
+        :type: bool
+    .. attribute:: inclinometry_correction
+        :type: bool
+    .. attribute:: pressure_correction
+        :type: bool
+    .. attribute:: hole_size_correction
+        :type: bool
+    .. attribute:: temperature_correction
+        :type: bool
+    .. attribute:: auxiliary_data_flag
+        :type: bool
+    .. attribute:: schlumberger_proprietary
+        :type: bool
 
 .. class:: dlisio.core.component_block()
 

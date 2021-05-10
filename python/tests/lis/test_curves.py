@@ -248,7 +248,25 @@ def test_dfsr_subtype1(tmpdir, merge_lis_prs):
         assert ch1.reserved_size      == 4
         assert ch1.samples            == 1
         assert ch1.reprc              == 73
-        assert ch1.process_indicators == b'\xff\xff\xff\xff\xff'
+
+        flags = ch1.process_indicators
+        assert flags.original_logging_direction     == 3
+        assert flags.true_vertical_depth_correction == True
+        assert flags.data_channel_not_on_depth      == True
+        assert flags.data_channel_is_filtered       == True
+        assert flags.data_channel_is_calibrated     == True
+        assert flags.computed                       == True
+        assert flags.derived                        == True
+        assert flags.tool_defined_correction_nb_2   == True
+        assert flags.tool_defined_correction_nb_1   == True
+        assert flags.mudcake_correction             == True
+        assert flags.lithology_correction           == True
+        assert flags.inclinometry_correction        == True
+        assert flags.pressure_correction            == True
+        assert flags.hole_size_correction           == True
+        assert flags.temperature_correction         == True
+        assert flags.auxiliary_data_flag            == True
+        assert flags.schlumberger_proprietary       == True
 
         curves = lis.curves(f, dfs)
         assert len(curves) == 0

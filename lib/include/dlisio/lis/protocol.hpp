@@ -268,6 +268,28 @@ struct spec_block1 : public detail::spec_block {
     static constexpr const int size = 40;
 };
 
+struct process_indicators {
+    explicit process_indicators( const lis::mask& );
+
+    std::int8_t original_logging_direction;
+    bool true_vertical_depth_correction;
+    bool data_channel_not_on_depth;
+    bool data_channel_is_filtered;
+    bool data_channel_is_calibrated;
+    bool computed;
+    bool derived;
+    bool tool_defined_correction_nb_2;
+    bool tool_defined_correction_nb_1;
+    bool mudcake_correction;
+    bool lithology_correction;
+    bool inclinometry_correction;
+    bool pressure_correction;
+    bool hole_size_correction;
+    bool temperature_correction;
+    bool auxiliary_data_flag;
+    bool schlumberger_proprietary;
+};
+
 spec_block0 read_spec_block0(const record&, std::size_t) noexcept (false);
 spec_block1 read_spec_block1(const record&, std::size_t) noexcept (false);
 

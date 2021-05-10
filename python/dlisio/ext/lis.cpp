@@ -795,12 +795,37 @@ void init_lis_extension(py::module_ &m) {
     ;
 
     py::class_< lis::spec_block1, lis::detail::spec_block >( m, "spec_block_1" )
-        .def_readonly( "api_codes",          &lis::spec_block1::api_codes          )
-        .def_readonly( "process_indicators", &lis::spec_block1::process_indicators )
+        .def_readonly( "api_codes", &lis::spec_block1::api_codes )
+        .def_property_readonly( "process_indicators", [](const lis::spec_block1& x) {
+            return lis::process_indicators(x.process_indicators);
+        })
         .def( "__repr__", [](const lis::spec_block1& x) {
             return "dlisio.core.spec_block1(mnemonic={})"_s.format(
                 x.mnemonic
             );
+        })
+    ;
+
+    py::class_< lis::process_indicators >( m, "process_indicators" )
+        .def_readonly( "original_logging_direction",     &lis::process_indicators::original_logging_direction     )
+        .def_readonly( "true_vertical_depth_correction", &lis::process_indicators::true_vertical_depth_correction )
+        .def_readonly( "data_channel_not_on_depth",      &lis::process_indicators::data_channel_not_on_depth      )
+        .def_readonly( "data_channel_is_filtered",       &lis::process_indicators::data_channel_is_filtered       )
+        .def_readonly( "data_channel_is_calibrated",     &lis::process_indicators::data_channel_is_calibrated     )
+        .def_readonly( "computed",                       &lis::process_indicators::computed                       )
+        .def_readonly( "derived",                        &lis::process_indicators::derived                        )
+        .def_readonly( "tool_defined_correction_nb_2",   &lis::process_indicators::tool_defined_correction_nb_2   )
+        .def_readonly( "tool_defined_correction_nb_1",   &lis::process_indicators::tool_defined_correction_nb_1   )
+        .def_readonly( "mudcake_correction",             &lis::process_indicators::mudcake_correction             )
+        .def_readonly( "lithology_correction",           &lis::process_indicators::lithology_correction           )
+        .def_readonly( "inclinometry_correction",        &lis::process_indicators::inclinometry_correction        )
+        .def_readonly( "pressure_correction",            &lis::process_indicators::pressure_correction            )
+        .def_readonly( "hole_size_correction",           &lis::process_indicators::hole_size_correction           )
+        .def_readonly( "temperature_correction",         &lis::process_indicators::temperature_correction         )
+        .def_readonly( "auxiliary_data_flag",            &lis::process_indicators::auxiliary_data_flag            )
+        .def_readonly( "schlumberger_proprietary",       &lis::process_indicators::schlumberger_proprietary       )
+        .def( "__repr__", [](const lis::process_indicators&) {
+            return "dlisio.core.process_indicators()";
         })
     ;
 
