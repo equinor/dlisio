@@ -75,6 +75,17 @@ class DataFormatSpec():
         if self.depth_mode == 0 and nspecs >  0: return self.specs[0].units
         if self.depth_mode == 1:                 return self.depth_units
 
+    def sample_rates(self):
+        """ Return all sample rates used by (non-index) Channels in this DFSR
+
+        Returns
+        -------
+
+        rates : set of ints
+        """
+        first = 1 if self.depth_mode == 0 else 0
+        return { x.samples for x in self.specs[first:] }
+
     @property
     def specs(self):
         """ Spec Blocks (SB)
