@@ -250,23 +250,23 @@ def test_dfsr_subtype1(tmpdir, merge_lis_prs):
         assert ch1.reprc              == 73
 
         flags = ch1.process_indicators
-        assert flags["original logging direction"]     == 3
-        assert flags["true vertical depth correction"] == True
-        assert flags["data channel not on depth"]      == True
-        assert flags["data channel is filtered"]       == True
-        assert flags["data channel is calibrated"]     == True
-        assert flags["computed"]                       == True
-        assert flags["derived"]                        == True
-        assert flags["tool defined correction nb 2"]   == True
-        assert flags["tool defined correction nb 1"]   == True
-        assert flags["mudcake correction"]             == True
-        assert flags["lithology correction"]           == True
-        assert flags["inclinometry correction"]        == True
-        assert flags["pressure correction"]            == True
-        assert flags["hole size correction"]           == True
-        assert flags["temperature correction"]         == True
-        assert flags["auxiliary data flag"]            == True
-        assert flags["schlumberger proprietary"]       == True
+        assert flags.original_logging_direction     == 3
+        assert flags.true_vertical_depth_correction == True
+        assert flags.data_channel_not_on_depth      == True
+        assert flags.data_channel_is_filtered       == True
+        assert flags.data_channel_is_calibrated     == True
+        assert flags.computed                       == True
+        assert flags.derived                        == True
+        assert flags.tool_defined_correction_nb_2   == True
+        assert flags.tool_defined_correction_nb_1   == True
+        assert flags.mudcake_correction             == True
+        assert flags.lithology_correction           == True
+        assert flags.inclinometry_correction        == True
+        assert flags.pressure_correction            == True
+        assert flags.hole_size_correction           == True
+        assert flags.temperature_correction         == True
+        assert flags.auxiliary_data_flag            == True
+        assert flags.schlumberger_proprietary       == True
 
         curves = lis.curves(f, dfs)
         assert len(curves) == 0

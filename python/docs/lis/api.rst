@@ -486,10 +486,47 @@ Other structures defined by LIS79
         '10' (2) indicated up-hole, while '00' (0) indicates an ambiguous
         direction. I.e.  stationary. '11' (3) is undefined.
 
-        For convienience the bitmask is expanded and returned as a dictionary
-        with the above definitions as keys.
+        For convenience the bitmask is expanded to an object with all the above
+        definitions as attributes.
 
-        :type: dict
+        :type: dlisio.core.process_indicators
+
+.. class:: dlisio.core.process_indicators()
+
+    .. attribute:: original_logging_direction
+        :type: int
+    .. attribute:: true_vertical_depth_correction
+        :type: bool
+    .. attribute:: data_channel_not_on_depth
+        :type: bool
+    .. attribute:: data_channel_is_filtered
+        :type: bool
+    .. attribute:: data_channel_is_calibrated
+        :type: bool
+    .. attribute:: computed
+        :type: bool
+    .. attribute:: derived
+        :type: bool
+    .. attribute:: tool_defined_correction_nb_2
+        :type: bool
+    .. attribute:: tool_defined_correction_nb_1
+        :type: bool
+    .. attribute:: mudcake_correction
+        :type: bool
+    .. attribute:: lithology_correction
+        :type: bool
+    .. attribute:: inclinometry_correction
+        :type: bool
+    .. attribute:: pressure_correction
+        :type: bool
+    .. attribute:: hole_size_correction
+        :type: bool
+    .. attribute:: temperature_correction
+        :type: bool
+    .. attribute:: auxiliary_data_flag
+        :type: bool
+    .. attribute:: schlumberger_proprietary
+        :type: bool
 
 .. class:: dlisio.core.component_block()
 

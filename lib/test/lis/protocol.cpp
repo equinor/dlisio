@@ -200,11 +200,11 @@ TEST_CASE("Entry Block", "[protocol]") {
 TEST_CASE("Process indicators", "[protocol]") {
     SECTION("Well-formatted process indicators") {
         const auto buffer = std::vector< unsigned char > {
-            0b10101010,
-            0b01010101,
-            0b11111111,
-            0b00000011,
-            0b00000000,
+            0xAA, // 0b10101010
+            0x55, // 0b01010101
+            0xFF, // 0b11111111
+            0x03, // 0b00000011
+            0x00, // 0b00000000
         };
         lis::mask mask{ std::string{ buffer.begin(), buffer.end() } };
 
