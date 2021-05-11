@@ -193,8 +193,98 @@ TEST_CASE("Entry Block", "[protocol]") {
         CHECK( value == std::string(".1IN") );
     }
 
-    SECTION("Can be read from arbitrary offset") { /* TODO */ }
-    SECTION("Too little data to parse entry") { /* TODO */ }
+    SECTION("Can be read from arbitrary offset") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x00, // dummy data
+            0x01, // Type
+            0x01, // Size
+            0x38, // Representation code 56 (lis::i8)
+            0x00, // Entry
+        };
+
+        const auto entry = lis::read_entry_block( rec, 1 );
+
+        CHECK( lis::decay(entry.type)  == 1  );
+        CHECK( lis::decay(entry.size)  == 1  );
+        CHECK( lis::decay(entry.reprc) == 56 );
+
+        CHECK( mpark::holds_alternative< lis::i8 >(entry.value) );
+        const auto value = lis::decay( mpark::get< lis::i8 >(entry.value) );
+        CHECK( value == 0 );
+    }
+
+
+    SECTION("Too little data to parse entry") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x04, // Size
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("lis::entry_block: "
+                     "2 bytes left in record, expected at least 3"));
+    }
+
+    SECTION("Too little data to parse entry value") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x04, // Size
+            0x49, // Representation code 73 (lis::i32)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("lis::entry_block: "
+                     "1 bytes left in record, expected at least 4"));
+    }
+
+    SECTION("Wrong type") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x20, // Type (invalid)
+            0x01, // Size
+            0x38, // Representation code 56 (lis::i8)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("unknown entry type 32"));
+    }
+
+    SECTION("Wrong repcode") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x01, // Size
+            0x7F, // Representation code 127 (invalid)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("unknown representation code 127 for entry (type: 1)"));
+    }
+
+    SECTION("Wrong size") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x01, // Type
+            0x02, // Size
+            0x38, // Representation code 56 (lis::i8)
+            0x00, // Entry
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_entry_block(rec, 0),
+            Contains("invalid entry (type: 1). "
+                     "Expected size for reprc 56 is 1, was 2"));
+    }
 }
 
 TEST_CASE("Process indicators", "[protocol]") {
@@ -285,8 +375,10 @@ TEST_CASE("Spec Block", "[protocol]") {
     }
 
     SECTION("Too little data to parse entry") {
-        CHECK_THROWS_AS( lis::read_spec_block1( rec, 10 ),
-                         std::runtime_error );
+        CHECK_THROWS_WITH(
+            lis::read_spec_block1( rec, 10 ),
+            Contains("lis::spec_block: "
+                     "30 bytes left in record, expected at least 40"));
     }
 }
 
@@ -335,7 +427,7 @@ TEST_CASE("Component Block", "[protocol]") {
     SECTION("Well-formatted - lis::i8") {
         lis::record rec;
         rec.data = std::vector< char > {
-            0x02, // type
+            0x45, // type
             0x38, // representation code 56 (lis::i8)
             0x01, // size
             0x03, // category
@@ -347,7 +439,7 @@ TEST_CASE("Component Block", "[protocol]") {
 
         const auto component = lis::read_component_block( rec, 0 );
 
-        CHECK( lis::decay(component.type_nb)  == 2  );
+        CHECK( lis::decay(component.type_nb)  == 69 );
         CHECK( lis::decay(component.reprc)    == 56 );
         CHECK( lis::decay(component.size)     == 1  );
         CHECK( lis::decay(component.category) == 3  );
@@ -362,7 +454,7 @@ TEST_CASE("Component Block", "[protocol]") {
     SECTION("Well-formatted - lis::string") {
         lis::record rec;
         rec.data = std::vector< char > {
-            0x02, // type
+            0x45, // type
             0x41, // representation code 65 (lis::string)
             0x02, // size
             0x03, // category
@@ -374,7 +466,7 @@ TEST_CASE("Component Block", "[protocol]") {
 
         const auto component = lis::read_component_block( rec, 0 );
 
-        CHECK( lis::decay(component.type_nb)  == 2  );
+        CHECK( lis::decay(component.type_nb)  == 69 );
         CHECK( lis::decay(component.reprc)    == 65 );
         CHECK( lis::decay(component.size)     == 2  );
         CHECK( lis::decay(component.category) == 3  );
@@ -390,7 +482,7 @@ TEST_CASE("Component Block", "[protocol]") {
         lis::record rec;
         rec.data = std::vector< char > {
             0x00, // dummy data
-            0x02, // type
+            0x45, // type
             0x38, // representation code 56 (lis::i8)
             0x01, // size
             0x03, // category
@@ -402,7 +494,7 @@ TEST_CASE("Component Block", "[protocol]") {
 
         const auto component = lis::read_component_block( rec, 1 );
 
-        CHECK( lis::decay(component.type_nb)  == 2  );
+        CHECK( lis::decay(component.type_nb)  == 69 );
         CHECK( lis::decay(component.reprc)    == 56 );
         CHECK( lis::decay(component.size)     == 1  );
         CHECK( lis::decay(component.category) == 3  );
@@ -414,12 +506,26 @@ TEST_CASE("Component Block", "[protocol]") {
         CHECK( value == 4 );
     }
 
-    SECTION("Too little data to parse entry") {
+    SECTION("Too little data to parse component") {
         lis::record rec;
         rec.data = std::vector< char > {
-            0x02, // type
-            0x38, // representation code 56 (lis::i8)
-            0x0b, // size
+            0x45, // type
+            0x49, // representation code 73 (lis::i32)
+            0x04, // size
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("lis::component_block: "
+                     "3 bytes left in record, expected at least 12"));
+    }
+
+    SECTION("Too little data to parse component value") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x45, // type
+            0x49, // representation code 73 (lis::i32)
+            0x04, // size
             0x03, // category
             0x44, 0x45, 0x50, 0x54, // mnemonic
             0x2E, 0x31, 0x49, 0x4E, // units
@@ -427,14 +533,72 @@ TEST_CASE("Component Block", "[protocol]") {
             0x35, // Component
         };
 
-        CHECK_THROWS_AS(lis::read_component_block( rec, 0 ), dlisio::truncation_error);
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("lis::component_block: "
+                     "1 bytes left in record, expected at least 4"));
+    }
+
+    SECTION("Wrong type") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x02, // type (invalid)
+            0x44, // representation code 68 (lis::f32)
+            0x04, // size
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x35, 0x34, 0x35, 0x34 // Component
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("unknown component type 2 in component DEPT"));
+    }
+
+    SECTION("Wrong repcode") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x00, // type
+            0x00, // representation code 0 (invalid)
+            0x04, // size
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x35, 0x34, 0x35, 0x34 // Component
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("unknown representation code 0 in component DEPT"));
+    }
+
+    SECTION("Wrong size") {
+        lis::record rec;
+        rec.data = std::vector< char > {
+            0x00, // type
+            0x44, // representation code 68 (lis::f32)
+            0x05, // size (invalid)
+            0x03, // category
+            0x44, 0x45, 0x50, 0x54, // mnemonic
+            0x2E, 0x31, 0x49, 0x4E, // units
+
+            0x35, 0x34, 0x35, 0x34 // Component
+        };
+
+        CHECK_THROWS_WITH(
+            lis::read_component_block(rec, 0),
+            Contains("invalid component (mnem: DEPT). "
+                     "Expected size for reprc 68 is 4, was 5"));
     }
 }
 
 TEST_CASE("Information Record", "[protocol]") {
     lis::record rec;
     rec.data = std::vector< char > {
-        0x02, // type
+        0x45, // type
         0x41, // representation code 65 (lis::string)
         0x02, // size
         0x03, // category
@@ -442,7 +606,7 @@ TEST_CASE("Information Record", "[protocol]") {
         0x2E, 0x31, 0x49, 0x4E, // units
         0x35, 0x34, // Component
 
-        0x02, // type
+        0x45, // type
         0x38, // representation code 56 (lis::i8)
         0x01, // size
         0x03, // category

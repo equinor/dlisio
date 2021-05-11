@@ -330,19 +330,20 @@ void validate_entry( const lis::entry_block& entry ) {
     const auto reprc = lis::decay(entry.reprc);
     const auto reprc_size = lis_sizeof_type(reprc);
 
-    if (reprc_size >= 0) {
-        if (size != reprc_size and size > 0 and reprc_size != LIS_VARIABLE_LENGTH) {
-            const auto msg = "lis::validate_entry: invalid entry (type: {}). "
-                             "Expected size for reprc {} is {}, was {}";
-            throw std::runtime_error( fmt::format(msg, type, reprc, reprc_size,
-                                                  size) );
-        }
-    } else {
+    if ( reprc_size < 0 ) {
         // will fail with invalid repcode even if entry size is 0.
         // possible to reconsider if such file ever seen in reality
-        const auto msg = "lis::validate_entry: unknown representation code {}";
+        const auto msg = "lis::validate_entry: unknown representation code {} "
+                         "for entry (type: {})";
         const auto code = lis::decay(reprc);
-        throw std::runtime_error(fmt::format(msg, code));
+        throw std::runtime_error(fmt::format(msg, code, type));
+    }
+
+    if (size != reprc_size and size > 0 and reprc_size != LIS_VARIABLE_LENGTH) {
+        const auto msg = "lis::validate_entry: invalid entry (type: {}). "
+                         "Expected size for reprc {} is {}, was {}";
+        throw std::runtime_error( fmt::format(msg, type, reprc, reprc_size,
+                                              size) );
     }
 
 }
@@ -551,6 +552,52 @@ process_indicators::process_indicators( const lis::mask& mask ) {
     original_logging_direction = (buffer[0] & (1 << 7 | 1 << 6)) >> 6;
 }
 
+namespace {
+
+void validate_component( const lis::component_block& component ) {
+    const auto type = lis::decay(component.type_nb);
+    /* For now consider only 0, 69 and 73 to be valid, but note that Customer
+     * Tape Subset Appendix G (A) identifies values 1-4 in addition.
+     */
+    switch (type) {
+        case 0 :
+        case 69:
+        case 73:
+            break;
+        default: {
+            const auto mnem = lis::decay(component.mnemonic);
+            const auto msg = "lis::validate_component: unknown component type {} "
+                             "in component {}";
+            throw std::runtime_error( fmt::format(msg, type, mnem) );
+        }
+    }
+
+    const auto size = lis::decay(component.size);
+
+    const auto reprc = lis::decay(component.reprc);
+    const auto reprc_size = lis_sizeof_type(reprc);
+
+    if ( reprc_size < 0 ) {
+        // will fail with invalid repcode even if entry size is 0.
+        // possible to reconsider if such file ever seen in reality
+        const auto msg = "lis::validate_component: unknown representation code {} "
+                         "in component {}";
+        const auto mnem = lis::decay(component.mnemonic);
+        const auto code = lis::decay(reprc);
+        throw std::runtime_error(fmt::format(msg, code, mnem));
+    }
+
+    if (size != reprc_size and size > 0 and reprc_size != LIS_VARIABLE_LENGTH) {
+        const auto msg =
+            "lis::validate_component: invalid component (mnem: {}). "
+            "Expected size for reprc {} is {}, was {}";
+        const auto mnem = lis::decay(component.mnemonic);
+        throw std::runtime_error(fmt::format(msg, mnem, reprc, reprc_size, size));
+    }
+}
+
+} // namespace
+
 lis::component_block read_component_block( const lis::record& rec, std::size_t offset )
 noexcept (false) {
     const auto* cur = rec.data.data() + offset;
@@ -560,27 +607,30 @@ noexcept (false) {
         const auto msg = "lis::component_block: "
                          "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
-        throw dlisio::truncation_error( fmt::format(
+        throw std::runtime_error( fmt::format(
                     msg, left, lis::component_block::fixed_size) );
     }
 
     lis::component_block component;
 
-    cur = cast( cur, component.type_nb ); // TODO verify type
-    cur = cast( cur, component.reprc );   // TODO verify reprc
+    cur = cast( cur, component.type_nb );
+    cur = cast( cur, component.reprc );
     cur = cast( cur, component.size );
     cur = cast( cur, component.category );
     cur = cast( cur, component.mnemonic, 4 );
     cur = cast( cur, component.units, 4 );
 
+    validate_component(component);
+
     if ( std::distance(cur, end) < lis::decay( component.size ) ) {
         const auto msg = "lis::component_block: "
                          "{} bytes left in record, expected at least {}";
         const auto left = std::distance(cur, end);
-        throw dlisio::truncation_error(fmt::format(msg, left, lis::decay(component.size)));
+        throw std::runtime_error(fmt::format(msg, left, lis::decay(component.size)));
     }
 
-    element(cur, component.size, component.reprc, component.component);
+    if ( lis::decay(component.size) != 0 )
+        element(cur, component.size, component.reprc, component.component);
 
     return component;
 }

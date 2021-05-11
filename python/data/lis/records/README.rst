@@ -18,6 +18,7 @@ inforec_05.lis  Illformed record. First CB have type_nb==73, second CB does
                 _not_ have type_nb==0
 inforec_06.lis  Empty record - Contains 0 CBs
 inforec_07.lis  Empty Table - Contains only 1 CB (type_nb==73)
+inforec_08.lis  Contains components with size == 0.
 =============== ==============================================================
 
 LIS parts (if file is not listed, it means there is nothing peculiar about it).
