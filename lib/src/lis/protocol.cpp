@@ -330,19 +330,20 @@ void validate_entry( const lis::entry_block& entry ) {
     const auto reprc = lis::decay(entry.reprc);
     const auto reprc_size = lis_sizeof_type(reprc);
 
-    if (reprc_size >= 0) {
-        if (size != reprc_size and size > 0 and reprc_size != LIS_VARIABLE_LENGTH) {
-            const auto msg = "lis::validate_entry: invalid entry (type: {}). "
-                             "Expected size for reprc {} is {}, was {}";
-            throw std::runtime_error( fmt::format(msg, type, reprc, reprc_size,
-                                                  size) );
-        }
-    } else {
+    if ( reprc_size < 0 ) {
         // will fail with invalid repcode even if entry size is 0.
         // possible to reconsider if such file ever seen in reality
-        const auto msg = "lis::validate_entry: unknown representation code {}";
+        const auto msg = "lis::validate_entry: unknown representation code {} "
+                         "for entry (type: {})";
         const auto code = lis::decay(reprc);
-        throw std::runtime_error(fmt::format(msg, code));
+        throw std::runtime_error(fmt::format(msg, code, type));
+    }
+
+    if (size != reprc_size and size > 0 and reprc_size != LIS_VARIABLE_LENGTH) {
+        const auto msg = "lis::validate_entry: invalid entry (type: {}). "
+                         "Expected size for reprc {} is {}, was {}";
+        throw std::runtime_error( fmt::format(msg, type, reprc, reprc_size,
+                                              size) );
     }
 
 }
