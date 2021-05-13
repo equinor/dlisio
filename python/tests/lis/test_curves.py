@@ -1230,3 +1230,74 @@ def test_duplicated_mnemonics(tmpdir, merge_lis_prs, assert_error,
 
         names  = curves.dtype.names
         assert names == ('NAME(0)', 'NAME(1)', 'TEST', 'NAME(2)')
+
+
+def test_curve_metadata_mode_0(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fastmeta.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-two-diff.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+    with lis.load(fpath) as (f, *_):
+        dfs = f.data_format_specs()[0]
+
+        for rate in dfs.sample_rates():
+            curves   = lis.curves(f, dfs, sample_rate=rate, strict=False)
+            channels = lis.curves_metadata(dfs, sample_rate=rate, strict=False)
+
+            assert list(curves.dtype.names) == list(channels.keys())
+            assert channels['CH01'] == dfs.specs[0]
+
+def test_curve_metadata_mode_1(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'fastmeta1.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-fast-depth.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+    with lis.load(fpath) as (f, *_):
+        dfs = f.data_format_specs()[0]
+
+        for rate in dfs.sample_rates():
+            curves   = lis.curves(f, dfs, sample_rate=rate, strict=False)
+            channels = lis.curves_metadata(dfs, sample_rate=rate, strict=False)
+
+            assert list(curves.dtype.names) == list(channels.keys())
+            assert channels['DEPT'] == None
+
+def test_curve_metadata_mode_0_duplicated(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'same-mnemonics.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-mnemonics-same.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+    with lis.load(fpath) as (f, *_):
+        dfs = f.data_format_specs()[0]
+
+        with pytest.raises(ValueError) as exc:
+            _ = lis.curves_metadata(dfs, sample_rate=1, strict=True)
+        assert 'duplicated mnemonics' in str(exc.value)
+
+        curves   = lis.curves(f, dfs, sample_rate=1, strict=False)
+        channels = lis.curves_metadata(dfs, sample_rate=1, strict=False)
+
+        assert list(curves.dtype.names) == list(channels.keys())
+        assert channels['NAME(0)'] == dfs.specs[0]
+
+def test_curve_metadata_no_channels(tmpdir, merge_lis_prs):
+    fpath = os.path.join(str(tmpdir), 'same-mnemonics.lis')
+
+    content = headers + [
+        'data/lis/records/curves/dfsr-entries-defined.lis.part',
+    ] + trailers
+
+    merge_lis_prs(fpath, content)
+    with lis.load(fpath) as (f, *_):
+        dfs = f.data_format_specs()[0]
+
+        assert lis.curves_metadata(dfs) == dict()

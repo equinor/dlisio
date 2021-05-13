@@ -19,6 +19,84 @@ nptype = {
     core.lis_reprc.string : 'O',  # String
 }
 
+def curves_metadata(dfsr, sample_rate=None, strict=True):
+    """ Get the metadata corresponding to curves()
+
+    This is a sister-function to :func:`dlisio.lis.curves`, that returns the
+    metadata objects (Spec Blocks) corresponding to the curves returned by
+    :func:`dlisio.lis.curves`.
+
+    The keys of the returned dict exactly match the (column) names in the numpy
+    array returned by `curves.lis.curves`. The values are the corresponding
+    Spec Blocks.
+
+    Notes
+    -----
+
+    :func:`curves_metadata` and :func:`curves` should be called with the same
+    values for both parameters `sample_rate` and `strict` for the metadata and
+    curves to match.
+
+    If dfsr.depth_mode is 1, then there is no Spec Block for the index. In this
+    case None is used as value for the index in the returned dict.
+
+    See Also
+    --------
+
+    :attr:`DataFormatSpec.index_mnem`  : The mnemonic of the index
+    :attr:`DataFormatSpec.index_units` : The units of the index
+
+    Returns
+    -------
+
+    metadata : dict
+
+    Examples
+    --------
+
+    Lets say that you want to read all curves that are sampled 6x the index,
+    and you don't care if the mnemonics are repeated. And that you are also
+    interested in the metadata of the curves you read:
+
+    >>> rate = 6
+    >>> strict = False
+    >>> curves = lis.curves(f, fs, sample_rate=rate, strict=strict)
+    >>> metadata = lis.curves_metadata( fs, sample_rate=rate, strict=strict)
+
+    You now have the curves and their metadata. The metadata lookup mirrors the
+    (column) names in the data. E.g. access data and metadata for the *first*
+    RCCL curve in this log set:
+
+    >>> data = curves['RCCL(0)']
+    >>> spec = metadata['RCCL(0)']
+    """
+    if len(dfsr.specs) == 0: return dict()
+
+    if not uniform_sampling(dfsr) and sample_rate is None:
+        msg  = "Multiple sampling rates in file, "
+        msg += "please explicitly specify which to read"
+        raise RuntimeError(msg)
+
+    if sample_rate is None: sample_rate = 1
+
+    channels = []
+    for i, spec in enumerate(dfsr.specs):
+        if spec.samples != sample_rate: continue
+        if is_index(i, dfsr.depth_mode): continue
+        channels.append(spec)
+
+    index = dfsr.specs[0] if dfsr.depth_mode == 0 else None
+
+    # Make sure that we also pass the index mnemonic to `unique_mnemonic` such
+    # that the postfix matches even when the index itself is repeated.
+    mnemonics = [dfsr.index_mnem] + [x.mnemonic for x in channels]
+    uniques   = unique_mnemonics(mnemonics)
+
+    if strict and uniques != mnemonics:
+        msg = "duplicated mnemonics in '{}'"
+        raise ValueError(msg.format(dfsr))
+
+    return dict(zip(uniques, [index] + channels))
 
 def curves(f, dfsr, sample_rate=None, strict=True):
     """ Read curves
