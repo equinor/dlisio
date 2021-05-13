@@ -193,31 +193,6 @@ class LogicalFile(object):
 
             logging.warning(msg.format(self))
 
-    def __getitem__(self, type):
-        """Return all objects of a given type
-
-        .. deprecated:: 0.2.6
-            use :func:`find(type, matcher=dlisio.dlis.exact)` instead
-
-        Parameters
-        ----------
-        type : str
-            object type, e.g. CHANNEL
-
-        Returns
-        -------
-
-        objects : dict
-            all objects of type 'type'
-        """
-        import warnings
-        msg = "__getitem__ is deprecated and will be removed in a future version, "
-        msg += "use find('{}', matcher=dlisio.dlis.exact) instead".format(type)
-        warnings.warn(msg, FutureWarning)
-
-        objs = self.find(type, matcher=exact)
-        return { x.fingerprint : x for x in objs }
-
     def __enter__(self):
         return self
 
