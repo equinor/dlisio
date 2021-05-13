@@ -117,6 +117,159 @@ class PhysicalFile(tuple):
         return utils.Summary(info=buf.getvalue())
 
 
+class ObjectStore():
+    """ Metadata handler for LogicalFile
+
+    This class stores all the object sets from the LogicalFile and promotes
+    them to proper Python objects (e.g. Channel()) when the store is queried.
+    It uses dl::pool as a backend for fetching the raw c++ objects.
+
+    By default, the promoted Python objects are cached to avoid a lot off
+    unnecessary re-creations. This can be toggled on/off.
+
+    Use :func:`find` to fetch objects.
+
+    Note that for simplicity the store will read and cache _all_ objects of the
+    queried type. This is not applicable when caching is off.
+
+    The cache-layout is deliberately chosen to ensure fast lookup for common
+    queries, while also allowing duplicated objects (identical type, name,
+    origin and copynumber). The layout is a nested dict, where the objects are
+    indexed first by type, then by name. E.g:
+
+      store = {
+          'FRAME' : {
+              'FRAME60' : [Frame('FRAME60'), Frame('FRAME60')],
+              'FRAME20' : [Frame('FRAME20')]
+          },
+          'CHANNEL' : {
+              'TDEP' : [Channel('TDEP')]
+              'GR'   : [Channel('GR')]
+          }
+      }
+    """
+    def __init__(self, logical_file, object_sets):
+        self.pool         = object_sets
+        self.logical_file = logical_file
+
+        #: Turn on/off caching. If set to False, nothing is ever cached in
+        #: :attr:`store`, and objects will be re-created from
+        #: :attr:`object_sets` on each query.
+        self.caching = True
+        self.cache   = {}
+
+    def types(self):
+        return set(self.pool.types)
+
+    def __getitem__(self, object_type):
+        """ Return all objects of type object_type
+
+        This method should be considered internal to this class and all queries
+        from the outside should go through either :func:`get` or :func:`find`.
+
+        Notes
+        -----
+
+        This is the _only_ method that should attempt to cache python objects.
+
+        Returns
+        -------
+
+        objects : defaultdict(list)
+            A defaultdict where objects are indexed by their name
+
+        Examples
+        --------
+
+        Get all channels:
+        >>> cache['CHANNEL']
+        { 'TDEP' : [Channel('TDEP'), Channel('TDEP')], 'GR' : [Channel('GR')] }
+
+        Get all TDEP channels:
+
+        >>> cache['CHANNEL']['TDEP']
+        [Channel('TDEP'), Channel('TDEP')]
+        """
+        if object_type in self.cache:
+            return self.cache[object_type]
+
+        attics = self.pool.get(
+                object_type,
+                exact,
+                self.logical_file.error_handler
+        )
+
+        objects = defaultdict(list)
+        for obj in self.promote(attics):
+            objects[obj.name].append(obj)
+
+        if self.caching:
+            self.cache[object_type] = objects
+
+        return objects
+
+    def clear_cache(self):
+        """Clear all cached objects """
+        self.cache = {}
+
+    def find(self, object_type, object_name=None, matcher=None):
+        """ Returns matching objects
+
+        find will first look for objects in the cache (if on). If there is no
+        objects to be found in the cache the method will continue to look in
+        the C++ pool. If found and caching is on, the result will be cached
+        before returned.
+        """
+        if matcher is None: matcher = exact
+
+        if not self.caching:
+            if not object_name:
+                attics = self.pool.get(
+                    object_type,
+                    matcher,
+                    self.logical_file.error_handler
+                )
+            else:
+                attics = self.pool.get(
+                    object_type,
+                    object_name,
+                    matcher,
+                    self.logical_file.error_handler
+                )
+
+            return self.promote(attics)
+
+        # This is an optimalization for direct cache lookup.
+        if isinstance(matcher, utils.exact_matcher) and object_name is not None:
+            return self[object_type][object_name]
+
+        types = [x for x in self.types() if matcher.match(object_type, x)]
+
+        matches = []
+        for obj_type in types:
+            for name, objs in self[obj_type].items():
+                if object_name is None or matcher.match(object_name, name):
+                    matches.extend(objs)
+        return matches
+
+    def promote(self, attics):
+        """Promote dlisio.core.basic_objects to first-class Python objects
+
+        E.g. Channel(), Frame() or Tool()
+        """
+        objects = []
+        for attic in attics:
+            try:
+                pythontype = self.logical_file.types[attic.type]
+                obj = pythontype(attic, lf=self.logical_file)
+            except KeyError:
+                obj = Unknown(attic, lf=self.logical_file)
+
+            objects.append(obj)
+
+        return objects
+
+
 class LogicalFile(object):
     """Logical file (LF)
 
@@ -139,6 +292,17 @@ class LogicalFile(object):
     two objects of the same type to have the same name, as long as either their
     origin or copynumber differ. E.g. there may exist two channels with the
     same name/mnemonic.
+
+    **Metadata caching**
+
+    All metadata (e.g. Frame, Channel, Parameter) are cached by default. This
+    avoids re-creation of the same objects.
+
+    Note that changes to settings such as :func:`dlisio.common.set_encodings`
+    or :attr:`LogicalFile.error_handler` *after* loading the file will not
+    propagate to already-cached objects. It's therefore advisable that such
+    settings are set before loading the file. Alternatively, you can manually
+    toggle on and off caching to clear it with :func:`cache_metadata`.
     """
     types = {
         'AXIS'                   : Axis,
@@ -179,14 +343,16 @@ class LogicalFile(object):
     then the users responsibility of ensuring correctness for the custom class.
     """
 
-    def __init__(self, stream, object_pool, fdata_index, sul, error_handler):
+    def __init__(self, stream, object_sets, fdata_index, sul, error_handler):
         self.file = stream
-        self.object_pool = object_pool
-        self.sul = sul
+        self.sul  = sul
+
         self.fdata_index = fdata_index
+        self.store       = ObjectStore(self, object_sets)
+
         self.error_handler = error_handler
 
-        if 'UPDATE' in self.object_pool.types:
+        if 'UPDATE' in self.store.types():
             msg = ('{} contains UPDATE-object(s) which changes other '
                    'objects. dlisio lacks support for UPDATEs, hence the '
                    'data in this logical file might be wrongly presented.')
@@ -213,6 +379,22 @@ class LogicalFile(object):
         except AttributeError:
             desc = 'Unknown'
         return 'LogicalFile({})'.format(desc)
+
+    def cache_metadata(self, cache):
+        """ Toggle caching of metadata objects
+
+        By default, the metadata objects are cached to avoid unnecessary
+        re-creation of objects. Like all caching, this trades CPU time for
+        memory usage.
+
+        Parameters
+        ----------
+
+        cache : bool
+            Toggle caching on/off
+        """
+        self.store.clear_cache()
+        self.store.caching = cache
 
     class IndexedObjectDescriptor:
         """ Return all objects of this type"""
@@ -287,13 +469,12 @@ class LogicalFile(object):
 
         """
         unknowns = defaultdict(dict)
-        for t in set(self.object_pool.types):
+        for t in self.store.types():
             if t in self.types: continue
             objects = self.find(t, matcher=exact)
             unknowns[t] = {x.fingerprint : x for x in objects}
 
         return unknowns
-
 
     def find(self, objecttype, objectname=None, matcher=None):
         """Find objects in the logical file
@@ -363,23 +544,9 @@ class LogicalFile(object):
         >>> f.find('FRAME', matcher=dlisio.dlis.exact)
         [Frame(60B), Frame(20B), Frame(10B)]
         """
-        if not matcher:
-            matcher = regex
+        if matcher is None: matcher = regex
+        return self.store.find(objecttype, objectname, matcher)
 
-        if not objectname:
-            attics = self.object_pool.get(objecttype, matcher, self.error_handler)
-        else:
-            attics = self.object_pool.get(objecttype, objectname, matcher, self.error_handler)
-
-        objects = []
-        for attic in attics:
-            try:
-                obj = self.types[attic.type](attic, lf=self)
-            except KeyError:
-                obj = Unknown(attic, lf=self)
-            objects.append(obj)
-
-        return objects
 
     def object(self, type, name, origin=None, copynr=None):
         """
@@ -413,7 +580,7 @@ class LogicalFile(object):
         MKAP
 
         """
-        matches = self.find(type, name, exact)
+        matches = self.store.find(type, name, exact)
 
         if origin is not None:
             matches = [o for o in matches if o.origin == origin]
@@ -472,7 +639,7 @@ class LogicalFile(object):
         utils.describe_dict(buf, d, width, indent)
 
         known, unknown = {}, {}
-        for objtype in self.object_pool.types:
+        for objtype in self.store.types():
             objs = self.find(objtype, matcher=exact)
             if objtype in self.types: known[objtype]   = len(objs)
             else:                     unknown[objtype] = len(objs)
@@ -489,8 +656,7 @@ class LogicalFile(object):
 
     def load(self):
         """ Force load all objects - mainly indended for debugging"""
-        _ = [self.find(x, matcher=exact)
-             for x in self.object_pool.types]
+        _ = [self.find(x, matcher=exact) for x in self.store.types()]
 
     def storage_label(self):
         """Return the storage label of the physical file

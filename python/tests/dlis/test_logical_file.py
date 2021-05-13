@@ -259,3 +259,59 @@ def test_noform_data(tmpdir):
 
         noform_unused = f.object('NO-FORMAT', 'NOFORMAT-UNUSED', 10, 0)
         assert len(noform_unused.data()) == 0
+
+
+def test_objectstore_clear_cache(f):
+    # Make sure the cache is cleared
+    f.store.clear_cache()
+
+    _ = f.parameters
+    assert 'PARAMETER' in f.store.cache
+
+    f.store.clear_cache()
+    assert not'PARAMETER' in f.store.cache
+
+def test_objectstore_objects_are_cached(f):
+    # Make sure the cache is cleared
+    f.store.clear_cache()
+    assert not'PARAMETER' in f.store.cache
+
+    _ = f.parameters
+    assert len(f.store.cache['PARAMETER']) == 3
+
+    _ = f.find('CHANNEL|FRAME', 'CHANN1')
+    assert len(f.store.cache['CHANNEL']) == 4
+    assert len(f.store.cache['FRAME'])   == 2
+
+    _ = f.object('TOOL', 'TOOL1')
+    assert len(f.store.cache['TOOL']) == 2
+
+    # Only objects of the so-far queried types are in the cache
+    expected = {'PARAMETER', 'CHANNEL', 'FRAME', 'TOOL'}
+    assert set(f.store.cache.keys()) == expected
+
+    # Objects are not cached again
+    _ = f.parameters
+    assert len(f.store.cache['PARAMETER']) == 3
+
+    _ = f.find('CHANNEL|FRAME', 'CHANN1')
+    assert len(f.store.cache['CHANNEL']) == 4
+    assert len(f.store.cache['FRAME'])   == 2
+
+    _ = f.object('TOOL', 'TOOL1')
+    assert len(f.store.cache['TOOL']) == 2
+
+def test_objectstore_objects_are_not_cached(f):
+    f.cache_metadata(False)
+
+    objs = f.parameters
+    assert len(objs) == 3
+    assert 'PARAMETER' not in f.store.cache
+
+    objs = f.find('CHANNEL|FRAME', 'CHANN1')
+    assert len(objs) == 1
+    assert 'CHANNEL' not in f.store.cache
+    assert 'FRAME' not in f.store.cache
+
+    _ = f.object('TOOL', 'TOOL1')
+    assert 'TOOL' not in f.store.cache
