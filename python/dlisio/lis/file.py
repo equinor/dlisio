@@ -1,4 +1,5 @@
 import logging
+log = logging.getLogger(__name__)
 
 from .. import core
 from .information_record import InformationRecord
@@ -32,7 +33,7 @@ class HeaderTrailer():
             Returns None if the Header Record is missing.
         """
         if self.rawheader is None:
-            logging.warning("Missing Header Record - File structure is broken")
+            log.warning("Missing Header Record - File structure is broken")
             return None
 
         return parse_record(self.rawheader)
@@ -50,7 +51,7 @@ class HeaderTrailer():
             Returns None if the Trailer Record is missing.
         """
         if self.rawtrailer is None:
-            logging.info("No (optional) Trailer Record present")
+            log.info("No (optional) Trailer Record present")
             return None
 
         return parse_record(self.rawtrailer)
@@ -158,7 +159,7 @@ class LogicalFile():
 
         if len(info) == 0:
             msg = "No {} Logical Record in {}"
-            logging.warning(msg.format(core.rectype_tostring(rectype), self))
+            log.warning(msg.format(core.rectype_tostring(rectype), self))
             return None
 
         rec = self.io.read_record(info[0])
@@ -184,7 +185,7 @@ class LogicalFile():
 
         if len(info) == 0:
             msg = "No {} Logical Record in {}"
-            logging.info(msg.format(core.rectype_tostring(rectype), self))
+            log.info(msg.format(core.rectype_tostring(rectype), self))
             return None
 
         rec = self.io.read_record(info[0])

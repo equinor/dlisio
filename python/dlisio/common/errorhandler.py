@@ -1,19 +1,20 @@
-import logging
 from enum import Enum
-
 from dlisio import core
+
+import logging
+log = logging.getLogger(__name__)
 
 class Actions(Enum):
     """
     Actions available for various specification violations
     """
-    LOG_DEBUG   = lambda msg: logging.debug(msg)
+    LOG_DEBUG   = lambda msg: log.debug(msg)
     """logging.debug"""
-    LOG_INFO    = lambda msg: logging.info(msg)
+    LOG_INFO    = lambda msg: log.info(msg)
     """logging.info"""
-    LOG_WARNING = lambda msg: logging.warning(msg)
+    LOG_WARNING = lambda msg: log.warning(msg)
     """logging.warning"""
-    LOG_ERROR   = lambda msg: logging.error(msg)
+    LOG_ERROR   = lambda msg: log.error(msg)
     """logging.error"""
     RAISE       = lambda msg: ErrorHandler.raise_msg(msg)
     """raise RuntimeError"""
@@ -124,6 +125,7 @@ class ErrorHandler(core.error_handler):
 
     >>> from dlisio.common import ErrorHandler, Actions
     >>> def myhandler(msg):
+    ...     logging.getLogger('custom').info("error in dlisio")
     ...     raise RuntimeError("Custom handler: " + msg)
     >>> errorhandler = ErrorHandler(
     ...     info     = Actions.SWALLOW,

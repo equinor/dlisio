@@ -1,4 +1,6 @@
 import logging
+log = logging.getLogger(__name__)
+
 import numpy as np
 from collections import OrderedDict
 
@@ -88,7 +90,7 @@ class Channel(BasicObject):
     def frame(self):
         if self.logicalfile is None:
             msg = 'Unable to lookup frame, {} has no logical file'
-            logging.info(msg.format(self))
+            log.info(msg.format(self))
             return None
 
         # Find the frame(s) that are claiming ownership over this channel
@@ -109,11 +111,11 @@ class Channel(BasicObject):
 
         if len(frames) == 0:
             msg = '{} does not belong to any Frame'
-            logging.info(msg.format(self))
+            log.info(msg.format(self))
 
         if len(frames) > 1:
             msg = '{} belongs to multiple frames. Candidates are {}'
-            logging.info(msg.format(self, frames))
+            log.info(msg.format(self, frames))
 
         return None
 
@@ -244,7 +246,7 @@ class Channel(BasicObject):
             return np.copy(self.frame.curves()[self.fingerprint])
 
         msg = 'There is no recorded curve-data for {}'
-        logging.info(msg.format(self))
+        log.info(msg.format(self))
         return None
 
     def describe_attr(self, buf, width, indent, exclude):

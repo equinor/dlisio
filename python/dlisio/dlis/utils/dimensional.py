@@ -1,4 +1,6 @@
 import logging
+log = logging.getLogger(__name__)
+
 import numpy as np
 
 from collections.abc import Sequence
@@ -136,7 +138,7 @@ def sampling(data, shape, single=False):
     if single:
         if len(array) != 1:
             msg = 'found {} samples, should be 1'
-            logging.warning(msg.format(len(array)))
+            log.warning(msg.format(len(array)))
         return array[0]
 
     return array
