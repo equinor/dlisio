@@ -4,7 +4,6 @@ representation codes
 """
 import pytest
 import numpy as np
-import sys
 from datetime import datetime
 
 from dlisio import dlis

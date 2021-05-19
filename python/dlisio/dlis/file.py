@@ -6,7 +6,6 @@ log = logging.getLogger(__name__)
 from collections import defaultdict, OrderedDict
 from io import StringIO
 
-from .basicobject import BasicObject
 from .axis import Axis
 from .fileheader import Fileheader
 from .longname import Longname

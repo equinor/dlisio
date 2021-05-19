@@ -3,7 +3,6 @@ from collections import OrderedDict
 
 from .basicobject import BasicObject
 from . import utils
-from .. import core
 
 import logging
 log = logging.getLogger(__name__)

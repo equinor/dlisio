@@ -5,7 +5,7 @@ Testing Logical file class (also known as dlis)
 import pytest
 import os
 
-from dlisio import core, dlis
+from dlisio import dlis
 
 def test_object(f):
     channel = f.object("CHANNEL", "CHANN1", 10, 0)

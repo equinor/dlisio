@@ -1,5 +1,3 @@
-import logging
-
 from .. import core
 from . import utils
 

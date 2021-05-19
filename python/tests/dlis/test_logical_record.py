@@ -4,7 +4,7 @@ Testing logical record data representation level - Chapter 3.
 
 import pytest
 from datetime import datetime
-import os, sys
+import os
 
 from dlisio import dlis
 from dlisio.core import dlis_reprc as reprc

@@ -6,7 +6,6 @@ import pytest
 import numpy as np
 from datetime import datetime
 
-from dlisio import core
 from dlisio import dlis
 from dlisio.dlis import mkunique
 
