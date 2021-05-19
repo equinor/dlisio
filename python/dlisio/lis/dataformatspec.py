@@ -38,6 +38,7 @@ class DataFormatSpec():
 
     def __init__(self, attic):
         self.attic = attic
+        self.default_index_mnem = 'DEPT'
 
     def __repr__(self):
         return 'DataFormatSpec()'
@@ -45,6 +46,45 @@ class DataFormatSpec():
     @property
     def info(self):
         return self.attic.info
+
+    @property
+    def index_mnem(self):
+        """ Mnemonic of the index
+
+        Returns
+        -------
+
+        mnemonic : str
+        """
+        nspecs = len(self.specs)
+        if self.depth_mode == 0 and nspecs == 0: return None
+        if self.depth_mode == 0 and nspecs >  0: return self.specs[0].mnemonic
+        if self.depth_mode == 1:                 return self.default_index_mnem
+
+    @property
+    def index_units(self):
+        """ Units of the index
+
+        Returns
+        -------
+
+        units : str
+        """
+        nspecs = len(self.specs)
+        if self.depth_mode == 0 and nspecs == 0: return None
+        if self.depth_mode == 0 and nspecs >  0: return self.specs[0].units
+        if self.depth_mode == 1:                 return self.depth_units
+
+    def sample_rates(self):
+        """ Return all sample rates used by (non-index) Channels in this DFSR
+
+        Returns
+        -------
+
+        rates : set of ints
+        """
+        first = 1 if self.depth_mode == 0 else 0
+        return { x.samples for x in self.specs[first:] }
 
     @property
     def specs(self):
@@ -111,6 +151,13 @@ class DataFormatSpec():
     @property
     def depth_units(self):
         """Units of depth/index channel
+
+        This is typically only defined when :attr:`depth_mode` is 1. When depth
+        mode is 0, the depth channel is defined by the first Spec Block in
+        :attr:`specs`.
+
+        If you don't care about the depth recoding mode and just want the units
+        of the index, use :attr:`index_units` instead.
         """
         eb = core.lis_ebtype.units_of_depth
         return self.entry_value(eb, default='.1IN')

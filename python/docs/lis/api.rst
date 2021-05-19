@@ -18,6 +18,7 @@ LIS Logical File
 LIS Curves
 ----------
 .. autofunction:: dlisio.lis.curves()
+.. autofunction:: dlisio.lis.curves_metadata()
 
 LIS Logical Records
 -------------------
