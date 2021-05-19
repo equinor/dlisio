@@ -7,7 +7,7 @@ import numpy as np
 from datetime import datetime
 
 from dlisio import dlis
-from dlisio.dlis import mkunique
+from dlisio.dlis.frame import mkunique
 
 def load_curves(fpath):
     with dlis.load(fpath) as (f, *_):

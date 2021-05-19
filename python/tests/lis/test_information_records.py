@@ -261,20 +261,12 @@ def test_inforecords(f):
         assert components[2].component == 89
 
 def test_table_dump(f):
-    table_dumps = [f.io.read_record(x)
-                  for x in f.explicits()
-                  if x.type == core.lis_rectype.table_dump]
-
     with pytest.raises(NotImplementedError) as exc:
-        lis.parse_record(table_dumps[0])
+        f.parse_records(core.lis_rectype.table_dump)
     assert "No parsing rule for Table Dump Records" in str(exc.value)
 
 def test_encrypted_table_dump(f):
-    encrypted_table_dumps = [f.io.read_record(x)
-                  for x in f.explicits()
-                  if x.type == core.lis_rectype.enc_table_dump]
-
     with pytest.raises(NotImplementedError) as exc:
-        lis.parse_record(encrypted_table_dumps[0])
+        f.parse_records(core.lis_rectype.enc_table_dump)
     assert "No parsing rule for Encrypted Table Dump Records" in str(exc.value)
 

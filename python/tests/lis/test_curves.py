@@ -3,13 +3,15 @@ import numpy as np
 import os
 import pytest
 
+from dlisio.lis.curves import dfsr_fmtstr, dfsr_dtype, validate_dfsr
+
 def test_dfsr_fmtstring():
     path = 'data/lis/MUD_LOG_1.LIS'
 
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        indexfmt, fmt = lis.dfsr_fmtstr(dfsr, sample_rate=1)
+        indexfmt, fmt = dfsr_fmtstr(dfsr, sample_rate=1)
         assert indexfmt == 'f1'
         assert fmt      == 'f1' * 43
 
@@ -19,7 +21,7 @@ def test_dfsr_dtype():
     with lis.load(path) as (lf, *tail):
         dfsr = lf.data_format_specs()[0]
 
-        dtype = lis.dfsr_dtype(dfsr, sample_rate=1)
+        dtype = dfsr_dtype(dfsr, sample_rate=1)
 
         expected = np.dtype([
             (ch.mnemonic, np.float32)
@@ -378,7 +380,7 @@ def test_fdata_repcodes_fixed_size(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        indexfmt, fmt = lis.dfsr_fmtstr(dfs, sample_rate=1)
+        indexfmt, fmt = dfsr_fmtstr(dfs, sample_rate=1)
         assert indexfmt == 'b1'
         assert      fmt == 's1i1l1e1f1r1p1'
 
@@ -405,7 +407,7 @@ def test_fdata_repcodes_string(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        indexfmt, fmt = lis.dfsr_fmtstr(dfs, sample_rate=1)
+        indexfmt, fmt = dfsr_fmtstr(dfs, sample_rate=1)
         assert indexfmt == 'i1'
         assert fmt      == 'a32'
 
@@ -426,9 +428,9 @@ def test_fdata_repcodes_mask(tmpdir, merge_lis_prs):
         dfs = f.data_format_specs()[0]
 
         with pytest.raises(NotImplementedError):
-            lis.validate_dfsr(dfs)
+            validate_dfsr(dfs)
 
-        assert lis.dfsr_fmtstr(dfs, sample_rate=1) == ('i1', 'm4')
+        assert dfsr_fmtstr(dfs, sample_rate=1) == ('i1', 'm4')
 
         with pytest.raises(NotImplementedError):
             curves = lis.curves(f, dfs)
@@ -1107,7 +1109,7 @@ def test_fdata_fast_channel_two_different(tmpdir, merge_lis_prs):
     with lis.load(fpath) as (f,):
         dfs = f.data_format_specs()[0]
 
-        assert lis.dfsr_fmtstr(dfs, sample_rate=1) == ('l1', 'S2S3l1')
+        assert dfsr_fmtstr(dfs, sample_rate=1) == ('l1', 'S2S3l1')
         curves = lis.curves(f, dfs, sample_rate=1)
 
         expected = np.array([1, 7])
@@ -1116,7 +1118,7 @@ def test_fdata_fast_channel_two_different(tmpdir, merge_lis_prs):
         expected = np.array([13, 14])
         np.testing.assert_array_equal(curves['CH04'], expected)
 
-        assert lis.dfsr_fmtstr(dfs, sample_rate=2) == ('l1', 'b1S3S4')
+        assert dfsr_fmtstr(dfs, sample_rate=2) == ('l1', 'b1S3S4')
         curves = lis.curves(f, dfs, sample_rate=2)
 
         expected = np.array([0, 1, 4, 7])
@@ -1125,7 +1127,7 @@ def test_fdata_fast_channel_two_different(tmpdir, merge_lis_prs):
         expected = np.array([2, 3, 8, 9])
         np.testing.assert_array_equal(curves['CH02'], expected)
 
-        assert lis.dfsr_fmtstr(dfs, sample_rate=3) ==  ('l1', 'S2b1S4')
+        assert dfsr_fmtstr(dfs, sample_rate=3) ==  ('l1', 'S2b1S4')
         curves = lis.curves(f, dfs, sample_rate=3)
 
         expected = np.array([0, 0, 1, 3, 5, 7])
