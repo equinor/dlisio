@@ -92,6 +92,37 @@ to make it easy to work with programmatically:
    >>> channel.long_name
    'Bond Index'
 
+Units
+-----
+
+Alongside attribute values, a DLIS-file also contains a corresponding **units**
+field. This is true for all object attributes, even when units make little
+sense, such as for :attr:`Channel.long_name`.
+
+Currently there is no *nice* interface for accessing units with dlisio.
+They are, however, reachable through some of the more basic interfaces.
+Sensible units are also printed in :func:`BasicObject.describe`.
+
+Each metadata object has in itself an attribute attic,
+:attr:`BasicObject.attic`.
+The attic is a complete dict-like representation of the object, but without the
+syntactic sugar provided by the specialized class of the object.
+
+At the moment attribute units are only accessible through the attic:
+:code:`obj.attic['ATTRIBUTE'].units`.
+
+Every attribute has a *RP66V1 name* section in its docs that corresponds to
+the :code:`ATTRIBUTE` value, which must be used to retrieve the raw attribute.
+
+For example, given the object :code:`frame` and docs for :attr:`Frame.spacing`:
+
+.. code-block:: python
+
+   >>> frame.spacing
+   ... 800
+   >>> frame.attic['SPACING'].units
+   ... '0.5 ms'
+
 Multiple origins
 ----------------
 

@@ -16,15 +16,23 @@ class Group(BasicObject):
 
     description : str
 
+        RP66V1 name: *DESCRIPTION*
+
     object_type  : str
         Specifies the type of object that is referenced in the object list
         attribute.
 
+        RP66V1 name: *OBJECT-TYPE*
+
     object_list : list
         References to arbitrary objects.
 
+        RP66V1 name: *OBJECT-LIST*
+
     group_list : list(Group)
         Reference to other Group objects
+
+        RP66V1 name: *GROUP-LIST*
 
     Notes
     -----

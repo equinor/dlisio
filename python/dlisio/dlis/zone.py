@@ -14,12 +14,23 @@ class Zone(BasicObject):
     ----------
     description : str
         Description of the zone
+
+        RP66V1 name: *DESCRIPTION*
+
     domain : str
         Type of interval, e.g. borhole-depth, time or vertical-depth
+
+        RP66V1 name: *DOMAIN*
+
     maximum
         Latest time or deepest point, not inclusive
+
+        RP66V1 name: *MAXIMUM*
+
     minimum
         Earliest time or shallowest point, inclusive
+
+        RP66V1 name: *MINIMUM*
 
     See also
     --------

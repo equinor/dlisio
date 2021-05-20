@@ -14,25 +14,39 @@ class Wellref(BasicObject):
     permanent_datum : str
         Level from where vertical distance is measured
 
+        RP66V1 name: *PERMANENT-DATUM*
+
     vertical_zero : str
         Vertical zero is an entity that corresponds to zero depth.
+
+        RP66V1 name: *VERTICAL-ZERO*
 
     permanent_datum_elevation
         Permanent datum, structure or entity from which the vertical distance
         can be measured.
 
+        RP66V1 name: *PERMANENT-DATUM-ELEVATION*
+
     above_permanent_datum
         Distance of permanent Datum above mean sea level. Negative values
         indicates that the Permanent datum is below mean sea level
+
+        RP66V1 name: *ABOVE-PERMANENT-DATUM*
 
     magnetic_declination
         Angle between  the line of direction to geographic north and the line
         of direction to magnetic north. This defines angle with vertex at well
         reference point.
 
+        RP66V1 name: *MAGNETIC-DECLINATION*
+
     coordinate : dict
         Independent spatial coordinates. Typically, latitude, longitude and
         elevation
+
+        RP66V1 names: *COORDINATE-1-NAME*, *COORDINATE-1-VALUE*,
+        *COORDINATE-2-NAME*, *COORDINATE-2-VALUE*, *COORDINATE-3-NAME*,
+        *COORDINATE-3-VALUE*
 
     See also
     --------

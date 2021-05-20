@@ -22,66 +22,106 @@ class Origin(BasicObject):
     file_id : str
         An exact copy of Fileheader.id
 
+        RP66V1 name: *FILE-ID*
+
     file_set_name : str
         The name of the File Set that the Logical File is a part of
+
+        RP66V1 name: *FILE-SET-NAME*
 
     file_set_nr : int
         The number of the File Set that the Logical File is a part of
 
+        RP66V1 name: *FILE-SET-NUMBER*
+
     file_nr : int
         The file number of the Logical File within a File Set
+
+        RP66V1 name: *FILE-NUMBER*
 
     file_type : str
         A producer spesified File-Type that signifies the content of the
         DLIS-file
 
+        RP66V1 name: *FILE-TYPE*
+
     product : str
         Name of the software product that produced the DLIS-file
 
+        RP66V1 name: *PRODUCT*
+
     version : str
         The version of the software product that created the DLIS-file
+
+        RP66V1 name: *VERSION*
 
     programs : list(str)
         Other programs and services that was a part of the software that
         created the DLIS-file
 
+        RP66V1 name: *PROGRAMS*
+
     creation_time : datetime
         Date and time at which the DLIS-File was created
+
+        RP66V1 name: *CREATION-TIME*
 
     order_nr : str
         An unique accounting number assosiated with the creation of the
         DLIS-File
 
+        RP66V1 name: *ORDER-NUMBER*
+
     descent_nr
         The meaning of this number must be obtained directly from the producer
+
+        RP66V1 name: *DESCENT-NUMBER*
 
     run_nr
         The meaning of this number must be obtained directly from the company
 
+        RP66V1 name: *RUN-NUMBER*
+
     well_id
         Id of the well at which the measurements where acquired
+
+        RP66V1 name: *WELL-ID*
 
     well_name : str
         Name of the well at which the measurements where acquired
 
+        RP66V1 name: *WELL-NAME*
+
     field_name : str
         The field to which the well belongs
+
+        RP66V1 name: *FIELD-NAME*
 
     producer_code : int
         The producer's identifying code
 
+        RP66V1 name: *PRODUCER-CODE*
+
     producer_name : str
         The producer's name
 
+        RP66V1 name: *PRODUCER-NAME*
+
     company : str
         The name of the client company which the log was produced for
+
+        RP66V1 name: *COMPANY*
 
     namespace_name : str
         (DLIS internal) A producer-defined namespace for which the object names
         for this origin are defined under
 
+        RP66V1 name: *NAME-SPACE-NAME*
+
     namespace_version : int
         (DLIS internal) The version of the namespace.
+
+        RP66V1 name: *NAME-SPACE-VERSION*
 
     See also
     --------

@@ -44,8 +44,12 @@ class Fileheader(BasicObject):
     sequencenr : str
         Sequential position of the logical file in a storage set
 
+        RP66V1 name: *SEQUENCE-NUMBER*
+
     id : str
         Descriptive identification of the logical file
+
+        RP66V1 name: *ID*
 
 
     See also

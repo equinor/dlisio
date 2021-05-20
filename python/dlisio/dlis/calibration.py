@@ -14,22 +14,34 @@ class Calibration(BasicObject):
     method : str
         Computational method used to calibrate the channels
 
+        RP66V1 name: *METHOD*
+
     calibrated : list(Channel)
         Calibrated channels
+
+        RP66V1 name: *CALIBRATED-CHANNELS*
 
     uncalibrated : list(Channel)
         Uncalibrated channels. I.e. the channels as they where before
         calibration
 
+        RP66V1 name: *UNCALIBRATED-CHANNELS*
+
     coefficients : list(Coefficient)
         Coefficients
+
+        RP66V1 name: *COEFFICIENTS*
 
     measurements : list(Measurement)
         Measurements
 
+        RP66V1 name: *MEASUREMENTS*
+
     parameters : list(Parameter)
         Parameters containing numerical and textual information assosiated
         with the calibration process.
+
+        RP66V1 name: *PARAMETERS*
 
     See also
     --------

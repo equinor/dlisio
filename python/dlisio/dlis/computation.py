@@ -26,22 +26,34 @@ class Computation(BasicObject):
     long_name : str or Longname
         Descriptive name of the computation
 
+        RP66V1 name: *LONG-NAME*
+
     properties : list(str)
         Property indicators that summarizes the characteristics of the
         computation and the processing that has occurred to produce it
 
+        RP66V1 name: *PROPERTIES*
+
     dimension : list(int)
         Array structure of a single value
 
+        RP66V1 name: *DIMENSION*
+
     axis : list(Axis)
         Coordinate axes of the values
+
+        RP66V1 name: *AXIS*
 
     zones : list(Zone)
         Mutually disjoint zones over which the value of the current
         computation is constant
 
+        RP66V1 name: *ZONES*
+
     source
         The immediate source of the Computation
+
+        RP66V1 name: *SOURCE*
 
     See also
     --------
@@ -112,7 +124,9 @@ class Computation(BasicObject):
         certain zone. If this is the case the first zone, computation.zones[0],
         will correspond to the first value, computation.values[0] and so on.
         If there is no zones, there should only be one value, which is said to
-        be unzoned, i.e. it is defined everywere.
+        be unzoned, i.e. it is defined everywhere.
+
+        RP66V1 name: *VALUES*
 
         Raises
         ------

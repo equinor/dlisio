@@ -15,19 +15,29 @@ class Coefficient(BasicObject):
     label : str
         Identify the coefficient-role in the calibration process
 
+        RP66V1 name: *LABEL*
+
     coefficients : list
         Coefficients corresponding to the label
 
+        RP66V1 name: *COEFFICIENTS*
+
     references : list
         Nominal values for each coefficient
+
+        RP66V1 name: *REFERENCES*
 
     plus_tolerance : list
         Maximum value that a sample can exceed the reference and still be
         "within tolerance"
 
+        RP66V1 name: *PLUS-TOLERANCES*
+
     minus_tolerance : list
         Maximum value that a sample can fall below the reference and still
         be "within tolerance"
+
+        RP66V1 name: *MINUS-TOLERANCES*
 
     See also
     --------
