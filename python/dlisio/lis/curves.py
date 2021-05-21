@@ -1,5 +1,7 @@
 import numpy as np
+
 import logging
+log = logging.getLogger(__name__)
 
 from .. import core
 
@@ -434,7 +436,7 @@ def dfsr_dtype(dfsr, sample_rate, strict=True):
         dtype = np.dtype(types)
     except ValueError as exc:
         msg = "duplicated mnemonics in frame '{}': {}"
-        logging.error(msg.format(dfsr, exc))
+        log.error(msg.format(dfsr, exc))
         if strict: raise
 
         types = mkunique(types)

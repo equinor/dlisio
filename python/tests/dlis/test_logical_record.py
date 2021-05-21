@@ -4,7 +4,7 @@ Testing logical record data representation level - Chapter 3.
 
 import pytest
 from datetime import datetime
-import os, sys
+import os
 
 from dlisio import dlis
 from dlisio.core import dlis_reprc as reprc
@@ -649,7 +649,7 @@ def test_novalue_more_count(tmpdir, merge_files_oneLR):
         attr = obj2['DEFAULT_ATTRIBUTE']
         assert attr == [1, 2, 3, 4]
 
-def test_set_redundant(tmpdir, merge_files_oneLR, assert_info):
+def test_set_redundant(tmpdir, merge_files_oneLR, assert_info, assert_message_count):
     path = os.path.join(str(tmpdir), 'redundant-set.dlis')
     content = [
         'data/chap3/sul.dlis.part',
@@ -661,8 +661,11 @@ def test_set_redundant(tmpdir, merge_files_oneLR, assert_info):
     merge_files_oneLR(path, content)
 
     with dlis.load(path) as (f, *tail):
+        msg = "Redundant sets are not supported"
+        assert_message_count(msg, 0)
         _ = f.object('REDUNDANT', 'OBJECT', 1, 1)
-        assert_info("Redundant sets are not supported")
+        assert_info(msg)
+        assert_message_count(msg, 1)
 
 def test_set_replacement(tmpdir, merge_files_oneLR, assert_log):
     path = os.path.join(str(tmpdir), 'replacement-set.dlis')

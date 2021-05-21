@@ -55,6 +55,15 @@ dlisio is written and maintained by Equinor ASA as a free, simple, easy-to-use
 library to read well logs that can be tailored to our needs, and as a
 contribution to the open-source community.
 
+dlisio is divided into 3 subpackages:
+
+- :mod:`dlisio.dlis`, :ref:`rp66`
+- :mod:`dlisio.lis` , :ref:`LIS`
+- :mod:`dlisio.common`, :ref:`Common API Reference`
+
+Table of Contents
+=================
+
 .. toctree::
    :maxdepth: 1
 
@@ -81,11 +90,12 @@ contribution to the open-source community.
    lis/api
 
 .. toctree::
-   :caption: Common
-   :name: common
+   :caption: Miscellaneous
+   :name: misc
    :maxdepth: 3
 
    common-api
+   logging
 
 Indices and tables
 ==================

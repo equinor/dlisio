@@ -1,5 +1,4 @@
 from collections import OrderedDict
-import logging
 import numpy as np
 
 from .basicobject import BasicObject

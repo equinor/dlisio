@@ -1,4 +1,5 @@
 import logging
+log = logging.getLogger(__name__)
 
 # Parse attribute as bool. A warning is issued if more than one value is found.
 # This typically happens when there are inconsistencies in the file or the file
@@ -32,7 +33,7 @@ def parsevalue(value, parse_as):
 
     if parse_as == scalar:
         if len(value) != 1:
-            logging.warning(msg.format(len(value)))
+            log.warning(msg.format(len(value)))
 
         value = value[0]
         return value
@@ -45,7 +46,7 @@ def parsevalue(value, parse_as):
 
     elif parse_as == boolean:
         if len(value) != 1:
-            logging.warning(msg.format(len(value)))
+            log.warning(msg.format(len(value)))
         return bool(value[0])
 
     else:

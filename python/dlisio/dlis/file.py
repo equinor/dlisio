@@ -1,10 +1,11 @@
 import re
+
 import logging
+log = logging.getLogger(__name__)
 
 from collections import defaultdict, OrderedDict
 from io import StringIO
 
-from .basicobject import BasicObject
 from .axis import Axis
 from .fileheader import Fileheader
 from .longname import Longname
@@ -191,7 +192,7 @@ class LogicalFile(object):
                    'objects. dlisio lacks support for UPDATEs, hence the '
                    'data in this logical file might be wrongly presented.')
 
-            logging.warning(msg.format(self))
+            log.warning(msg.format(self))
 
     def __getitem__(self, type):
         """Return all objects of a given type
@@ -261,7 +262,7 @@ class LogicalFile(object):
 
         if len(values) != 1:
             msg = "Expected exactly one fileheader. Was: {}"
-            logging.warning(msg.format(values))
+            log.warning(msg.format(values))
             if len(values) == 0:
                 return None
         else:
@@ -612,6 +613,6 @@ class LogicalFile(object):
         This method is mainly intended for internal use.
         """
         if not self.sul:
-            logging.warning('file has no storage unit label')
+            log.warning('file has no storage unit label')
             return None
         return core.storage_label(self.sul)

@@ -1,10 +1,11 @@
 import numpy as np
-import logging
 from collections import OrderedDict
 
 from .basicobject import BasicObject
 from . import utils
-from .. import core
+
+import logging
+log = logging.getLogger(__name__)
 
 class Frame(BasicObject):
     """Frame
@@ -143,7 +144,7 @@ class Frame(BasicObject):
         msg = 'Frame has no channels'
         index = None
         if len(self.channels) == 0:
-            logging.info(msg)
+            log.info(msg)
             return index
 
         if self.index_type is None: index = 'FRAMENO'
@@ -220,8 +221,8 @@ class Frame(BasicObject):
             try:
                 label = fmtlabel(ch.name, ch.origin, ch.copynumber)
             except (IndexError, ValueError):
-                logging.error(fmterr.format(ch.name, self.name))
-                logging.debug(info(ch.name, ch.origin, ch.copynumber))
+                log.error(fmterr.format(ch.name, self.name))
+                log.debug(info(ch.name, ch.origin, ch.copynumber))
                 raise
 
             types.append(((ch.fingerprint, label), ch.dtype))
@@ -235,8 +236,8 @@ class Frame(BasicObject):
             try:
                 label = fmtlabel(prev.name, prev.origin, prev.copynumber)
             except (IndexError, ValueError):
-                logging.error(fmterr.format(ch.name, self.name))
-                logging.debug(info(prev.name, prev.origin, prev.copynumber))
+                log.error(fmterr.format(ch.name, self.name))
+                log.debug(info(prev.name, prev.origin, prev.copynumber))
                 raise
 
             # update the previous label with this name, and mark (with None)
@@ -247,7 +248,7 @@ class Frame(BasicObject):
         try:
             dtype = np.dtype(types)
         except ValueError as exc:
-            logging.error(duplerr.format(self.name, exc))
+            log.error(duplerr.format(self.name, exc))
             if strict: raise
 
             types = mkunique(types)

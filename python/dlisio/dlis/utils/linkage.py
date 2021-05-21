@@ -1,4 +1,5 @@
 import logging
+log = logging.getLogger(__name__)
 
 from ... import core
 
@@ -19,14 +20,14 @@ def lookup(lf, reftype, value):
         obname, objtype = reftype(value)
     except TypeError:
         msg = "Unable to create object-reference to '{}'"
-        logging.warning(msg.format(value))
+        log.warning(msg.format(value))
         return None
 
     try:
         return lf.object(objtype, obname.id, obname.origin, obname.copynumber)
     except ValueError as e:
         msg = "Unable to find linked object: {}"
-        logging.warning(msg.format(str(e)))
+        log.warning(msg.format(str(e)))
         return None
 
 def isreference(val):

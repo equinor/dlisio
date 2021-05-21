@@ -1117,7 +1117,10 @@ void object_set::parse() noexcept (true) {
     const char* cur = this->record.data.data();
 
     try {
-        /* As cursor value is not stored, read data again to get the position */
+        /* As cursor value is not stored, read data again to get the position.
+           Clear the log to prevent duplication.
+         */
+        this->log.clear();
         cur = parse_set_component(cur);
         cur = parse_template(cur);
               parse_objects(cur);
