@@ -2,6 +2,7 @@
 #define DLISIO_FILE_HPP
 
 #include <cstdint>
+#include <cstdio>
 
 #include <lfp/lfp.h>
 
@@ -70,6 +71,9 @@ public:
 private:
     lfp_protocol* f;
 };
+
+/* Opens a file in 'rb' mode */
+std::FILE* fopen( const char* path ) noexcept (false);
 
 } // namespace dlisio
 

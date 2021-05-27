@@ -153,6 +153,17 @@ def test_load_nonexisting_file():
     msg = "'this_file_does_not_exist.dlis' is not an existing regular file"
     assert msg in str(exc.value)
 
+@pytest.mark.parametrize('id', [
+    "æøå",
+    "кириллица",
+    ])
+def test_file_with_nonascii_name(tmpdir, id):
+    path = str(tmpdir.join('file with '+id+'.dlis'))
+    shutil.copyfile('data/chap4-7/many-logical-files.dlis', path)
+
+    with dlis.load(path) as files:
+        assert len(files) == 3
+
 def test_load_directory():
     with pytest.raises(OSError) as exc:
         _ = dlis.load(".")

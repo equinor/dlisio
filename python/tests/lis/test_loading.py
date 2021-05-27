@@ -60,6 +60,17 @@ def test_load_nonexisting_file():
     msg = "unable to open file for path this_file_does_not_exist.lis"
     assert msg in str(exc.value)
 
+@pytest.mark.parametrize('id', [
+    "中国文字",
+    "ąęóćłńśźżçè",
+    ])
+def test_file_with_nonascii_name(tmpdir, id):
+    path = str(tmpdir.join('file with '+id+'.lis'))
+    shutil.copyfile('data/lis/layouts/layout_tif_01.lis', path)
+
+    with lis.load(path) as files:
+        assert len(files) == 4
+
 def test_load_empty_file(tmpdir, merge_lis_prs):
     fpath = os.path.join(str(tmpdir), 'empty.lis')
     merge_lis_prs(fpath, [])
