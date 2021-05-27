@@ -100,100 +100,6 @@ def test_object_same_signature_diff_content(tmpdir_factory, merge_files_manyLR):
         chs = f.find("CHANNEL", "CHANN1")
         assert len(chs) == 2
 
-def test_match(tmpdir_factory, merge_files_manyLR):
-    fpath = str(tmpdir_factory.mktemp('lf').join('match.dlis'))
-    content = [
-        'data/chap4-7/eflr/envelope.dlis.part',
-        'data/chap4-7/eflr/file-header.dlis.part',
-        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH111-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.127-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.440-TYPE-I.440.MATCH1-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
-    ]
-    merge_files_manyLR(fpath, content)
-    with dlis.load(fpath) as (f, *_):
-        refs = []
-        refs.append(f.object('CHANNEL', 'MATCH1', 16, 0))
-        refs.append(f.object('CHANNEL', 'MATCH111', 16, 0))
-        refs.append(f.object('CHANNEL', 'MATCH1', 127, 0))
-
-        channels = f.match('.*match1.*')
-
-        assert len(list(channels)) == 3
-        for ch in channels:
-            assert ch in refs
-
-        channels = f.match('.*match1.*', ".*")
-        assert len(list(channels)) == 5
-
-def test_match_type(tmpdir_factory, merge_files_manyLR):
-    fpath = str(tmpdir_factory.mktemp('lf').join('match-type.dlis'))
-    content = [
-        'data/chap4-7/eflr/envelope.dlis.part',
-        'data/chap4-7/eflr/file-header.dlis.part',
-        'data/chap4-7/eflr/match/T.FRAME-I.MATCH22-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.MATCH-I.MATCH22-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
-    ]
-    merge_files_manyLR(fpath, content)
-    with dlis.load(fpath) as (f, *_):
-        refs = []
-        refs.append( f.object('MATCH', 'MATCH22', 16, 0) )
-        refs.append( f.object('FRAME', 'MATCH22', 16, 0) )
-
-        objs = f.match('MATCH2.*', type='MATCH|FRAME')
-
-        assert len(list(objs)) == len(refs)
-        for obj in objs:
-            assert obj in refs
-
-        objs = f.match('', type='MATCH|frame')
-
-        assert len(list(objs)) == len(refs)
-        for obj in objs:
-            assert obj in refs
-
-def test_match_invalid_regex(f):
-    with pytest.raises(ValueError):
-        _ = next(f.match('*'))
-
-    with pytest.raises(ValueError):
-        _ = next(f.match('AIBK', type='*'))
-
-def test_match_special_characters(tmpdir_factory, merge_files_manyLR):
-    fpath = str(tmpdir_factory.mktemp('lf').join('match-special.dlis'))
-    content = [
-        'data/chap4-7/eflr/envelope.dlis.part',
-        'data/chap4-7/eflr/file-header.dlis.part',
-        'data/chap4-7/eflr/match/T.CHANNEL-I.MATCH1-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.440-TYPE-I.440.MATCH1-O.16-C.0.dlis.part',
-        'data/chap4-7/eflr/match/T.440.TYPE-I.440-MATCH1-O.16-C.0.dlis.part',
-    ]
-    merge_files_manyLR(fpath, content)
-    with dlis.load(fpath) as (f, *_):
-        o1 = f.object('440.TYPE', '440-MATCH1', 16, 0)
-        o2 = f.object('440-TYPE', '440.MATCH1', 16, 0)
-
-        refs = [o1, o2]
-        channels = f.match('440.MATCH1', '440.TYPE')
-
-        assert len(list(channels)) == 2
-        for ch in channels:
-            assert ch in refs
-
-        refs = [o1]
-        channels = f.match('440-MATCH1', '440.TYPE')
-        assert len(list(channels)) == 1
-        for ch in channels:
-            assert ch in refs
-
-        refs = [o2]
-        channels = f.match('440.MATCH1', '440-TYPE')
-        assert len(list(channels)) == 1
-        for ch in channels:
-            assert ch in refs
-
 def test_find(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('lf').join('find.dlis'))
     content = [
@@ -353,3 +259,59 @@ def test_noform_data(tmpdir):
 
         noform_unused = f.object('NO-FORMAT', 'NOFORMAT-UNUSED', 10, 0)
         assert len(noform_unused.data()) == 0
+
+
+def test_objectstore_clear_cache(f):
+    # Make sure the cache is cleared
+    f.store.clear_cache()
+
+    _ = f.parameters
+    assert 'PARAMETER' in f.store.cache
+
+    f.store.clear_cache()
+    assert not'PARAMETER' in f.store.cache
+
+def test_objectstore_objects_are_cached(f):
+    # Make sure the cache is cleared
+    f.store.clear_cache()
+    assert not'PARAMETER' in f.store.cache
+
+    _ = f.parameters
+    assert len(f.store.cache['PARAMETER']) == 3
+
+    _ = f.find('CHANNEL|FRAME', 'CHANN1')
+    assert len(f.store.cache['CHANNEL']) == 4
+    assert len(f.store.cache['FRAME'])   == 2
+
+    _ = f.object('TOOL', 'TOOL1')
+    assert len(f.store.cache['TOOL']) == 2
+
+    # Only objects of the so-far queried types are in the cache
+    expected = {'PARAMETER', 'CHANNEL', 'FRAME', 'TOOL'}
+    assert set(f.store.cache.keys()) == expected
+
+    # Objects are not cached again
+    _ = f.parameters
+    assert len(f.store.cache['PARAMETER']) == 3
+
+    _ = f.find('CHANNEL|FRAME', 'CHANN1')
+    assert len(f.store.cache['CHANNEL']) == 4
+    assert len(f.store.cache['FRAME'])   == 2
+
+    _ = f.object('TOOL', 'TOOL1')
+    assert len(f.store.cache['TOOL']) == 2
+
+def test_objectstore_objects_are_not_cached(f):
+    f.cache_metadata(False)
+
+    objs = f.parameters
+    assert len(objs) == 3
+    assert 'PARAMETER' not in f.store.cache
+
+    objs = f.find('CHANNEL|FRAME', 'CHANN1')
+    assert len(objs) == 1
+    assert 'CHANNEL' not in f.store.cache
+    assert 'FRAME' not in f.store.cache
+
+    _ = f.object('TOOL', 'TOOL1')
+    assert 'TOOL' not in f.store.cache

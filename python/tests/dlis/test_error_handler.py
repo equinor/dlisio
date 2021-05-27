@@ -261,6 +261,7 @@ def test_complex(create_very_broken_file, tmpdir):
     # escape errors on load
     errorhandler.critical = Actions.LOG_ERROR
     with dlis.load(path, error_handler=errorhandler) as (f, *_):
+        f.cache_metadata(False)
 
         # fail again on parsing objects not parsed on load
         errorhandler.critical = Actions.RAISE

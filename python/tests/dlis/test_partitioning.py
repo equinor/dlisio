@@ -18,14 +18,14 @@ def test_partitioning():
 
         key = core.fingerprint('FRAME', 'FRAME-INC', 10, 0)
 
-        assert f1.object_pool.types == ['ORIGIN', 'CHANNEL', 'FRAME']
+        assert f1.store.types() == { 'ORIGIN', 'CHANNEL', 'FRAME' }
         assert not f1.fdata_index
 
-        assert f2.object_pool.types == ['FILE-HEADER', 'ORIGIN', 'CHANNEL',
-                                     'FRAME', 'FRAME']
+        assert f2.store.types() == { 'FILE-HEADER', 'ORIGIN', 'CHANNEL',
+                                     'FRAME', 'FRAME' }
         assert f2.fdata_index[key] == [824, 1060]
 
-        assert f3.object_pool.types == ['FILE-HEADER']
+        assert f3.store.types() == { 'FILE-HEADER' }
         assert not f3.fdata_index
 
 def test_objects_ownership():

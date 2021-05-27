@@ -32,6 +32,8 @@ class ActuallyKnown(dlisio.dlis.BasicObject):
         return self['SOME_STATUS']
 
 def test_type_new(f):
+    f.cache_metadata(False)
+
     assert len(f.unknowns) == 2
     unknown = f.object('UNKNOWN_SET', 'OBJ1', 10, 0)
     with pytest.raises(AttributeError):
@@ -52,6 +54,7 @@ def test_type_new(f):
         del f.types['UNKNOWN_SET']
 
 def test_type_change(f):
+    f.cache_metadata(False)
     try:
         # Parse all parameters as if they where Channels
         dlisio.dlis.LogicalFile.types['PARAMETER'] = dlisio.dlis.Channel
