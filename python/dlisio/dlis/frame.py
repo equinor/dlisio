@@ -37,8 +37,12 @@ class Frame(BasicObject):
     description : str
         Textual description of the Frame.
 
+        RP66V1 name: *DESCRIPTION*
+
     channels : list(Channel)
         Channels in the frame
+
+        RP66V1 name: *CHANNELS*
 
     index_type : str
         The measurement of the index, e.g. borehole-depth. If **not** None, the
@@ -46,20 +50,32 @@ class Frame(BasicObject):
         None, then the Frame has no index channel and is implicitly indexed by
         samplenumber i.e. 0, 1, ..., n.
 
+        RP66V1 name: *INDEX-TYPE*
+
     direction : str
         Direction of the index (Increasing or decreasing)
+
+        RP66V1 name: *DIRECTION*
 
     spacing
         Constant spacing in the index
 
+        RP66V1 name: *SPACING*
+
     index_min
         Minimum value of the index
+
+        RP66V1 name: *INDEX-MIN*
 
     index_max
         Maximum value of the index
 
+        RP66V1 name: *INDEX-MAX*
+
     encrypted : bool
         If the frame was encrypted
+
+        RP66V1 name: *ENCRYPTED*
 
     See also
     --------

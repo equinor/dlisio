@@ -17,11 +17,17 @@ class Axis(BasicObject):
     axis_id : str
         Axis identifier
 
+        RP66V1 name: *AXIS-ID*
+
     coordinates : list
         Explicit coordinate value along the axis
 
+        RP66V1 name: *COORDINATES*
+
     spacing
         Constant, signed spacing along the axis between successive coordinates
+
+        RP66V1 name: *SPACING*
 
     See also
     --------

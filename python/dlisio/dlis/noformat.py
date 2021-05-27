@@ -15,8 +15,12 @@ class Noformat(BasicObject):
         Client-provided name for the data, for example an external file
         specification
 
+        RP66V1 name: *CONSUMER-NAME*
+
     description : str
         Textual description
+
+        RP66V1 name: *DESCRIPTION*
 
     See also
     --------

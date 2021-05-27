@@ -28,27 +28,43 @@ class Channel(BasicObject):
     long_name : str or Longname
         Descriptive name of the channel.
 
+        RP66V1 name: *LONG-NAME*
+
     reprc : int
         Representation code
 
+        RP66V1 name: *REPRESENTATION-CODE*
+
     units : str
         Physical units of each element in the channel's sample arrays
+
+        RP66V1 name: *UNITS*
 
     properties : list(str)
         Property indicators that summarizes the characteristics of the
         channel and the processing that have produced it.
 
+        RP66V1 name: *PROPERTIES*
+
     dimension : list(int)
         Dimensions of the samples
+
+        RP66V1 name: *DIMENSION*
 
     axis : list(Axis)
         Coordinate axes of the samples
 
+        RP66V1 name: *AXIS*
+
     element_limit : list(int)
         The maximum size of the sample dimensions
 
+        RP66V1 name: *ELEMENT-LIMIT*
+
     source
         The source of the channel. Returns the source object, if any
+
+        RP66V1 name: *SOURCE*
 
     frame : Frame
         Frame to which channel belongs to

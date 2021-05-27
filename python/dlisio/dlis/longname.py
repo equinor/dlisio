@@ -13,52 +13,82 @@ class Longname(BasicObject):
     modifier : list(str)
         General modifier
 
+        RP66V1 name: *GENERAL-MODIFIER*
+
     quantity : str
         Something that is measureable E.g. the diameter of a pipe
 
+        RP66V1 name: *QUANTITY*
+
     quantity_mod : list(str)
         Specialization of a quantity
+
+        RP66V1 name: *QUANTITY-MODIFIER*
 
     altered_form : str
         Altered form of the quantity. E.g. standard deviation is an altered
         form of a temperature quantity.
 
+        RP66V1 name: *ALTERED-FORM*
+
     entity : str
         The entity of which the quantity is measured. E.g. entity =
         borehole, quantity = diameter
 
+        RP66V1 name: *ENTITY*
+
     entity_mod : list(str)
         Specialization of an entity
+
+        RP66V1 name: *ENTITY-MODIFIER*
 
     entity_nr : str
         Distinguishes multiple instances of the same entity
 
+        RP66V1 name: *ENTITY-NUMBER*
+
     entity_part : str
         Part of an entity
+
+        RP66V1 name: *ENTITY-PART*
 
     entity_part_nr : str
         Distinguishes multiple instances of the same entity part
 
+        RP66V1 name: *ENTITY-PART-NUMBER*
+
     generic_source : str
         The source of the information
+
+        RP66V1 name: *GENERIC-SOURCE*
 
     source_part : list(str)
         A specific part of the source information. E.g. "transmitter"
 
+        RP66V1 name: *SOURCE-PART*
+
     source_part_nr : list(str)
         Distinguishes multiple instances of the same source part
+
+        RP66V1 name: *SOURCE-PART-NUMBER*
 
     conditions : list(str)
         Conditions applicable at the time the information was acquired or
         generated
 
+        RP66V1 name: *CONDITIONS*
+
     standard_symbol : str
         Industry-standardized symbolic name by which the information is
         known. The possible values are specified by POSC
 
+        RP66V1 name: *STANDARD-SYMBOL*
+
     private_symbol : str
         Association between the recorded information and corresponding
         records or objects of the Producer’s internal or corporate database
+
+        RP66V1 name: *PRIVATE-SYMBOL*
 
 
     See also

@@ -13,6 +13,8 @@ class Comment(BasicObject):
     text : list(str)
         Textual comments
 
+        RP66V1 name: *TEXT*
+
     See also
     --------
 

@@ -14,39 +14,61 @@ class Process(BasicObject):
 
     description : str
 
+        RP66V1 name: *DESCRIPTION*
+
     trademark_name  : str
         Trademark name refers to the process and its products.
 
+        RP66V1 name: *TRADEMARK-NAME*
+
     version : str
         Software version.
+
+        RP66V1 name: *VERSION*
 
     properties : list(str)
         Properties that applies to the output of the process, as a result of
         the process.
 
+        RP66V1 name: *PROPERTIES*
+
     status : str
         Indicated the status of the process. It's typically updated to indicate
         when the process is completed or aborted.
 
+        RP66V1 name: *STATUS*
+
     input_channels : list(Channel)
         Channels that are used directly by this Process.
+
+        RP66V1 name: *INPUT-CHANNELS*
 
     output_channels : list(Channel)
         Channels that are produced directly by this Process.
 
+        RP66V1 name: *OUTPUT-CHANNELS*
+
     input_computations : list(Computation)
         Computations that are used directly by this Process.
 
+        RP66V1 name: *INPUT-COMPUTATIONS*
+
     output_computations : list(Computation)
         Computations that are produced directly by this Process.
+
+        RP66V1 name: *OUTPUT-COMPUTATIONS*
 
     parameters : list(Parameter)
         Parameters that are used by the Process or that directly affect the
         operation of the Process.
 
+        RP66V1 name: *PARAMETERS*
+
     comments : list(str)
         Comments contains information specific to the particular
         execution of the process.
+
+        RP66V1 name: *COMMENTS*
 
     See also
     --------

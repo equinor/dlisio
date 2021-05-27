@@ -15,23 +15,37 @@ class Message(BasicObject):
     message_type : str
         source and purpose of the message.
 
+        RP66V1 name: *TYPE*
+
     time
         time the message was issued. |crtime|
+
+        RP66V1 name: *TIME*
 
     borehole_drift
         borehole drift of the tool zero point when message was issued.
 
+        RP66V1 name: *BOREHOLE-DRIFT*
+
     vertical_depth
         vertical depth of the tool zero point when message was issued.
+
+        RP66V1 name: *VERTICAL-DEPTH*
 
     radial_drift
         radial drift of the tool zero point when message was issued.
 
+        RP66V1 name: *RADIAL-DRIFT*
+
     angular_drift
         angular drift of the tool zero point when message was issued.
 
+        RP66V1 name: *ANGULAR-DRIFT*
+
     text : list(str)
         message(s).
+
+        RP66V1 name: *TEXT*
 
     See also
     --------

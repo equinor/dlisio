@@ -16,53 +16,87 @@ class Equipment(BasicObject):
     trademark_name : str
         The producer's name for the equipment
 
+        RP66V1 name: *TRADEMARK-NAME*
+
     status : bool
         Operational status
+
+        RP66V1 name: *STATUS*
 
     generic_type : str
         Generic type
 
+        RP66V1 name: *TYPE*
+
     serial_number : str
         Serial number
+
+        RP66V1 name: *SERIAL-NUMBER*
 
     location : str
         General location of equipment during acqusition
 
+        RP66V1 name: *LOCATION*
+
     height
         Heigth
+
+        RP66V1 name: *HEIGHT*
 
     length
         Length
 
+        RP66V1 name: *LENGTH*
+
     diameter_min
         Minimum diameter
+
+        RP66V1 name: *MINIMUM-DIAMETER*
 
     diameter_max
         Maximum diameter
 
+        RP66V1 name: *MAXIMUM-DIAMETER*
+
     volume
         Volume
+
+        RP66V1 name: *VOLUME*
 
     weight
         Weight
 
+        RP66V1 name: *WEIGHT*
+
     hole_size
         Hole size
+
+        RP66V1 name: *HOLE-SIZE*
 
     pressure
         Pressure
 
+        RP66V1 name: *PRESSURE*
+
     temperature
         Temperature
+
+        RP66V1 name: *TEMPERATURE*
 
     vertical_depth
         Vertical depth
 
+        RP66V1 name: *VERTICAL-DEPTH*
+
     radial_drift
         Radial drift
 
+        RP66V1 name: *RADIAL-DRIFT*
+
     angular_drift
         Angular drift
+
+        RP66V1 name: *ANGULAR-DRIFT*
 
     See also
     --------

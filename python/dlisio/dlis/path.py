@@ -16,45 +16,67 @@ class Path(BasicObject):
     frame_type : Frame
         The frame in which the channel's of the current path are recorded.
 
+        RP66V1 name: *FRAME-TYPE*
+
     well_reference_point : Wellref
         Well Reference Point
 
+        RP66V1 name: *WELL-REFERENCE-POINT*
+
     value : list(Channel)
         Value Channel for the current Path.
+
+        RP66V1 name: *VALUE*
 
     borehole_depth
         Specifies the constant Borehole Depth coordinate for the
         current Path, It may or may not be described by a channel object.
 
+        RP66V1 name: *BOREHOLE-DEPTH*
+
     vertical_depth
         Specifies the constant Vertical Depth coordinate for the
         current Path, It may or may not be described by a channel object.
+
+        RP66V1 name: *VERTICAL-DEPTH*
 
     radial_drift
         Specifies the constant Radial Drift coordinate for the
         current Path, It may or may not be described by a channel object.
 
+        RP66V1 name: *RADIAL-DRIFT*
+
     angular_drift
         Specifies the constant Angular Drift coordinate for the
         current Path, It may or may not be described by a channel object.
+
+        RP66V1 name: *ANGULAR-DRIFT*
 
     time
         Specifies the constant Time coordinate for the
         current Path, It may or may not be described by a channel object.
         |crtime|
 
+        RP66V1 name: *TIME*
+
     depth_offset
         Specifies the Depth Offset, which indicates how much the *value*
         is "off depth".
+
+        RP66V1 name: *DEPTH-OFFSET*
 
     measure_point_offset
         Specifies a Measure Point Offset, which indicates a fixed distance
         along Borehole Depth from the Value Channel’s Measure Point to a
         Data Reference Point.
 
+        RP66V1 name: *MEASURE-POINT-OFFSET*
+
     tool_zero_offset
         Distance of the Data Reference Point for the current Path above
         the tool string’s Tool Zero Point.
+
+        RP66V1 name: *TOOL-ZERO-OFFSET*
 
 
     See also

@@ -16,23 +16,37 @@ class Tool(BasicObject):
     description : str
         Textual description of the tool
 
+        RP66V1 name: *DESCRIPTION*
+
     trademark_name : str
         The producer's name for the tool
+
+        RP66V1 name: *TRADEMARK-NAME*
 
     generic_name : str
         The name generally used by the industry to describe such a tool
 
+        RP66V1 name: *GENERIC-NAME*
+
     status : bool
         If the tool is enabled to provide information to the acquisition system
+
+        RP66V1 name: *STATUS*
 
     parts : list(Equipment)
         Equipments that makes up the tool
 
+        RP66V1 name: *PARTS*
+
     channels : list(Channel)
         Channels that are produced by this tool
 
+        RP66V1 name: *CHANNELS*
+
     parameters : list(Parameter)
         Parameters that directly affect or reflect the operation of the tool
+
+        RP66V1 name: *PARAMETERS*
 
     See also
     --------

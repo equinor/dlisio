@@ -23,14 +23,22 @@ class Parameter(BasicObject):
     long_name : Longname
         Descriptive name of the channel.
 
+        RP66V1 name: *LONG-NAME*
+
     dimension : list(int)
         Dimensions of the parameter values
+
+        RP66V1 name: *DIMENSION*
 
     axis : list(Axis)
         Coordinate axes of the parameter values
 
+        RP66V1 name: *AXIS*
+
     zones : list(Zone)
         Mutually disjoint intervals where the parameter values is constant
+
+        RP66V1 name: *ZONES*
 
     See also
     --------
@@ -90,6 +98,8 @@ class Parameter(BasicObject):
         will correspond to the first value, parameter.values[0] and so on.  If
         there is no zones, there should only be one value, which is said to be
         unzoned, i.e. it is defined everywere.
+
+        RP66V1 name: *VALUES*
 
         Raises
         ------

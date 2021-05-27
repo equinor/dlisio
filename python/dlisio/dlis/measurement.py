@@ -16,30 +16,48 @@ class Measurement(BasicObject):
     phase : str
         In what phase of the overall job sequence the measurement as acquired
 
+        RP66V1 name: *PHASE*
+
     source
         Source the measurement
+
+        RP66V1 name: *MEASUREMENT-SOURCE*
 
     mtype : str
         Type of measurement
 
+        RP66V1 name: *TYPE*
+
     dimension : list(int)
         Structure of the sample array
+
+        RP66V1 name: *DIMENSION*
 
     axis : list(Axis)
         Coordinate axis of the sample array
 
+        RP66V1 name: *AXIS*
+
     samplecount : int
         Number of samples used to compute the max/std_deviation
+
+        RP66V1 name: *SAMPLE-COUNT*
 
     begin_time
         Time of the sample acquisition. |crtime|
 
+        RP66V1 name: *BEGIN-TIME*
+
     duration
         Time duration of the sample acquisition
+
+        RP66V1 name: *DURATION*
 
     standard
         Measurable quantity of the calibration standard used to produce the
         sample
+
+        RP66V1 name: *STANDARD*
 
     See also
     --------
@@ -122,6 +140,8 @@ class Measurement(BasicObject):
 
         The type of measurment is described by the type attribute. Each sample
         may be either a scalar or ndarray
+
+        RP66V1 name: *MEASUREMENT*
         """
         try:
             samples = self.attic['MEASUREMENT'].value
@@ -142,6 +162,8 @@ class Measurement(BasicObject):
 
         Each sample may be a scalar of ndarray, but should have the same
         structure as the samples in the sample attribute.
+
+        RP66V1 name: *MAXIMUM-DEVIATION*
         """
         try:
             dev = self.attic['MAXIMUM-DEVIATION'].value
@@ -161,6 +183,8 @@ class Measurement(BasicObject):
 
         Each sample may be a scalar of ndarray, but should have the same
         structure as the samples in the sample attribute.
+
+        RP66V1 name: *STANDARD-DEVIATION*
         """
         try:
             dev = self.attic['STANDARD-DEVIATION'].value
@@ -176,6 +200,8 @@ class Measurement(BasicObject):
 
         Each sample may be a scalar of ndarray, but should have the same
         structure as the samples in the sample attribute.
+
+        RP66V1 name: *REFERENCE*
         """
         try:
             ref = self.attic['REFERENCE'].value
@@ -194,6 +220,8 @@ class Measurement(BasicObject):
 
         Each sample may be a scalar of ndarray, but should have the same
         structure as the samples in the sample attribute.
+
+        RP66V1 name: *PLUS-TOLERANCE*
         """
         try:
             tolerance = self.attic['PLUS-TOLERANCE'].value
@@ -212,6 +240,8 @@ class Measurement(BasicObject):
 
         Each sample may be a scalar of ndarray, but should have the same
         structure as the samples in the sample attribute.
+
+        RP66V1 name: *MINUS-TOLERANCE*
         """
         try:
             tolerance   = self.attic['MINUS-TOLERANCE'].value

@@ -28,13 +28,19 @@ class Splice(BasicObject):
     ----------
 
     output_channel : Channel
-        Concatination of all input channels
+        Concatenation of all input channels
+
+        RP66V1 name: *OUTPUT-CHANNELS*
 
     input_channels : list(Channel)
         Channels that where used to create the output channel
 
-    Zones : list(Zone)
+        RP66V1 name: *INPUT-CHANNELS*
+
+    zones : list(Zone)
         Zones of each input channel that is used in the concatination process
+
+        RP66V1 name: *ZONES*
 
     See also
     --------
