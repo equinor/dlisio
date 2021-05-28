@@ -9,7 +9,7 @@
 
 #include <lfp/lfp.h>
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/dlis/types.hpp>
 #include <dlisio/dlis/records.hpp>
 

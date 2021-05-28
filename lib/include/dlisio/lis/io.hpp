@@ -9,7 +9,7 @@
 #include <lfp/tapeimage.h>
 
 #include <dlisio/lis/protocol.hpp>
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 
 
 namespace dlisio { namespace lis79 {

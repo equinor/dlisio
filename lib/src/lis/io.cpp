@@ -12,7 +12,7 @@
 
 #include <dlisio/lis/protocol.hpp>
 #include <dlisio/lis/io.hpp>
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/exception.hpp>
 
 namespace dlisio { namespace lis79 {
@@ -576,7 +576,7 @@ iodevice::read_records(const record_index& index,
 /* miscellaneous */
 iodevice open( const std::string& path, std::int64_t offset, bool tapeimage )
 noexcept (false) {
-    auto* file = std::fopen(path.c_str(), "rb");
+    auto* file = dlisio::fopen(path.c_str());
     if ( not file ) {
         auto msg = "lis::open: unable to open file for path {} : {}";
         throw dlisio::io_error(fmt::format(msg, path, strerror(errno)));

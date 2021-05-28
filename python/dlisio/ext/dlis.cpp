@@ -14,7 +14,7 @@
 #include <pybind11/stl.h>
 #include <datetime.h>
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/exception.hpp>
 #include <dlisio/dlis/dlisio.h>
 #include <dlisio/dlis/types.h>

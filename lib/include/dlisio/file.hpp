@@ -1,7 +1,8 @@
-#ifndef DLISIO_STREAM_HPP
-#define DLISIO_STREAM_HPP
+#ifndef DLISIO_FILE_HPP
+#define DLISIO_FILE_HPP
 
 #include <cstdint>
+#include <cstdio>
 
 #include <lfp/lfp.h>
 
@@ -71,6 +72,9 @@ private:
     lfp_protocol* f;
 };
 
+/* Opens a file in 'rb' mode */
+std::FILE* fopen( const char* path ) noexcept (false);
+
 } // namespace dlisio
 
-#endif // DLISIO_STREAM_HPP
+#endif // DLISIO_FILE_HPP

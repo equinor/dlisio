@@ -13,7 +13,7 @@
 #include <lfp/rp66.h>
 #include <lfp/tapeimage.h>
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/exception.hpp>
 
 #include <dlisio/dlis/dlisio.h>
@@ -26,7 +26,7 @@ namespace dlisio { namespace dlis {
 
 dlisio::stream open(const std::string& path, std::int64_t offset)
 noexcept (false) {
-    auto* file = std::fopen(path.c_str(), "rb");
+    auto* file = dlisio::fopen(path.c_str());
     if (!file) {
         auto msg = "unable to open file for path {} : {}";
         throw dlisio::io_error(fmt::format(msg, path, strerror(errno)));

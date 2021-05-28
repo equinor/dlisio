@@ -1,9 +1,16 @@
 #include <stdexcept>
 #include <cstdint>
+#include <cstdio>
+#include <string>
+#include <cassert>
+
+#ifdef _WIN32
+    #include <windows.h>
+#endif
 
 #include <lfp/lfp.h>
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 
 namespace dlisio {
 
@@ -77,6 +84,33 @@ int stream::peof() const noexcept (false) {
         }
         outer = inner;
     }
+}
+
+std::FILE* fopen( const char* path) noexcept (false) {
+    std::FILE* file;
+
+#ifdef _WIN32
+    auto wpathlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+
+    /* can in theory fail if path contains illegal characters, though it is
+     * unlikely in practice
+     */
+    if (wpathlen <= 0) {
+        const auto msg = "dlisio::sysopen: unable to count wpath length";
+        throw std::runtime_error(msg);
+    }
+
+    std::wstring wpath;
+    wpath.resize(wpathlen);
+    auto written =
+        MultiByteToWideChar(CP_UTF8, 0, path, -1, &wpath[0], wpathlen);
+    assert(written == wpathlen);
+    file = _wfopen(wpath.c_str(), L"rb");
+#else
+    file = std::fopen(path, "rb");
+#endif
+
+    return file;
 }
 
 } // namespace dlisio

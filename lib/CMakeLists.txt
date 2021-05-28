@@ -8,7 +8,7 @@ add_library(dlisio src/dlis/dlisio.cpp
                    src/lis/types.cpp
                    src/lis/pack.cpp
                    src/lis/io.cpp
-                   src/stream.cpp
+                   src/file.cpp
                    src/tapemark.cpp
 )
 target_include_directories(dlisio
