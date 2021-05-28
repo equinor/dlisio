@@ -12,7 +12,7 @@
 
 #include <dlisio/lis/protocol.hpp>
 #include <dlisio/lis/io.hpp>
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/exception.hpp>
 
 namespace dlisio { namespace lis79 {

@@ -1,7 +1,7 @@
 #ifndef DLISIO_TAPEMARK_HPP
 #define DLISIO_TAPEMARK_HPP
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 
 /** tapemark.hpp - Tape Image Format
  *

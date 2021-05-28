@@ -13,7 +13,7 @@
 #include <lfp/rp66.h>
 #include <lfp/tapeimage.h>
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/exception.hpp>
 
 #include <dlisio/dlis/dlisio.h>

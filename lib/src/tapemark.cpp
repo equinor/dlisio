@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include <dlisio/tapemark.hpp>
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 #include <dlisio/exception.hpp>
 
 namespace dlisio {

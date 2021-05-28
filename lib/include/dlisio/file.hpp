@@ -1,5 +1,5 @@
-#ifndef DLISIO_STREAM_HPP
-#define DLISIO_STREAM_HPP
+#ifndef DLISIO_FILE_HPP
+#define DLISIO_FILE_HPP
 
 #include <cstdint>
 
@@ -73,4 +73,4 @@ private:
 
 } // namespace dlisio
 
-#endif // DLISIO_STREAM_HPP
+#endif // DLISIO_FILE_HPP

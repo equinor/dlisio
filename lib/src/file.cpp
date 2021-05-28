@@ -3,7 +3,7 @@
 
 #include <lfp/lfp.h>
 
-#include <dlisio/stream.hpp>
+#include <dlisio/file.hpp>
 
 namespace dlisio {
 
