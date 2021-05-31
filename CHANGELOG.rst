@@ -6,6 +6,22 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+0.3.5_ - 2021.05.31
+-------------------
+* Added support for UTF-8 filepaths on Windows
+* dlisio has been given its own logger. ``#df40d7e``
+* Fixes a bug that caused dlisio to fail when opening files >2GB on Windows
+* DLIS metadata is now cached by default ``#810d077``
+* DLIS attribute units are better documented
+* Removed deprecated ``dlis.LogicalFile.__getitem__``
+* Removed deprecated ``dlis.LogicalFile.match``
+* Added ``curves_metadata`` to the lis interface
+* Added ``index_mnem`` to ``DataFormatSpec``
+* Added ``index_units`` to ``DataFormatSpec``
+* Added ``sample_rates`` to ``DataFormatSpec``
+* LIS Component Blocks are validated when parsed
+* Added a class-like interface for LIS Spec Block 1 Process Indicators
+
 0.3.4_ - 2021.05.07
 -------------------
 * Full support for LIS Spec Block sub-type 0 and 1.
@@ -267,6 +283,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.3.5: https://github.com/equinor/dlisio/compare/v0.3.4...v0.3.5
 .. _0.3.4: https://github.com/equinor/dlisio/compare/v0.3.3...v0.3.4
 .. _0.3.3: https://github.com/equinor/dlisio/compare/v0.3.2...v0.3.3
 .. _0.3.2: https://github.com/equinor/dlisio/compare/v0.3.1...v0.3.2
