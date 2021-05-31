@@ -43,6 +43,10 @@ origin2                 Second origin file
 
 axis-encrypted          Encrypted records
 
+channel-empty-source    First channel has empty source without attribute
+                        present, second has empty source too, but attribute
+                        descriptor is 20 (take default).
+
 channel-same-objects    Channel duplication
 
 fdata***                contains IFLR(s) of type FDATA, referencing Frame
