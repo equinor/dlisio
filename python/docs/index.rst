@@ -18,6 +18,17 @@ and some knowledge about them is required for effective work. A good place to
 start is the user guides: :ref:`DLIS User Guide` and :ref:`LIS User Guide`.
 
 .. warning::
+    DLIS and LIS files are often "wrapped" in "container"-formats. Essentially
+    this is just extra information needed for the file to be correctly read by
+    a tape-reader and does not add anything to the well-logs themselves. Maybe
+    the most common one is the TapeImageFormat (TIF). TIF is automatically
+    detected by dlisio and both DLIS and LIS files wrapped in TIF can be read
+    without any special care from the user. There are other container formats
+    or TIF-modifications with unknown origins that dlisio does not support.
+    **DLIS and LIS files using these formats or modifications will fail to
+    read.**
+
+.. warning::
    Please note that dlisio is still in alpha, so expect breaking changes between
    versions.
 
