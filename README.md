@@ -39,11 +39,10 @@ the industry. It is an attempt at a powerful community-driven, portable,
 easy-to-use and flexible library for well logs, that can be used to build a
 wide array of applications.
 
-As of version 0.3.0, dlisio is extended to also read Log Information Standard 79
-([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)). An extended version of the
-LIS79 standard called LIS84/Enhanced LIS exists, but this version is currently
-not supported by dlisio. Please note that the LIS reader is experimental and
-lacks the same thorough testing and real world experience as the DLIS reader.
+As of version 0.3.0, dlisio is extended to also read Log Information Standard
+79 ([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)). An extended version of
+the LIS79 standard called LIS84/Enhanced LIS exists, but this version is
+currently not supported by dlisio.
 
 Features are added as they are needed; suggestions, defect reports, and
 contributions of all kinds are very welcome.

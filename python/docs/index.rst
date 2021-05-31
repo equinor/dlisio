@@ -12,12 +12,6 @@ As of version 0.3.0, dlisio is extended to also read Log Information Standard 79
 (LIS79) [2]_. An extended version of the LIS79 standard called LIS84/Enhanced LIS
 exists, but this version is currently not supported by dlisio.
 
-.. warning::
-   The LIS79 reader should be used with caution. It is experimental and lacks
-   the same thorough testing and real world experience as the DLIS reader.
-   Early adopters are encouraged to report any issues or bugs in the issue
-   tracker on GitHub [3]_
-
 Before you get started we recommended that you familiarize yourself with some
 basic concepts of the DLIS- and LIS file formats. These are non-trivial formats
 and some knowledge about them is required for effective work. A good place to
@@ -29,7 +23,6 @@ start is the user guides: :ref:`DLIS User Guide` and :ref:`LIS User Guide`.
 
 .. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
 .. [2] LIS79, http://w3.energistics.org/LIS/lis-79.pdf
-.. [3] Issue Tracker, https://github.com/equinor/dlisio/issues
 
 Installation
 ============
