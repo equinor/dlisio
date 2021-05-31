@@ -226,6 +226,9 @@ class Frame(BasicObject):
 
         fmtlabel = self.dtype_fmt.format
         for i, ch in enumerate(self.channels, start = 1):
+            if ch is None:
+                msg = "Channel {} not found"
+                raise ValueError(msg.format(self.attic['CHANNELS'].value[i-1]))
             current = ((ch.fingerprint, ch.name), ch.dtype)
 
             # first time for this label, register it as "seen before"
