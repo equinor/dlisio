@@ -348,7 +348,8 @@ def test_channels_with_same_id(assert_info):
     #
     # T.FRAME-I.FRAME_SAME1-O.0-C.0' -> T.CHANNEL-I.SAME-O.0-C.1'
     # T.FRAME-I.FRAME_SAME2-O.0-C.0' -> T.CHANNEL-I.SAME-O.0-C.2'
-    fpath = "data/chap4-7/eflr/frames-and-channels/2-channels-same-content-diff-copynr.dlis"
+    fname = "2-channels-same-content-diff-sign.dlis"
+    fpath = "data/chap4-7/eflr/frames-and-channels/"+fname
     with dlis.load(fpath) as (f, *_):
         ch1 = f.object('CHANNEL', 'SAME', 0, 1)
         ch2 = f.object('CHANNEL', 'SAME', 0, 2)
@@ -365,6 +366,21 @@ def test_channel_in_multiple_frames(assert_info):
         _  = ch.frame
         assert_info("Channel(DUPL) belongs to multiple")
 
+def test_channel_missing():
+    fpath = "data/chap4-7/eflr/frames-and-channels/channel-missing.dlis"
+    with dlis.load(fpath) as (f, *_):
+        fr = f.object("FRAME", "MAINFRAME")
+
+        with pytest.raises(ValueError) as exc:
+            _ = f.object("CHANNEL", "TDEP")
+        msg = "type=CHANNEL, name=TDEP, origin='any', copynumber='any'"
+        assert "Object not found: "+msg in str(exc.value)
+
+        with pytest.raises(ValueError) as exc:
+            _ = fr.curves()
+        msg = "Channel dlisio.core.obname(id='TDEP', origin=0, copynum=0) not found"
+        assert msg in str(exc.value)
+
 def test_channel_duplicated_in_frame(assert_info):
     fpath = "data/chap4-7/eflr/frames-and-channels/duplicated.dlis"
     with dlis.load(fpath) as (f, *_):
@@ -372,6 +388,31 @@ def test_channel_duplicated_in_frame(assert_info):
         ch = f.object("CHANNEL", "DUPL")
 
         assert ch.frame == fr
+
+def test_channel_same_signature_same_content(assert_info):
+    fname = "2-channels-same-sign-same-content.dlis"
+    fpath = "data/chap4-7/eflr/frames-and-channels/"+fname
+    with dlis.load(fpath) as (f, *_):
+        fr = f.object("FRAME", "WHICH_CHANNEL")
+        ch = f.object("CHANNEL", "DUPL")
+
+        assert ch.frame == fr
+        fr.curves()
+
+def test_channel_same_signature_diff_content(assert_info):
+    fname = "2-channels-same-sign-diff-content.dlis"
+    fpath = "data/chap4-7/eflr/frames-and-channels/"+fname
+    with dlis.load(fpath) as (f, *_):
+        fr = f.object("FRAME", "WHICH_CHANNEL")
+
+        with pytest.raises(ValueError) as exc:
+            _ = f.object("CHANNEL", "DUPL")
+        assert "Multiple CHANNEL objects with name DUPL" in str(exc.value)
+
+        with pytest.raises(ValueError) as exc:
+            _ = fr.curves()
+        msg = "Channel dlisio.core.obname(id='DUPL', origin=0, copynum=0) not found"
+        assert msg in str(exc.value)
 
 def test_channel_fmt():
     fpath = "data/chap4-7/eflr/frames-and-channels/various.dlis"

@@ -62,7 +62,6 @@ def test_lookup_no_such_object(f, assert_log):
     assert res is None
     assert_log('Unable to find linked object')
 
-@pytest.mark.xfail(strict=True, reason="attempt to link empty fingerprint")
 def test_link_empty_object(tmpdir_factory, merge_files_manyLR):
     fpath = str(tmpdir_factory.mktemp('load').join('empty-attribute.dlis'))
     content = [
@@ -73,14 +72,18 @@ def test_link_empty_object(tmpdir_factory, merge_files_manyLR):
     ]
     merge_files_manyLR(fpath, content)
 
-    with dlisio.load(fpath) as (f, *_):
+    with dlisio.dlis.load(fpath) as (f, *_):
+        # c1 and c2 differently refer to undefined value
         c1 = f.object('CHANNEL', 'EMPTY_SOURCE_1', 10, 0)
-        try:
-            _ = c1.stash["SOURCE"]
-        except KeyError:
-            pass
+        assert c1.source == None
+        assert c1.attic['SOURCE'].value == None
+
         c2 = f.object('CHANNEL', 'EMPTY_SOURCE_2', 10, 0)
-        assert c2.source == (0, 0, "", "")
+        assert c2.source == None
+        ref = c2.attic['SOURCE'].value
+        # Note: can't print ref because objref.__repr__uses fingerprint, and
+        # fingerprint fails for default (0, 0, "", "") objref
+        assert ref[0] == ("", (0, 0, ""))
 
 
 def test_parse_attribute_scalar():

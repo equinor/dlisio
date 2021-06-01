@@ -43,6 +43,10 @@ origin2                 Second origin file
 
 axis-encrypted          Encrypted records
 
+channel-empty-source    First channel has empty source without attribute
+                        present, second has empty source too, but attribute
+                        descriptor is 20 (take default).
+
 channel-same-objects    Channel duplication
 
 fdata***                contains IFLR(s) of type FDATA, referencing Frame
@@ -178,5 +182,8 @@ many-logical-files-error-in-last.dlis            Contains several logical files,
 
 many-logical-files-same-object.dlis              Contains 2 logical files with the same objects and
                                                  encrypted records
+
+many-logical-files-unnamed-fileheader.dlis       Contains several logical files, all fileheaders
+                                                 present as named, though they are not.
 
 ================================================ ==================================================

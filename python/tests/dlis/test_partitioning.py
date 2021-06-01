@@ -3,6 +3,7 @@ Testing division of one physical file into several logical files
 """
 
 from dlisio import dlis, core
+import pytest
 
 def test_partitioning():
     path = 'data/chap4-7/many-logical-files.dlis'
@@ -27,6 +28,27 @@ def test_partitioning():
 
         assert f3.store.types() == { 'FILE-HEADER' }
         assert not f3.fdata_index
+
+
+def test_partitioning_with_broken_fileheader():
+    path = 'data/chap4-7/many-logical-files-unnamed-fileheader.dlis'
+
+    with dlis.load(path) as (f1, f2):
+        f1_channel = f1.object('CHANNEL', 'CHANN1', 10, 0)
+        f2_channel = f2.object('CHANNEL', 'INC-CH1', 10, 0)
+
+        assert len(f1_channel.dimension) == 3
+        assert len(f2_channel.dimension) == 1
+
+        msg = "object set of type 'FILE-HEADER' named 'SEQUENCE-NUMBER4ID"
+
+        with pytest.raises(RuntimeError) as exc:
+            f1.fileheader
+        assert msg in str(exc.value)
+
+        with pytest.raises(RuntimeError) as exc:
+            f2.fileheader
+        assert msg in str(exc.value)
 
 def test_objects_ownership():
     path = 'data/chap4-7/many-logical-files.dlis'
