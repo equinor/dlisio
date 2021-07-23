@@ -86,7 +86,7 @@ The :class:`dlisio.lis.DataFormatSpec` can be accessed directly from the
 
 .. code-block:: python
 
-    >>> formatspecs = f.data_format_specs
+    >>> formatspecs = f.data_format_specs()
 
 A DFSR contains information about the logset in general, such as logging
 direction and information about the index. In addition it contains a list of
@@ -235,7 +235,7 @@ Logical File, ``f``, we get:
 
 .. code-block:: python
 
-    >>> for format_spec in f.data_format_specs:
+    >>> for format_spec in f.data_format_specs():
     ...    for sample_rate in format_spec.sample_rates():
     ...        data = lis.curves(f, format_spec, sample_rate)
     ...        meta = lis.curves_metadata(format_spec, sample_rate)
