@@ -50,7 +50,7 @@ contributions of all kinds are very welcome.
 ## Getting started ##
 
 dlisio is in rapid development, and the interfaces are *not* stable. We welcome
-any users and will try our best to accomodate your needs, but we currently make
+any users and will try our best to accommodate your needs, but we currently make
 no guarantees that code that works today will work tomorrow.
 
 ### Get dlisio ###
@@ -123,7 +123,7 @@ from dlisio import dlis
 with dlis.load('myfile.dlis') as files:
     for f in files:
         for frame in f.frames:
-            curves = f.curves()
+            curves = frame.curves()
             # Do something with the curves
 
 ```
@@ -134,7 +134,7 @@ from dlisio import lis
 
 with lis.load('myfile.lis') as files:
     for f in files:
-        for format_spec in f.data_format_specs:
+        for format_spec in f.data_format_specs():
             curves = lis.curves(f, format_spec)
             # Do something with the curves
 ```
