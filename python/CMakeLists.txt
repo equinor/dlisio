@@ -56,7 +56,7 @@ add_custom_target(
         build_ext --inplace
         build # setup.py build args
             --cmake-executable ${CMAKE_COMMAND}
-            --generator "Visual Studio 14 2015 Win64"
+            --generator "Visual Studio 14 2015 Win64 Win64"
             ${DLISIO_PYTHON_BUILD_TYPE}
         -- # cmake to the extension
             -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
