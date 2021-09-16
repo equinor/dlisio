@@ -39,6 +39,7 @@ endif ()
 if (CMAKE_GENERATOR_PLATFORM)
     set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
 endif ()
+set(CMAKE_GENERATOR_CHEAT --generator ${CMAKE_GENERATOR} Win64)
 
 add_custom_target(
     dlisio-python ALL
@@ -55,7 +56,7 @@ add_custom_target(
         build_ext --inplace
         build # setup.py build args
             --cmake-executable ${CMAKE_COMMAND}
-            --generator ${CMAKE_GENERATOR} Win64
+            ${CMAKE_GENERATOR_CHEAT}
             ${DLISIO_PYTHON_BUILD_TYPE}
         -- # cmake to the extension
             -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
@@ -83,7 +84,7 @@ install(CODE "
                 --single-version-externally-managed
                 --record record.txt
                 --cmake-executable \"${CMAKE_COMMAND}\"
-                --generator \"${CMAKE_GENERATOR}\"
+                ${CMAKE_GENERATOR_CHEAT}
                 ${DLISIO_PYTHON_BUILD_TYPE}
             --
                 ${DLISIO_GENERATOR_PLATFORM}
