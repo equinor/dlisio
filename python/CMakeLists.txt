@@ -36,10 +36,9 @@ if (CMAKE_BUILD_TYPE)
 endif ()
 
 # is set when target platform was provided by user
-# if (CMAKE_GENERATOR_PLATFORM)
-#     set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
-# endif ()
-set(DLISIO_GENERATOR_PLATFORM -A x64)
+if (CMAKE_GENERATOR_PLATFORM)
+    set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
+endif ()
 
 add_custom_target(
     dlisio-python ALL
@@ -56,7 +55,7 @@ add_custom_target(
         build_ext --inplace
         build # setup.py build args
             --cmake-executable ${CMAKE_COMMAND}
-            --generator ${CMAKE_GENERATOR}
+            --generator ${CMAKE_GENERATOR} Win64
             ${DLISIO_PYTHON_BUILD_TYPE}
         -- # cmake to the extension
             -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
