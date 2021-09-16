@@ -37,7 +37,8 @@ endif ()
 
 # is set when target platform was provided by user
 if (CMAKE_GENERATOR_PLATFORM)
-    set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
+    #set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
+    set(DLISIO_GENERATOR_PLATFORM --A=${CMAKE_GENERATOR_PLATFORM})
 endif ()
 
 add_custom_target(
