@@ -36,10 +36,10 @@ if (CMAKE_BUILD_TYPE)
 endif ()
 
 # is set when target platform was provided by user
-if (CMAKE_GENERATOR_PLATFORM)
-    #set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
-    set(DLISIO_GENERATOR_PLATFORM --A=${CMAKE_GENERATOR_PLATFORM})
-endif ()
+# if (CMAKE_GENERATOR_PLATFORM)
+#     set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
+# endif ()
+set(DLISIO_GENERATOR_PLATFORM -A x64)
 
 add_custom_target(
     dlisio-python ALL
@@ -58,7 +58,6 @@ add_custom_target(
             --cmake-executable ${CMAKE_COMMAND}
             --generator ${CMAKE_GENERATOR}
             ${DLISIO_PYTHON_BUILD_TYPE}
-            ${DLISIO_GENERATOR_PLATFORM}
         -- # cmake to the extension
             -Ddlisio_DIR=${DLISIO_LIB_BINARY_DIR}
             # "install" to the python/dlisio dir with rpath, so there's no need
@@ -67,6 +66,7 @@ add_custom_target(
             -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
             -DCMAKE_INSTALL_RPATH=$<TARGET_FILE_DIR:dlisio>
             -DCMAKE_INSTALL_NAME_DIR=$<TARGET_FILE_DIR:dlisio>
+            ${DLISIO_GENERATOR_PLATFORM}
 )
 
 add_dependencies(dlisio-python dlisio)
@@ -86,8 +86,8 @@ install(CODE "
                 --cmake-executable \"${CMAKE_COMMAND}\"
                 --generator \"${CMAKE_GENERATOR}\"
                 ${DLISIO_PYTHON_BUILD_TYPE}
-                ${DLISIO_GENERATOR_PLATFORM}
             --
+                ${DLISIO_GENERATOR_PLATFORM}
                 -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )"
