@@ -83,7 +83,7 @@ install(CODE "
                 --single-version-externally-managed
                 --record record.txt
                 --cmake-executable \"${CMAKE_COMMAND}\"
-                --generator \"${CMAKE_GENERATOR}\"
+                --generator \"Visual Studio 14 2015 Win64 Win64 Win64\"
                 ${DLISIO_PYTHON_BUILD_TYPE}
             --
                 ${DLISIO_GENERATOR_PLATFORM}
