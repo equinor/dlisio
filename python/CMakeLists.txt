@@ -39,7 +39,6 @@ endif ()
 if (CMAKE_GENERATOR_PLATFORM)
     set(DLISIO_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
 endif ()
-set(CMAKE_GENERATOR_CHEAT --generator ${CMAKE_GENERATOR} Win64)
 
 add_custom_target(
     dlisio-python ALL
@@ -84,7 +83,7 @@ install(CODE "
                 --single-version-externally-managed
                 --record record.txt
                 --cmake-executable \"${CMAKE_COMMAND}\"
-                --generator \"Visual Studio 14 2015 Win64 Win64\"
+                --generator \"${CMAKE_GENERATOR}\"
                 ${DLISIO_PYTHON_BUILD_TYPE}
             --
                 ${DLISIO_GENERATOR_PLATFORM}
