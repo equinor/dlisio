@@ -206,27 +206,27 @@ jobs:
 
   python-36:
     docker:
-      - image: circleci/python:3.6
+      - image: cimg/python:3.6
     steps:
       - python_build
 
   python-37:
     docker:
-      - image: circleci/python:3.7
+      - image: cimg/python:3.7
     steps:
       - python_build:
           docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
 
   python-38:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     steps:
       - python_build:
           docs: "-DBUILD_DOC=ON -DSPHINX_ARGS=-WT"
 
   python-39:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     steps:
       - python_build
 
@@ -413,7 +413,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.7
+      - image: cimg/python:3.7
     # parameters are not used, here only to create correct build-deployment matrix
     parameters:
       python:

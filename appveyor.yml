@@ -34,6 +34,8 @@ install:
         twine
         wheel
     - IF DEFINED PYTHON pip install --upgrade -r python/requirements-dev.txt
+    # updates in 0.12 make building 64-bit version on Appveyor fail
+    - IF DEFINED PYTHON pip install scikit-build==0.11.0 --force-reinstall
 
 before_build:
     - set generator="Visual Studio 14 2015"
