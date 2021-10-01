@@ -28,10 +28,6 @@ start is the user guides: :ref:`DLIS User Guide` and :ref:`LIS User Guide`.
     **DLIS and LIS files using these formats or modifications will fail to
     read.**
 
-.. warning::
-   Please note that dlisio is still in alpha, so expect breaking changes between
-   versions.
-
 .. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
 .. [2] LIS79, http://w3.energistics.org/LIS/lis-79.pdf
 

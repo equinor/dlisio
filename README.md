@@ -20,53 +20,74 @@
   </a>
 </p>
 
-## Index ##
-
-* [Introduction](#introduction)
-* [Getting started](#getting-started)
-  * [Get dlisio](#get-dlisio)
-  * [Build dlisio](#build-dlisio)
-* [Tutorial](#tutorial)
-* [Contributing](#contributing)
-
 ## Introduction ##
 
-dlisio is an LGPL licensed library for working with well logs in Digital Log
-Interchange Standard (DLIS V1), also known as
-[RP66 V1](http://w3.energistics.org/rp66/v1/Toc/main.html). DLIS V2 is
-out-of-scope for this project, as it is quite different and hardly in use in
-the industry. It is an attempt at a powerful community-driven, portable,
-easy-to-use and flexible library for well logs, that can be used to build a
-wide array of applications.
+dlisio is an LGPL licensed library for reading well logs in Digital Log
+Interchange Standard (DLIS V1), also known as [RP66
+V1](http://w3.energistics.org/rp66/v1/Toc/main.html), and Log Information
+Standard 79 ([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)).
 
-As of version 0.3.0, dlisio is extended to also read Log Information Standard
-79 ([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)). An extended version of
-the LIS79 standard called LIS84/Enhanced LIS exists, but this version is
-currently not supported by dlisio.
+dlisio is designed as a general purpose library for reading well logs in a
+simple and easy-to-use manner. Its main focus is making all the data and
+metadata accessible while putting few assumptions on how the data is to be
+used. This makes it suitable as a building block for higher level applications
+as well as for being used directly.
 
-Features are added as they are needed; suggestions, defect reports, and
-contributions of all kinds are very welcome.
+dlisio focuses above all on correctness, performance and robustness. Its core,
+which does all the heavy lifting, is implemented in C++. Both the C++ core and
+the python wrappers are backed by an extensive test-suite. It strives to be
+robust against files that do not strictly adhere to the specifications, which
+is a widespread issue with both DLIS and LIS files. dlisio tries to account for
+many of the known specification violations out there, but only when it can do
+so without compromising correctness. It will not do any guess work on your
+behalf when such violations pose any ambiguity.
+
+## Installation ##
+
+dlisio supplies pre-built python wheels for Windows (32-bit and 64bit), Linux,
+and MacOS for Python 3.6 and above. The wheels are hosted through
+[PyPi](https://pip.pypi.io) and can be installed with:
+
+```bash
+pip install dlisio
+```
+
+See [Build dlisio](#Build-dlisio) for building dlisio from source.
 
 ## Getting started ##
 
-dlisio is in rapid development, and the interfaces are *not* stable. We welcome
-any users and will try our best to accommodate your needs, but we currently make
-no guarantees that code that works today will work tomorrow.
+dlisio's documentation is hosted on
+[readthedocs](https://dlisio.readthedocs.io/en/stable/). Please refer there for
+proper introduction to dlisio and the file-formats DLIS and LIS. Here is a
+motivating example showcasing how to read the curve-data from a DLIS-file:
 
-### Get dlisio ###
+```python
+from dlisio import dlis
 
-The end-user should go through the python library, as the core library is
-intended for developers only. The pre-built alpha releases are available
-through [pypi](https://pypi.org/project/dlisio/)
+with dlis.load('myfile.dlis') as files:
+    for f in files:
+        for frame in f.frames:
+            curves = frame.curves()
+            # Do something with the curves
 
-```bash
-pip3 install dlisio
+```
+and from a LIS-file:
+
+```python
+from dlisio import lis
+
+with lis.load('myfile.lis') as files:
+    for f in files:
+        for format_spec in f.data_format_specs():
+            curves = lis.curves(f, format_spec)
+            # Do something with the curves
 ```
 
-Once dlisio is stable it will also be available as debian, fedora, and conda
-packages.
+In both cases the curves are returned as [structured
+numpy.ndarray](https://numpy.org/doc/stable/user/basics.rec.html) with the
+curve mnemonics as field names (column names).
 
-### Build dlisio ###
+## Build dlisio ##
 
 To develop dlisio, or to build a particular revision from source, you need:
 
@@ -109,39 +130,6 @@ dlisio follows common cmake rules and conventions, e.g. to set install prefix
 use `-DCMAKE_INSTALL_PREFIX`. To build the python library it is usually a good
 idea to build shared libraries. To disable python, pass `-DBUILD_PYTHON=OFF`.
 By default, the python library is built.
-
-## Tutorial ##
-
-dlisio's documentation is hosted on
-[readthedocs](https://dlisio.readthedocs.io/en/stable/). Please refer there for
-proper introduction to dlisio, and the file-formats DLIS and LIS. With dlisio
-it is easy to read the curve-data from DLIS-files:
-
-```python
-from dlisio import dlis
-
-with dlis.load('myfile.dlis') as files:
-    for f in files:
-        for frame in f.frames:
-            curves = frame.curves()
-            # Do something with the curves
-
-```
-and from LIS-files:
-
-```python
-from dlisio import lis
-
-with lis.load('myfile.lis') as files:
-    for f in files:
-        for format_spec in f.data_format_specs():
-            curves = lis.curves(f, format_spec)
-            # Do something with the curves
-```
-
-In both cases the curves are returned as [structured
-numpy.ndarray](https://numpy.org/doc/stable/user/basics.rec.html) with the
-curve mnemonics as field names (column names).
 
 ## Contributing ##
 
