@@ -142,15 +142,3 @@ before_deploy:
 
 after_deploy:
     - popd
-
-deploy:
-    - provider: pypi
-      skip_cleanup: true
-      skip_upload_docs: true
-      user: statoil-travis
-      distributions: --skip-cmake build
-      password:
-        secure: NKjQaDPPCDE8C7f1c3rNdVInJUBkp1DegubXyzbNwLz0k/JiQv5IoTKh7ehJnZoOaHaFa8zTMSZYT9VypgvRp2sziCdI/piEASCTbv5lJAZ1ELE2aSiVeSCuBbq/3BFp5YqfuqPjrIy32xvlbCU2rwhRNo4eVrfop8pYdMZeWSAvn+FDSNaVPhUs0E4HKI57ROkjDJvnMmRQpcOYQslxUgGth7F7F2kGxP0Z+L0DmsAnxPYjLzjNe3DzD9EMfegPG5il+J7GmKJrLNNhGyIET+cxKKaODgjVSqaiZ5tgiNjAALxZMiZz0KyYclo/TOiKvuimWjSruDAiSY2NsacF6SW83qkfGZHCURL/nrHnyTEhzY3/qRN2HuSeE51BTFTrw306HzdCHDp8E7nlLz44/F3X+UaL8OinuZvj5IaaJSX9Q0eU10dxvH5ezgZa0CgAIK3N/bvjSMEFJhkG5/MlRk4pmo4HsjX8EduskJQMV+qc0pE4JHMZkRqlFY+LjkyEgw73iIqrpXBkSnkSM8Q4t7sECyTup7nhMbbkl1MehT+uKC+9dy1cZw2AMsRcs+WLzSOV8jU6IY1Iwh/q+N8q6Y08ek6lmGXGMKPzPQCsNQ6B2NpJ0zb6PRqMa4d5HS+b+ar/B4nMrltzRzP8bRJYrmx1cQXnJ1gLwgpsBhfEnf0=
-      on:
-        tags: true
-        condition: -z $SOURCEDEPLOY
