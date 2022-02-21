@@ -17,32 +17,6 @@ def src(x):
     root = os.path.dirname( __file__ )
     return os.path.abspath(os.path.join(root, x))
 
-def getversion():
-    pkgversion = { 'version': '0.0.0' }
-    versionfile = 'dlisio/version.py'
-
-    if not os.path.exists(versionfile):
-        return {
-            'use_scm_version': {
-                # look for git in ../
-                'root': '..',
-                'relative_to' : __file__,
-                # write to ./python
-                'write_to'    : os.path.join(src(''), versionfile),
-            }
-        }
-
-    import ast
-    with open(versionfile) as f:
-        root = ast.parse(f.read())
-
-    for node in ast.walk(root):
-        if not isinstance(node, ast.Assign): continue
-        if len(node.targets) == 1 and node.targets[0].id == 'version':
-            pkgversion['version'] = node.value.s
-
-    return pkgversion
-
 pybind_includes = [
     str(get_pybind_include()),
     str(get_pybind_include(user = True))
@@ -77,5 +51,4 @@ skbuild.setup(
     # skbuild's test imples develop, which is pretty obnoxious instead, use a
     # manually integrated pytest.
     cmdclass = { 'test': setuptools.command.test.test },
-    **getversion()
 )
