@@ -1,0 +1,53 @@
+name: Build and test wheels
+
+on: [push, pull_request]
+
+jobs:
+  wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macOS-10.15]
+        arch: [auto]
+        include:
+          - os: windows-2016
+            cibw-arch: AMD64
+            cmake-generator: "Visual Studio 15 2017 Win64"
+          - os: windows-2016
+            cibw-arch: x86
+            cmake-generator: "Visual Studio 15 2017"
+
+    steps:
+      - name: Disable autocrlf
+        run: |
+            git config --global core.autocrlf false
+
+      - uses: actions/checkout@v2
+
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v2
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel
+
+      - name: Build wheels
+        env:
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_GENERATOR="${{ matrix.cmake-generator }}"
+            CMAKE_PREFIX_PATH="C:/Program Files/Mpark.Variant/"
+            CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/Mpark.Variant/"
+            CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files/layered-file-protocols/"
+            CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/layered-file-protocols/"
+
+          CIBW_ARCHS_WINDOWS: ${{ matrix.cibw-arch }}
+          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
+          CIBW_SKIP: pp* *-musllinux_* cp31*-win32
+          COMSPEC: C:\Program Files\PowerShell\7\pwsh.EXE
+
+        run: |
+            python -m cibuildwheel --output-dir wheelhouse python/
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl

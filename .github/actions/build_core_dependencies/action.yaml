@@ -1,0 +1,77 @@
+name: Install core dependencies
+description: Install fmtlib, mpark and lfp
+
+inputs:
+  privileges:
+    required: true
+  cmake_generator:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install fmtlib
+      shell: bash
+      run: |
+        curl                                                              \
+          -L https://github.com/fmtlib/fmt/archive/refs/tags/7.1.3.tar.gz \
+          -o fmt-7.1.3.tar.gz
+        tar xf fmt-7.1.3.tar.gz
+        cmake                 \
+          -S fmt-7.1.3        \
+          -B fmt-7.1.3/build  \
+          -DFMT_TEST=OFF      \
+          -DFMT_DOC=OFF       \
+          ${{ inputs.cmake_generator  }}
+        ${{ inputs.privileges }} cmake  \
+          --build fmt-7.1.3/build       \
+          --target install              \
+          --config Release
+
+    - name: Install Layered File Protocols
+      shell: bash
+      run: |
+        git clone https://github.com/equinor/layered-file-protocols.git
+        cmake                                   \
+          -S layered-file-protocols             \
+          -B layered-file-protocols/build       \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON  \
+          -DLFP_FMT_HEADER_ONLY=ON              \
+          -DBUILD_TESTING=OFF                   \
+          ${{ inputs.cmake_generator  }}
+        ${{ inputs.privileges }} cmake          \
+          --build layered-file-protocols/build  \
+          --target install                      \
+          --config Release
+
+    - name: Install Mpark Variant
+      shell: bash
+      run: |
+        curl \
+          -L https://github.com/mpark/variant/archive/refs/tags/v1.4.0.tar.gz \
+          -o variant-1.4.0.tar.gz
+        tar xf variant-1.4.0.tar.gz
+        cmake                     \
+          -S variant-1.4.0        \
+          -B variant-1.4.0/build  \
+          ${{ inputs.cmake_generator  }}
+        ${{ inputs.privileges }} cmake  \
+          --build variant-1.4.0/build   \
+          --target install              \
+          --config Release
+
+    - name: Export install directories on Win32
+      if: ${{ contains(inputs.cmake_generator, 'Win32') }}
+      shell: bash
+      run: |
+        export PREFIX="C:/Program Files (x86)/Mpark.Variant/"
+        export PREFIX="$PREFIX;C:/Program Files (x86)/layered-file-protocols/"
+        echo "CMAKE_PREFIX_PATH=$PREFIX" >> $GITHUB_ENV
+
+    - name: Export install directories on Windows x64
+      if: ${{ contains(inputs.cmake_generator, 'x64') }}
+      shell: bash
+      run: |
+        export PREFIX="C:/Program Files/Mpark.Variant/"
+        export PREFIX="$PREFIX;C:/Program Files/layered-file-protocols/"
+        echo "CMAKE_PREFIX_PATH=$PREFIX" >> $GITHUB_ENV
