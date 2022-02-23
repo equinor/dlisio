@@ -139,7 +139,7 @@ class ErrorHandler(core.error_handler):
     >>> files = dlis.load(path)
     RuntimeError: "...."
     >>> handler = ErrorHandler(critical=Actions.LOG_ERROR)
-    >>> files = dlis.load(path, errorhandler=handler)
+    >>> files = dlis.load(path, error_handler=handler)
     [ERROR] "...."
     >>> for f in files:
     ...  pass
