@@ -17,6 +17,8 @@ jobs:
           - os: windows-2016
             cibw-arch: x86
             cmake-generator: "Visual Studio 15 2017"
+          - os: ubuntu-20.04
+            arch: aarch64
 
     steps:
       - name: Disable autocrlf
@@ -27,6 +29,10 @@ jobs:
 
       # Used to host cibuildwheel
       - uses: actions/setup-python@v2
+
+      - uses: docker/setup-qemu-action@v1
+        if: ${{ matrix.arch == 'aarch64' }}
+        name: Set up QEMU
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
