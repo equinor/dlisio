@@ -79,6 +79,7 @@ Table of Contents
    dlis/metadata
    dlis/curves
    dlis/api
+   dlis/errors
    dlis/vendors
 
 .. toctree::
