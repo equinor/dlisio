@@ -11,12 +11,14 @@ jobs:
         os: [ubuntu-20.04, macOS-10.15]
         arch: [auto]
         include:
-          - os: windows-2016
+          - os: windows-2019
             cibw-arch: AMD64
-            cmake-generator: "Visual Studio 15 2017 Win64"
-          - os: windows-2016
+            cmake_generator: "Visual Studio 16 2019"
+            cmake_generator_platform: "x64"
+          - os: windows-2019
             cibw-arch: x86
-            cmake-generator: "Visual Studio 15 2017"
+            cmake_generator: "Visual Studio 16 2019"
+            cmake_generator_platform: "Win32"
           - os: ubuntu-20.04
             arch: aarch64
 
@@ -40,7 +42,8 @@ jobs:
       - name: Build wheels
         env:
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_GENERATOR="${{ matrix.cmake-generator }}"
+            CMAKE_GENERATOR="${{ matrix.cmake_generator }}"
+            CMAKE_GENERATOR_PLATFORM="${{ matrix.cmake_generator_platform }}"
             CMAKE_PREFIX_PATH="C:/Program Files/Mpark.Variant/"
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/Mpark.Variant/"
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files/layered-file-protocols/"
