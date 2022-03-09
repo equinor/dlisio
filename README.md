@@ -3,17 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://travis-ci.com/equinor/dlisio">
-    <img src="https://travis-ci.com/equinor/dlisio.svg?branch=master" alt="Travis"/>
-  </a>
-  <a href="https://circleci.com/gh/equinor/dlisio/tree/master">
-    <img src="https://circleci.com/gh/equinor/dlisio/tree/master.svg?style=svg" alt="CircleCI"/>
-  </a>
-  <a href="https://ci.appveyor.com/project/jokva/dlisio/branch/master">
-    <img src="https://ci.appveyor.com/api/projects/status/jdhagpm7jkga07j1?svg=true" alt="Appveyor"/>
-  </a>
   <a href="https://pypi.org/project/dlisio/">
     <img src="https://badge.fury.io/py/dlisio.svg" alt="PyPI version"/>
+  </a>
+  <a href="https://github.com/equinor/dlisio/actions/workflows/wheels.yaml">
+    <img src="https://github.com/equinor/dlisio/actions/workflows/wheels.yaml/badge.svg" alt="Github Actions"/>
   </a>
   <a href="http://dlisio.readthedocs.io/">
     <img src="https://img.shields.io/readthedocs/dlisio" alt="Read the Docs"/>
