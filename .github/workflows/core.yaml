@@ -1,0 +1,67 @@
+name: Build and test core
+
+on: [push, pull_request]
+
+jobs:
+  build_core:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macOS-10.15]
+        include:
+          - os: ubuntu-20.04
+
+          - os: ubuntu-20.04
+            compiler: "clang"
+
+          - os: windows-2019
+            cmake_generator: "-G \"Visual Studio 16 2019\" -A x64"
+
+          - os: windows-2019
+            cmake_generator: "-G \"Visual Studio 16 2019\" -A Win32"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Elevate privileges
+        if: ${{ !contains( matrix.os, 'windows') }}
+        run: |
+          echo "PRIVLEDGES=sudo" >> $GITHUB_ENV
+
+      - name: Install clang
+        if: ${{ matrix.compiler == 'clang' }}
+        run: |
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y install clang
+            echo "CC=/usr/bin/clang"    >> $GITHUB_ENV
+            echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
+
+      - uses: './.github/actions/build_core_dependencies'
+        with:
+          privileges: $PRIVLEDGES
+          cmake_generator: ${{ matrix.cmake_generator }}
+
+      - name: Build dlisio
+        shell: bash
+        run: |
+          cmake -S . -B build                     \
+            -DCMAKE_BUILD_TYPE=Release            \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON  \
+            -DBUILD_PYTHON=OFF                    \
+            ${{ matrix.cmake_generator }}
+
+      - name: Install dlisio
+        shell: bash
+        run: |
+          $PRIVLEDGES cmake   \
+            --build build     \
+            --parallel        \
+            --target install  \
+            --config Release
+
+      - name: Test Core
+        shell: bash
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
