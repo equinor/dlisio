@@ -38,13 +38,22 @@ behalf when such violations pose any ambiguity.
 
 ## Installation ##
 
-dlisio supplies pre-built python wheels for Windows (32-bit and 64bit), Linux,
-and MacOS for Python 3.6 and above. The wheels are hosted through
-[PyPi](https://pip.pypi.io) and can be installed with:
+dlisio supplies pre-built python wheels for a variety of platforms and
+architectures. The wheels are hosted through [PyPi](https://pip.pypi.io) and
+can be installed with:
 
 ```bash
 pip install dlisio
 ```
+
+
+|   | macOS Intel | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 |
+|---------------|----|-----|-----|----|----|
+| CPython 3.6   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.7   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.8   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.9   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.10  | ✅ | ✅  | -   | ✅ | ✅ |
 
 See [Build dlisio](#Build-dlisio) for building dlisio from source.
 
