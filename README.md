@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="dlisio-logo.svg" alt="dlisio logo" width="400"/>
+  <img src="https://raw.githubusercontent.com/equinor/dlisio/master/dlisio-logo.svg" alt="dlisio logo" width="400"/>
 </p>
 
 <p align="center">
