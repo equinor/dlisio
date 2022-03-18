@@ -22,10 +22,16 @@ pybind_includes = [
     str(get_pybind_include(user = True))
 ]
 
+def get_long_description():
+    path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'README.md'))
+    with open(path) as f:
+        return f.read()
+
 skbuild.setup(
     name = 'dlisio',
-    description = 'DLIS v1',
-    long_description = 'DLIS v1',
+    description = 'Python library for working with the well log formats DLIS (RP66v1) and LIS79',
+    long_description = get_long_description(),
+    long_description_content_type = "text/markdown",
     url = 'https://github.com/equinor/dlisio',
     packages = ['dlisio', 'dlisio.dlis', 'dlisio.lis', 'dlisio.common', 'dlisio.dlis.utils'],
     license = 'LGPL-3.0',

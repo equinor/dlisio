@@ -1,19 +1,13 @@
 <p align="center">
-  <img src="dlisio-logo.svg" alt="dlisio logo" width="400"/>
+  <img src="https://raw.githubusercontent.com/equinor/dlisio/master/dlisio-logo.svg" alt="dlisio logo" width="400"/>
 </p>
 
 <p align="center">
-  <a href="https://travis-ci.com/equinor/dlisio">
-    <img src="https://travis-ci.com/equinor/dlisio.svg?branch=master" alt="Travis"/>
-  </a>
-  <a href="https://circleci.com/gh/equinor/dlisio/tree/master">
-    <img src="https://circleci.com/gh/equinor/dlisio/tree/master.svg?style=svg" alt="CircleCI"/>
-  </a>
-  <a href="https://ci.appveyor.com/project/jokva/dlisio/branch/master">
-    <img src="https://ci.appveyor.com/api/projects/status/jdhagpm7jkga07j1?svg=true" alt="Appveyor"/>
-  </a>
   <a href="https://pypi.org/project/dlisio/">
     <img src="https://badge.fury.io/py/dlisio.svg" alt="PyPI version"/>
+  </a>
+  <a href="https://github.com/equinor/dlisio/actions/workflows/wheels.yaml">
+    <img src="https://github.com/equinor/dlisio/actions/workflows/wheels.yaml/badge.svg" alt="Github Actions"/>
   </a>
   <a href="http://dlisio.readthedocs.io/">
     <img src="https://img.shields.io/readthedocs/dlisio" alt="Read the Docs"/>
@@ -44,13 +38,22 @@ behalf when such violations pose any ambiguity.
 
 ## Installation ##
 
-dlisio supplies pre-built python wheels for Windows (32-bit and 64bit), Linux,
-and MacOS for Python 3.6 and above. The wheels are hosted through
-[PyPi](https://pip.pypi.io) and can be installed with:
+dlisio supplies pre-built python wheels for a variety of platforms and
+architectures. The wheels are hosted through [PyPi](https://pip.pypi.io) and
+can be installed with:
 
 ```bash
 pip install dlisio
 ```
+
+
+|   | macOS Intel | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 |
+|---------------|----|-----|-----|----|----|
+| CPython 3.6   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.7   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.8   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.9   | ✅ | ✅  | ✅  | ✅ | ✅ |
+| CPython 3.10  | ✅ | ✅  | -   | ✅ | ✅ |
 
 See [Build dlisio](#Build-dlisio) for building dlisio from source.
 

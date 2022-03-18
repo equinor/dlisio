@@ -3,6 +3,8 @@ name: Build and test wheels
 on:
   push:
     branches: [master]
+    tags:
+      - '*'
   pull_request:
     branches: [master]
 
