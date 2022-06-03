@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <bitset>
+#include <limits>
 
 #include <catch2/catch.hpp>
 
