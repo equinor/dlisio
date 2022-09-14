@@ -19,6 +19,7 @@ before-all = [
         -B fmt-7.1.3/build  \
         -DFMT_TEST=OFF      \
         -DFMT_DOC=OFF       \
+        -DCMAKE_OSX_ARCHITECTURES=$(echo $arch) \
     """,
     """cmake                    \
         --build fmt-7.1.3/build \
@@ -32,6 +33,7 @@ before-all = [
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON    \
         -DLFP_FMT_HEADER_ONLY=ON                \
         -DBUILD_TESTING=OFF                     \
+        -DCMAKE_OSX_ARCHITECTURES=$(echo $arch) \
     """,
     """cmake                                    \
         --build layered-file-protocols/build    \
@@ -46,6 +48,7 @@ before-all = [
     """cmake                    \
         -S variant-1.4.0        \
         -B variant-1.4.0/build  \
+        -DCMAKE_OSX_ARCHITECTURES=$(echo $arch) \
     """,
     """cmake                        \
         --build variant-1.4.0/build \

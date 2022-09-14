@@ -30,6 +30,8 @@ jobs:
           - os: ubuntu-20.04
             arch: i686
           - os: macOS-10.15
+            arch: arm64
+          - os: macOS-10.15
             arch: x86_64
 
     steps:
