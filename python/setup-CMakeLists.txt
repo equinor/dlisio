@@ -10,6 +10,7 @@ find_package(dlisio           REQUIRED)
 find_package(mpark_variant    REQUIRED)
 find_package(lfp              REQUIRED)
 find_package(fmt              REQUIRED)
+find_package(pybind11         REQUIRED)
 
 add_library(core MODULE
     dlisio/ext/core.cpp

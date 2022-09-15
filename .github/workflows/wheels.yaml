@@ -15,18 +15,18 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: windows-2019
-          #   cibw-arch: AMD64
-          #   cmake_generator: "Visual Studio 16 2019"
+          - os: windows-2019
+            arch: AMD64
+            cmake_generator: "Visual Studio 16 2019"
           #   cmake_generator_platform: "x64"
           # - os: windows-2019
-          #   cibw-arch: x86
+          #   arch: x86
           #   cmake_generator: "Visual Studio 16 2019"
           #   cmake_generator_platform: "Win32"
           # - os: ubuntu-20.04
           #   arch: aarch64
-          # - os: ubuntu-20.04
-          #   arch: x86_64
+          - os: ubuntu-20.04
+            arch: x86_64
           # - os: ubuntu-20.04
           #   arch: i686
           - os: macOS-10.15
@@ -53,6 +53,7 @@ jobs:
 
       - name: Build wheels
         env:
+          CIBW_ENVIRONMENT_MACOS: CMAKE_OSX_ARCHITECTURES="${{ matrix.arch }}"
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_GENERATOR="${{ matrix.cmake_generator }}"
             CMAKE_GENERATOR_PLATFORM="${{ matrix.cmake_generator_platform }}"
@@ -61,9 +62,7 @@ jobs:
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files/layered-file-protocols/"
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/layered-file-protocols/"
 
-          CIBW_ARCHS_WINDOWS: ${{ matrix.cibw-arch }}
-          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
-          CIBW_ARCHS_MACOS: ${{ matrix.arch }}
+          CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_SKIP: pp* *-musllinux_* cp31*-win32 *cp311*
           COMSPEC: C:\Program Files\PowerShell\7\pwsh.EXE
 
