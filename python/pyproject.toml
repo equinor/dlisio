@@ -105,4 +105,4 @@ test-command = [
 manylinux-x86_64-image = "manylinux2010"
 
 [tool.cibuildwheel.macos]
-environment = { CXXFLAGS="-L/usr/local/lib" }
+environment = { LDFLAGS="-L/usr/local/lib" }
