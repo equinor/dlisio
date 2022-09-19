@@ -57,6 +57,8 @@ before-all = [
     """cmake                    \
         -S pybind11        \
         -B pybind11/build  \
+        -DPYBIND11_TEST=OFF \
+        -DPYBIND11_NOPYTHON=ON \
     """,
     """cmake                        \
         --build pybind11/build \
