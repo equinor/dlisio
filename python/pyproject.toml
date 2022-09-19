@@ -53,6 +53,15 @@ before-all = [
         --target install            \
         --config Release            \
     """,
+    """git clone https://github.com/pybind/pybind11.git""",
+    """cmake                    \
+        -S pybind11        \
+        -B pybind11/build  \
+    """,
+    """cmake                        \
+        --build pybind11/build \
+        --target install            \
+    """,
 ]
 
 before-build = [

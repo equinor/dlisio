@@ -10,18 +10,19 @@ find_package(dlisio           REQUIRED)
 find_package(mpark_variant    REQUIRED)
 find_package(lfp              REQUIRED)
 find_package(fmt              REQUIRED)
+find_package(pybind11         REQUIRED)
 
 add_library(core MODULE
     dlisio/ext/core.cpp
     dlisio/ext/lis.cpp
     dlisio/ext/dlis.cpp
 )
-target_include_directories(core
-    PRIVATE
-        ${PYBIND11_INCLUDE_DIRS}
-)
+# target_include_directories(core
+#     PRIVATE
+#         ${PYBIND11_INCLUDE_DIRS}
+# )
 python_extension_module(core)
-target_link_libraries(core dlisio mpark_variant)
+target_link_libraries(core dlisio mpark_variant pybind11)
 
 if (MSVC)
     target_compile_options(core

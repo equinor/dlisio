@@ -48,7 +48,7 @@ skbuild.setup(
     # instead, the get include dirs from the package and give directly from
     # here
     cmake_args = [
-        '-DPYBIND11_INCLUDE_DIRS=' + ';'.join(pybind_includes),
+        # '-DPYBIND11_INCLUDE_DIRS=' + ';'.join(pybind_includes),
         # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
         # everything not OS X. We depend on C++11, which makes our minimum
         # supported OS X release 10.9
