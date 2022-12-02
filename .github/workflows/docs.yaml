@@ -28,6 +28,7 @@ jobs:
         run: |
           cmake -S . -B build          \
             -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=OFF        \
             -DBUILD_SHARED_LIBS=ON     \
             -DBUILD_DOC=ON
           cmake --build build

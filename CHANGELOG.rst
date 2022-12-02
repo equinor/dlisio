@@ -6,6 +6,11 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+
+0.3.7_ - 2022.12.02
+-------------------
+* Prebuilt wheels for python 3.11
+
 0.3.6_ - 2022.03.18
 -------------------
 * Prebuilt wheels for python 3.10
@@ -288,6 +293,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _0.3.7: https://github.com/equinor/dlisio/compare/v0.3.6...v0.3.7
 .. _0.3.6: https://github.com/equinor/dlisio/compare/v0.3.5...v0.3.6
 .. _0.3.5: https://github.com/equinor/dlisio/compare/v0.3.4...v0.3.5
 .. _0.3.4: https://github.com/equinor/dlisio/compare/v0.3.3...v0.3.4

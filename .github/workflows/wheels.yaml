@@ -10,23 +10,27 @@ on:
 
 jobs:
   wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }} for ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-10.15]
-        arch: [auto]
         include:
           - os: windows-2019
-            cibw-arch: AMD64
+            arch: AMD64
             cmake_generator: "Visual Studio 16 2019"
             cmake_generator_platform: "x64"
           - os: windows-2019
-            cibw-arch: x86
+            arch: x86
             cmake_generator: "Visual Studio 16 2019"
             cmake_generator_platform: "Win32"
           - os: ubuntu-20.04
+            arch: x86_64
+          - os: ubuntu-20.04
             arch: aarch64
+          - os: ubuntu-20.04
+            arch: i686
+          - os: macOS-10.15
+            arch: x86_64
 
     steps:
       - name: Disable autocrlf
@@ -43,7 +47,7 @@ jobs:
         name: Set up QEMU
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.1
+        run: python -m pip install cibuildwheel
 
       - name: Build wheels
         env:
@@ -55,10 +59,8 @@ jobs:
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files/layered-file-protocols/"
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/layered-file-protocols/"
 
-          CIBW_ARCHS_WINDOWS: ${{ matrix.cibw-arch }}
-          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
+          CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_SKIP: pp* *-musllinux_* cp31*-win32
-          COMSPEC: C:\Program Files\PowerShell\7\pwsh.EXE
 
         run: |
             python -m cibuildwheel --output-dir wheelhouse python/
