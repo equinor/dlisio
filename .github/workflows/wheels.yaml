@@ -40,7 +40,9 @@ jobs:
       - uses: actions/checkout@v3
 
       # Used to host cibuildwheel
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
       - uses: docker/setup-qemu-action@v1
         if: ${{ matrix.arch == 'aarch64' }}
