@@ -9,4 +9,4 @@ pybind11
 hypothesis
 sphinx
 scikit-build
-furo
+furo==2022.12.7
