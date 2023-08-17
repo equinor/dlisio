@@ -1,6 +1,6 @@
 
 bandit
-numpy
+numpy<2.0
 setuptools
 setuptools_scm
 pytest
