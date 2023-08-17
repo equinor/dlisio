@@ -1,6 +1,6 @@
-.. image:: ../../dlisio-logo.svg
+.. image:: ../../dlisio-icon.svg
    :width: 400
-   :alt: dlisio logo
+   :alt: dlisio icon
    :align: center
 
 Welcome to dlisio. dlisio is a python package for reading Digital Log
