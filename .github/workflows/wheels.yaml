@@ -60,7 +60,7 @@ jobs:
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/layered-file-protocols/"
 
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_SKIP: pp* *-musllinux_* cp31*-win32
+          CIBW_SKIP: pp* *-musllinux_* cp31*-win32 cp312-*
 
         run: |
             python -m cibuildwheel --output-dir wheelhouse python/
