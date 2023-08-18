@@ -392,7 +392,7 @@ TEST_CASE("short float (16-bit)", "[type]") {
     for( std::size_t i = 0; i < expected.size(); ++i ) {
         float v;
         dlis_fshort( (char*)inputs[ i ], &v );
-        CHECK( v == Approx( expected[ i ] ).epsilon(0.001) );
+        CHECK_THAT(v, Catch::Matchers::WithinRel(expected[ i ], 0.001f));
     }
 }
 
@@ -582,7 +582,7 @@ TEST_CASE("vax single precision float", "[type]") {
         for( std::size_t i = 0; i < inputs.size(); ++i ) {
             float v;
             dlis_vsingl( inputs[ i ], &v );
-            CHECK( v == Approx(expected[ i ]).epsilon(0.0000001));
+            CHECK_THAT(v, Catch::Matchers::WithinRel(expected[ i ], 0.0000001f));
         }
     }
 
