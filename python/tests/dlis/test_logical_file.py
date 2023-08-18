@@ -251,7 +251,7 @@ def test_noform_data(tmpdir):
         # handling of images is essentially same as handling of text
         # it's present only because text and images are common noform
         noform_image = f.object('NO-FORMAT', 'NOFORMAT-IMAGE', 10, 0)
-        imagepath = str(tmpdir.join("dlisio-logo.png"))
+        imagepath = str(tmpdir.join("dlisio-icon.png"))
         out = open(imagepath, 'wb')
         out.write(noform_image.data())
         out.close()

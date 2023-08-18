@@ -29,7 +29,7 @@ jobs:
             arch: aarch64
           - os: ubuntu-20.04
             arch: i686
-          - os: macOS-10.15
+          - os: macos-11
             arch: x86_64
 
     steps:
@@ -37,12 +37,14 @@ jobs:
         run: |
             git config --global core.autocrlf false
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Used to host cibuildwheel
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-qemu-action@v2
         if: ${{ matrix.arch == 'aarch64' }}
         name: Set up QEMU
 
@@ -60,12 +62,12 @@ jobs:
             CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;C:/Program Files (x86)/layered-file-protocols/"
 
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_SKIP: pp* *-musllinux_* cp31*-win32
+          CIBW_SKIP: pp* *-musllinux_* cp31*-win32 cp312-*
 
         run: |
             python -m cibuildwheel --output-dir wheelhouse python/
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -75,9 +77,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
 
       - name: Publish wheels to PyPI
 

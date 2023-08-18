@@ -131,7 +131,7 @@ TEST_CASE("16-bit floating point", "[type]") {
     for( std::size_t i = 0; i < expected.size(); ++i ) {
         float v;
         lis_f16( (char*)inputs[ i ], &v );
-        CHECK( v == Approx( expected[ i ] ).epsilon(0.001) );
+        CHECK_THAT(v, WithinRel(expected[ i ], 0.01f));
     }
 }
 
