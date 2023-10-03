@@ -39,7 +39,7 @@ behalf when such violations pose any ambiguity.
 ## Installation ##
 
 dlisio supplies pre-built python wheels for a variety of platforms and
-architectures. The wheels are hosted through [PyPi](https://pip.pypi.io) and
+architectures. The wheels are hosted through [Python Package Index PyPi](https://pip.pypa.io) and
 can be installed with:
 
 ```bash
