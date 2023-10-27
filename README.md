@@ -47,13 +47,13 @@ pip install dlisio
 ```
 
 
-|   | macOS Intel | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 |
-|---------------|----|-----|-----|----|----|
-| CPython 3.7   | ✅ | ✅  | ✅  | ✅ | ✅ |
-| CPython 3.8   | ✅ | ✅  | ✅  | ✅ | ✅ |
-| CPython 3.9   | ✅ | ✅  | ✅  | ✅ | ✅ |
-| CPython 3.10  | ✅ | ✅  | -   | ✅ | ✅ |
-| CPython 3.11  | ✅ | ✅  | -   | ✅ | ✅ |
+|   | macOS Intel | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 | manylinux i686 |
+|---------------|----|-----|-----|----|----|----|
+| CPython 3.7   | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ |
+| CPython 3.8   | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ |
+| CPython 3.9   | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ |
+| CPython 3.10  | ✅ | ✅  | -   | ✅ | ✅ | ✅ |
+| CPython 3.11  | ✅ | ✅  | -   | ✅ | ✅ | ✅ |
 
 See [Build dlisio](#Build-dlisio) for building dlisio from source.
 
