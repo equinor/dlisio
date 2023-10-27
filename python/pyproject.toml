@@ -92,5 +92,25 @@ test-command = [
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux2014"
 
+[[tool.cibuildwheel.overrides]]
+select = "cp3{9,10,11}*i686"
+before-build= [
+    "python -m pip install numpy --config-settings=setup-args=\"-Dallow-noblas=true\" ",
+    """cmake                                 \
+        -S .                                 \
+        -B build                             \
+        -DCMAKE_BUILD_TYPE=Release           \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DBUILD_TESTING=OFF                  \
+        -DBUILD_PYTHON=OFF                   \
+    """,
+    """cmake             \
+        --build build    \
+        --parallel       \
+        --target install \
+        --config Release \
+    """,
+]
+
 [tool.cibuildwheel.macos]
 environment = { CXXFLAGS="-L/usr/local/lib" }
