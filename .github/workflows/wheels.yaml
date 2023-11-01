@@ -32,6 +32,8 @@ jobs:
             arch: i686
           - os: macos-11
             arch: x86_64
+          - os: macos-13-xlarge
+            arch: arm64
 
     steps:
       - name: Disable autocrlf
@@ -65,7 +67,8 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           # musllinux arch skip: unlikely someone wants to run dlisio on alpine on non-standard architecture
           # musllinux cp37 and cp38 skip: latest available numpy doesn't provide musslinux wheels, so it is unlikely useful
-          CIBW_SKIP: pp* *-musllinux_i686 *-musllinux_aarch64 cp37*-musllinux* cp38*-musllinux* cp36-*
+          # macosx 38 skip: cibuildwheel can't test it
+          CIBW_SKIP: pp* *-musllinux_i686 *-musllinux_aarch64 cp37*-musllinux* cp38*-musllinux* cp38*-macosx_*:arm64 cp36-*
 
         run: |
             python -m cibuildwheel --output-dir wheelhouse python/
