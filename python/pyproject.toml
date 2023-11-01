@@ -93,7 +93,7 @@ test-command = [
 manylinux-x86_64-image = "manylinux2014"
 
 [[tool.cibuildwheel.overrides]]
-select = "cp3{9,10,11}*i686"
+select = "cp3{9,10,11,12}*i686"
 before-build= [
     "python -m pip install numpy --config-settings=setup-args=\"-Dallow-noblas=true\" ",
     """cmake                                 \
