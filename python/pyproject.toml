@@ -90,11 +90,90 @@ test-command = [
 ]
 
 [tool.cibuildwheel.linux]
-manylinux-x86_64-image = "manylinux2010"
+manylinux-x86_64-image = "manylinux2014"
 
 [[tool.cibuildwheel.overrides]]
-select = "cp311*"
-manylinux-x86_64-image = "manylinux2014"
+select = "cp3{9,10,11,12}*i686"
+before-build= [
+    "python -m pip install numpy --config-settings=setup-args=\"-Dallow-noblas=true\" ",
+    """cmake                                 \
+        -S .                                 \
+        -B build                             \
+        -DCMAKE_BUILD_TYPE=Release           \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DBUILD_TESTING=OFF                  \
+        -DBUILD_PYTHON=OFF                   \
+    """,
+    """cmake             \
+        --build build    \
+        --parallel       \
+        --target install \
+        --config Release \
+    """,
+]
 
 [tool.cibuildwheel.macos]
 environment = { CXXFLAGS="-L/usr/local/lib" }
+
+before-all = [
+    """curl                                                             \
+        -L https://github.com/fmtlib/fmt/archive/refs/tags/7.1.3.tar.gz \
+        -o fmt-7.1.3.tar.gz                                             \
+    """,
+    "tar xf fmt-7.1.3.tar.gz",
+    """cmake                \
+        -S fmt-7.1.3        \
+        -B fmt-7.1.3/build  \
+        -DFMT_TEST=OFF      \
+        -DFMT_DOC=OFF       \
+    """,
+    """sudo cmake                    \
+        --build fmt-7.1.3/build \
+        --target install        \
+        --config Release        \
+    """,
+    """git clone https://github.com/equinor/layered-file-protocols.git""",
+    """cmake                                    \
+        -S layered-file-protocols               \
+        -B layered-file-protocols/build         \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON    \
+        -DLFP_FMT_HEADER_ONLY=ON                \
+        -DBUILD_TESTING=OFF                     \
+    """,
+    """sudo cmake                                    \
+        --build layered-file-protocols/build    \
+        --target install                        \
+        --config Release                        \
+    """,
+    """curl                                                                 \
+        -L https://github.com/mpark/variant/archive/refs/tags/v1.4.0.tar.gz \
+        -o variant-1.4.0.tar.gz                                             \
+    """,
+    "tar xf variant-1.4.0.tar.gz",
+    """cmake                    \
+        -S variant-1.4.0        \
+        -B variant-1.4.0/build  \
+    """,
+    """sudo cmake                        \
+        --build variant-1.4.0/build \
+        --target install            \
+        --config Release            \
+    """,
+]
+
+before-build = [
+    """cmake                                 \
+        -S .                                 \
+        -B build                             \
+        -DCMAKE_BUILD_TYPE=Release           \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DBUILD_TESTING=OFF                  \
+        -DBUILD_PYTHON=OFF                   \
+    """,
+    """sudo cmake             \
+        --build build    \
+        --parallel       \
+        --target install \
+        --config Release \
+    """,
+]
