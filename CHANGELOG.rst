@@ -6,6 +6,13 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+1.0.1_ - 2023.11.07
+-------------------
+* Prebuilt wheels for musllinux x86_64
+* Prebuilt wheels for python 3.12
+* Prebuilt wheels for Win32 for python >=3.10
+* Prebuilt wheels for MacOS arm64
+
 1.0.0_ - 2023.08.18
 -------------------
 * The dlisio API has been stable and production ready for quite some time.
@@ -297,6 +304,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _1.0.1: https://github.com/equinor/dlisio/compare/v1.0.0...v1.0.1
 .. _1.0.0: https://github.com/equinor/dlisio/compare/v0.3.7...v1.0.0
 .. _0.3.7: https://github.com/equinor/dlisio/compare/v0.3.6...v0.3.7
 .. _0.3.6: https://github.com/equinor/dlisio/compare/v0.3.5...v0.3.6
