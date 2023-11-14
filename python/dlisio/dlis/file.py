@@ -456,7 +456,7 @@ class LogicalFile(object):
         parsed as :py:class:`dlisio.dlis.Unknown`, that implements a dict
         interface.
 
-        [1] http://w3.energistics.org/rp66/v1/Toc/main.html
+        [1] https://energistics.org/sites/default/files/RP66/V1/Toc/main.html
 
         Notes
         -----

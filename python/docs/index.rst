@@ -28,7 +28,7 @@ start is the user guides: :ref:`DLIS User Guide` and :ref:`LIS User Guide`.
     **DLIS and LIS files using these formats or modifications will fail to
     read.**
 
-.. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
+.. [1] API RP66 v1, https://energistics.org/sites/default/files/RP66/V1/Toc/main.html
 .. [2] LIS79, https://www.energistics.org/sites/default/files/2022-10/lis-79.pdf
 
 Installation
