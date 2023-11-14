@@ -161,7 +161,7 @@ def curves(f, dfsr, sample_rate=None, strict=True):
 
     [1] Structured Arrays, https://numpy.org/doc/stable/user/basics.rec.html
 
-    [2] LIS79 ch 3.3.2.2,  http://w3.energistics.org/LIS/lis-79.pdf
+    [2] LIS79 ch 3.3.2.2,  https://www.energistics.org/sites/default/files/2022-10/lis-79.pdf
 
     Parameters
     ----------

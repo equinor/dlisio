@@ -56,4 +56,4 @@ before you add new files. When adding a new file, please consider:
 - If new file(s) are added, update the relevant README.rst with a short
   description
 
-.. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
+.. [1] API RP66 v1, https://energistics.org/sites/default/files/RP66/V1/Toc/main.html

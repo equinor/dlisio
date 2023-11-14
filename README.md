@@ -18,8 +18,8 @@
 
 dlisio is an LGPL licensed library for reading well logs in Digital Log
 Interchange Standard (DLIS V1), also known as [RP66
-V1](http://w3.energistics.org/rp66/v1/Toc/main.html), and Log Information
-Standard 79 ([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)).
+V1](https://www.energistics.org/sites/default/files/rp66v1.html), and Log Information
+Standard 79 ([LIS79](https://www.energistics.org/sites/default/files/2022-10/lis-79.pdf)).
 
 dlisio is designed as a general purpose library for reading well logs in a
 simple and easy-to-use manner. Its main focus is making all the data and
@@ -39,8 +39,8 @@ behalf when such violations pose any ambiguity.
 ## Installation ##
 
 dlisio supplies pre-built python wheels for a variety of platforms and
-architectures. The wheels are hosted through [PyPi](https://pip.pypi.io) and
-can be installed with:
+architectures. The wheels are hosted through the [Python Package Index
+(PyPI)](https://pypi.org/) and can be installed with:
 
 ```bash
 pip install dlisio

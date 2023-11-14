@@ -21,4 +21,4 @@ information for a modern computer, but as these mechanics are embedded in the
 files, modern software still has to account for it. This adds additional layers
 of complexity.
 
-.. [1] LIS79, http://w3.energistics.org/LIS/lis-79.pdf
+.. [1] LIS79, https://www.energistics.org/sites/default/files/2022-10/lis-79.pdf

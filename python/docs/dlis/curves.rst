@@ -100,4 +100,4 @@ metadata for the unused channels are never removed.
    :code:`None` when there is no recorded curve data.
 
 .. _`structured numpy.ndarray`: https://numpy.org/doc/stable/user/basics.rec.html
-.. _`Appendix C`: http://w3.energistics.org/rp66/V1/rp66v1_appc.html
+.. _`Appendix C`: https://energistics.org/sites/default/files/RP66/V1/rp66v1_appc.html
