@@ -19,7 +19,7 @@
 dlisio is an LGPL licensed library for reading well logs in Digital Log
 Interchange Standard (DLIS V1), also known as [RP66
 V1](http://w3.energistics.org/rp66/v1/Toc/main.html), and Log Information
-Standard 79 ([LIS79](http://w3.energistics.org/LIS/lis-79.pdf)).
+Standard 79 ([LIS79](https://www.energistics.org/sites/default/files/2022-10/lis-79.pdf)).
 
 dlisio is designed as a general purpose library for reading well logs in a
 simple and easy-to-use manner. Its main focus is making all the data and

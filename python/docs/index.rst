@@ -29,7 +29,7 @@ start is the user guides: :ref:`DLIS User Guide` and :ref:`LIS User Guide`.
     read.**
 
 .. [1] API RP66 v1, http://w3.energistics.org/RP66/V1/Toc/main.html
-.. [2] LIS79, http://w3.energistics.org/LIS/lis-79.pdf
+.. [2] LIS79, https://www.energistics.org/sites/default/files/2022-10/lis-79.pdf
 
 Installation
 ============
