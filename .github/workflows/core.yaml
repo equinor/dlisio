@@ -27,7 +27,7 @@ jobs:
             cmake_generator: "-G \"Visual Studio 16 2019\" -A Win32"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Elevate privileges
         if: ${{ !contains( matrix.os, 'windows') }}
