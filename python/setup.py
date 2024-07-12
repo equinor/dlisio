@@ -36,7 +36,7 @@ skbuild.setup(
     packages = ['dlisio', 'dlisio.dlis', 'dlisio.lis', 'dlisio.common', 'dlisio.dlis.utils'],
     license = 'LGPL-3.0',
     platforms = 'any',
-    install_requires = ['numpy < 2.0'],
+    install_requires = ['numpy'],
     setup_requires = ['setuptools >= 28',
                       'pybind11 >= 2.3',
                       'setuptools_scm',
