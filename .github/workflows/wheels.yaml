@@ -30,9 +30,9 @@ jobs:
             arch: aarch64
           - os: ubuntu-20.04
             arch: i686
-          - os: macos-11
+          - os: macos-13
             arch: x86_64
-          - os: macos-13-xlarge
+          - os: macos-14
             arch: arm64
 
     steps:

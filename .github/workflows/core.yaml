@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-11]
+        os: [macos-13, macos-14]
         include:
           - os: ubuntu-20.04
 
