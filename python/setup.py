@@ -2,7 +2,6 @@
 
 import os
 import skbuild
-import setuptools
 
 class get_pybind_include(object):
     def __init__(self, user=False):
@@ -54,7 +53,4 @@ skbuild.setup(
         # supported OS X release 10.9
         '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9',
     ],
-    # skbuild's test imples develop, which is pretty obnoxious instead, use a
-    # manually integrated pytest.
-    cmdclass = { 'test': setuptools.command.test.test },
 )
