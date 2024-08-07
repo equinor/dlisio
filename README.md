@@ -102,7 +102,7 @@ To develop dlisio, or to build a particular revision from source, you need:
 * [pybind11](https://github.com/pybind/pybind11) version 2.6 or greater
 * [setuptools](https://pypi.python.org/pypi/setuptools) version 28 or greater
 * [layered-file-protocols](https://github.com/equinor/layered-file-protocols)
-* python packages pytest, pytest-runner, and numpy
+* python packages pytest and numpy
 
 If you do not have pybind11 installed on your system, the easiest way to get a
 working copy is to `pip3 install pybind11` (NP! pybind11, not pybind)
