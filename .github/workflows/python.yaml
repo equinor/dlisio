@@ -1,0 +1,62 @@
+name: Build and test python
+#Build and test with python turned on
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build_python:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: "./.github/actions/build_core_dependencies"
+        with:
+          privileges: "sudo"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Create python venv
+        shell: bash
+        run: |
+          python -m venv venv
+          . ./venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools
+          python -m pip install -r python/requirements-dev.txt
+          which python
+
+      - name: Configure dlisio
+        shell: bash
+        run: |
+          . ./venv/bin/activate
+          cmake -S . -B build                     \
+            -DCMAKE_BUILD_TYPE=Release            \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON  \
+            -DBUILD_PYTHON=ON
+
+      - name: Build dlisio
+        shell: bash
+        run: |
+          sudo cmake   \
+            --build build     \
+            --parallel        \
+            --config Release
+
+      - name: Test dlisio
+        shell: bash
+        run: |
+          cd build
+          ctest -C Release --output-on-failure --verbose
