@@ -1,10 +1,9 @@
 
 bandit
-numpy<2.0
+numpy
 setuptools
 setuptools_scm
 pytest
-pytest-runner
 pybind11
 hypothesis
 sphinx

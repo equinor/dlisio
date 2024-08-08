@@ -137,6 +137,6 @@ endif()
 # different args to setup.py, rebuilding the python lib (and wrongly so as it
 # either won't find dlisio or picked up on a system installed one)
 add_test(NAME python.unit
-    COMMAND ${python} ${setup.py} --skip-cmake test
+    COMMAND ${python} -m pytest tests
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )

@@ -49,7 +49,6 @@ pip install dlisio
 
 |   | macOS Intel | macOS ARM | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 | manylinux i686 | musllinux x86_64
 |---------------|----|-----|-----|----|----|----|----|----|
-| CPython 3.7   | ✅ | -   | ✅  | ✅ | ✅ | ✅ | ✅ | -  |
 | CPython 3.8   | ✅ | -   | ✅  | ✅ | ✅ | ✅ | ✅ | -  |
 | CPython 3.9   | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CPython 3.10  | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -97,13 +96,13 @@ To develop dlisio, or to build a particular revision from source, you need:
 
 * A C++11 compatible compiler (tested on gcc, clang, and msvc 2019)
 * [CMake](https://cmake.org/) version 3.5 or greater
-* [Python](https://python.org) version 3.7 or greater
+* [Python](https://python.org) version 3.8 or greater
 * [fmtlib](http://fmtlib.net/) tested mainly with 7.1.3
 * [mpark_variant](https://github.com/mpark/variant)
 * [pybind11](https://github.com/pybind/pybind11) version 2.6 or greater
 * [setuptools](https://pypi.python.org/pypi/setuptools) version 28 or greater
 * [layered-file-protocols](https://github.com/equinor/layered-file-protocols)
-* python packages pytest, pytest-runner, and numpy
+* python packages pytest and numpy
 
 If you do not have pybind11 installed on your system, the easiest way to get a
 working copy is to `pip3 install pybind11` (NP! pybind11, not pybind)

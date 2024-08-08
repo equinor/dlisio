@@ -2,7 +2,6 @@
 
 import os
 import skbuild
-import setuptools
 
 class get_pybind_include(object):
     def __init__(self, user=False):
@@ -36,13 +35,11 @@ skbuild.setup(
     packages = ['dlisio', 'dlisio.dlis', 'dlisio.lis', 'dlisio.common', 'dlisio.dlis.utils'],
     license = 'LGPL-3.0',
     platforms = 'any',
-    install_requires = ['numpy < 2.0'],
+    install_requires = ['numpy'],
     setup_requires = ['setuptools >= 28',
                       'pybind11 >= 2.3',
                       'setuptools_scm',
-                      'pytest-runner',
     ],
-    tests_require = ['pytest'],
     # we're building with the pybind11 fetched from pip. Since we don't rely on
     # a cmake-installed pybind there's also no find_package(pybind11) -
     # instead, the get include dirs from the package and give directly from
@@ -54,7 +51,4 @@ skbuild.setup(
         # supported OS X release 10.9
         '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9',
     ],
-    # skbuild's test imples develop, which is pretty obnoxious instead, use a
-    # manually integrated pytest.
-    cmdclass = { 'test': setuptools.command.test.test },
 )

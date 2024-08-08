@@ -11,7 +11,7 @@ jobs:
   cppcheck:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: './.github/actions/build_core_dependencies'
         with:
@@ -41,7 +41,7 @@ jobs:
   scan_build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: './.github/actions/build_core_dependencies'
         with:
@@ -69,7 +69,7 @@ jobs:
   valgrind:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: './.github/actions/build_core_dependencies'
         with:
@@ -96,7 +96,7 @@ jobs:
   debug:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: './.github/actions/build_core_dependencies'
         with:
