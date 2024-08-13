@@ -6,6 +6,11 @@ complete overview of changes, please refer to the git log.
 The format is based on `Keep a Changelog`_,
 but most notably, without sectioning changes into type-of-change.
 
+1.0.2_ - 2024.08.13
+-------------------
+* dlisio is tested to work against numpy 2.0
+* Updated links to RP66V1 and LIS79 specifications
+
 1.0.1_ - 2023.11.07
 -------------------
 * Prebuilt wheels for musllinux x86_64
@@ -304,6 +309,7 @@ but most notably, without sectioning changes into type-of-change.
 .. _`Keep a changelog`: https://keepachangelog.com/en/1.0.0/
 .. _readthedocs: https://dlisio.readthedocs.io/en/stable/
 
+.. _1.0.2: https://github.com/equinor/dlisio/compare/v1.0.1...v1.0.2
 .. _1.0.1: https://github.com/equinor/dlisio/compare/v1.0.0...v1.0.1
 .. _1.0.0: https://github.com/equinor/dlisio/compare/v0.3.7...v1.0.0
 .. _0.3.7: https://github.com/equinor/dlisio/compare/v0.3.6...v0.3.7
