@@ -20,11 +20,11 @@ jobs:
           - os: ubuntu-latest
             compiler: "clang"
 
-          - os: windows-2019
-            cmake_generator: "-G \"Visual Studio 16 2019\" -A x64"
+          - os: windows-2022
+            cmake_generator: "-G \"Visual Studio 17 2022\" -A x64"
 
-          - os: windows-2019
-            cmake_generator: "-G \"Visual Studio 16 2019\" -A Win32"
+          - os: windows-2022
+            cmake_generator: "-G \"Visual Studio 17 2022\" -A Win32"
 
     steps:
       - uses: actions/checkout@v4
