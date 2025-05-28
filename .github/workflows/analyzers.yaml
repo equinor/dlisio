@@ -9,7 +9,7 @@ on:
 
 jobs:
   cppcheck:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +39,7 @@ jobs:
             --project=build/compile_commands.json           \
 
   scan_build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -67,7 +67,7 @@ jobs:
             --target install
 
   valgrind:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -94,7 +94,7 @@ jobs:
             valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 build/lib/test-lis
 
   debug:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
