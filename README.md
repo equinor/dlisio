@@ -139,3 +139,15 @@ By default, the python library is built.
 We welcome all kinds of contributions, including bug reports, issues, feature
 requests and documentation. The preferred way of submitting a contribution is to
 make an [issue](https://github.com/equinor/dlisio/issues) on github.
+
+## Writing DLIS files ##
+
+dlisio currently has no capability to write files, see [issue
+396](https://github.com/equinor/dlisio/issues/396) or [issue
+417](https://github.com/equinor/dlisio/issues/417). If writing capability is
+required, one can use dlisio together with other packages to achieve this. For
+example, the [dliswriter](https://github.com/well-id/dliswriter) created by
+[Well ID](https://www.wellid.no) contains some [utility
+functions](https://github.com/well-id/dliswriter/blob/master/src/dliswriter/utils/import_from_dlisio.py)
+to create DLIS files from dlisio objects and also provides [an
+example](https://github.com/well-id/dliswriter/blob/master/examples/create_dlis_from_dlisio.py).
