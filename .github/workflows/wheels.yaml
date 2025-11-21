@@ -27,7 +27,7 @@ jobs:
             cmake_generator_platform: "Win32"
           - os: ubuntu-latest
             arch: x86_64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             arch: aarch64
           - os: ubuntu-latest
             arch: i686 #builds from cibuildwheel, qemu not needed
@@ -45,10 +45,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - uses: docker/setup-qemu-action@v3
-        if: ${{ matrix.arch == 'aarch64' }}
-        name: Set up QEMU
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
