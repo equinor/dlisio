@@ -88,9 +88,6 @@ test-command = [
     """python {project}/.github/utils.py remove --paths tests data""",
 ]
 
-[tool.cibuildwheel.linux]
-manylinux-x86_64-image = "manylinux2014"
-
 [[tool.cibuildwheel.overrides]]
 select = "cp3{9,10,11,12}*i686"
 before-build= [
