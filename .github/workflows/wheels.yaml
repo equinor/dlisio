@@ -30,7 +30,7 @@ jobs:
             arch: aarch64
           - os: ubuntu-latest
             arch: i686 #builds from cibuildwheel, qemu not needed
-          - os: macos-14
+          - os: macos-latest
             arch: arm64
 
     steps:
