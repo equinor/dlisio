@@ -1,11 +1,8 @@
 
 bandit
 numpy
-setuptools
-setuptools_scm
 pytest
 pybind11
 hypothesis
 sphinx
-scikit-build
 furo==2022.12.7

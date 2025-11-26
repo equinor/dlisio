@@ -99,7 +99,6 @@ To develop dlisio, or to build a particular revision from source, you need:
 * [fmtlib](http://fmtlib.net/) tested mainly with 7.1.3
 * [mpark_variant](https://github.com/mpark/variant)
 * [pybind11](https://github.com/pybind/pybind11) version 2.6 or greater
-* [setuptools](https://pypi.python.org/pypi/setuptools) version 28 or greater
 * [layered-file-protocols](https://github.com/equinor/layered-file-protocols)
 * python packages pytest and numpy
 

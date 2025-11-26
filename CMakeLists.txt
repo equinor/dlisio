@@ -42,4 +42,6 @@ find_package(lfp           REQUIRED)
 find_package(mpark_variant REQUIRED)
 
 add_subdirectory(lib)
-add_subdirectory(python)
+if (BUILD_PYTHON)
+    add_subdirectory(python)
+endif()
