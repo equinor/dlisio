@@ -53,6 +53,7 @@ pip install dlisio
 | CPython 3.11  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CPython 3.12  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CPython 3.13  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CPython 3.14  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 See [Build dlisio](#Build-dlisio) for building dlisio from source.
 
