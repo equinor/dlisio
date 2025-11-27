@@ -95,25 +95,6 @@ test-requires = "pytest"
 test-command = [ "cd python", "pytest tests" ]
 test-sources = [ "python/tests", "python/data", "python/pyproject.toml" ]
 
-[[tool.cibuildwheel.overrides]]
-select = "cp3{9,10,11,12}*i686"
-before-build= [
-    "python -m pip install numpy --config-settings=setup-args=\"-Dallow-noblas=true\" ",
-    """cmake                                 \
-        -S .                                 \
-        -B build                             \
-        -DCMAKE_BUILD_TYPE=Release           \
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -DBUILD_TESTING=OFF                  \
-        -DBUILD_PYTHON=OFF                   \
-    """,
-    """cmake             \
-        --build build    \
-        --parallel       \
-        --target install \
-        --config Release \
-    """,
-]
 
 [tool.cibuildwheel.macos]
 
