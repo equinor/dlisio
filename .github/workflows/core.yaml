@@ -1,4 +1,5 @@
 name: Build and test core
+permissions: {}
 
 on:
   push:

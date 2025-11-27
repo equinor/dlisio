@@ -1,4 +1,5 @@
 name: Build and test wheels
+permissions: {}
 
 on:
   push:

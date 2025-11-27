@@ -1,5 +1,6 @@
 name: Build and test python
 #Build and test with python turned on
+permissions: {}
 
 on:
   push:
