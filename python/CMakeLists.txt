@@ -7,23 +7,23 @@ if (SKBUILD)
     return ()
 endif ()
 
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.18)
 project(dlisio-python)
 
 if(NOT BUILD_PYTHON)
     return()
 endif()
 
-find_package(PythonInterp REQUIRED)
+find_package(Python COMPONENTS Interpreter REQUIRED)
 
-if(NOT PYTHON_EXECUTABLE)
+if(NOT Python_EXECUTABLE)
     message(WARNING "Could not find python - skipping python bindings")
     message(WARNING "Select specific python distribution with "
-                    "-DPYTHON_EXECUTABLE=bin/python")
+                    "-DPython_EXECUTABLE=bin/python")
     return()
 endif()
 
-set(python ${PYTHON_EXECUTABLE})
+set(python ${Python_EXECUTABLE})
 set(setup.py ${CMAKE_CURRENT_SOURCE_DIR}/setup.py)
 
 if (CMAKE_BUILD_TYPE)

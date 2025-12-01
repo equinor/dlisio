@@ -40,6 +40,6 @@ RUN make install
 WORKDIR /home/ci
 COPY . /home/ci/dlisio
 WORKDIR /home/ci/dlisio/build
-RUN cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib -DPYTHON_EXECUTABLE="/home/ci/dlisio_requirements/venv/bin/python" ..
+RUN cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib -DPython_ROOT_DIR="/home/ci/dlisio_requirements/venv/" ..
 RUN make -j4
 RUN ctest --verbose

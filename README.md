@@ -94,7 +94,7 @@ curve mnemonics as field names (column names).
 To develop dlisio, or to build a particular revision from source, you need:
 
 * A C++11 compatible compiler (tested on gcc, clang, and msvc 2019)
-* [CMake](https://cmake.org/) version 3.5 or greater
+* [CMake](https://cmake.org/) version 3.18 or greater
 * [Python](https://python.org) version 3.10 or greater
 * [fmtlib](http://fmtlib.net/) tested mainly with 7.1.3
 * [mpark_variant](https://github.com/mpark/variant)
