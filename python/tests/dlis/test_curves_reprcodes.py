@@ -2,6 +2,9 @@
 Testing that curves methods correctly reads values with various
 representation codes
 """
+
+import sys
+
 import pytest
 import numpy as np
 from datetime import datetime
@@ -388,9 +391,15 @@ def test_ascii_broken_utf8():
 
 def test_datetime_invalid():
     fpath = 'data/chap4-7/iflr/invalid-dtime.dlis'
+    expected_message = (
+        "ValueError: day is out of range for month"
+        if sys.version_info < (3, 14)
+        else "ValueError: day 0 must be in range 1..31 for month 3 in year 1971"
+    )
     with pytest.raises(RuntimeError) as excinfo:
         _ = load_curves(fpath)
-    assert "ValueError: day is out of range for month" in str(excinfo.value)
+    assert expected_message in str(excinfo.value)
+
 
 @pytest.mark.parametrize('fpath', [
     'data/chap4-7/iflr/broken-fmt.dlis',

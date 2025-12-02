@@ -1,5 +1,6 @@
 name: Build and test python
 #Build and test with python turned on
+permissions: {}
 
 on:
   push:
@@ -45,7 +46,8 @@ jobs:
           cmake -S . -B build                     \
             -DCMAKE_BUILD_TYPE=Release            \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON  \
-            -DBUILD_PYTHON=ON
+            -DBUILD_PYTHON=ON                     \
+            -DPython_ROOT_DIR=/home/runner/work/dlisio/dlisio/venv
 
       - name: Build dlisio
         shell: bash
@@ -60,3 +62,70 @@ jobs:
         run: |
           cd build
           ctest -C Release --output-on-failure --verbose
+
+
+  build_python_via_pip:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: "./.github/actions/build_core_dependencies"
+        with:
+          privileges: "sudo"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Create python venv
+        shell: bash
+        run: |
+          python -m venv venv
+          . ./venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools
+          python -m pip install -r python/requirements-dev.txt
+          which python
+
+      - name: Configure dlisio
+        shell: bash
+        run: |
+          cmake -S . -B build                     \
+            -DCMAKE_BUILD_TYPE=Release            \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON  \
+            -DBUILD_PYTHON=OFF
+
+      - name: Build dlisio
+        shell: bash
+        run: |
+          cmake   \
+            --build build     \
+            --parallel        \
+            --config Release
+
+      - name: Install dlisio
+        shell: bash
+        run: |
+          sudo cmake   \
+            --install build
+
+      - name: Build python package
+        shell: bash
+        run: |
+          . ./venv/bin/activate
+          cd python
+          pip install .[test]
+
+      - name: Test dlisio
+        shell: bash
+        run: |
+          . ./venv/bin/activate
+          cd python
+          python -m pytest

@@ -1,4 +1,5 @@
 name: Build documentation
+permissions: {}
 
 on:
   push:

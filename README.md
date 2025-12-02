@@ -47,13 +47,13 @@ pip install dlisio
 ```
 
 
-|   | macOS Intel | macOS ARM | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 | manylinux i686 | musllinux x86_64
-|---------------|----|-----|-----|----|----|----|----|----|
-| CPython 3.9   | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
-| CPython 3.10  | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
-| CPython 3.11  | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
-| CPython 3.12  | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
-| CPython 3.13  | ✅ | ✅  | ✅  | ✅ | ✅ | ✅ | ✅ | ✅ |
+|   | macOS ARM | Windows 64bit | Windows 32bit | manylinux x86_64 | manylinux aarch64 | manylinux i686 | musllinux x86_64
+|---------------|----|----|----|----|----|----|----|
+| CPython 3.10  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CPython 3.11  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CPython 3.12  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CPython 3.13  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CPython 3.14  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 See [Build dlisio](#Build-dlisio) for building dlisio from source.
 
@@ -95,12 +95,11 @@ curve mnemonics as field names (column names).
 To develop dlisio, or to build a particular revision from source, you need:
 
 * A C++11 compatible compiler (tested on gcc, clang, and msvc 2019)
-* [CMake](https://cmake.org/) version 3.5 or greater
-* [Python](https://python.org) version 3.9 or greater
+* [CMake](https://cmake.org/) version 3.18 or greater
+* [Python](https://python.org) version 3.10 or greater
 * [fmtlib](http://fmtlib.net/) tested mainly with 7.1.3
 * [mpark_variant](https://github.com/mpark/variant)
 * [pybind11](https://github.com/pybind/pybind11) version 2.6 or greater
-* [setuptools](https://pypi.python.org/pypi/setuptools) version 28 or greater
 * [layered-file-protocols](https://github.com/equinor/layered-file-protocols)
 * python packages pytest and numpy
 

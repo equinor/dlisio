@@ -1,6 +1,6 @@
 FROM s390x/debian
 RUN apt-get update
-RUN apt-get install -y cmake g++ python3 python3-pip git python3-venv libopenblas-dev
+RUN apt-get install -y cmake g++ python3 python3-pip git python3-venv python3-numpy
 
 #mpark variant
 WORKDIR /home/ci
@@ -23,7 +23,7 @@ RUN make install
 WORKDIR /home/ci
 COPY . /home/ci/dlisio_requirements
 WORKDIR /home/ci/dlisio_requirements
-RUN python3 -m venv venv
+RUN python3 -m venv venv --system-site-packages
 RUN . venv/bin/activate
 RUN /home/ci/dlisio_requirements/venv/bin/python -m pip install --upgrade pip
 RUN /home/ci/dlisio_requirements/venv/bin/python -m pip install -r python/requirements-dev.txt
@@ -40,6 +40,6 @@ RUN make install
 WORKDIR /home/ci
 COPY . /home/ci/dlisio
 WORKDIR /home/ci/dlisio/build
-RUN cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib -DPYTHON_EXECUTABLE="/home/ci/dlisio_requirements/venv/bin/python" ..
+RUN cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_NAME_DIR=/usr/local/lib -DPython_ROOT_DIR="/home/ci/dlisio_requirements/venv/" ..
 RUN make -j4
 RUN ctest --verbose

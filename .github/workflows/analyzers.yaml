@@ -1,4 +1,5 @@
 name: Run static- and dynamic analyzers
+permissions: {}
 
 on:
   push:

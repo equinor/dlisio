@@ -1,9 +1,29 @@
 [build-system]
 requires = [
-    "setuptools >= 40",
-    "scikit-build",
-    "wheel",
-    "pybind11",
+    "scikit-build-core",
+    "pybind11"
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "dlisio"
+version = "1.0.3"
+description = "Python library for working with the well log formats DLIS (RP66v1) and LIS79"
+authors = [
+    { name = "Equinor ASA" },
+]
+urls.homepage = "https://github.com/equinor/dlisio"
+license = "LGPL-3.0"
+requires-python = ">=3.10"
+dependencies = ["numpy"]
+readme = "../README.md"
+
+[tool.scikit-build]
+cmake.args = [
+    # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
+    # everything not OS X. We depend on C++11, which makes our minimum
+    # supported OS X release 10.9
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9',
 ]
 
 [tool.cibuildwheel]
@@ -72,47 +92,11 @@ before-build = [
 
 test-requires = "pytest"
 
-# Cibuildwheel doesn't run tests from the project directory. This is to ensure
-# the wheel is imported by the tests, and not the source copy. Normally, one
-# would run pytest using the cibw project variable like so: 'pytest
-# {project}/tests'.  This doesn't work for us however, because our tests use
-# relative paths to our test data folder python/data. The workaround is to copy
-# out the tests/ and data/ directories to the current folder. This has to be
-# done in 'test-command' and not in 'before-test' because there is no guarantee
-# they are run from the same directory.
-test-command = [
-    """python {project}/.github/utils.py copy --src {package}/tests --dst testdir/tests""",
-    """python {project}/.github/utils.py copy --src {package}/data  --dst testdir/data""",
-    """cd testdir""",
-    """pytest tests""",
-    """python {project}/.github/utils.py remove --paths tests data""",
-]
+test-command = [ "cd python", "pytest tests" ]
+test-sources = [ "python/tests", "python/data", "python/pyproject.toml" ]
 
-[tool.cibuildwheel.linux]
-manylinux-x86_64-image = "manylinux2014"
-
-[[tool.cibuildwheel.overrides]]
-select = "cp3{9,10,11,12}*i686"
-before-build= [
-    "python -m pip install numpy --config-settings=setup-args=\"-Dallow-noblas=true\" ",
-    """cmake                                 \
-        -S .                                 \
-        -B build                             \
-        -DCMAKE_BUILD_TYPE=Release           \
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -DBUILD_TESTING=OFF                  \
-        -DBUILD_PYTHON=OFF                   \
-    """,
-    """cmake             \
-        --build build    \
-        --parallel       \
-        --target install \
-        --config Release \
-    """,
-]
 
 [tool.cibuildwheel.macos]
-environment = { CXXFLAGS="-L/usr/local/lib" }
 
 before-all = [
     """curl                                                             \
