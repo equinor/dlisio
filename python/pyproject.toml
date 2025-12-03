@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "dlisio"
-version = "1.0.3"
+version = "1.0.4"
 description = "Python library for working with the well log formats DLIS (RP66v1) and LIS79"
 authors = [
     { name = "Equinor ASA" },
