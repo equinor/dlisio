@@ -517,6 +517,9 @@ noexcept (false) {
      * By writing directly into the numpy array as we go, PyObjects are either
      * default-constructed (set to None) by numpy, or properly created (and
      * replaced) here.
+     *
+     * Note: for this to work, 'alloc' function must return a new, not borrowed,
+     * reference to a numpy array.
      */
     auto implicits = idx.implicits_of( recinfo.ltell );
     auto allocated_rows = implicits.size() * fconf.samples;
@@ -534,7 +537,11 @@ noexcept (false) {
     auto resize = [&](std::size_t n) {
         info = py::buffer_info {};
         dstb = py::buffer {};
-        dstobj.attr("resize")(n);
+        /* From python 3.14 numpy raises ValueError "cannot resize an array that
+         * may be referenced by another object" despite all the precautions
+         * taken. Assume this is a false-positive and disable refcheck.
+         */
+        dstobj.attr("resize")(n, "refcheck"_a = false);
         allocated_rows = n;
         dstb = py::buffer(dstobj);
         info = dstb.request(true);
