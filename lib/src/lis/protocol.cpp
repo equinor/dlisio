@@ -658,7 +658,7 @@ noexcept (false) {
               type == lis::record_type::system_outputs or
               type == lis::record_type::flic_comment) ) {
 
-        const auto type = lis::decay(raw.info.type);
+        const auto type = static_cast<int>(lis::decay(raw.info.type));
         const auto type_str = lis::record_type_str(raw.info.type);
         const auto msg = "parse_text_record: Invalid record type, {} ({})";
         throw std::runtime_error(fmt::format(msg, type, type_str));
@@ -685,7 +685,7 @@ void parse_file_record( const record& raw, T& rec ) noexcept (false) {
     if ( not (raw.info.type == lis::record_type::file_header or
               raw.info.type == lis::record_type::file_trailer) ) {
 
-        const auto type = lis::decay(raw.info.type);
+        const auto type = static_cast<int>(lis::decay(raw.info.type));
         const auto type_str = lis::record_type_str(raw.info.type);
         const auto msg = "parse_file_record: Invalid record type, {} ({})";
         throw std::runtime_error(fmt::format(msg, type, type_str));
@@ -756,7 +756,7 @@ void parse_reel_tape_record( const record& raw, T& rec ) {
               type == lis::record_type::tape_header or
               type == lis::record_type::tape_trailer) ) {
 
-        const auto type = lis::decay(raw.info.type);
+        const auto type = static_cast<int>(lis::decay(raw.info.type));
         const auto type_str = lis::record_type_str(raw.info.type);
         const auto msg = "parse_reel_tape_record: Invalid record type, {} ({})";
         throw std::runtime_error(fmt::format(msg, type, type_str));
