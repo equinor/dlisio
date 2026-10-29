@@ -63,10 +63,8 @@ jobs:
 
           CIBW_ARCHS: ${{ matrix.arch }}
           # musllinux arch skip: unlikely someone wants to run dlisio on alpine on non-standard architecture
-          # musllinux cp38 skip: latest available numpy doesn't provide musslinux wheels, so it is unlikely useful
-          # macosx arm 38 skip: cibuildwheel can't test it
-          # 38, 39 skip: python versions not supported
-          CIBW_SKIP: "*-musllinux_i686 *-musllinux_aarch64 cp38*-musllinux* cp38*-macosx_*arm64 cp38-* cp39-*"
+          # 39, 310 skip: python versions not supported
+          CIBW_SKIP: "*-musllinux_i686 *-musllinux_aarch64 cp39-* cp310-*"
 
         run: |
             python -m cibuildwheel --output-dir wheelhouse python/
