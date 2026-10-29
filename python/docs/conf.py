@@ -21,9 +21,6 @@ autodoc_mock_imports = ['dlisio.core']
 
 # -- General configuration -----------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.5'
-
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
@@ -38,21 +35,9 @@ extensions = [
 
 autosummary_generate = True
 
-# sphinx 1.8 deprecates autodoc_default_flags. docs should be buildable with
-# warnings-as-errors, but the docs really don't require more than sphinx 1.5.
-# use the new autodoc config if built with >= 1.8
-#
-# ref http://luc.lino-framework.org/blog/2018/0821.html
-
-from distutils.version import LooseVersion
-import sphinx
-
-if LooseVersion(sphinx.__version__) < LooseVersion("1.8"):
-    autodoc_default_flags = ['members', 'inherited-members']
-else:
-    autodoc_default_options = {
-        'members': None,
-    }
+autodoc_default_options = {
+    'members': None,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
